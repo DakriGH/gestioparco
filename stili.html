@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gestione Parco — tre strade per la grafica</title>
+<link rel="stylesheet" href="./css/fonts.css">
+<style>
+/* ============================================================
+   Pagina di confronto: LO STESSO contenuto in tre vesti diverse.
+   Serve a scegliere guardando, non immaginando.
+   ============================================================ */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #0C0C11;
+  color: #E9E9F2;
+  padding: 0 0 60px;
+}
+.intro { padding: 22px 18px 6px; max-width: 900px; margin: 0 auto; }
+.intro h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 6px; }
+.intro p { color: #A8A8BD; font-size: 15px; line-height: 1.5; margin: 0; }
+
+.strada { max-width: 900px; margin: 0 auto; padding: 26px 18px 8px; }
+.strada > header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+.strada > header .n {
+  font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 700;
+  background: #2A2A36; color: #C6B2FF; border-radius: 20px; padding: 4px 12px;
+}
+.strada > header h2 { font-family: 'Fredoka', sans-serif; font-size: 23px; margin: 0; }
+.strada > .perche { color: #9A9AB0; font-size: 14.5px; line-height: 1.55; margin: 8px 0 16px; }
+.strada > .perche b { color: #C6B2FF; font-weight: 600; }
+.telaio { border-radius: 18px; overflow: hidden; border: 1px solid rgba(255,255,255,0.10); }
+
+/* ===========================================================
+   A — SCONTRINO. Tutto piatto, contrasto alto, il colore solo
+   dove porta informazione. Come un terminale di cassa.
+   =========================================================== */
+.A { background: #101014; padding: 0; }
+.A .barra {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; background: #17171C;
+  border-bottom: 1px solid rgba(255,255,255,0.09);
+}
+.A .barra .logo { font-size: 17px; }
+.A .barra .tab {
+  margin-left: auto; display: flex; gap: 0;
+  border: 1px solid rgba(255,255,255,0.14); border-radius: 8px; overflow: hidden;
+}
+.A .barra .tab button {
+  background: none; border: none; color: #9A9AB0; font: inherit; font-size: 14px;
+  font-weight: 600; padding: 9px 16px; cursor: pointer;
+}
+.A .barra .tab button.on { background: #E9E9F2; color: #101014; }
+.A .barra .ora { font-family: 'Fredoka', sans-serif; font-size: 17px; color: #C2C2D4; }
+
+.A .scheda { display: flex; background: #16161C; border-bottom: 1px solid rgba(255,255,255,0.09); }
+.A .stripe { width: 12px; flex-shrink: 0; }
+.A .corpo { flex: 1; min-width: 0; padding: 12px 14px; }
+.A .riga1 { display: flex; align-items: baseline; gap: 12px; }
+.A .conto { font-family: 'Fredoka', sans-serif; font-size: 40px; font-weight: 700; line-height: 1; }
+.A .stato { font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.A .orari { margin-left: auto; font-family: 'Fredoka', sans-serif; font-size: 17px; color: #C2C2D4; }
+.A .griglia { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: rgba(255,255,255,0.09); margin: 12px 0; border: 1px solid rgba(255,255,255,0.09); }
+.A .cella { background: #16161C; padding: 8px 10px; }
+.A .cella .k { font-size: 10.5px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: #86869C; }
+.A .cella .v { font-family: 'Fredoka', sans-serif; font-size: 21px; font-weight: 700; }
+.A .soldi { display: flex; align-items: baseline; gap: 8px; padding: 9px 0; border-top: 1px dashed rgba(255,255,255,0.18); font-size: 14px; color: #A8A8BD; }
+.A .soldi .tot { margin-left: auto; font-family: 'Fredoka', sans-serif; font-size: 24px; font-weight: 700; color: #FF6B6B; }
+.A .azioni { display: flex; gap: 8px; margin-top: 8px; }
+.A .azioni button {
+  flex: 1; background: #22222A; border: 1px solid rgba(255,255,255,0.14); color: #E9E9F2;
+  font: inherit; font-size: 14px; font-weight: 600; padding: 11px 0; border-radius: 6px; cursor: pointer;
+}
+.A .azioni button.forte { background: #E9E9F2; color: #101014; border-color: #E9E9F2; }
+.A .rif { width: 190px; flex-shrink: 0; padding: 12px; border-left: 1px solid rgba(255,255,255,0.09); text-align: center; }
+.A .rif .nome { font-family: 'Fredoka', sans-serif; font-size: 17px; margin-bottom: 6px; }
+.A .rif .av { width: 108px; height: 148px; margin: 0 auto; }
+.A .rif .av svg { width: 100%; height: 100%; display: block; }
+.A .rif .tratti { text-align: left; font-size: 12.5px; color: #C2C2D4; line-height: 1.5; margin-top: 8px; }
+.A .rif .brac { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+.A .rif .brac i { width: 14px; height: 14px; border-radius: 50%; display: block; }
+
+/* ===========================================================
+   B — VETRO. Pannelli traslucidi, luce morbida, il colore come
+   alone. Elegante, "premium", ma piu' atmosfera che sostanza.
+   =========================================================== */
+.B { background: radial-gradient(120% 60% at 50% 0%, #241E3A 0%, #0E0E15 62%); padding: 14px; }
+.B .barra { display: flex; align-items: center; gap: 10px; padding: 4px 4px 14px; }
+.B .barra .tab { margin-left: auto; display: flex; gap: 6px; }
+.B .barra .tab button {
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10);
+  color: #C2C2D4; font: inherit; font-size: 14px; font-weight: 600;
+  padding: 9px 16px; border-radius: 11px; cursor: pointer; backdrop-filter: blur(8px);
+}
+.B .barra .tab button.on { background: linear-gradient(160deg,#C6B2FF,#8E6BF0); color: #14102A; border-color: transparent; box-shadow: 0 4px 18px rgba(150,122,255,0.35); }
+.B .barra .ora { font-family: 'Fredoka', sans-serif; font-size: 17px; color: #C2C2D4; }
+.B .scheda {
+  display: flex; border-radius: 18px; overflow: hidden; margin-bottom: 12px;
+  background: rgba(255,255,255,0.045);
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.07) inset, 0 18px 40px -20px rgba(0,0,0,0.9);
+  backdrop-filter: blur(14px);
+}
+.B .corpo { flex: 1; min-width: 0; padding: 14px 16px; }
+.B .riga1 { display: flex; align-items: baseline; gap: 12px; }
+.B .conto { font-family: 'Fredoka', sans-serif; font-size: 38px; font-weight: 700; line-height: 1; }
+.B .stato { font-size: 12px; font-weight: 700; color: #A8A8BD; }
+.B .orari { margin-left: auto; font-family: 'Fredoka', sans-serif; font-size: 16px; color: #C2C2D4; }
+.B .barretta { height: 6px; border-radius: 6px; background: rgba(255,255,255,0.10); margin: 10px 0 12px; overflow: hidden; }
+.B .barretta i { display: block; height: 100%; border-radius: 6px; }
+.B .griglia { display: flex; gap: 8px; flex-wrap: wrap; }
+.B .cella { flex: 1 1 120px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 8px 11px; }
+.B .cella .k { font-size: 11px; color: #9A9AB0; }
+.B .cella .v { font-family: 'Fredoka', sans-serif; font-size: 20px; font-weight: 700; }
+.B .soldi { display: flex; align-items: baseline; margin-top: 11px; font-size: 14px; color: #A8A8BD; }
+.B .soldi .tot { margin-left: auto; font-family: 'Fredoka', sans-serif; font-size: 23px; font-weight: 700; color: #FF8A8A; }
+.B .azioni { display: flex; gap: 8px; margin-top: 12px; }
+.B .azioni button {
+  flex: 1; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.11);
+  color: #E9E9F2; font: inherit; font-size: 14px; font-weight: 600; padding: 11px 0;
+  border-radius: 11px; cursor: pointer;
+}
+.B .azioni button.forte { background: linear-gradient(160deg,#7FE8C1,#46C79A); color: #06241A; border-color: transparent; }
+.B .rif { width: 190px; flex-shrink: 0; padding: 14px; text-align: center; position: relative; }
+.B .rif .nome { font-family: 'Fredoka', sans-serif; font-size: 17px; margin-bottom: 4px; }
+.B .rif .av { width: 112px; height: 152px; margin: 0 auto; position: relative; z-index: 1; }
+.B .rif .av svg { width: 100%; height: 100%; display: block; }
+.B .rif .tratti { text-align: left; font-size: 12.5px; color: #C2C2D4; line-height: 1.5; margin-top: 8px; }
+.B .rif .brac { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 11px; font-weight: 700; }
+.B .rif .brac i { width: 14px; height: 14px; border-radius: 50%; display: block; }
+
+/* ===========================================================
+   C — BLOCCHI. Colore pieno per stato, testo bianco, forme
+   ciccione. Si legge da lontano e sembra un parco, non un
+   gestionale. E' la strada che consiglio.
+   =========================================================== */
+.C { background: #12121A; padding: 14px; }
+.C .barra { display: flex; align-items: center; gap: 10px; padding: 2px 2px 14px; }
+.C .barra .logo { font-size: 20px; }
+.C .barra .tab { margin-left: auto; display: flex; gap: 8px; }
+.C .barra .tab button {
+  background: #22222E; border: none; color: #C2C2D4; font: inherit; font-size: 15px;
+  font-weight: 700; padding: 11px 18px; border-radius: 14px; cursor: pointer;
+}
+.C .barra .tab button.on { background: #FFD166; color: #221A00; }
+.C .barra .ora { font-family: 'Fredoka', sans-serif; font-size: 18px; color: #C2C2D4; }
+
+.C .scheda { border-radius: 22px; overflow: hidden; margin-bottom: 14px; display: flex; }
+.C .corpo { flex: 1; min-width: 0; padding: 14px 16px 16px; }
+.C .riga1 { display: flex; align-items: center; gap: 12px; }
+.C .conto { font-family: 'Fredoka', sans-serif; font-size: 42px; font-weight: 700; line-height: 1; color: #fff; }
+.C .stato { font-size: 12.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(255,255,255,0.75); }
+.C .orari { margin-left: auto; font-family: 'Fredoka', sans-serif; font-size: 17px; color: rgba(255,255,255,0.9); background: rgba(0,0,0,0.22); padding: 5px 11px; border-radius: 20px; }
+.C .barretta { height: 8px; border-radius: 8px; background: rgba(0,0,0,0.25); margin: 11px 0 13px; overflow: hidden; }
+.C .barretta i { display: block; height: 100%; background: #fff; border-radius: 8px; opacity: 0.9; }
+.C .griglia { display: flex; gap: 9px; flex-wrap: wrap; }
+.C .cella { flex: 1 1 118px; background: rgba(0,0,0,0.24); border-radius: 15px; padding: 8px 12px; }
+.C .cella .k { font-size: 11.5px; font-weight: 700; color: rgba(255,255,255,0.7); }
+.C .cella .v { font-family: 'Fredoka', sans-serif; font-size: 22px; font-weight: 700; color: #fff; }
+.C .soldi { display: flex; align-items: baseline; margin-top: 12px; font-size: 14.5px; color: rgba(255,255,255,0.8); font-weight: 600; }
+.C .soldi .tot { margin-left: auto; font-family: 'Fredoka', sans-serif; font-size: 26px; font-weight: 700; color: #fff; }
+.C .azioni { display: flex; gap: 9px; margin-top: 13px; }
+.C .azioni button {
+  flex: 1; background: rgba(255,255,255,0.16); border: none; color: #fff;
+  font: inherit; font-size: 15px; font-weight: 700; padding: 13px 0; border-radius: 15px; cursor: pointer;
+}
+.C .azioni button.forte { background: #fff; color: #123A2C; }
+.C .rif { width: 196px; flex-shrink: 0; padding: 14px; text-align: center; background: rgba(0,0,0,0.24); }
+.C .rif .nome { font-family: 'Fredoka', sans-serif; font-size: 18px; color: #fff; margin-bottom: 4px; }
+.C .rif .av { width: 116px; height: 156px; margin: 0 auto; border-radius: 18px; background: rgba(255,255,255,0.10); }
+.C .rif .av svg { width: 100%; height: 100%; display: block; }
+.C .rif .tratti { text-align: left; font-size: 13px; color: rgba(255,255,255,0.92); line-height: 1.5; margin-top: 9px; font-weight: 600; }
+.C .rif .brac { display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 9px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #fff; background: rgba(0,0,0,0.3); border-radius: 20px; padding: 5px 12px; }
+.C .rif .brac i { width: 15px; height: 15px; border-radius: 50%; display: block; box-shadow: 0 0 0 2px rgba(255,255,255,0.5); }
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <h1>Tre strade per la grafica</h1>
+  <p>Lo stesso gruppo, disegnato in tre modi. Guarda quale ti viene più naturale leggere di sfuggita,
+  poi dimmi il numero — o anche “il countdown di A, i colori di C”.</p>
+</div>
+
+<div class="strada">
+  <header><span class="n">A</span><h2>Scontrino</h2></header>
+  <p class="perche">Tutto <b>piatto e ad alto contrasto</b>, come il terminale di una cassa. Niente ombre,
+  niente sfumature: il colore compare <b>solo</b> dove dice qualcosa — la striscia laterale è il bracciale.
+  Numeri grossi, etichette minuscole. Si legge benissimo anche di taglio e con la luce del sole.
+  È la più severa: sembra uno strumento di lavoro, non un giocattolo.</p>
+  <div class="telaio A">
+    <div class="barra">
+      <span class="logo">🎡</span>
+      <div class="tab"><button>Nuovo</button><button class="on">In corso 3</button><button>⚙</button></div>
+      <span class="ora">21:30</span>
+    </div>
+    <div class="scheda">
+      <div class="stripe" style="background:#E23D4B"></div>
+      <div class="corpo">
+        <div class="riga1">
+          <span class="conto" style="color:#59E0AE">42:00</span>
+          <span class="stato" style="color:#59E0AE">in tempo</span>
+          <span class="orari">21:20 → 22:05</span>
+        </div>
+        <div class="griglia">
+          <div class="cella"><div class="k">Bambini</div><div class="v">2</div></div>
+          <div class="cella"><div class="k">Crazy</div><div class="v">1</div></div>
+          <div class="cella"><div class="k">Durata</div><div class="v">45′</div></div>
+        </div>
+        <div class="soldi"><span>Parco 14,00 €</span><span>· Bar 3,50 €</span><span class="tot">17,50 €</span></div>
+        <div class="azioni"><button>Bar</button><button>Conto</button><button>Modifica</button><button class="forte">Uscita</button></div>
+      </div>
+      <div class="rif">
+        <div class="nome">Nonna</div>
+        <div class="av" id="avA"></div>
+        <div class="tratti">• Maglietta gialla<br>• Gonna nera<br>• Chignon grigi</div>
+        <div class="brac"><i style="background:#E23D4B"></i> rosso</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="strada">
+  <header><span class="n">B</span><h2>Vetro</h2></header>
+  <p class="perche">Pannelli <b>traslucidi con luce morbida</b>, il colore come alone invece che come blocco.
+  È la più bella da vedere ferma, e la più elegante. Ma il contrasto è più basso: al sole, o guardando
+  di fretta, si legge <b>meno</b> delle altre due. La metto perché è quella che di solito piace in foto.</p>
+  <div class="telaio B">
+    <div class="barra">
+      <span style="font-size:18px">🎡</span>
+      <div class="tab"><button>Nuovo</button><button class="on">In corso 3</button><button>⚙</button></div>
+      <span class="ora">21:30</span>
+    </div>
+    <div class="scheda">
+      <div class="corpo">
+        <div class="riga1">
+          <span class="conto" style="color:#7FE8C1">42:00</span>
+          <span class="stato">alla scadenza</span>
+          <span class="orari">21:20 → 22:05</span>
+        </div>
+        <div class="barretta"><i style="width:62%;background:linear-gradient(90deg,#46C79A,#7FE8C1)"></i></div>
+        <div class="griglia">
+          <div class="cella"><div class="k">🧒 Bambini</div><div class="v">2</div></div>
+          <div class="cella"><div class="k">🤸 Crazy</div><div class="v">1</div></div>
+          <div class="cella"><div class="k">⏱️ Durata</div><div class="v">45′</div></div>
+        </div>
+        <div class="soldi"><span>Parco 14,00 € · Bar 3,50 €</span><span class="tot">17,50 €</span></div>
+        <div class="azioni"><button>Bar</button><button>Conto</button><button>Modifica</button><button class="forte">Uscita</button></div>
+      </div>
+      <div class="rif" style="background:radial-gradient(120% 90% at 110% 105%, rgba(226,61,75,0.45) 0%, transparent 70%)">
+        <div class="nome">Nonna</div>
+        <div class="av" id="avB"></div>
+        <div class="tratti">• Maglietta gialla<br>• Gonna nera<br>• Chignon grigi</div>
+        <div class="brac"><i style="background:#E23D4B"></i> rosso</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="strada">
+  <header><span class="n">C</span><h2>Blocchi <span style="font-size:14px;color:#7FE8C1">← la consiglio</span></h2></header>
+  <p class="perche">La scheda <b>è</b> il colore dello stato: verde piena finché c'è tempo, ambra vicino alla
+  scadenza, rossa oltre. Testo bianco sopra, forme ciccione, tasti grandi. Si capisce <b>a due metri e di
+  sfuggita</b> — che è esattamente il tuo caso — e sembra un parco divertimenti invece che un gestionale.
+  Il bracciale resta una pastiglia in chiaro sul riquadro della persona.</p>
+  <div class="telaio C">
+    <div class="barra">
+      <span class="logo">🎡</span>
+      <div class="tab"><button>Nuovo</button><button class="on">In corso 3</button><button>⚙</button></div>
+      <span class="ora">21:30</span>
+    </div>
+    <div class="scheda" style="background:linear-gradient(150deg,#1E9E76 0%,#137A5A 100%)">
+      <div class="corpo">
+        <div class="riga1">
+          <span class="conto">42:00</span>
+          <span class="stato">alla scadenza</span>
+          <span class="orari">21:20 → 22:05</span>
+        </div>
+        <div class="barretta"><i style="width:62%"></i></div>
+        <div class="griglia">
+          <div class="cella"><div class="k">🧒 Bambini</div><div class="v">2</div></div>
+          <div class="cella"><div class="k">🤸 Crazy</div><div class="v">1</div></div>
+          <div class="cella"><div class="k">⏱️ Durata</div><div class="v">45′</div></div>
+        </div>
+        <div class="soldi"><span>Parco 14,00 € · Bar 3,50 €</span><span class="tot">17,50 €</span></div>
+        <div class="azioni"><button>🥤 Bar</button><button>🧾 Conto</button><button>✏️ Modifica</button><button class="forte">🚪 Uscita</button></div>
+      </div>
+      <div class="rif">
+        <div class="nome">Nonna</div>
+        <div class="av" id="avC"></div>
+        <div class="tratti">• Maglietta gialla<br>• Gonna nera<br>• Chignon grigi</div>
+        <div class="brac"><i style="background:#E23D4B"></i> rosso</div>
+      </div>
+    </div>
+    <div class="scheda" style="background:linear-gradient(150deg,#D9922A 0%,#B26F12 100%)">
+      <div class="corpo">
+        <div class="riga1">
+          <span class="conto">4:12</span>
+          <span class="stato">sta scadendo</span>
+          <span class="orari">20:50 → 21:35</span>
+        </div>
+        <div class="barretta"><i style="width:91%"></i></div>
+        <div class="griglia">
+          <div class="cella"><div class="k">🧒 Bambini</div><div class="v">1</div></div>
+          <div class="cella"><div class="k">🤸 Crazy</div><div class="v">0</div></div>
+          <div class="cella"><div class="k">⏱️ Durata</div><div class="v">45′</div></div>
+        </div>
+        <div class="soldi"><span>Parco 7,00 €</span><span class="tot">7,00 €</span></div>
+        <div class="azioni"><button>🥤 Bar</button><button>🧾 Conto</button><button>✏️ Modifica</button><button class="forte">🚪 Uscita</button></div>
+      </div>
+      <div class="rif">
+        <div class="nome">Ragazzo</div>
+        <div class="av" id="avC2"></div>
+        <div class="tratti">• Maglietta verde<br>• Pantaloncini blu<br>• Capelli ricci neri</div>
+        <div class="brac"><i style="background:#FBBF24"></i> giallo</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="./js/avatar.js"></script>
+<script>
+/* gli stessi sprite dell'app, così il confronto è onesto */
+const nonna = AV.normalize({
+  role:'nonna', skin:'#F6CFA8',
+  hair:{style:'chignon',color:'#C9CDD3'},
+  top:{style:'maglietta',color:'#FBBF24',color2:'#F4F6F8',pattern:'solid'},
+  pants:{style:'gonna',color:'#1F2430',color2:'#F4F6F8',pattern:'solid'},
+  shoes:{style:'sneakers',color:'#F4F6F8'},
+  hat:{style:'none',color:'#E23D4B'}, glasses:'none', facial:'none', bag:{style:'none',color:'#7C4A2D'}
+}, 'nonna');
+const ragazzo = AV.normalize({
+  role:'ragazzo', skin:'#E8B98A',
+  hair:{style:'ricci',color:'#1B1714'},
+  top:{style:'maglietta',color:'#22C55E',color2:'#F4F6F8',pattern:'solid'},
+  pants:{style:'pantaloncini',color:'#2547C4',color2:'#F4F6F8',pattern:'solid'},
+  shoes:{style:'sneakers',color:'#F4F6F8'},
+  hat:{style:'none',color:'#E23D4B'}, glasses:'none', facial:'none', bag:{style:'none',color:'#7C4A2D'}
+}, 'ragazzo');
+['avA','avB','avC'].forEach(id => { const e = document.getElementById(id); if (e) e.innerHTML = AV.build(nonna); });
+const e2 = document.getElementById('avC2'); if (e2) e2.innerHTML = AV.build(ragazzo);
+</script>
+</body>
+</html>
