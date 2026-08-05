@@ -1159,6 +1159,15 @@ function ripristinaCopia(giorno) {
   });
 }
 
+/* un colore della palette con la trasparenza che serve alle sfumature */
+function conAlfa(hex, a) {
+  let c = String(hex || '').replace('#', '');
+  if (c.length === 3) c = c.split('').map(x => x + x).join('');
+  const n = parseInt(c, 16);
+  if (!Number.isFinite(n) || c.length !== 6) return 'transparent';
+  return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
+}
+
 function traitChip(t) {
   const c = el('span', 'trait');
   if (t.color) {
@@ -1751,6 +1760,12 @@ function entryCard(entry) {
   const who = el('div', 'e-who');
   const autoSlot = braceletFor(entry.startTime);
   const wristColor = entry.braceletColor || (autoSlot ? autoSlot.color : null);
+  /* La scheda sfuma verso il colore del bracciale: è il modo più veloce
+     per abbinare la persona al braccialetto senza andare a cercare il
+     pallino. Se il bracciale non c'è, niente sfumatura. */
+  card.style.setProperty('--brace', wristColor ? conAlfa(wristColor, 0.46) : 'transparent');
+  card.style.setProperty('--brace-orlo', wristColor ? conAlfa(wristColor, 0.75) : 'transparent');
+  card.classList.toggle('con-bracciale', !!wristColor);
   const wrist = el('button', 'e-wrist');
   wrist.title = 'Cambia bracciale';
   const dot = el('span', 'dot');
