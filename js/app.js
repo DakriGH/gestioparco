@@ -748,8 +748,11 @@ function syncPeople(container, people, onChange) {
       b.appendChild(el('div', 'wp-n', r.label));
       b.onclick = () => {
         container.dataset.scegli = '';
-        // si aggiunge e basta: il vestiario si apre col suo tasto, se serve
-        aggiungi({ id: uid(), role: r.key, name: '', avatar: AV.baseFor(r.key), note: '' }, false);
+        /* Scelta l'emoji si apre SUBITO il palco: e' il flusso che ha
+           scelto guardando il modello E2. (All'inizio lo aprivo e gli
+           dava fastidio, ma allora l'editor era quello vecchio, lungo
+           e da scorrere.) */
+        aggiungi({ id: uid(), role: r.key, name: '', avatar: AV.baseFor(r.key), note: '' }, true);
       };
       griglia.appendChild(b);
     });
@@ -773,7 +776,7 @@ function syncPeople(container, people, onChange) {
           aggiungi({
             id: uid(), role: p.role || 'altro', name: p.name || '',
             avatar: JSON.parse(JSON.stringify(AV.normalize(p.avatar, p.role))), note: ''
-          }, false);
+          }, true);
         };
         g2.appendChild(b);
       });
@@ -1763,7 +1766,7 @@ function entryCard(entry) {
   time.appendChild(count);
   time.appendChild(sub);
   const range = el('div', 'e-range');
-  range.innerHTML = '\ud83d\udd50 ' + fmtTime(entry.startTime) + '<span class="arrow">\u2192</span>' + (entry.payLater ? '?' : fmtTime(endTimeOf(entry)));
+  range.innerHTML = fmtTime(entry.startTime) + '<span class="arrow">\u2192</span>' + (entry.payLater ? '?' : fmtTime(endTimeOf(entry)));
   time.appendChild(range);
   body.appendChild(time);
 
@@ -2196,7 +2199,7 @@ function syncCard(entry) {
   // se il conto è aperto lo riallineo: i prezzi possono essere cambiati
   if (r.payPanel && !r.payPanel.classList.contains('hidden')) r.buildPay();
 
-  r.range.innerHTML = '\ud83d\udd50 ' + fmtTime(entry.startTime) + '<span class="arrow">\u2192</span>' + (entry.payLater ? '?' : fmtTime(endTimeOf(entry)));
+  r.range.innerHTML = fmtTime(entry.startTime) + '<span class="arrow">\u2192</span>' + (entry.payLater ? '?' : fmtTime(endTimeOf(entry)));
   updateBadge();
 }
 
@@ -2289,6 +2292,10 @@ function buildSettingsView() {
       <div class="blk-in">
       <button class="switch-row" id="setTheme" role="switch">
         <span class="sw-txt"><b>Tema scuro</b><span>Riposante e con i colori dei bracciali più leggibili.</span></span>
+        <span class="switch"></span>
+      </button>
+      <button class="switch-row" id="setTinte" role="switch" style="margin-top:10px;">
+        <span class="sw-txt"><b>Tinte più leggibili</b><span>Gli stessi colori, un po' più scuri. Le scritte piccole passano da 2,6 a 6 di contrasto: al sole si legge molto meglio. Spento = tinte accese come nel disegno.</span></span>
         <span class="switch"></span>
       </button>
       </div>
@@ -2396,6 +2403,20 @@ function buildSettingsView() {
     settings.theme = settings.theme === 'light' ? 'dark' : 'light';
     applyTheme();
     paintTheme();
+    saveSettings();
+  };
+
+  const tn = $('#setTinte');
+  const paintTinte = () => {
+    const on = settings.tinteLeggibili === true;
+    $('.switch', tn).classList.toggle('on', on);
+    tn.setAttribute('aria-checked', on ? 'true' : 'false');
+  };
+  paintTinte();
+  tn.onclick = () => {
+    settings.tinteLeggibili = settings.tinteLeggibili !== true;
+    applyTheme();
+    paintTinte();
     saveSettings();
   };
 
@@ -2619,6 +2640,8 @@ function renderPresets() {
    ============================================================ */
 function applyTheme() {
   document.documentElement.dataset.theme = settings.theme === 'light' ? 'light' : 'dark';
+  // tinte: quelle del modello (di serie) o quelle misurate
+  document.getElementById('app').classList.toggle('tinte-leggibili', settings.tinteLeggibili === true);
   const meta = document.querySelector('meta[name="theme-color"]');
   // la barra di sistema del tablet deve intonarsi all'app, non restare
   // del blu di due versioni fa

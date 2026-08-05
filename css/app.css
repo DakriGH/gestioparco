@@ -2580,3 +2580,133 @@ main {
 .entry .e-wrist { padding: 5px 12px 5px 6px; }
 .entry .e-wrist .dot { width: 17px; height: 17px; }
 .entry .e-wrist .lab { font-size: 11.5px; font-weight: 800; }
+
+/* ============================================================
+   IDENTICO AL MODELLO C — stili.html, misurato
+   ============================================================ */
+
+/* le tinte esatte del modello approvato */
+:root, :root[data-theme="light"] {
+  --blk-verde:  linear-gradient(150deg, #1E9E76 0%, #137A5A 100%);
+  --blk-ambra:  linear-gradient(150deg, #D9922A 0%, #B26F12 100%);
+  --blk-rosso:  linear-gradient(150deg, #E05A5A 0%, #B93636 100%);
+}
+
+/* il pannello del riferimento e' PIATTO: nel modello non c'e' nessun
+   alone. La sfumatura verso il bracciale era una mia aggiunta. */
+.entry .e-who {
+  background: rgba(0, 0, 0, 0.24);
+  width: 196px;
+  padding: 14px;
+  gap: 0;
+  justify-content: flex-start;
+}
+.entry.con-bracciale .e-who::before { display: none; }
+.entry.con-bracciale .e-avatars::before { display: none; }
+.entry .e-avatars .av {
+  width: 116px;
+  height: 156px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.10);
+  box-shadow: none;
+}
+/* le misure del modello, riga per riga */
+.entry .e-role { font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+.entry .e-names { display: none; }
+.entry .e-avatars { margin: 0 auto; }
+.entry .e-traits { margin-top: 9px; font-size: 13px; font-weight: 600; line-height: 1.5; color: rgba(255,255,255,0.92); }
+.entry .e-wrist { margin-top: 9px; font-size: 12px; padding: 5px 12px; gap: 7px; }
+.entry .e-wrist .dot { width: 15px; height: 15px; box-shadow: 0 0 0 2px rgba(255,255,255,0.5); }
+.entry .e-wrist .lab { font-size: 12px; font-weight: 800; letter-spacing: 0.05em; }
+.entry .e-kids-badge { bottom: 4px; right: 4px; }
+
+/* il corpo */
+.entry .e-body { padding: 14px 16px 16px; gap: 0; }
+.entry .e-time { margin-bottom: 0; }
+.entry .e-count { font-size: 42px; line-height: 1; }
+.entry .e-count-sub { font-size: 12.5px; font-weight: 800; letter-spacing: 0.06em; }
+.entry .e-range { font-size: 17px; font-weight: 400; padding: 5px 11px; background: rgba(0,0,0,0.22); border-radius: 20px; }
+.entry .e-bar-track { height: 8px; border-radius: 8px; background: rgba(0,0,0,0.25); margin: 11px 0 13px; }
+.entry .e-bar-fill { border-radius: 8px; background: #fff; opacity: 0.9; box-shadow: none; }
+.entry .e-controls { gap: 9px; }
+.entry .e-step { background: rgba(0,0,0,0.24); border-radius: 15px; padding: 8px 12px; }
+.entry .e-step .k { font-size: 11.5px; font-weight: 700; color: rgba(255,255,255,0.7); }
+.entry .e-step .v { font-family: 'Fredoka', sans-serif; font-size: 22px; font-weight: 700; color: #fff; }
+.entry .e-costs { margin-top: 12px; font-size: 14.5px; font-weight: 600; color: rgba(255,255,255,0.85); }
+.entry .e-due .v { font-family: 'Fredoka', sans-serif; font-size: 26px; font-weight: 700; }
+.entry .e-acts { margin-top: 13px; gap: 9px; }
+.entry .e-act {
+  background: rgba(255,255,255,0.16);
+  border-radius: 15px;
+  min-height: 46px;
+  padding: 13px 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+.entry .e-act.on, .entry .e-act.out { background: #fff; color: #123A2C; }
+
+/* ultimi scarti dal modello, misurati */
+.entry { font-size: 16px; }
+.entry .e-act { height: 46px; min-height: 46px; padding: 0; }
+/* nel modello la pastiglia del bracciale e' larga quanto il pannello */
+.entry .e-wrist { display: flex; width: 100%; justify-content: center; }
+.entry .e-range { font-size: 17px; padding: 5px 11px; }
+
+/* ============================================================
+   IDENTICO AL MODELLO E2 — stili2.html, misurato
+   ============================================================ */
+.ed-palco { display: flex; gap: 14px; align-items: flex-start; }
+.ed-persona { width: 168px; flex-shrink: 0; text-align: center; }
+.ed-figura {
+  width: 168px;
+  height: 224px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+.ed-chi { font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 600; margin: 8px 0 0; }
+.ed-tratti { text-align: left; font-size: 13px; line-height: 1.5; color: rgba(255,255,255,0.9); margin-top: 9px; font-weight: 600; }
+
+.ed-parti { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+.ed-parte {
+  background: rgba(255, 255, 255, 0.07);
+  border: 2px solid transparent;
+  border-radius: 15px;
+  padding: 10px 4px 8px;
+  gap: 3px;
+}
+.ed-parte .em { font-size: 24px; line-height: 1; }
+.ed-parte .nm { font-size: 12px; font-weight: 700; }
+.ed-parte.on { background: var(--sel); color: var(--sel-ink); border-color: #fff; }
+
+.ed-pannello { background: rgba(0, 0, 0, 0.3); border-radius: 17px; padding: 13px 14px 15px; }
+.ed-opts { display: flex; gap: 9px; flex-wrap: wrap; margin-bottom: 12px; }
+.ed-opt {
+  width: 86px;
+  height: 92px;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 3px solid transparent;
+  padding: 5px 4px 6px;
+}
+.ed-opt.on { border-color: var(--sel); background: rgba(255, 209, 102, 0.18); }
+.ed-cols { display: flex; gap: 10px; flex-wrap: wrap; }
+.ed-col { width: 46px; height: 46px; border-width: 3px; }
+.ed-col.on { border-color: #fff; transform: scale(1.08); }
+.ed-k { font-size: 12px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: rgba(255,255,255,0.62); margin-bottom: 7px; }
+
+/* ---------- tinte leggibili (interruttore in Impostazioni) ----------
+   Stesse tinte, scurite quel tanto che basta perche' il bianco regga
+   >=4,6 anche sul capo piu' chiaro della sfumatura. */
+#app.tinte-leggibili {
+  --blk-blu:    linear-gradient(150deg, #2261B6 0%, #17498D 100%);
+  --blk-viola:  linear-gradient(150deg, #664BC5 0%, #4C3499 100%);
+  --blk-ambra:  linear-gradient(150deg, #825819 0%, #64420F 100%);
+  --blk-verde:  linear-gradient(150deg, #156F53 0%, #0E5640 100%);
+  --blk-rosso:  linear-gradient(150deg, #A64343 0%, #832E2E 100%);
+  --blk-ciano:  linear-gradient(150deg, #1F6978 0%, #14515D 100%);
+}
+
+/* col velo allo 0,16 del modello la scritta bianca sui tasti scende a
+   4,35; a 0,12 la differenza non si vede e passa */
+.entry .e-act { background: rgba(255, 255, 255, 0.12); }
