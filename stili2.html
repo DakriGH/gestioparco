@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Avatar e menu — quale ti torna comodo</title>
+<link rel="stylesheet" href="./css/fonts.css">
+<style>
+/* ============================================================
+   Secondo confronto, tutto nel linguaggio di C (Blocchi):
+   colore pieno, forme ciccione, testo bianco, tasti grandi.
+   Qui si sceglie COME si gestisce l'avatar.
+   ============================================================ */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #12121A; color: #E9E9F2; padding: 0 0 70px; }
+.intro { padding: 22px 18px 4px; max-width: 900px; margin: 0 auto; }
+.intro h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 6px; }
+.intro p { color: #A8A8BD; font-size: 15px; line-height: 1.5; margin: 0; }
+.strada { max-width: 900px; margin: 0 auto; padding: 26px 18px 6px; }
+.strada > header { display: flex; align-items: baseline; gap: 12px; }
+.strada > header .n { font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 700; background: #2A2A36; color: #FFD166; border-radius: 20px; padding: 4px 12px; }
+.strada > header h2 { font-family: 'Fredoka', sans-serif; font-size: 23px; margin: 0; }
+.strada > .perche { color: #9A9AB0; font-size: 14.5px; line-height: 1.55; margin: 8px 0 16px; }
+.strada > .perche b { color: #FFD166; font-weight: 600; }
+.telaio { border-radius: 20px; padding: 14px; background: #17171F; border: 1px solid rgba(255,255,255,0.09); }
+
+/* --- mattoni comuni in linguaggio C --- */
+.blocco { border-radius: 20px; overflow: hidden; margin-bottom: 12px; }
+.blocco > .testa {
+  display: flex; align-items: center; gap: 9px;
+  padding: 11px 15px; font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 600; color: #fff;
+}
+.blocco > .dentro { padding: 13px 15px 15px; background: rgba(0,0,0,0.26); }
+.viola { background: linear-gradient(150deg,#7C5CF0,#5B3FD0); }
+.verde { background: linear-gradient(150deg,#1E9E76,#137A5A); }
+.ambra { background: linear-gradient(150deg,#D9922A,#B26F12); }
+.blu   { background: linear-gradient(150deg,#2D7FF0,#1B5FC4); }
+
+.pill { background: rgba(255,255,255,0.15); color: #fff; border: none; font: inherit; font-size: 15px; font-weight: 700; padding: 12px 16px; border-radius: 15px; cursor: pointer; }
+.pill.on { background: #fff; color: #1A1626; }
+.k { font-size: 12px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: rgba(255,255,255,0.62); margin-bottom: 7px; }
+
+/* ============ E1 — RIGHE GRANDI ============ */
+.E1 .voce { border-radius: 16px; background: rgba(255,255,255,0.05); margin-bottom: 9px; overflow: hidden; }
+.E1 .voce > .tit { display: flex; align-items: center; gap: 8px; padding: 8px 13px; background: rgba(255,255,255,0.07); font-size: 14px; font-weight: 700; }
+.E1 .voce > .tit .em { font-size: 17px; }
+.E1 .voce > .corpo { padding: 10px 13px 12px; }
+.E1 .forme { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.E1 .forma { width: 66px; height: 58px; border-radius: 13px; background: rgba(255,255,255,0.07); border: 3px solid transparent; overflow: hidden; padding: 0; cursor: pointer; }
+.E1 .forma.on { border-color: #FFD166; background: rgba(255,209,102,0.16); }
+.E1 .forma svg { width: 100%; height: 100%; display: block; }
+.E1 .tinte { display: flex; gap: 9px; flex-wrap: wrap; }
+.E1 .tinta { width: 40px; height: 40px; border-radius: 50%; border: 3px solid transparent; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25); cursor: pointer; }
+.E1 .tinta.on { border-color: #fff; transform: scale(1.08); }
+
+/* ============ E2 — TOCCA LA PARTE ============ */
+.E2 .palco { display: flex; gap: 14px; align-items: flex-start; }
+.E2 .persona { width: 168px; flex-shrink: 0; text-align: center; }
+.E2 .persona .av { width: 168px; height: 224px; border-radius: 20px; background: rgba(255,255,255,0.07); overflow: hidden; }
+.E2 .persona .av svg { width: 100%; height: 100%; display: block; }
+.E2 .persona .tratti { text-align: left; font-size: 13px; line-height: 1.5; color: rgba(255,255,255,0.9); margin-top: 9px; font-weight: 600; }
+.E2 .lato { flex: 1; min-width: 0; }
+.E2 .parti { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+.E2 .parte {
+  background: rgba(255,255,255,0.07); border: 2px solid transparent; border-radius: 15px;
+  padding: 10px 4px 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  color: #E9E9F2; font: inherit;
+}
+.E2 .parte .em { font-size: 24px; line-height: 1; }
+.E2 .parte span:last-child { font-size: 12px; font-weight: 700; }
+.E2 .parte.on { background: #FFD166; color: #221A00; border-color: #fff; }
+.E2 .pannello { background: rgba(0,0,0,0.3); border-radius: 17px; padding: 13px 14px 15px; }
+.E2 .forme { display: flex; gap: 9px; flex-wrap: wrap; margin-bottom: 12px; }
+.E2 .forma { width: 78px; height: 68px; border-radius: 15px; background: rgba(255,255,255,0.08); border: 3px solid transparent; overflow: hidden; padding: 0; cursor: pointer; }
+.E2 .forma.on { border-color: #FFD166; background: rgba(255,209,102,0.18); }
+.E2 .forma svg { width: 100%; height: 100%; display: block; }
+.E2 .tinte { display: flex; gap: 10px; flex-wrap: wrap; }
+.E2 .tinta { width: 46px; height: 46px; border-radius: 50%; border: 3px solid transparent; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25); cursor: pointer; }
+.E2 .tinta.on { border-color: #fff; transform: scale(1.08); }
+
+/* ============ E3 — PRIMA IL COLORE ============ */
+.E3 .palco { display: flex; gap: 14px; align-items: flex-start; }
+.E3 .persona { width: 150px; flex-shrink: 0; }
+.E3 .persona .av { width: 150px; height: 200px; border-radius: 18px; background: rgba(255,255,255,0.07); overflow: hidden; }
+.E3 .persona .av svg { width: 100%; height: 100%; display: block; }
+.E3 .lato { flex: 1; min-width: 0; }
+.E3 .capo { background: rgba(255,255,255,0.05); border-radius: 16px; padding: 11px 13px 13px; margin-bottom: 10px; }
+.E3 .capo .tit { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; margin-bottom: 9px; }
+.E3 .capo .tit .em { font-size: 18px; }
+.E3 .capo .tit .ora { margin-left: auto; font-size: 12.5px; color: rgba(255,255,255,0.62); font-weight: 600; }
+.E3 .tinte { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+.E3 .tinta { aspect-ratio: 1; border-radius: 12px; border: 3px solid transparent; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.22); cursor: pointer; }
+.E3 .tinta.on { border-color: #fff; }
+.E3 .forme { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 9px; }
+.E3 .forma { height: 44px; padding: 0 12px; border-radius: 12px; background: rgba(255,255,255,0.08); border: 2px solid transparent; color: #E9E9F2; font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+.E3 .forma.on { border-color: #FFD166; background: rgba(255,209,102,0.16); color: #FFD166; }
+.E3 .resto { display: flex; gap: 8px; flex-wrap: wrap; }
+.E3 .resto button { flex: 1 1 120px; background: rgba(255,255,255,0.06); border: none; border-radius: 14px; padding: 11px; color: #C2C2D4; font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+
+/* --- schermata Nuovo in linguaggio C --- */
+.N .fila { display: flex; gap: 9px; flex-wrap: wrap; }
+.N .grande { font-family: 'Fredoka', sans-serif; font-size: 34px; font-weight: 700; color: #fff; }
+.N .tondo { width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,0.16); border: none; color: #fff; font-size: 22px; cursor: pointer; }
+.N .scelta { flex: 1 1 96px; background: rgba(255,255,255,0.14); border: none; border-radius: 15px; padding: 13px 0; color: #fff; font: inherit; font-size: 16px; font-weight: 700; cursor: pointer; }
+.N .scelta.on { background: #fff; color: #1A1626; }
+.N .ruoli { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; }
+.N .ruolo { background: rgba(255,255,255,0.12); border: none; border-radius: 15px; padding: 9px 2px 7px; color: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.N .ruolo .em { font-size: 27px; line-height: 1; }
+.N .ruolo span:last-child { font-size: 11.5px; font-weight: 700; }
+.N .bracc { display: flex; gap: 8px; align-items: center; margin-left: auto; }
+.N .bracc i { width: 34px; height: 34px; border-radius: 50%; display: block; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.35); }
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <h1>Come gestiamo l'avatar</h1>
+  <p>Tutto già nel linguaggio di <b>C — Blocchi</b>: colore pieno, forme ciccione, testo bianco.
+  Qui cambia solo <i>come</i> si vestono le persone. Dimmi E1, E2 o E3.</p>
+</div>
+
+<!-- =============== E1 =============== -->
+<div class="strada">
+  <header><span class="n">E1</span><h2>Righe grandi</h2></header>
+  <p class="perche">Tutto a vista, una riga per capo, con miniature e pastiglie <b>grandi</b>.
+  Nessun tocco in più per arrivare a niente. In cambio è <b>lungo</b>: per arrivare alle scarpe
+  si scorre. È l'editor di adesso, ma respirato e leggibile.</p>
+  <div class="telaio E1">
+    <div class="blocco viola">
+      <div class="testa"><span>🎨</span> Com'è vestita — Nonna</div>
+      <div class="dentro">
+        <div class="voce"><div class="tit"><span class="em">💇</span> Capelli</div><div class="corpo">
+          <div class="forme" id="e1cap"></div>
+          <div class="tinte" data-tinte="capelli"></div>
+        </div></div>
+        <div class="voce"><div class="tit"><span class="em">👕</span> Maglietta</div><div class="corpo">
+          <div class="forme" id="e1top"></div>
+          <div class="tinte" data-tinte="capi"></div>
+        </div></div>
+        <div class="voce"><div class="tit"><span class="em">👖</span> Pantaloni</div><div class="corpo">
+          <div class="forme" id="e1pan"></div>
+          <div class="tinte" data-tinte="capi"></div>
+        </div></div>
+        <div style="text-align:center;color:rgba(255,255,255,0.5);font-size:13px;padding:6px">…poi cappello, scarpe, borsa, viso, pelle</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =============== E2 =============== -->
+<div class="strada">
+  <header><span class="n">E2</span><h2>Tocca la parte <span style="font-size:14px;color:#7FE8C1">← la consiglio</span></h2></header>
+  <p class="perche">Come i Mii della Wii: <b>scegli il pezzo</b> in alto e sotto compaiono le sue scelte,
+  belle grosse. La persona resta sempre a fianco e cambia sotto gli occhi. Nessuno scorrimento:
+  <b>tutto in una schermata</b>, e ogni modifica è a due tocchi. I pezzi sono tutti a vista,
+  non è un menù nascosto: è un selettore, esattamente come sulla Wii.</p>
+  <div class="telaio E2">
+    <div class="blocco viola">
+      <div class="testa"><span>🎨</span> Com'è vestita — Nonna</div>
+      <div class="dentro">
+        <div class="palco">
+          <div class="persona">
+            <div class="av" id="e2av"></div>
+            <div class="tratti">• Maglietta gialla<br>• Gonna nera<br>• Chignon grigi</div>
+          </div>
+          <div class="lato">
+            <div class="parti">
+              <button class="parte"><span class="em">💇</span><span>Capelli</span></button>
+              <button class="parte"><span class="em">🧢</span><span>Cappello</span></button>
+              <button class="parte on"><span class="em">👕</span><span>Maglietta</span></button>
+              <button class="parte"><span class="em">👖</span><span>Sotto</span></button>
+              <button class="parte"><span class="em">👟</span><span>Scarpe</span></button>
+              <button class="parte"><span class="em">🎒</span><span>Borsa</span></button>
+              <button class="parte"><span class="em">😎</span><span>Viso</span></button>
+              <button class="parte"><span class="em">✋</span><span>Pelle</span></button>
+            </div>
+            <div class="pannello">
+              <div class="k">Forma della maglietta</div>
+              <div class="forme" id="e2top"></div>
+              <div class="k">Colore</div>
+              <div class="tinte" data-tinte="capi"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =============== E3 =============== -->
+<div class="strada">
+  <header><span class="n">E3</span><h2>Prima il colore</h2></header>
+  <p class="perche">Parte dal fatto che all'uscita uno ricorda <b>il colore</b>, non il taglio: quindi
+  le tinte sono grosse e in griglia, le forme sono pastiglie scritte lì sotto. Cortissimo e
+  velocissimo per i tre capi che contano. Il resto sta in fondo, sempre a vista.
+  Il rischio: le forme scritte a parole tornano ad essere da leggere.</p>
+  <div class="telaio E3">
+    <div class="blocco viola">
+      <div class="testa"><span>🎨</span> Com'è vestita — Nonna</div>
+      <div class="dentro">
+        <div class="palco">
+          <div class="persona"><div class="av" id="e3av"></div></div>
+          <div class="lato">
+            <div class="capo">
+              <div class="tit"><span class="em">👕</span> Maglietta <span class="ora">gialla, tinta unita</span></div>
+              <div class="tinte" data-tinte="capi6"></div>
+              <div class="forme"><button class="forma on">Maglietta</button><button class="forma">Polo</button><button class="forma">Camicia</button><button class="forma">Felpa</button><button class="forma">Vestito</button></div>
+            </div>
+            <div class="capo">
+              <div class="tit"><span class="em">👖</span> Sotto <span class="ora">gonna nera</span></div>
+              <div class="tinte" data-tinte="capi6"></div>
+            </div>
+            <div class="resto">
+              <button>💇 Capelli</button><button>🧢 Cappello</button><button>👟 Scarpe</button><button>🎒 Borsa</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =============== la schermata Nuovo in C =============== -->
+<div class="strada">
+  <header><span class="n">+</span><h2>E il resto dell'app, in C</h2></header>
+  <p class="perche">Così diventano le altre schermate: ogni sezione è un <b>blocco col suo colore</b>
+  e il titolo dentro la fascia. Viola per quello che imposti, verde per il denaro, ambra per gli avvisi.
+  Il colore serve a ritrovare la sezione senza leggerne il nome.</p>
+  <div class="telaio N">
+    <div class="blocco blu">
+      <div class="testa"><span>🕒</span> Orario di inizio</div>
+      <div class="dentro">
+        <div class="fila" style="align-items:center">
+          <button class="tondo">−</button>
+          <span class="grande">21:30</span>
+          <button class="tondo">+</button>
+          <button class="pill" style="margin-left:10px">📍 Adesso</button>
+          <div class="bracc"><span class="k" style="margin:0">bracciale</span>
+            <i style="background:#22C55E"></i><i style="background:#FBBF24"></i><i style="background:#0EA5E9;box-shadow:inset 0 0 0 3px #fff"></i><i style="background:#E23D4B"></i></div>
+        </div>
+      </div>
+    </div>
+    <div class="blocco viola">
+      <div class="testa"><span>⏳</span> Quanto restano</div>
+      <div class="dentro"><div class="fila">
+        <button class="scelta">15m</button><button class="scelta">30m</button>
+        <button class="scelta on">1h</button><button class="scelta">1h30</button>
+        <button class="scelta">🕐 Paga dopo</button>
+      </div></div>
+    </div>
+    <div class="blocco ambra">
+      <div class="testa"><span>🧒</span> Bambini e attrazioni</div>
+      <div class="dentro"><div class="fila" style="align-items:center">
+        <span style="font-weight:700">🧒 Bambini</span>
+        <button class="tondo">−</button><span class="grande" style="font-size:27px">2</span><button class="tondo">+</button>
+        <span style="font-weight:700;margin-left:18px">🤸 Crazy Jumping</span>
+        <button class="tondo">−</button><span class="grande" style="font-size:27px">1</span><button class="tondo">+</button>
+      </div></div>
+    </div>
+    <div class="blocco verde">
+      <div class="testa"><span>🧑‍🤝‍🧑</span> Chi accompagna</div>
+      <div class="dentro"><div class="ruoli">
+        <button class="ruolo"><span class="em">👩</span><span>Mamma</span></button>
+        <button class="ruolo"><span class="em">👨</span><span>Papà</span></button>
+        <button class="ruolo"><span class="em">👵</span><span>Nonna</span></button>
+        <button class="ruolo"><span class="em">👴</span><span>Nonno</span></button>
+        <button class="ruolo"><span class="em">👧</span><span>Ragazza</span></button>
+        <button class="ruolo"><span class="em">👦</span><span>Ragazzo</span></button>
+        <button class="ruolo"><span class="em">🧑‍🍼</span><span>Baby</span></button>
+        <button class="ruolo"><span class="em">🧑</span><span>Altro</span></button>
+      </div></div>
+    </div>
+  </div>
+</div>
+
+<script src="./js/avatar.js"></script>
+<script>
+const base = AV.normalize({
+  role:'nonna', skin:'#F6CFA8',
+  hair:{style:'chignon',color:'#C9CDD3'},
+  top:{style:'maglietta',color:'#FBBF24',color2:'#F4F6F8',pattern:'solid'},
+  pants:{style:'gonna',color:'#1F2430',color2:'#F4F6F8',pattern:'solid'},
+  shoes:{style:'sneakers',color:'#F4F6F8'},
+  hat:{style:'none',color:'#E23D4B'}, glasses:'none', facial:'none', bag:{style:'none',color:'#7C4A2D'}
+}, 'nonna');
+
+['e2av','e3av'].forEach(id => { const e=document.getElementById(id); if(e) e.innerHTML = AV.build(base); });
+
+/* miniature ritagliate sul pezzo, come nell'app */
+function variante(cambio) {
+  const c = JSON.parse(JSON.stringify(base));
+  Object.assign(c, cambio);
+  return c;
+}
+function riempi(id, lista, campo, zona, attivo) {
+  const box = document.getElementById(id);
+  if (!box) return;
+  lista.forEach(it => {
+    const b = document.createElement('button');
+    b.className = 'forma' + (it.key === attivo ? ' on' : '');
+    b.title = it.label;
+    const c = JSON.parse(JSON.stringify(base));
+    if (campo === 'hair') c.hair.style = it.key;
+    if (campo === 'top') c.top.style = it.key;
+    if (campo === 'pants') c.pants.style = it.key;
+    b.innerHTML = AV.build(c, { zona: zona });
+    box.appendChild(b);
+  });
+}
+riempi('e1cap', AV.HAIR, 'hair', 'testa', 'chignon');
+riempi('e1top', AV.TOP, 'top', 'busto', 'maglietta');
+riempi('e1pan', AV.PANTS, 'pants', 'gambe', 'gonna');
+riempi('e2top', AV.TOP, 'top', 'busto', 'maglietta');
+
+/* pastiglie di colore */
+document.querySelectorAll('[data-tinte]').forEach(box => {
+  const tipo = box.dataset.tinte;
+  let lista = AV.COLORS, attivo = '#FBBF24';
+  if (tipo === 'capelli') { lista = AV.HAIR_COLORS; attivo = '#C9CDD3'; }
+  if (tipo === 'capi6') lista = AV.COLORS.slice(0, 12);
+  lista.forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'tinta' + (c.c.toLowerCase() === attivo.toLowerCase() ? ' on' : '');
+    b.style.background = c.c;
+    b.title = c.n[0];
+    box.appendChild(b);
+  });
+});
+
+/* il selettore delle parti in E2 funziona davvero, per provarlo */
+document.querySelectorAll('.E2 .parte').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('.E2 .parte').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    document.querySelector('.E2 .pannello .k').textContent =
+      'Forma — ' + b.lastElementChild.textContent;
+  };
+});
+</script>
+</body>
+</html>
