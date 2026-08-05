@@ -82,6 +82,10 @@
   --blk-rosso:  linear-gradient(150deg, #A64343 0%, #832E2E 100%);
   --blk-ciano:  linear-gradient(150deg, #1F6978 0%, #14515D 100%);
   --blk-grigio: linear-gradient(150deg, #4A4A5C 0%, #353544 100%);
+  /* "scelto" = giallo, in tutta l'app: tab attivo, pezzo dell'editor,
+     forma presa. Una convenzione sola da imparare. */
+  --sel:     #FFD166;
+  --sel-ink: #221A00;
 
   /* le barre in alto: velo sul fondo, non due pannelli opachi */
   --velo-barra:  rgba(255, 255, 255, 0.045);
@@ -264,9 +268,9 @@ h2 .ic, .e-panel-k .ic { width: 1.25em; height: 1.25em; }
 .tabs button .em { font-size: 17px; }
 .tabs button:active { transform: scale(0.96); }
 .tabs button.on {
-  background: var(--grad-accento);
-  color: var(--accent-ink);
-  box-shadow: var(--relief), var(--luce-accento);
+  background: var(--sel);
+  color: var(--sel-ink);
+  box-shadow: var(--relief), 0 4px 14px rgba(255, 209, 102, 0.28);
 }
 .tabs .badge {
   min-width: 21px;
@@ -281,7 +285,7 @@ h2 .ic, .e-panel-k .ic { width: 1.25em; height: 1.25em; }
   align-items: center;
   justify-content: center;
 }
-.tabs button.on .badge { background: var(--accent-ink); color: var(--accent); }
+.tabs button.on .badge { background: var(--sel-ink); color: var(--sel); }
 .tabs .badge[data-n="0"] { display: none; }
 
 .topbar .clock { font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 600; flex-shrink: 0; margin-left: 2px; color: var(--txt-2); }
@@ -330,7 +334,9 @@ h2 .ic, .e-panel-k .ic { width: 1.25em; height: 1.25em; }
 .ab-voce .num { font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 600; color: var(--txt-2); }
 
 .ab-tot { display: flex; align-items: baseline; gap: 7px; margin-left: auto; }
-.ab-tot .num { font-family: 'Fredoka', sans-serif; font-size: 23px; font-weight: 700; color: var(--accent); }
+/* il totale sta sulla barra, non dentro un blocco: qui il giallo pieno
+   sparirebbe sul tema chiaro. --warn e' ambra in tutti e due i temi. */
+.ab-tot .num { font-family: 'Fredoka', sans-serif; font-size: 23px; font-weight: 700; color: var(--warn); }
 .actionbar .btn { min-width: 140px; min-height: 42px; font-size: 15px; }
 
 main {
@@ -2061,6 +2067,81 @@ main {
 }
 .ed-pannello .ed-cols { margin-top: 4px; }
 
+
+/* ============================================================
+   I COMANDI DENTRO I BLOCCHI
+   Sopra un colore pieno non esiste il viola del tema: i comandi sono
+   bianco trasparente, e quello SCELTO e' bianco pieno con testo scuro.
+   Una regola sola, invece di venti eccezioni sparse.
+   ============================================================ */
+.blk .step-b, .entry .step-b,
+.blk .round-btn, .entry .round-btn,
+.blk .mini-b, .entry .mini-b,
+.blk .chip, .entry .chip,
+.blk .btn, .entry .btn,
+.blk .wp, .entry .wp,
+.blk .opt, .entry .opt,
+.blk .bar-row, .entry .bar-row,
+.blk .add-person, .entry .add-person {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: none;
+}
+/* il "+" pesa un filo di piu' del "−": e' quello che si usa */
+.blk .step-b.plus, .entry .step-b.plus,
+.blk .round-btn.plus, .entry .round-btn.plus {
+  background: rgba(255, 255, 255, 0.30);
+  color: #fff;
+}
+.blk .step-b:disabled, .entry .step-b:disabled { opacity: 0.35; }
+
+/* quello scelto: bianco pieno, si vede da lontano quale hai preso */
+.blk .chip.on, .entry .chip.on,
+.blk .wp.on, .entry .wp.on,
+.blk .opt.on, .entry .opt.on,
+.blk .pill.on, .entry .pill.on,
+.blk .btn-primary, .blk .btn-ok {
+  background: #fff;
+  color: #1A1626;
+  border-color: transparent;
+}
+.blk .bar-row.has-qty, .entry .bar-row.has-qty {
+  background: rgba(255, 255, 255, 0.30);
+  border-color: rgba(255, 255, 255, 0.55);
+}
+.blk .wp-preset { background: rgba(255,255,255,0.24); border-color: rgba(255,255,255,0.4); }
+
+/* interruttori */
+.blk .switch { background: rgba(0, 0, 0, 0.34); border-color: rgba(255,255,255,0.22); }
+.blk .switch.on { background: #fff; }
+.blk .switch.on::after { background: #1A1626; }
+.blk .switch::after { background: rgba(255,255,255,0.85); }
+
+/* campi da scrivere */
+.blk input, .blk textarea, .blk select,
+.entry input, .entry textarea {
+  background: rgba(0, 0, 0, 0.26);
+  border-color: rgba(255, 255, 255, 0.20);
+  color: #fff;
+}
+.blk input::placeholder, .entry input::placeholder { color: rgba(255, 255, 255, 0.55); }
+.blk input:focus, .entry input:focus { outline-color: #fff; background: rgba(0, 0, 0, 0.34); }
+
+/* nell'editor: il pezzo scelto e la forma scelta restano GIALLI, cosi'
+   "dove sono" e "cosa ho preso" non si confondono col bianco */
+.blk .ed-opt.on, .entry .ed-opt.on {
+  border-color: var(--sel);
+  background: rgba(255, 209, 102, 0.20);
+}
+.blk .ed-opt.on > span, .entry .ed-opt.on > span { color: var(--sel); }
+.blk .ed-col.on, .entry .ed-col.on { border-color: #fff; }
+.blk .wm-row.on, .entry .wm-row.on { border-color: #fff; background: rgba(255,255,255,0.18); }
+
+/* pastiglie dei tratti e conteggi */
+.blk .trait, .entry .trait { background: rgba(0, 0, 0, 0.22); }
+.blk .pay-line.done .chk, .entry .pay-line.done .chk { background: #fff; border-color: #fff; color: #1A1626; }
+
 /* ---------- accesso al cloud ----------
    Schermata piena, ma non è un muro: c'è sempre la via d'uscita per
    lavorare su questo tablet, altrimenti un wifi ballerino chiude la cassa. */
@@ -2313,3 +2394,20 @@ main {
 .avviso-versione .av-txt b { font-size: 15px; }
 .avviso-versione .av-txt span { font-size: 13px; color: rgba(255,255,255,0.85); }
 .avviso-versione .btn { background: rgba(0,0,0,0.3); color: #fff; border-color: rgba(255,255,255,0.3); }
+
+/* tre rimasugli del vecchio tema, trovati misurando */
+/* 1. il tasto aperto: il testo prendeva --c-bg, che dentro la scheda e'
+      un nero trasparente -> nero su bianco quasi invisibile */
+.entry .e-act.on, .blk .e-act.on { background: #fff; color: #1A1626; }
+/* 2. "tutti -> X EUR" era verde su verde slavato */
+.entry .pay-all, .blk .pay-all {
+  background: rgba(0, 0, 0, 0.32);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+/* 3. i tasti dentro una riga gia' schiarita vanno scuriti, non schiariti
+      ancora: due veli bianchi uno sull'altro mangiano il contrasto */
+.blk .copia-riga .btn, .blk .row-edit .btn, .blk .preset .btn {
+  background: rgba(0, 0, 0, 0.32);
+  border-color: rgba(255, 255, 255, 0.28);
+}
