@@ -2533,3 +2533,50 @@ main {
 .entry .e-step { flex: 1 1 118px; min-width: 0; }
 .entry .e-step .ctrl { justify-content: space-between; }
 .entry .e-step .v { flex: 1; }
+
+/* ============================================================
+   PARI AL MODELLO C, misurato elemento per elemento
+   ============================================================ */
+/* 1. i tasti in fondo sono CHIARI sul colore, non scuri: e' quello che
+      cambia di piu' l'aria della scheda.
+      Il velo e' 0,12 e non 0,16 come nel modello: a 0,16 il fondo si
+      schiarisce troppo e la scritta bianca scende a 4,35 (serve 4,5).
+      Il modello non era stato misurato. */
+.entry .e-act {
+  background: rgba(255, 255, 255, 0.12);
+  min-height: 46px;
+  padding: 11px 8px;
+  font-size: 15px;
+}
+.entry .e-act.on, .entry .e-act.out { background: #fff; color: #1A1626; }
+
+/* 2. e 3. tratti e soldi: testo direttamente sul colore, senza riquadro.
+      I riquadri li avevo aggiunti io e appesantivano tutto. */
+.entry .e-costs {
+  background: none;
+  border-radius: 0;
+  padding: 0;
+  gap: 14px;
+  font-size: 15px;
+}
+.entry .e-traits {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  font-size: 13px;
+  gap: 3px;
+}
+
+/* le misure del modello */
+.entry .e-body { padding: 14px 16px 16px; gap: 11px; }
+.entry .e-count { font-size: 42px; }
+.entry .e-step { padding: 8px 12px; }
+.entry .e-step .v { font-size: 22px; }
+.entry .e-bar-track { height: 8px; }
+.entry .e-due .v { font-size: 26px; }
+.entry .e-who { width: auto; padding: 14px; gap: 7px; }
+.entry .e-role { font-size: 18px; padding-right: 0; text-align: center; align-self: center; }
+.entry .e-avatars .av { width: 116px; height: 156px; }
+.entry .e-wrist { padding: 5px 12px 5px 6px; }
+.entry .e-wrist .dot { width: 17px; height: 17px; }
+.entry .e-wrist .lab { font-size: 11.5px; font-weight: 800; }
