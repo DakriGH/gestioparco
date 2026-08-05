@@ -2196,3 +2196,102 @@ main {
   border-color: rgba(255, 255, 255, 0.28);
 }
 .blk .rm:active, .blk .del:active { background: #8E2230; }
+
+/* ============================================================
+   LA FORMA DI "C": pastiglie scure sul colore pieno.
+   Non basta tingere la scheda: il modello che gli e' piaciuto ha gli
+   orari in una pastiglia, i numeri dentro riquadri scuri arrotondati,
+   l'avatar in un riquadro (non un tondo) e il bracciale come pastiglia
+   scritta sotto i tratti.
+   ============================================================ */
+.entry { border-radius: 22px; }
+
+/* gli orari: pastiglia scura, non testo nudo */
+.entry .e-range {
+  background: rgba(0, 0, 0, 0.24);
+  border-radius: 20px;
+  padding: 5px 13px;
+  font-size: 17px;
+}
+.entry .e-range .arrow { color: rgba(255, 255, 255, 0.7); }
+
+/* i numeri: riquadri scuri arrotondati, etichetta sopra e valore grosso */
+.entry .e-step {
+  background: rgba(0, 0, 0, 0.24);
+  border-radius: 15px;
+  padding: 7px 11px 9px;
+}
+.entry .e-step .k { font-size: 12px; font-weight: 700; color: rgba(255, 255, 255, 0.78); }
+.entry .e-step .v { font-size: 24px; }
+.entry .e-step .step-b { background: rgba(255, 255, 255, 0.20); color: #fff; border: none; }
+.entry .e-step .step-b:disabled { opacity: 0.35; }
+
+/* la riga dei soldi */
+.entry .e-costs { background: rgba(0, 0, 0, 0.24); border-radius: 15px; }
+
+/* i tasti in fondo */
+.entry .e-act { border-radius: 15px; font-weight: 700; }
+
+/* --- il pannello del riferimento --- */
+.entry .e-who { padding: 13px 13px 15px; gap: 8px; }
+.entry .e-role { font-size: 19px; }
+.entry .e-names { font-size: 13.5px; padding-right: 0; text-align: center; align-self: center; color: rgba(255,255,255,0.82); }
+
+/* l'avatar in un RIQUADRO arrotondato, come nel modello */
+.entry .e-avatars .av {
+  width: 128px;
+  height: 168px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.10);
+  box-shadow: inset 0 0 0 2px var(--brace-orlo, rgba(255,255,255,0.22));
+}
+.entry .e-avatars.multi .av { width: 92px; height: 124px; margin-left: -18px; border-radius: 15px; }
+.entry .e-avatars.multi .av:first-child { margin-left: 0; }
+.entry.con-bracciale .e-avatars::before {
+  inset: -6px;
+  border-radius: 22px;
+  background: radial-gradient(circle at 50% 55%, var(--brace) 0%, transparent 70%);
+}
+
+/* il bracciale: pastiglia scritta, sotto i tratti */
+.entry .e-wrist {
+  position: static;
+  flex-direction: row;
+  gap: 8px;
+  align-self: center;
+  padding: 6px 14px 6px 7px;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.30);
+  margin-top: 2px;
+}
+.entry .e-wrist .dot {
+  width: 20px;
+  height: 20px;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.5);
+}
+.entry .e-wrist .lab { font-size: 12px; color: #fff; letter-spacing: 0.05em; }
+.entry .e-wrist:hover { background: rgba(0, 0, 0, 0.42); }
+
+/* i tratti: elenco puntato a sinistra dentro il riquadro scuro */
+.entry .e-traits { background: rgba(0, 0, 0, 0.24); border-radius: 14px; padding: 9px 12px; }
+
+/* il numero dei bambini appeso all'avatar */
+.entry .e-kids-badge { border-radius: 16px; }
+
+/* nel modello la pastiglia del bracciale sta IN FONDO, sotto i tratti:
+   prima si guarda chi e', poi di che colore ha il polso */
+.entry .e-who > * { order: 2; }
+.entry .e-who .e-role { order: 1; }
+.entry .e-who .e-names { order: 1; }
+.entry .e-who .e-avatars { order: 1; }
+.entry .e-who .e-traits { order: 3; }
+.entry .e-who .e-note { order: 4; }
+.entry .e-who .e-wrist { order: 5; margin-top: 4px; }
+/* un filo piu' compatto: cosi' le due colonne finiscono quasi pari e
+   non resta l'aria in mezzo alla scheda */
+.entry .e-avatars .av { width: 112px; height: 140px; }
+.entry .e-traits { font-size: 12.8px; line-height: 1.32; padding: 8px 11px; }
+.entry .e-who { gap: 6px; padding: 11px 12px 13px; }
+/* il corpo distribuisce lo spazio invece di lasciare un buco prima dei
+   tasti: le due colonne finiscono pari */
+.entry .e-body { justify-content: space-evenly; padding: 13px 15px; }
