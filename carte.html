@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Come rifarei le schede</title>
+<link rel="stylesheet" href="./css/fonts.css">
+<style>
+/* ============================================================
+   Quattro modi di impaginare la stessa scheda.
+   Stessi sei gruppi in tutte e quattro: quello che cambia e'
+   quanto spazio prendono e cosa si vede senza toccare niente.
+   ============================================================ */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #12121A; color: #E9E9F2; padding: 0 0 80px; }
+.intro { padding: 22px 18px 4px; max-width: 900px; margin: 0 auto; }
+.intro h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 8px; }
+.intro p { color: #A8A8BD; font-size: 15px; line-height: 1.55; margin: 0 0 8px; }
+.intro b { color: #FFD166; font-weight: 600; }
+
+.strada { max-width: 900px; margin: 0 auto; padding: 26px 18px 6px; }
+.strada > header { display: flex; align-items: baseline; gap: 12px; }
+.strada > header .n { font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 700; background: #2A2A36; color: #FFD166; border-radius: 20px; padding: 4px 12px; }
+.strada > header h2 { font-family: 'Fredoka', sans-serif; font-size: 23px; margin: 0; }
+.veloce { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 12px; }
+.veloce span { font-size: 12.5px; font-weight: 700; background: #22222E; color: #C2C2D4; border-radius: 20px; padding: 5px 11px; }
+.veloce span.buono { background: #16382C; color: #7FE8C1; }
+.veloce span.cosi { background: #3A2F16; color: #FFD166; }
+.veloce span.male { background: #3A1E22; color: #FF9AA2; }
+.perche { color: #9A9AB0; font-size: 14.5px; line-height: 1.55; margin: 0 0 14px; }
+.perche b { color: #FFD166; font-weight: 600; }
+.telaio { border-radius: 18px; padding: 12px; background: #17171F; border: 1px solid rgba(255,255,255,0.09); }
+.schermo { border-top: 2px dashed rgba(255,255,255,0.22); margin: 10px 0 4px; padding-top: 6px; font-size: 11.5px; font-weight: 800; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* --- tinte di stato, comuni --- */
+.ok    { background: linear-gradient(150deg,#1E9E76,#137A5A); }
+.warn  { background: linear-gradient(150deg,#D9922A,#B26F12); }
+.late  { background: linear-gradient(150deg,#E05A5A,#B93636); }
+.dopo  { background: linear-gradient(150deg,#2D9BB0,#1B7387); }
+.av img, .av svg { width: 100%; height: 100%; display: block; }
+.tondo { border-radius: 50%; }
+
+/* ============ R1 — RIGA ============ */
+.R1 .riga {
+  display: flex; align-items: center; gap: 12px;
+  border-radius: 16px; padding: 10px 12px; margin-bottom: 8px; color: #fff;
+}
+.R1 .av { width: 58px; height: 58px; border-radius: 14px; background: rgba(255,255,255,0.12); overflow: hidden; flex-shrink: 0; }
+.R1 .av svg { width: 160%; height: 160%; margin: -14% 0 0 -30%; }
+.R1 .chi { flex: 1; min-width: 0; }
+.R1 .chi b { font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 600; display: block; }
+.R1 .chi span { font-size: 12.5px; color: rgba(255,255,255,0.85); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.R1 .brac { width: 22px; height: 22px; border-radius: 50%; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.55); flex-shrink: 0; }
+.R1 .conto { font-family: 'Fredoka', sans-serif; font-size: 30px; font-weight: 700; min-width: 104px; text-align: right; }
+.R1 .eur { font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 700; min-width: 84px; text-align: right; }
+.R1 .piu { width: 44px; height: 44px; border-radius: 13px; background: rgba(255,255,255,0.16); border: none; color: #fff; font-size: 20px; flex-shrink: 0; }
+.R1 .aperta { background: rgba(0,0,0,0.26); border-radius: 0 0 16px 16px; margin: -8px 0 8px; padding: 11px 12px 12px; display: flex; gap: 9px; flex-wrap: wrap; align-items: center; }
+.R1 .cella { background: rgba(0,0,0,0.28); border-radius: 13px; padding: 6px 11px; }
+.R1 .cella .k { font-size: 11px; color: rgba(255,255,255,0.7); }
+.R1 .cella .v { font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 700; }
+.R1 .tasti { display: flex; gap: 8px; margin-left: auto; }
+.R1 .tasti button { background: rgba(255,255,255,0.14); border: none; color: #fff; font: inherit; font-size: 14px; font-weight: 700; padding: 10px 14px; border-radius: 13px; }
+.R1 .tasti button.forte { background: #fff; color: #123A2C; }
+
+/* ============ R2 — DUE RIGHE ============ */
+.R2 .scheda { border-radius: 18px; padding: 11px 13px 12px; margin-bottom: 9px; color: #fff; }
+.R2 .su { display: flex; align-items: center; gap: 12px; }
+.R2 .av { width: 62px; height: 62px; border-radius: 15px; background: rgba(255,255,255,0.12); overflow: hidden; flex-shrink: 0; }
+.R2 .av svg { width: 160%; height: 160%; margin: -14% 0 0 -30%; }
+.R2 .chi { flex: 1; min-width: 0; }
+.R2 .chi b { font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 600; display: block; }
+.R2 .chi span { font-size: 12.5px; color: rgba(255,255,255,0.88); }
+.R2 .brac { display: inline-flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.3); border-radius: 20px; padding: 3px 10px 3px 4px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+.R2 .brac i { width: 15px; height: 15px; border-radius: 50%; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.5); }
+.R2 .conto { font-family: 'Fredoka', sans-serif; font-size: 32px; font-weight: 700; }
+.R2 .eur { font-family: 'Fredoka', sans-serif; font-size: 21px; font-weight: 700; min-width: 88px; text-align: right; }
+.R2 .giu { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.R2 .cella { display: flex; align-items: center; gap: 7px; background: rgba(0,0,0,0.26); border-radius: 13px; padding: 5px 8px; }
+.R2 .cella .v { font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 700; min-width: 24px; text-align: center; }
+.R2 .cella button { width: 32px; height: 32px; border-radius: 10px; background: rgba(255,255,255,0.18); border: none; color: #fff; font-size: 17px; }
+.R2 .tasti { display: flex; gap: 7px; margin-left: auto; }
+.R2 .tasti button { width: 46px; height: 42px; border-radius: 13px; background: rgba(255,255,255,0.14); border: none; color: #fff; font-size: 19px; }
+.R2 .tasti button.forte { background: #fff; }
+
+/* ============ R3 — TESSERE A DUE COLONNE ============ */
+.R3 .griglia { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.R3 .tessera { border-radius: 18px; padding: 12px; color: #fff; }
+.R3 .su { display: flex; gap: 11px; align-items: flex-start; }
+.R3 .av { width: 76px; height: 96px; border-radius: 14px; background: rgba(255,255,255,0.12); overflow: hidden; flex-shrink: 0; }
+.R3 .chi { flex: 1; min-width: 0; }
+.R3 .chi b { font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 600; display: block; }
+.R3 .chi .tr { font-size: 12px; color: rgba(255,255,255,0.88); line-height: 1.45; }
+.R3 .conto { font-family: 'Fredoka', sans-serif; font-size: 30px; font-weight: 700; line-height: 1; }
+.R3 .brac { display: inline-flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.3); border-radius: 20px; padding: 2px 9px 2px 3px; font-size: 10.5px; font-weight: 800; text-transform: uppercase; margin-top: 5px; }
+.R3 .brac i { width: 13px; height: 13px; border-radius: 50%; }
+.R3 .giu { display: flex; align-items: center; gap: 7px; margin-top: 10px; }
+.R3 .eur { font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 700; }
+.R3 .tasti { display: flex; gap: 6px; margin-left: auto; }
+.R3 .tasti button { width: 40px; height: 38px; border-radius: 12px; background: rgba(255,255,255,0.14); border: none; color: #fff; font-size: 17px; }
+.R3 .tasti button.forte { background: #fff; }
+
+/* ============ R4 — RIGA CON I NUMERI ============ */
+.R4 .riga { display: flex; align-items: center; gap: 11px; border-radius: 16px; padding: 9px 12px; margin-bottom: 8px; color: #fff; }
+.R4 .av { width: 54px; height: 54px; border-radius: 13px; background: rgba(255,255,255,0.12); overflow: hidden; flex-shrink: 0; }
+.R4 .av svg { width: 160%; height: 160%; margin: -14% 0 0 -30%; }
+.R4 .chi { min-width: 116px; }
+.R4 .chi b { font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 600; display: block; }
+.R4 .chi span { font-size: 12px; color: rgba(255,255,255,0.85); }
+.R4 .brac { width: 20px; height: 20px; border-radius: 50%; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.55); flex-shrink: 0; }
+.R4 .num { display: flex; gap: 6px; }
+.R4 .num span { background: rgba(0,0,0,0.26); border-radius: 11px; padding: 4px 9px; font-size: 13px; font-weight: 700; }
+.R4 .conto { font-family: 'Fredoka', sans-serif; font-size: 27px; font-weight: 700; margin-left: auto; min-width: 96px; text-align: right; }
+.R4 .eur { font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 700; min-width: 78px; text-align: right; }
+.R4 .piu { width: 42px; height: 42px; border-radius: 12px; background: rgba(255,255,255,0.16); border: none; color: #fff; font-size: 19px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <h1>Come rifarei le schede</h1>
+  <p>Il problema non è come sono disegnate: è che <b>mostrano tutto sempre</b>. Countdown, orari,
+  barra, tre numeri con i tasti, tre importi, quattro azioni, avatar, quattro tratti e il bracciale
+  — per <i>ogni</i> gruppo, anche per i cinque che non stai toccando.</p>
+  <p>Quello che serve davvero <b>a colpo d'occhio</b> è: sta scadendo? chi è? quanto deve? Il resto
+  serve solo quando agisci su quel gruppo, cioè un gruppo alla volta.</p>
+  <p>Sotto, gli stessi <b>sei gruppi</b> in quattro impaginazioni. La riga tratteggiata è dove
+  finisce lo schermo del tuo tablet.</p>
+</div>
+
+<div class="strada">
+  <header><span class="n">R1</span><h2>Una riga per gruppo</h2></header>
+  <div class="veloce"><span class="buono">📏 78px l'una</span><span class="buono">👁️ 12 gruppi a schermata</span><span class="cosi">👆 1 tocco per agire</span></div>
+  <p class="perche">Ogni gruppo è <b>una riga sola</b>: chi è, il bracciale, quanto manca, quanto deve.
+  I numeri e le azioni compaiono <b>sotto la riga che tocchi</b>, una alla volta (la prima qui sotto è
+  aperta per farti vedere come). Passi da <b>2</b> gruppi a schermata a <b>12</b>.
+  È la più adatta a un parco pieno: scorri l'elenco e vedi subito chi sta per scadere.</p>
+  <div class="telaio R1" id="R1"></div>
+</div>
+
+<div class="strada">
+  <header><span class="n">R2</span><h2>Due righe, niente nascosto</h2></header>
+  <div class="veloce"><span class="cosi">📏 137px l'una</span><span class="cosi">👁️ 7 gruppi</span><span class="buono">👆 0 tocchi: c'è tutto</span></div>
+  <p class="perche">Come adesso ma <b>disteso in orizzontale</b> invece che impilato: sopra chi è e
+  quanto manca, sotto i tre numeri e le quattro azioni. <b>Non si apre niente</b>, tutto è già lì.
+  Meno gruppi a schermata di R1, ma zero tocchi per fare qualsiasi cosa.</p>
+  <div class="telaio R2" id="R2"></div>
+</div>
+
+<div class="strada">
+  <header><span class="n">R3</span><h2>Tessere a due colonne</h2></header>
+  <div class="veloce"><span class="buono">📏 2 per riga, 180px</span><span class="buono">👁️ 10 gruppi</span><span class="cosi">👆 0 tocchi</span><span class="male">🔍 avatar più piccolo</span></div>
+  <p class="perche">Sfrutta la larghezza mettendo <b>due gruppi affiancati</b>. Dieci a schermata con
+  tutto in vista. Il prezzo: l'avatar scende a 76×96 e i tratti a due righe, quindi <b>riconoscere
+  la persona all'uscita è un po' più faticoso</b> — che è proprio la cosa per cui esiste l'app.
+  Te la metto perché sullo spazio è la migliore.</p>
+  <div class="telaio R3"><div class="griglia" id="R3"></div></div>
+</div>
+
+<div class="strada">
+  <header><span class="n">R4</span><h2>Riga con i numeri in vista</h2></header>
+  <div class="veloce"><span class="buono">📏 72px l'una</span><span class="buono">👁️ 13 gruppi</span><span class="cosi">👆 1 tocco per i tasti</span></div>
+  <p class="perche">La più stretta: una riga con <b>anche i tre numeri</b> (2 bambini, 1 crazy, 45′)
+  scritti come pastigliette, ma <b>senza</b> i tasti per cambiarli. Quelli, e le quattro azioni,
+  compaiono col tocco. Tredici gruppi a schermata: da qui si governa un parco pieno.
+  Il rischio: la riga è densa, e i tratti della persona non ci stanno.</p>
+  <div class="telaio R4" id="R4"></div>
+</div>
+
+<div class="strada">
+  <header><span class="n">≡</span><h2>Cosa toglierei, in ogni caso</h2></header>
+  <p class="perche">
+  <b>Gli orari «23:55 → 00:40»</b>: dicono la stessa cosa del countdown, che è più immediato.
+  Li terrei solo nella parte che si apre.<br>
+  <b>La barra che si svuota</b>: è un terzo modo di dire la stessa cosa (colore + countdown + barra).<br>
+  <b>«alla scadenza»</b>: lo dice già il colore.<br>
+  <b>«Parco 14,00 € · Bar —»</b>: alla cassa serve <b>un</b> numero, quanto deve. Il dettaglio sta nel Conto.<br>
+  <b>Il quarto tratto</b>: due bastano per riconoscere («maglietta gialla, gonna nera»); gli altri
+  nella parte aperta.<br>
+  E <b>accorperei Bar e Conto</b> in un solo pannello «Conto», con il bar dentro come sezione:
+  sono la stessa operazione, e libera un tasto.</p>
+</div>
+
+<script src="./js/avatar.js"></script>
+<script>
+const GRUPPI = [
+  { nome:'Nonna',  stato:'late', conto:'−12:40', eur:'21,00 €', brac:'#E23D4B', bl:'rosso',  k:2, c:1, t:'45′',
+    av:{role:'nonna',skin:'#F6CFA8',hair:{style:'chignon',color:'#C9CDD3'},top:{style:'maglietta',color:'#FBBF24',color2:'#F4F6F8',pattern:'solid'},pants:{style:'gonna',color:'#1F2430',color2:'#F4F6F8',pattern:'solid'},shoes:{style:'sneakers',color:'#F4F6F8'},hat:{style:'none',color:'#E23D4B'},glasses:'none',facial:'none',bag:{style:'none',color:'#7C4A2D'}},
+    tr:'Maglietta gialla · Gonna nera' },
+  { nome:'Ragazzo', stato:'warn', conto:'04:12', eur:'7,00 €', brac:'#FBBF24', bl:'giallo', k:1, c:0, t:'45′',
+    av:{role:'ragazzo',skin:'#E8B98A',hair:{style:'ricci',color:'#1B1714'},top:{style:'maglietta',color:'#22C55E',color2:'#F4F6F8',pattern:'solid'},pants:{style:'pantaloncini',color:'#2547C4',color2:'#F4F6F8',pattern:'solid'},shoes:{style:'sneakers',color:'#F4F6F8'},hat:{style:'none',color:'#E23D4B'},glasses:'none',facial:'none',bag:{style:'none',color:'#7C4A2D'}},
+    tr:'Maglietta verde · Pantaloncini blu' },
+  { nome:'Mamma', stato:'ok', conto:'28:05', eur:'14,00 €', brac:'#22C55E', bl:'verde', k:2, c:0, t:'60′',
+    av:{role:'mamma',skin:'#FFE0C0',hair:{style:'lunghi',color:'#4A2E1E'},top:{style:'camicia',color:'#EC4899',color2:'#F4F6F8',pattern:'solid'},pants:{style:'pantaloni',color:'#2547C4',color2:'#F4F6F8',pattern:'solid'},shoes:{style:'sneakers',color:'#F4F6F8'},hat:{style:'none',color:'#E23D4B'},glasses:'none',facial:'none',bag:{style:'borsa',color:'#7C4A2D'}},
+    tr:'Camicia rosa · Borsa marrone' },
+  { nome:'Papà', stato:'ok', conto:'41:33', eur:'9,00 €', brac:'#0EA5E9', bl:'azzurro', k:1, c:1, t:'60′',
+    av:{role:'papa',skin:'#D19A68',hair:{style:'corti',color:'#1B1714'},top:{style:'polo',color:'#2547C4',color2:'#F4F6F8',pattern:'solid'},pants:{style:'pantaloni',color:'#1F2430',color2:'#F4F6F8',pattern:'solid'},shoes:{style:'sneakers',color:'#F4F6F8'},hat:{style:'cappellino',color:'#E23D4B'},glasses:'none',facial:'barba',bag:{style:'none',color:'#7C4A2D'}},
+    tr:'Polo blu · Cappellino rosso' },
+  { nome:'Nonno', stato:'ok', conto:'55:19', eur:'12,00 €', brac:'#22C55E', bl:'verde', k:3, c:0, t:'90′',
+    av:{role:'nonno',skin:'#F6CFA8',hair:{style:'pelato',color:'#C9CDD3'},top:{style:'camicia',color:'#9AA5B4',color2:'#F4F6F8',pattern:'solid'},pants:{style:'pantaloni',color:'#7C4A2D',color2:'#F4F6F8',pattern:'solid'},shoes:{style:'sandali',color:'#7C4A2D'},hat:{style:'panama',color:'#FBBF24'},glasses:'vista',facial:'baffi',bag:{style:'none',color:'#7C4A2D'}},
+    tr:'Cappello di paglia · Camicia grigia' },
+  { nome:'Ragazza', stato:'dopo', conto:'paga dopo', eur:'—', brac:'#8B5CF6', bl:'viola', k:1, c:2, t:'—',
+    av:{role:'ragazza',skin:'#E8B98A',hair:{style:'codino',color:'#8B5A2B'},top:{style:'maglietta',color:'#EC4899',color2:'#F4F6F8',pattern:'dots'},pants:{style:'pantaloncini',color:'#2547C4',color2:'#F4F6F8',pattern:'solid'},shoes:{style:'sneakers',color:'#F4F6F8'},hat:{style:'none',color:'#E23D4B'},glasses:'sole',facial:'none',bag:{style:'zaino',color:'#22C55E'}},
+    tr:'Maglietta rosa a pois · Zaino verde' }
+];
+GRUPPI.forEach(g => { g.sprite = AV.build(AV.normalize(g.av, g.av.role)); });
+
+/* --- R1: una riga, la prima aperta --- */
+const r1 = document.getElementById('R1');
+GRUPPI.forEach((g, i) => {
+  const d = document.createElement('div');
+  d.className = 'riga ' + g.stato;
+  d.innerHTML =
+    '<div class="av">' + g.sprite + '</div>' +
+    '<div class="chi"><b>' + g.nome + '</b><span>' + g.tr + '</span></div>' +
+    '<span class="brac" style="background:' + g.brac + '"></span>' +
+    '<div class="conto">' + g.conto + '</div>' +
+    '<div class="eur">' + g.eur + '</div>' +
+    '<button class="piu">⋯</button>';
+  r1.appendChild(d);
+  if (i === 0) {
+    const a = document.createElement('div');
+    a.className = 'aperta ' + g.stato;
+    a.innerHTML =
+      '<div class="cella"><div class="k">🧒 Bambini</div><div class="v">− ' + g.k + ' +</div></div>' +
+      '<div class="cella"><div class="k">🤸 Crazy</div><div class="v">− ' + g.c + ' +</div></div>' +
+      '<div class="cella"><div class="k">⏱️ Tempo</div><div class="v">−5 ' + g.t + ' +5</div></div>' +
+      '<div class="tasti"><button>🧾 Conto</button><button>✏️</button><button class="forte">🚪 Uscita</button></div>';
+    r1.appendChild(a);
+  }
+  if (i === 8) { const s = document.createElement('div'); s.className = 'schermo'; s.textContent = 'fine schermata'; r1.appendChild(s); }
+});
+const s1 = document.createElement('div'); s1.className = 'schermo'; s1.textContent = '↑ ci stanno 12 gruppi in una schermata (adesso ne stanno 2)'; r1.appendChild(s1);
+
+/* --- R2: due righe --- */
+const r2 = document.getElementById('R2');
+GRUPPI.forEach(g => {
+  const d = document.createElement('div');
+  d.className = 'scheda ' + g.stato;
+  d.innerHTML =
+    '<div class="su">' +
+      '<div class="av">' + g.sprite + '</div>' +
+      '<div class="chi"><b>' + g.nome + '</b><span>' + g.tr + '</span><br>' +
+        '<span class="brac"><i style="background:' + g.brac + '"></i>' + g.bl + '</span></div>' +
+      '<div class="conto">' + g.conto + '</div>' +
+      '<div class="eur">' + g.eur + '</div>' +
+    '</div>' +
+    '<div class="giu">' +
+      '<div class="cella"><button>−</button><span>🧒</span><div class="v">' + g.k + '</div><button>+</button></div>' +
+      '<div class="cella"><button>−</button><span>🤸</span><div class="v">' + g.c + '</div><button>+</button></div>' +
+      '<div class="cella"><button>−5</button><div class="v">' + g.t + '</div><button>+5</button></div>' +
+      '<div class="tasti"><button>🥤</button><button>🧾</button><button>✏️</button><button class="forte">🚪</button></div>' +
+    '</div>';
+  r2.appendChild(d);
+});
+const s2 = document.createElement('div'); s2.className = 'schermo'; s2.textContent = '↑ ci stanno 7 gruppi'; r2.appendChild(s2);
+
+/* --- R3: tessere --- */
+const r3 = document.getElementById('R3');
+GRUPPI.forEach(g => {
+  const d = document.createElement('div');
+  d.className = 'tessera ' + g.stato;
+  d.innerHTML =
+    '<div class="su">' +
+      '<div class="av">' + g.sprite + '</div>' +
+      '<div class="chi"><div class="conto">' + g.conto + '</div><b>' + g.nome + '</b>' +
+        '<div class="tr">' + g.tr.replace(' · ', '<br>') + '</div>' +
+        '<span class="brac"><i style="background:' + g.brac + '"></i>' + g.bl + '</span></div>' +
+    '</div>' +
+    '<div class="giu"><span class="eur">' + g.eur + '</span>' +
+      '<div class="tasti"><button>🥤</button><button>🧾</button><button>✏️</button><button class="forte">🚪</button></div></div>';
+  r3.appendChild(d);
+});
+
+/* --- R4: riga stretta coi numeri --- */
+const r4 = document.getElementById('R4');
+GRUPPI.forEach(g => {
+  const d = document.createElement('div');
+  d.className = 'riga ' + g.stato;
+  d.innerHTML =
+    '<div class="av">' + g.sprite + '</div>' +
+    '<div class="chi"><b>' + g.nome + '</b><span>' + g.tr.split(' · ')[0] + '</span></div>' +
+    '<span class="brac" style="background:' + g.brac + '"></span>' +
+    '<div class="num"><span>🧒 ' + g.k + '</span><span>🤸 ' + g.c + '</span><span>⏱️ ' + g.t + '</span></div>' +
+    '<div class="conto">' + g.conto + '</div>' +
+    '<div class="eur">' + g.eur + '</div>' +
+    '<button class="piu">⋯</button>';
+  r4.appendChild(d);
+});
+const s4 = document.createElement('div'); s4.className = 'schermo'; s4.textContent = '↑ ci stanno 13 gruppi'; r4.appendChild(s4);
+</script>
+</body>
+</html>
