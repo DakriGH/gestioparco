@@ -680,6 +680,19 @@ function syncPeople(container, people, onChange) {
        da solo all'infinito. */
     if (aperto) {
       const ed = el('div', 'p-editor');
+      /* la riga compatta sparisce mentre l'editor e' aperto, quindi il
+         tasto per chiudere deve stare QUI dentro */
+      const fine = el('button', 'ed-fatto', '\u2713 Fatto');
+      fine.onclick = () => { container.dataset.apri = ''; rinfresca(); };
+      const via = el('button', 'ed-via', '\u2715');
+      via.title = 'Togli questa persona';
+      via.onclick = () => {
+        const i = people.indexOf(p);
+        if (i > -1) people.splice(i, 1);
+        container.dataset.apri = '';
+        onChange();
+        rinfresca();
+      };
       let ultimo = JSON.stringify(p.avatar);
       buildAvatarEditor(ed, p, () => {
         const ora = JSON.stringify(p.avatar);
@@ -694,6 +707,11 @@ function syncPeople(container, people, onChange) {
         container.dataset.sig = '';   // la prossima volta ridisegna davvero
         onChange();
       });
+      const barra = el('div', 'ed-barra');
+      barra.appendChild(el('span', 'ed-tit', '\ud83c\udfa8 Come \u00e8 vestito'));
+      barra.appendChild(via);
+      barra.appendChild(fine);
+      ed.insertBefore(barra, ed.firstChild);
       blocco.appendChild(ed);
     }
     container.appendChild(blocco);
@@ -1329,14 +1347,20 @@ function buildAvatarEditor(box, person, onChange, opts) {
     box.appendChild(testa);
   }
 
+  let figuraViva = null, trattiVivi = null;
+
   /* la nota: l'unico campo che non sta gi\u00e0 nella riga */
   const nota = el('input', 'ed-nota');
   nota.placeholder = 'Segno particolare, nota\u2026';
   nota.value = person.note || '';
   nota.oninput = () => { person.note = nota.value; onChange(); };
-  box.appendChild(nota);
 
   const aggiorna = (avvisa) => {
+    if (figuraViva) {
+      figuraViva.innerHTML = AV.build(av);
+      trattiVivi.innerHTML = '';
+      AV.traits(av, 4).forEach(t => trattiVivi.appendChild(traitChip(t)));
+    }
     if (prev) prev.innerHTML = AV.build(av);
     if (traits) {
       traits.innerHTML = '';
@@ -1557,11 +1581,30 @@ function buildAvatarEditor(box, person, onChange, opts) {
   const rPelle = riga('pelle', 'Pelle');
   colori(rPelle, AV.SKINS, () => av.skin, v => { av.skin = v; });
 
-  /* il selettore: emoji + nome, tutti a vista, uno acceso per volta */
+  /* Il palco di E2: a sinistra la persona (grande, sempre in vista), a
+     destra i pezzi e le loro scelte. La riga compatta sopra si nasconde
+     mentre l'editor e' aperto, cosi' l'avatar resta uno solo. */
+  const palco = el('div', 'ed-palco');
+  const colonna = el('div', 'ed-persona');
+  const figura = el('div', 'ed-figura');
+  figura.innerHTML = AV.build(av);
+  colonna.appendChild(figura);
+  const chi = el('div', 'ed-chi', roleOf(person.role).label);
+  colonna.appendChild(chi);
+  const tratti = el('div', 'ed-tratti');
+  colonna.appendChild(tratti);
+  figuraViva = figura;
+  trattiVivi = tratti;
+  colonna.appendChild(nota);
+  const lato = el('div', 'ed-lato');
+  palco.appendChild(colonna);
+  palco.appendChild(lato);
+  box.appendChild(palco);
+
   const parti = el('div', 'ed-parti');
   const pannello = el('div', 'ed-pannello');
-  box.appendChild(parti);
-  box.appendChild(pannello);
+  lato.appendChild(parti);
+  lato.appendChild(pannello);
 
   const mostra = (i) => {
     $$('.ed-parte', parti).forEach((b, j) => b.classList.toggle('on', i === j));
@@ -1712,14 +1755,13 @@ function entryCard(entry) {
   card.dataset.id = entry.id;
   const body = el('div', 'e-body');
 
-  /* riga 1: countdown, orari, barra che si svuota */
+  /* riga 1: countdown e stato sulla STESSA riga, orari a destra in
+     pastiglia — come nel modello scelto. */
   const time = el('div', 'e-time');
-  const cw = el('div');
   const count = el('div', 'e-count num', '--:--');
   const sub = el('div', 'e-count-sub', '');
-  cw.appendChild(count);
-  cw.appendChild(sub);
-  time.appendChild(cw);
+  time.appendChild(count);
+  time.appendChild(sub);
   const range = el('div', 'e-range');
   range.innerHTML = '\ud83d\udd50 ' + fmtTime(entry.startTime) + '<span class="arrow">\u2192</span>' + (entry.payLater ? '?' : fmtTime(endTimeOf(entry)));
   time.appendChild(range);
