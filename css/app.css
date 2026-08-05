@@ -2295,3 +2295,21 @@ main {
 /* il corpo distribuisce lo spazio invece di lasciare un buco prima dei
    tasti: le due colonne finiscono pari */
 .entry .e-body { justify-content: space-evenly; padding: 13px 15px; }
+
+/* avviso "c'è una versione nuova" */
+.avviso-versione {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 11px 14px;
+  border-radius: var(--r);
+  background: var(--blk-blu);
+  color: #fff;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.12) inset, 0 8px 22px -12px rgba(0,0,0,0.8);
+}
+.avviso-versione .em { font-size: 21px; flex-shrink: 0; }
+.avviso-versione .av-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.35; }
+.avviso-versione .av-txt b { font-size: 15px; }
+.avviso-versione .av-txt span { font-size: 13px; color: rgba(255,255,255,0.85); }
+.avviso-versione .btn { background: rgba(0,0,0,0.3); color: #fff; border-color: rgba(255,255,255,0.3); }

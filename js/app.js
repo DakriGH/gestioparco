@@ -1627,6 +1627,8 @@ function commitEntry() {
   saveEntries();
   draft = freshDraft();
   switchTab('active');
+  // se una versione nuova stava aspettando che finissi, adesso puo' entrare
+  if (typeof applicaSePuoi === 'function') setTimeout(applicaSePuoi, 1200);
 }
 
 /* ============================================================
@@ -2712,11 +2714,80 @@ function init() {
       navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
       if (window.caches) caches.keys().then(ks => ks.forEach(k => caches.delete(k)));
     } else {
-      navigator.serviceWorker.register('./sw.js')
-        .then(reg => reg.update())
-        .catch(() => {});
+      registraAggiornamenti();
     }
   }
+}
+
+/* ---------- aggiornamenti dell'app installata ----------
+   L'app installata deve accorgersi da sola che ne è uscita una versione
+   nuova. Due accorgimenti che senza non funziona:
+   - `updateViaCache: 'none'`: altrimenti il browser controlla il service
+     worker usando la propria cache e non si accorge di niente;
+   - il controllo si rifà ogni volta che l'app torna in primo piano, non
+     solo all'avvio: un tablet da cassa resta aperto per giorni. */
+function registraAggiornamenti() {
+  navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then(reg => {
+    reg.update();
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update(); });
+    setInterval(() => reg.update(), 20 * 60000);
+
+    const guarda = (sw) => {
+      if (!sw) return;
+      sw.addEventListener('statechange', () => {
+        if (sw.state === 'installed' && navigator.serviceWorker.controller) pronto(reg);
+      });
+    };
+    if (reg.waiting && navigator.serviceWorker.controller) pronto(reg);
+    guarda(reg.installing);
+    reg.addEventListener('updatefound', () => guarda(reg.installing));
+  }).catch(() => {});
+
+  let giaRicaricato = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (giaRicaricato) return;
+    giaRicaricato = true;
+    location.reload();
+  });
+}
+
+/* La versione nuova è scaricata e aspetta. Se non c'è niente a metà la si
+   applica da sola dopo qualche secondo; se si sta registrando un ingresso
+   si aspetta un tocco, perché ricaricare sotto le dita sarebbe peggio. */
+let versioneInAttesa = null;
+function pronto(reg) {
+  versioneInAttesa = reg;
+  mostraAvvisoVersione(applicaVersione, impegnatoAdesso());
+  if (!impegnatoAdesso()) setTimeout(applicaSePuoi, 2500);
+}
+function impegnatoAdesso() {
+  return !!((draft && draft.touched) || editingId || document.querySelector('.e-panel:not(.hidden)'));
+}
+function applicaVersione() {
+  if (versioneInAttesa && versioneInAttesa.waiting) {
+    versioneInAttesa.waiting.postMessage({ tipo: 'attiva-adesso' });
+  }
+}
+/* Chiamata anche dopo aver salvato un ingresso: se la versione nuova
+   aspettava perche' eri a meta' di qualcosa, adesso entra da sola. */
+function applicaSePuoi() {
+  if (versioneInAttesa && !impegnatoAdesso()) applicaVersione();
+}
+
+function mostraAvvisoVersione(applica, impegnato) {
+  if ($('#avvisoVersione')) return;
+  const b = el('div', 'avviso-versione');
+  b.id = 'avvisoVersione';
+  b.innerHTML = '<span class="em">🔄</span>';
+  const t = el('div', 'av-txt');
+  t.innerHTML = '<b>C’è una versione nuova</b><span>' +
+    (impegnato ? 'La metto appena hai finito quello che stai facendo.' : 'La sto applicando…') + '</span>';
+  b.appendChild(t);
+  const ora = el('button', 'btn btn-sm', 'Aggiorna adesso');
+  ora.onclick = applica;
+  b.appendChild(ora);
+  const main = $('main');
+  main.insertBefore(b, main.firstChild);
 }
 
 /* Partenza. Di norma si parte subito: i dati sono già lì e l'attesa non

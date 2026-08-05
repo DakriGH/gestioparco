@@ -1,7 +1,7 @@
 /* Service worker: l'app deve partire anche senza rete.
    Strategia: rete-prima per l'HTML (così un aggiornamento si vede subito),
    cache-prima per CSS/JS/icone. Nessuna risorsa esterna da scaricare. */
-const CACHE = 'gestioparco-v13';
+const CACHE = 'gestioparco-v18';
 const ASSETS = [
   './',
   './index.html',
@@ -28,12 +28,19 @@ const ASSETS = [
    finisce comunque in cache e da lì in poi funziona anche offline. */
 
 self.addEventListener('install', (e) => {
+  /* NIENTE skipWaiting() qui: la versione nuova non deve sostituirsi da
+     sola mentre uno sta registrando un ingresso. Resta in attesa e l'app
+     la fa entrare quando non c'è niente a metà (vedi js/app.js). */
   e.waitUntil(
     caches.open(CACHE)
       .then(c => c.addAll(ASSETS))
       .catch(err => console.warn('cache incompleta', err))
-      .then(() => self.skipWaiting())
   );
+});
+
+/* l'app dice "adesso puoi": si passa alla versione nuova */
+self.addEventListener('message', (e) => {
+  if (e.data && e.data.tipo === 'attiva-adesso') self.skipWaiting();
 });
 
 self.addEventListener('activate', (e) => {
@@ -52,8 +59,12 @@ self.addEventListener('fetch', (e) => {
     (req.headers.get('accept') || '').includes('text/html');
 
   if (isDoc) {
+    /* `cache: 'no-store'` non è un vezzo: GitHub Pages manda
+       `Cache-Control: max-age=600`, quindi senza questo il browser
+       restituiva al service worker la pagina di dieci minuti prima e
+       l'app installata continuava a mostrare la versione vecchia. */
     e.respondWith(
-      fetch(req)
+      fetch(req, { cache: 'no-store' })
         .then(res => {
           const copy = res.clone();
           caches.open(CACHE).then(c => c.put(req, copy));
@@ -71,7 +82,8 @@ self.addEventListener('fetch', (e) => {
     // ignoreSearch: senza questo, cambiando ?v=… l'app offline non
     // troverebbe più i propri file e resterebbe con la pagina nuda.
     caches.match(req, { ignoreSearch: true }).then(hit => {
-      const net = fetch(req).then(res => {
+      const vecchia = hit && new URL(hit.url).search !== new URL(req.url).search;
+      const net = fetch(req, vecchia ? { cache: 'no-store' } : undefined).then(res => {
         if (res && res.status === 200 && res.type === 'basic') {
           const copy = res.clone();
           caches.open(CACHE).then(c => c.put(req, copy));
@@ -80,7 +92,6 @@ self.addEventListener('fetch', (e) => {
       }).catch(() => hit);
       // stessa versione in cache? la uso subito. Diversa (o assente)? rete,
       // con la copia vecchia come rete di sicurezza se si è offline.
-      const vecchia = hit && new URL(hit.url).search !== new URL(req.url).search;
       return (hit && !vecchia) ? hit : net;
     })
   );
