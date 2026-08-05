@@ -187,6 +187,90 @@ body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #1212
 .E7 .altro { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .E7 .altro button { background: rgba(255,255,255,0.07); border: none; border-radius: 14px; padding: 10px 6px; color: #C2C2D4; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; }
 .E7 .altro button .em { font-size: 20px; }
+
+/* --- ogni scelta porta la sua SCRITTA: una camicia e una polo ritagliate
+       si somigliano troppo, il nome toglie ogni dubbio --- */
+.forma { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 3px 5px; }
+.forma .sp { width: 100%; flex: 1; min-height: 0; overflow: hidden; border-radius: 8px; }
+.forma .sp svg { width: 100%; height: 100%; display: block; }
+.forma .nm { font-size: 11px; font-weight: 700; line-height: 1.15; color: rgba(255,255,255,0.88); }
+.forma.on .nm { color: #FFD166; }
+.E1 .forma { width: 74px; height: 76px; }
+.E2 .forma { width: 86px; height: 88px; }
+.E4 .forma { width: 86px; height: 88px; }
+.E6 .forma { width: 84px; height: 86px; }
+/* anche le pastiglie di colore possono dire il nome */
+.tinta { position: relative; }
+
+/* ============ E8 — ELENCO PARLANTE ============ */
+.E8 .palco { display: flex; gap: 14px; align-items: flex-start; }
+.E8 .persona { width: 132px; flex-shrink: 0; }
+.E8 .persona .av { width: 132px; height: 176px; border-radius: 16px; background: rgba(255,255,255,0.07); overflow: hidden; }
+.E8 .persona .av svg { width: 100%; height: 100%; display: block; }
+.E8 .lato { flex: 1; min-width: 0; }
+.E8 .parti { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 11px; }
+.E8 .parte { background: rgba(255,255,255,0.08); border: 2px solid transparent; border-radius: 13px; padding: 9px 13px; color: #E9E9F2; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 7px; }
+.E8 .parte.on { background: #FFD166; color: #221A00; }
+.E8 .pannello { background: rgba(0,0,0,0.3); border-radius: 17px; padding: 12px 13px 14px; }
+.E8 .riga {
+  display: flex; align-items: center; gap: 11px; width: 100%;
+  background: rgba(255,255,255,0.06); border: 2px solid transparent; border-radius: 14px;
+  padding: 7px 12px 7px 7px; margin-bottom: 7px; cursor: pointer; color: #E9E9F2; font: inherit;
+}
+.E8 .riga .sp { width: 52px; height: 46px; border-radius: 9px; overflow: hidden; background: rgba(255,255,255,0.07); flex-shrink: 0; }
+.E8 .riga .sp svg { width: 100%; height: 100%; display: block; }
+.E8 .riga .nm { font-size: 16px; font-weight: 700; }
+.E8 .riga .sn { margin-left: auto; font-size: 13px; color: rgba(255,255,255,0.55); font-weight: 600; }
+.E8 .riga.on { background: rgba(255,209,102,0.16); border-color: #FFD166; }
+.E8 .riga.on .nm { color: #FFD166; }
+.E8 .tinte { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 10px; }
+.E8 .tinta { width: 44px; height: 44px; border-radius: 50%; border: 3px solid transparent; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25); cursor: pointer; }
+.E8 .tinta.on { border-color: #fff; }
+
+/* ============ E9 — PASTIGLIE CON NOME ============ */
+.E9 .palco { display: flex; gap: 14px; align-items: flex-start; }
+.E9 .persona { width: 132px; flex-shrink: 0; }
+.E9 .persona .av { width: 132px; height: 176px; border-radius: 16px; background: rgba(255,255,255,0.07); overflow: hidden; }
+.E9 .persona .av svg { width: 100%; height: 100%; display: block; }
+.E9 .lato { flex: 1; min-width: 0; }
+.E9 .capo { background: rgba(255,255,255,0.05); border-radius: 16px; padding: 10px 12px 12px; margin-bottom: 9px; }
+.E9 .capo .tit { font-size: 12.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255,255,255,0.66); margin-bottom: 8px; }
+.E9 .chips { display: flex; gap: 7px; flex-wrap: wrap; }
+.E9 .chip {
+  display: flex; align-items: center; gap: 7px; padding: 5px 13px 5px 5px;
+  background: rgba(255,255,255,0.08); border: 2px solid transparent; border-radius: 30px;
+  color: #E9E9F2; font: inherit; font-size: 14.5px; font-weight: 700; cursor: pointer;
+}
+.E9 .chip .sp { width: 38px; height: 34px; border-radius: 50%; overflow: hidden; background: rgba(255,255,255,0.10); flex-shrink: 0; }
+.E9 .chip .sp svg { width: 100%; height: 100%; display: block; }
+.E9 .chip.on { background: rgba(255,209,102,0.18); border-color: #FFD166; color: #FFD166; }
+.E9 .tinte { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 9px; }
+.E9 .tinta { width: 42px; height: 42px; border-radius: 50%; border: 3px solid transparent; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25); cursor: pointer; }
+.E9 .tinta.on { border-color: #fff; }
+
+/* ============ E10 — TUTTO SCRITTO ============ */
+.E10 .palco { display: flex; gap: 14px; align-items: flex-start; }
+.E10 .persona { width: 128px; flex-shrink: 0; }
+.E10 .persona .av { width: 128px; height: 170px; border-radius: 16px; background: rgba(255,255,255,0.07); overflow: hidden; }
+.E10 .persona .av svg { width: 100%; height: 100%; display: block; }
+.E10 .lato { flex: 1; min-width: 0; }
+.E10 .capo { background: rgba(255,255,255,0.05); border-radius: 16px; padding: 10px 12px 12px; margin-bottom: 9px; }
+.E10 .capo .tit { display: flex; align-items: baseline; gap: 8px; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255,255,255,0.66); margin-bottom: 8px; }
+.E10 .capo .tit .ora { margin-left: auto; text-transform: none; letter-spacing: 0; font-size: 14px; font-weight: 700; color: #FFD166; }
+.E10 .parole { display: flex; gap: 7px; flex-wrap: wrap; }
+.E10 .parola {
+  background: rgba(255,255,255,0.08); border: 2px solid transparent; border-radius: 12px;
+  padding: 11px 15px; color: #E9E9F2; font: inherit; font-size: 15.5px; font-weight: 700; cursor: pointer;
+}
+.E10 .parola.on { background: #FFD166; color: #221A00; }
+.E10 .colori { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 9px; }
+.E10 .colore {
+  display: flex; align-items: center; gap: 8px; padding: 8px 14px 8px 8px;
+  background: rgba(255,255,255,0.07); border: 2px solid transparent; border-radius: 12px;
+  color: #E9E9F2; font: inherit; font-size: 14.5px; font-weight: 700; cursor: pointer;
+}
+.E10 .colore i { width: 26px; height: 26px; border-radius: 50%; display: block; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3); }
+.E10 .colore.on { background: rgba(255,209,102,0.18); border-color: #FFD166; color: #FFD166; }
 </style>
 </head>
 <body>
@@ -228,7 +312,7 @@ body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #1212
 
 <!-- =============== E2 =============== -->
 <div class="strada">
-  <header><span class="n">E2</span><h2>Tocca la parte <span style="font-size:14px;color:#7FE8C1">← la consiglio</span></h2></header>
+  <header><span class="n">E2</span><h2>Tocca la parte</h2></header>
   <div class="veloce"><span class="cosi">👆 2 tocchi per il colore</span><span class="buono">↕ niente scorrimento</span><span class="buono">📏 sta in 474px</span></div>
   <p class="perche">Come i Mii della Wii: <b>scegli il pezzo</b> in alto e sotto compaiono le sue scelte,
   belle grosse. La persona resta sempre a fianco e cambia sotto gli occhi. Nessuno scorrimento:
@@ -433,6 +517,107 @@ body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #1212
   </div>
 </div>
 
+
+<!-- =============== E8 =============== -->
+<div class="strada">
+  <header><span class="n">E8</span><h2>Elenco parlante</h2></header>
+  <div class="veloce"><span class="cosi">&#128070; 2 tocchi per il colore</span><span class="buono">&#8597; niente scorrimento</span><span class="buono">&#128214; nome grande, zero dubbi</span></div>
+  <p class="perche">Le scelte sono <b>righe larghe</b>: miniatura piccola a sinistra e il <b>nome scritto grande</b>
+  accanto. Camicia, polo, felpa non si confondono mai, perch&eacute; c&rsquo;&egrave; scritto. Sopra, i pezzi come pastiglie
+  con l&rsquo;emoji e il nome. &Egrave; la pi&ugrave; leggibile di tutte: se uno non conosce l&rsquo;app, la usa lo stesso.</p>
+  <div class="telaio E8">
+    <div class="blocco viola">
+      <div class="testa"><span>&#127912;</span> Com&rsquo;&egrave; vestita &mdash; Nonna</div>
+      <div class="dentro">
+        <div class="palco">
+          <div class="persona"><div class="av" id="e8av"></div></div>
+          <div class="lato">
+            <div class="parti">
+              <button class="parte"><span>&#128139;</span> Capelli</button>
+              <button class="parte"><span>&#129506;</span> Cappello</button>
+              <button class="parte on"><span>&#128085;</span> Maglietta</button>
+              <button class="parte"><span>&#128086;</span> Sotto</button>
+              <button class="parte"><span>&#128095;</span> Scarpe</button>
+              <button class="parte"><span>&#127890;</span> Borsa</button>
+            </div>
+            <div class="pannello">
+              <div class="k">Che cos&rsquo;ha addosso sopra?</div>
+              <div id="e8lista"></div>
+              <div class="k" style="margin-top:11px">Di che colore</div>
+              <div class="tinte" data-tinte="capi"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =============== E9 =============== -->
+<div class="strada">
+  <header><span class="n">E9</span><h2>Pastiglie con nome <span style="font-size:14px;color:#7FE8C1">&larr; ora consiglio questa</span></h2></header>
+  <div class="veloce"><span class="buono">&#128070; 1 tocco per il colore</span><span class="cosi">&#8597; poco</span><span class="buono">&#128214; icona e nome insieme</span></div>
+  <p class="perche">Via di mezzo: ogni scelta &egrave; una <b>pastiglia con la miniatura tonda e il nome accanto</b>,
+  e vanno a capo da sole. Si legge come E8 ma occupa quasi quanto E2, e i due capi che contano stanno
+  aperti insieme senza toccare niente.</p>
+  <div class="telaio E9">
+    <div class="blocco viola">
+      <div class="testa"><span>&#127912;</span> Com&rsquo;&egrave; vestita &mdash; Nonna</div>
+      <div class="dentro">
+        <div class="palco">
+          <div class="persona"><div class="av" id="e9av"></div></div>
+          <div class="lato">
+            <div class="capo">
+              <div class="tit">&#128085; Sopra</div>
+              <div class="chips" id="e9top"></div>
+              <div class="tinte" data-tinte="capi"></div>
+            </div>
+            <div class="capo">
+              <div class="tit">&#128086; Sotto</div>
+              <div class="chips" id="e9pan"></div>
+            </div>
+            <div class="capo" style="margin-bottom:0">
+              <div class="tit">&#128139; Capelli</div>
+              <div class="chips" id="e9cap"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =============== E10 =============== -->
+<div class="strada">
+  <header><span class="n">E10</span><h2>Tutto scritto</h2></header>
+  <div class="veloce"><span class="buono">&#128070; 1 tocco</span><span class="cosi">&#8597; poco</span><span class="buono">&#128214; anche i colori hanno il nome</span><span class="male">&#127912; niente disegni</span></div>
+  <p class="perche">L&rsquo;estremo opposto: <b>nessuna miniatura</b>, solo parole grandi. &laquo;Camicia&raquo;, &laquo;Polo&raquo;,
+  &laquo;Felpa&raquo;, e anche i colori hanno il nome scritto accanto al pallino. Non c&rsquo;&egrave; assolutamente niente da
+  interpretare e si legge da lontano. In cambio si perde il colpo d&rsquo;occhio: per capire com&rsquo;&egrave; vestita
+  devi <b>leggere</b> invece che guardare. La metto perch&eacute; per la fretta a volte &egrave; la scelta giusta.</p>
+  <div class="telaio E10">
+    <div class="blocco viola">
+      <div class="testa"><span>&#127912;</span> Com&rsquo;&egrave; vestita &mdash; Nonna</div>
+      <div class="dentro">
+        <div class="palco">
+          <div class="persona"><div class="av" id="e10av"></div></div>
+          <div class="lato">
+            <div class="capo">
+              <div class="tit">&#128085; Sopra <span class="ora">camicia gialla</span></div>
+              <div class="parole" id="e10top"></div>
+              <div class="colori" id="e10col"></div>
+            </div>
+            <div class="capo" style="margin-bottom:0">
+              <div class="tit">&#128086; Sotto <span class="ora">gonna nera</span></div>
+              <div class="parole" id="e10pan"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- =============== la schermata Nuovo in C =============== -->
 <div class="strada">
   <header><span class="n">+</span><h2>E il resto dell'app, in C</h2></header>
@@ -505,6 +690,15 @@ function variante(cambio) {
   Object.assign(c, cambio);
   return c;
 }
+function vestita(campo, key) {
+  const c = JSON.parse(JSON.stringify(base));
+  if (campo === 'hair') c.hair.style = key;
+  if (campo === 'top') c.top.style = key;
+  if (campo === 'pants') c.pants.style = key;
+  return c;
+}
+/* ogni scelta: la miniatura E il nome. Una camicia e una polo ritagliate
+   si somigliano troppo perche' il disegno basti da solo. */
 function riempi(id, lista, campo, zona, attivo) {
   const box = document.getElementById(id);
   if (!box) return;
@@ -512,11 +706,18 @@ function riempi(id, lista, campo, zona, attivo) {
     const b = document.createElement('button');
     b.className = 'forma' + (it.key === attivo ? ' on' : '');
     b.title = it.label;
-    const c = JSON.parse(JSON.stringify(base));
-    if (campo === 'hair') c.hair.style = it.key;
-    if (campo === 'top') c.top.style = it.key;
-    if (campo === 'pants') c.pants.style = it.key;
-    b.innerHTML = AV.build(c, { zona: zona });
+    const sp = document.createElement('div');
+    sp.className = 'sp';
+    sp.innerHTML = AV.build(vestita(campo, it.key), { zona: zona });
+    b.appendChild(sp);
+    const nm = document.createElement('span');
+    nm.className = 'nm';
+    nm.textContent = it.label;
+    b.appendChild(nm);
+    b.onclick = () => {
+      box.querySelectorAll('.forma').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+    };
     box.appendChild(b);
   });
 }
@@ -595,6 +796,96 @@ document.querySelectorAll('.E6 .voce').forEach(function(v){
       b.classList.add('on');
     };
     g.appendChild(b);
+  });
+})();
+
+/* --- E8 / E9 / E10 --- */
+['e8av','e9av','e10av'].forEach(function(id){ var e=document.getElementById(id); if(e) e.innerHTML = AV.build(base); });
+
+/* E8: righe larghe con il nome grande */
+(function(){
+  var box = document.getElementById('e8lista');
+  if (!box) return;
+  AV.TOP.forEach(function(it){
+    var b = document.createElement('button');
+    b.className = 'riga' + (it.key === 'maglietta' ? ' on' : '');
+    var sp = document.createElement('div');
+    sp.className = 'sp';
+    sp.innerHTML = AV.build(vestita('top', it.key), { zona: 'busto' });
+    b.appendChild(sp);
+    var nm = document.createElement('span');
+    nm.className = 'nm';
+    nm.textContent = it.label;
+    b.appendChild(nm);
+    if (it.key === 'maglietta') {
+      var sn = document.createElement('span');
+      sn.className = 'sn';
+      sn.textContent = 'quella che ha adesso';
+      b.appendChild(sn);
+    }
+    b.onclick = function(){
+      box.querySelectorAll('.riga').forEach(function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+    };
+    box.appendChild(b);
+  });
+})();
+
+/* E9: pastiglie tonde con il nome accanto */
+function chips(id, lista, campo, zona, attivo) {
+  var box = document.getElementById(id);
+  if (!box) return;
+  lista.forEach(function(it){
+    var b = document.createElement('button');
+    b.className = 'chip' + (it.key === attivo ? ' on' : '');
+    var sp = document.createElement('span');
+    sp.className = 'sp';
+    sp.innerHTML = AV.build(vestita(campo, it.key), { zona: zona });
+    b.appendChild(sp);
+    b.appendChild(document.createTextNode(it.label));
+    b.onclick = function(){
+      box.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+    };
+    box.appendChild(b);
+  });
+}
+chips('e9top', AV.TOP, 'top', 'busto', 'maglietta');
+chips('e9pan', AV.PANTS, 'pants', 'gambe', 'gonna');
+chips('e9cap', AV.HAIR, 'hair', 'testa', 'chignon');
+
+/* E10: solo parole, colori compresi */
+(function(){
+  function parole(id, lista, attivo) {
+    var box = document.getElementById(id);
+    if (!box) return;
+    lista.forEach(function(it){
+      var b = document.createElement('button');
+      b.className = 'parola' + (it.key === attivo ? ' on' : '');
+      b.textContent = it.label;
+      b.onclick = function(){
+        box.querySelectorAll('.parola').forEach(function(x){ x.classList.remove('on'); });
+        b.classList.add('on');
+      };
+      box.appendChild(b);
+    });
+  }
+  parole('e10top', AV.TOP, 'camicia');
+  parole('e10pan', AV.PANTS, 'gonna');
+  var box = document.getElementById('e10col');
+  if (!box) return;
+  AV.COLORS.slice(0, 8).forEach(function(c){
+    var b = document.createElement('button');
+    b.className = 'colore' + (c.c === '#FBBF24' ? ' on' : '');
+    var i = document.createElement('i');
+    i.style.background = c.c;
+    b.appendChild(i);
+    b.appendChild(document.createTextNode(c.n[1]));
+    b.onclick = function(){
+      box.querySelectorAll('.colore').forEach(function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+    };
+    box.appendChild(b);
   });
 })();
 </script>
