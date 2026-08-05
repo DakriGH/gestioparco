@@ -109,6 +109,84 @@ body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #1212
 .N .ruolo span:last-child { font-size: 11.5px; font-weight: 700; }
 .N .bracc { display: flex; gap: 8px; align-items: center; margin-left: auto; }
 .N .bracc i { width: 34px; height: 34px; border-radius: 50%; display: block; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.35); }
+
+/* --- targhetta della velocita': si sceglie anche coi numeri --- */
+.veloce { display: flex; gap: 8px; flex-wrap: wrap; margin: -6px 0 14px; }
+.veloce span { font-size: 12.5px; font-weight: 700; background: #22222E; color: #C2C2D4; border-radius: 20px; padding: 5px 11px; }
+.veloce span.buono { background: #16382C; color: #7FE8C1; }
+.veloce span.cosi { background: #3A2F16; color: #FFD166; }
+.veloce span.male { background: #3A1E22; color: #FF9AA2; }
+
+/* ============ E4 — TOCCA L'AVATAR ============ */
+.E4 .palco { display: flex; gap: 16px; align-items: flex-start; }
+.E4 .fig { position: relative; width: 200px; flex-shrink: 0; }
+.E4 .fig .av { width: 200px; height: 266px; border-radius: 20px; background: rgba(255,255,255,0.07); overflow: hidden; }
+.E4 .fig .av svg { width: 100%; height: 100%; display: block; }
+.E4 .zona {
+  position: absolute; border: 2px dashed rgba(255,255,255,0.35); border-radius: 12px;
+  background: rgba(0,0,0,0.10); cursor: pointer; padding: 0;
+  display: flex; align-items: flex-start; justify-content: flex-end;
+}
+.E4 .zona b { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
+  background: rgba(0,0,0,0.55); color: #fff; border-radius: 8px; padding: 2px 6px; margin: 3px; }
+.E4 .zona.on { border-color: #FFD166; border-style: solid; background: rgba(255,209,102,0.16); }
+.E4 .zona.on b { background: #FFD166; color: #221A00; }
+.E4 .lato { flex: 1; min-width: 0; }
+.E4 .pannello { background: rgba(0,0,0,0.3); border-radius: 17px; padding: 13px 14px 15px; }
+.E4 .forme { display: flex; gap: 9px; flex-wrap: wrap; margin-bottom: 12px; }
+.E4 .forma { width: 78px; height: 68px; border-radius: 15px; background: rgba(255,255,255,0.08); border: 3px solid transparent; overflow: hidden; padding: 0; cursor: pointer; }
+.E4 .forma.on { border-color: #FFD166; background: rgba(255,209,102,0.18); }
+.E4 .forma svg { width: 100%; height: 100%; display: block; }
+.E4 .tinte { display: flex; gap: 10px; flex-wrap: wrap; }
+.E4 .tinta { width: 46px; height: 46px; border-radius: 50%; border: 3px solid transparent; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25); cursor: pointer; }
+.E4 .tinta.on { border-color: #fff; transform: scale(1.08); }
+
+/* ============ E5 — UN TOCCO ============ */
+.E5 .griglia { display: grid; grid-template-columns: repeat(6, 1fr); gap: 9px; }
+.E5 .capo { border-radius: 16px; background: rgba(255,255,255,0.06); border: 3px solid transparent; padding: 6px 4px 4px; cursor: pointer; }
+.E5 .capo.on { border-color: #FFD166; background: rgba(255,209,102,0.16); }
+.E5 .capo .mini { width: 100%; height: 74px; overflow: hidden; border-radius: 10px; }
+.E5 .capo .mini svg { width: 100%; height: 100%; display: block; }
+.E5 .capo .nm { font-size: 11.5px; font-weight: 700; text-align: center; color: rgba(255,255,255,0.85); margin-top: 3px; }
+.E5 .dopo { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 13px; }
+.E5 .dopo button { flex: 1 1 128px; background: rgba(255,255,255,0.09); border: none; border-radius: 15px; padding: 13px; color: #E9E9F2; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+
+/* ============ E6 — DUE COLONNE ============ */
+.E6 .palco { display: flex; gap: 12px; align-items: stretch; }
+.E6 .elenco { width: 152px; flex-shrink: 0; display: flex; flex-direction: column; gap: 6px; }
+.E6 .voce {
+  display: flex; align-items: center; gap: 9px; padding: 11px 12px; border-radius: 14px;
+  background: rgba(255,255,255,0.07); border: none; color: #E9E9F2; font: inherit;
+  font-size: 14.5px; font-weight: 700; cursor: pointer; text-align: left;
+}
+.E6 .voce .em { font-size: 19px; }
+.E6 .voce .ora { margin-left: auto; width: 17px; height: 17px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.4); }
+.E6 .voce.on { background: #FFD166; color: #221A00; }
+.E6 .destra { flex: 1; min-width: 0; background: rgba(0,0,0,0.3); border-radius: 17px; padding: 13px 14px 15px; }
+.E6 .anteprima { float: right; width: 104px; height: 140px; border-radius: 14px; overflow: hidden; background: rgba(255,255,255,0.07); margin-left: 12px; }
+.E6 .anteprima svg { width: 100%; height: 100%; display: block; }
+.E6 .forme { display: flex; gap: 9px; flex-wrap: wrap; margin-bottom: 12px; }
+.E6 .forma { width: 76px; height: 66px; border-radius: 14px; background: rgba(255,255,255,0.08); border: 3px solid transparent; overflow: hidden; padding: 0; cursor: pointer; }
+.E6 .forma.on { border-color: #FFD166; background: rgba(255,209,102,0.18); }
+.E6 .forma svg { width: 100%; height: 100%; display: block; }
+.E6 .tinte { display: flex; gap: 9px; flex-wrap: wrap; }
+.E6 .tinta { width: 44px; height: 44px; border-radius: 50%; border: 3px solid transparent; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25); cursor: pointer; }
+.E6 .tinta.on { border-color: #fff; transform: scale(1.08); }
+
+/* ============ E7 — SCORCIATOIE ============ */
+.E7 .palco { display: flex; gap: 14px; align-items: flex-start; }
+.E7 .persona { width: 140px; flex-shrink: 0; }
+.E7 .persona .av { width: 140px; height: 186px; border-radius: 18px; background: rgba(255,255,255,0.07); overflow: hidden; }
+.E7 .persona .av svg { width: 100%; height: 100%; display: block; }
+.E7 .lato { flex: 1; min-width: 0; }
+.E7 .sub { background: rgba(0,0,0,0.28); border-radius: 16px; padding: 10px 12px 12px; margin-bottom: 9px; }
+.E7 .sub .tit { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255,255,255,0.68); margin-bottom: 8px; }
+.E7 .tinte { display: flex; gap: 8px; flex-wrap: wrap; }
+.E7 .tinta { width: 42px; height: 42px; border-radius: 13px; border: 3px solid transparent; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.22); cursor: pointer; }
+.E7 .tinta.on { border-color: #fff; }
+.E7 .altro { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.E7 .altro button { background: rgba(255,255,255,0.07); border: none; border-radius: 14px; padding: 10px 6px; color: #C2C2D4; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.E7 .altro button .em { font-size: 20px; }
 </style>
 </head>
 <body>
@@ -122,6 +200,7 @@ body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #1212
 <!-- =============== E1 =============== -->
 <div class="strada">
   <header><span class="n">E1</span><h2>Righe grandi</h2></header>
+  <div class="veloce"><span class="buono">👆 1 tocco per il colore</span><span class="male">↕ si scorre ~1500px</span><span class="buono">👁️ tutto a vista</span></div>
   <p class="perche">Tutto a vista, una riga per capo, con miniature e pastiglie <b>grandi</b>.
   Nessun tocco in più per arrivare a niente. In cambio è <b>lungo</b>: per arrivare alle scarpe
   si scorre. È l'editor di adesso, ma respirato e leggibile.</p>
@@ -150,6 +229,7 @@ body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #1212
 <!-- =============== E2 =============== -->
 <div class="strada">
   <header><span class="n">E2</span><h2>Tocca la parte <span style="font-size:14px;color:#7FE8C1">← la consiglio</span></h2></header>
+  <div class="veloce"><span class="cosi">👆 2 tocchi per il colore</span><span class="buono">↕ niente scorrimento</span><span class="buono">📏 sta in 474px</span></div>
   <p class="perche">Come i Mii della Wii: <b>scegli il pezzo</b> in alto e sotto compaiono le sue scelte,
   belle grosse. La persona resta sempre a fianco e cambia sotto gli occhi. Nessuno scorrimento:
   <b>tutto in una schermata</b>, e ogni modifica è a due tocchi. I pezzi sono tutti a vista,
@@ -190,6 +270,7 @@ body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #1212
 <!-- =============== E3 =============== -->
 <div class="strada">
   <header><span class="n">E3</span><h2>Prima il colore</h2></header>
+  <div class="veloce"><span class="buono">👆 1 tocco per il colore</span><span class="cosi">↕ poco scorrimento</span><span class="male">📖 forme da leggere</span></div>
   <p class="perche">Parte dal fatto che all'uscita uno ricorda <b>il colore</b>, non il taglio: quindi
   le tinte sono grosse e in griglia, le forme sono pastiglie scritte lì sotto. Cortissimo e
   velocissimo per i tre capi che contano. Il resto sta in fondo, sempre a vista.
@@ -212,6 +293,138 @@ body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #1212
             </div>
             <div class="resto">
               <button>💇 Capelli</button><button>🧢 Cappello</button><button>👟 Scarpe</button><button>🎒 Borsa</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- =============== E4 =============== -->
+<div class="strada">
+  <header><span class="n">E4</span><h2>Tocca l&rsquo;avatar</h2></header>
+  <div class="veloce"><span class="cosi">&#128070; 2 tocchi per il colore</span><span class="buono">&#8597; niente scorrimento</span><span class="buono">&#127919; si punta la cosa</span></div>
+  <p class="perche">Niente elenco di nomi: <b>tocchi il pezzo sulla figura</b>. Vuoi cambiare la maglietta?
+  Tocchi la maglietta. I capelli? Tocchi la testa. Le zone sono segnate con l&rsquo;etichetta, quindi si
+  scoprono al primo colpo d&rsquo;occhio. &Egrave; il modo pi&ugrave; diretto che esista: <b>non devi tradurre in parole
+  quello che vedi</b>. Il rischio: le zone piccole (borsa, scarpe) vanno prese con precisione.</p>
+  <div class="telaio E4">
+    <div class="blocco viola">
+      <div class="testa"><span>&#127912;</span> Com&rsquo;&egrave; vestita &mdash; Nonna</div>
+      <div class="dentro">
+        <div class="palco">
+          <div class="fig">
+            <div class="av" id="e4av"></div>
+            <button class="zona" style="left:26%;top:2%;width:48%;height:22%"><b>capelli</b></button>
+            <button class="zona on" style="left:16%;top:25%;width:68%;height:26%"><b>maglietta</b></button>
+            <button class="zona" style="left:20%;top:52%;width:60%;height:24%"><b>sotto</b></button>
+            <button class="zona" style="left:22%;top:77%;width:56%;height:16%"><b>scarpe</b></button>
+          </div>
+          <div class="lato">
+            <div class="pannello">
+              <div class="k">Forma della maglietta</div>
+              <div class="forme" id="e4top"></div>
+              <div class="k">Colore</div>
+              <div class="tinte" data-tinte="capi"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =============== E5 =============== -->
+<div class="strada">
+  <header><span class="n">E5</span><h2>Un tocco</h2></header>
+  <div class="veloce"><span class="buono">&#128070; 1 solo tocco</span><span class="buono">&#8597; niente scorrimento</span><span class="cosi">&#9999;&#65039; i dettagli dopo</span></div>
+  <p class="perche">Parte da un fatto: alla cassa hai <b>pochi secondi</b>, e quello che ricordi davvero
+  &egrave; <b>com&rsquo;&egrave; vestito dal petto in su</b>. Qui vedi subito dodici persone gi&agrave; vestite con la maglietta di
+  colore diverso: <b>tocchi quella giusta e hai finito</b>. Se poi hai tempo, i tasti sotto aggiungono
+  cappello, capelli, sotto e scarpe. &Egrave; la pi&ugrave; veloce in assoluto per il caso normale.</p>
+  <div class="telaio E5">
+    <div class="blocco viola">
+      <div class="testa"><span>&#127912;</span> Com&rsquo;&egrave; vestita &mdash; Nonna</div>
+      <div class="dentro">
+        <div class="k">Di che colore ha la maglietta?</div>
+        <div class="griglia" id="e5grid"></div>
+        <div class="dopo">
+          <button>&#128139; Capelli</button><button>&#129506; Cappello</button>
+          <button>&#128086; Sotto</button><button>&#128095; Scarpe</button><button>&#127890; Borsa</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =============== E6 =============== -->
+<div class="strada">
+  <header><span class="n">E6</span><h2>Due colonne</h2></header>
+  <div class="veloce"><span class="cosi">&#128070; 2 tocchi per il colore</span><span class="buono">&#8597; niente scorrimento</span><span class="buono">&#128065;&#65039; vedi cosa hai gi&agrave; messo</span></div>
+  <p class="perche">Come E2 ma l&rsquo;elenco dei pezzi sta <b>in colonna a sinistra</b>, sempre visibile e con i
+  nomi scritti per esteso. Accanto a ogni voce c&rsquo;&egrave; <b>il pallino del colore che hai gi&agrave; messo</b>: con
+  un&rsquo;occhiata sai a che punto sei senza aprire niente. A destra le scelte, grandi. Sfrutta la
+  larghezza del tablet meglio di tutte.</p>
+  <div class="telaio E6">
+    <div class="blocco viola">
+      <div class="testa"><span>&#127912;</span> Com&rsquo;&egrave; vestita &mdash; Nonna</div>
+      <div class="dentro">
+        <div class="palco">
+          <div class="elenco">
+            <button class="voce"><span class="em">&#128139;</span> Capelli <span class="ora" style="background:#C9CDD3"></span></button>
+            <button class="voce"><span class="em">&#129506;</span> Cappello <span class="ora" style="background:transparent;box-shadow:inset 0 0 0 2px rgba(255,255,255,0.25)"></span></button>
+            <button class="voce on"><span class="em">&#128085;</span> Maglietta <span class="ora" style="background:#FBBF24"></span></button>
+            <button class="voce"><span class="em">&#128086;</span> Sotto <span class="ora" style="background:#1F2430"></span></button>
+            <button class="voce"><span class="em">&#128095;</span> Scarpe <span class="ora" style="background:#F4F6F8"></span></button>
+            <button class="voce"><span class="em">&#127890;</span> Borsa <span class="ora" style="background:transparent;box-shadow:inset 0 0 0 2px rgba(255,255,255,0.25)"></span></button>
+            <button class="voce"><span class="em">&#128526;</span> Viso <span class="ora" style="background:transparent;box-shadow:inset 0 0 0 2px rgba(255,255,255,0.25)"></span></button>
+            <button class="voce"><span class="em">&#9995;</span> Pelle <span class="ora" style="background:#F6CFA8"></span></button>
+          </div>
+          <div class="destra">
+            <div class="anteprima" id="e6av"></div>
+            <div class="k">Forma della maglietta</div>
+            <div class="forme" id="e6top"></div>
+            <div class="k">Colore</div>
+            <div class="tinte" data-tinte="capi"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =============== E7 =============== -->
+<div class="strada">
+  <header><span class="n">E7</span><h2>Scorciatoie in cima</h2></header>
+  <div class="veloce"><span class="buono">&#128070; 1 tocco per il colore</span><span class="cosi">&#8597; pochissimo</span><span class="buono">&#127919; le 2 cose che contano subito</span></div>
+  <p class="perche">Le <b>due tinte che identificano davvero</b> una persona &mdash; sopra e sotto &mdash; stanno in cima,
+  grandi e a un tocco. Tutto il resto &egrave; una fila di tasti sotto, sempre a vista, che apre le sue
+  scelte dove sta. Met&agrave; strada fra E5 (velocissimo ma grezzo) ed E2 (completo ma a due tocchi):
+  <b>veloce sulla cosa frequente, completo su tutto il resto</b>.</p>
+  <div class="telaio E7">
+    <div class="blocco viola">
+      <div class="testa"><span>&#127912;</span> Com&rsquo;&egrave; vestita &mdash; Nonna</div>
+      <div class="dentro">
+        <div class="palco">
+          <div class="persona"><div class="av" id="e7av"></div></div>
+          <div class="lato">
+            <div class="sub">
+              <div class="tit"><span>&#128085;</span> Sopra &mdash; gialla</div>
+              <div class="tinte" data-tinte="capi"></div>
+            </div>
+            <div class="sub">
+              <div class="tit"><span>&#128086;</span> Sotto &mdash; gonna nera</div>
+              <div class="tinte" data-tinte="capi"></div>
+            </div>
+            <div class="altro">
+              <button><span class="em">&#128139;</span>Capelli</button>
+              <button><span class="em">&#129506;</span>Cappello</button>
+              <button><span class="em">&#128095;</span>Scarpe</button>
+              <button><span class="em">&#127890;</span>Borsa</button>
+              <button><span class="em">&#128526;</span>Viso</button>
+              <button><span class="em">&#9995;</span>Pelle</button>
             </div>
           </div>
         </div>
@@ -336,6 +549,54 @@ document.querySelectorAll('.E2 .parte').forEach(b => {
       'Forma — ' + b.lastElementChild.textContent;
   };
 });
+
+/* --- E4/E6/E7: stessa persona, stesse miniature --- */
+['e4av','e6av','e7av'].forEach(function(id){ var e=document.getElementById(id); if(e) e.innerHTML = AV.build(base); });
+riempi('e4top', AV.TOP, 'top', 'busto', 'maglietta');
+riempi('e6top', AV.TOP, 'top', 'busto', 'maglietta');
+
+/* E4: le zone sulla figura si accendono davvero */
+document.querySelectorAll('.E4 .zona').forEach(function(z){
+  z.onclick = function(){
+    document.querySelectorAll('.E4 .zona').forEach(function(x){ x.classList.remove('on'); });
+    z.classList.add('on');
+    document.querySelector('.E4 .pannello .k').textContent = 'Forma \u2014 ' + z.textContent;
+  };
+});
+
+/* E6: l'elenco a sinistra */
+document.querySelectorAll('.E6 .voce').forEach(function(v){
+  v.onclick = function(){
+    document.querySelectorAll('.E6 .voce').forEach(function(x){ x.classList.remove('on'); });
+    v.classList.add('on');
+    document.querySelector('.E6 .destra .k').textContent = 'Forma \u2014 ' + v.textContent.trim();
+  };
+});
+
+/* E5: dodici persone gia' vestite, una per colore */
+(function(){
+  var g = document.getElementById('e5grid');
+  if (!g) return;
+  AV.COLORS.slice(0, 12).forEach(function(c){
+    var b = document.createElement('button');
+    b.className = 'capo' + (c.c === '#FBBF24' ? ' on' : '');
+    var v = JSON.parse(JSON.stringify(base));
+    v.top.color = c.c;
+    var m = document.createElement('div');
+    m.className = 'mini';
+    m.innerHTML = AV.build(v, { zona: 'busto' });
+    b.appendChild(m);
+    var n = document.createElement('div');
+    n.className = 'nm';
+    n.textContent = c.n[1];
+    b.appendChild(n);
+    b.onclick = function(){
+      document.querySelectorAll('.E5 .capo').forEach(function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+    };
+    g.appendChild(b);
+  });
+})();
 </script>
 </body>
 </html>
