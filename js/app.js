@@ -708,7 +708,7 @@ function syncPeople(container, people, onChange) {
         onChange();
       });
       const barra = el('div', 'ed-barra');
-      barra.appendChild(el('span', 'ed-tit', '\ud83c\udfa8 Come \u00e8 vestito'));
+      barra.appendChild(el('span', 'ed-tit', '\ud83c\udfa8 Come \u00e8 vestito ' + roleOf(p.role).label.toLowerCase()));
       barra.appendChild(via);
       barra.appendChild(fine);
       ed.insertBefore(barra, ed.firstChild);
@@ -1362,7 +1362,10 @@ function buildAvatarEditor(box, person, onChange, opts) {
     if (figuraViva) {
       figuraViva.innerHTML = AV.build(av);
       trattiVivi.innerHTML = '';
-      AV.traits(av, 4).forEach(t => trattiVivi.appendChild(traitChip(t)));
+      // nel modello sono righe di testo puntate, non pastiglie
+      AV.traits(av, 4).forEach(t => {
+        trattiVivi.appendChild(el('div', 'ed-tr', '\u2022 ' + t.txt));
+      });
     }
     if (prev) prev.innerHTML = AV.build(av);
     if (traits) {
@@ -1563,7 +1566,7 @@ function buildAvatarEditor(box, person, onChange, opts) {
   patterns(rTop, () => av.top.pattern, v => { av.top.pattern = v; },
     () => av.top.color, () => av.top.color2, v => { av.top.color2 = v; });
 
-  const rPants = riga('pantaloni', 'Pantaloni', 'pants');
+  const rPants = riga('pantaloni', 'Sotto', 'pants');
   stili(rPants, AV.PANTS, () => av.pants.style, v => { av.pants.style = v; }, 'gambe');
   colori(rPants, AV.COLORS, () => av.pants.color, v => { av.pants.color = v; });
   patterns(rPants, () => av.pants.pattern, v => { av.pants.pattern = v; },
@@ -1573,7 +1576,7 @@ function buildAvatarEditor(box, person, onChange, opts) {
   stili(rShoes, AV.SHOES, () => av.shoes.style, v => { av.shoes.style = v; }, 'piedi');
   colori(rShoes, AV.COLORS, () => av.shoes.color, v => { av.shoes.color = v; });
 
-  const rBag = riga('borsa', 'Zaino e borse');
+  const rBag = riga('borsa', 'Borsa');
   stili(rBag, AV.BAG, () => av.bag.style, v => { av.bag.style = v; }, 'lato');
   colori(rBag, AV.COLORS, () => av.bag.color, v => { av.bag.color = v; });
 
@@ -1612,6 +1615,9 @@ function buildAvatarEditor(box, person, onChange, opts) {
   const mostra = (i) => {
     $$('.ed-parte', parti).forEach((b, j) => b.classList.toggle('on', i === j));
     pannello.innerHTML = '';
+    /* il titoletto che dice cosa stai cambiando: nel modello c'e' e
+       aiuta a non perdersi ("FORMA DELLA MAGLIETTA") */
+    pannello.appendChild(el('div', 'ed-k', sezioni[i].titolo));
     pannello.appendChild(sezioni[i].node);
   };
   sezioni.forEach((sz, i) => {
@@ -1621,7 +1627,9 @@ function buildAvatarEditor(box, person, onChange, opts) {
     b.onclick = () => mostra(i);
     parti.appendChild(b);
   });
-  mostra(0);
+  // si parte dalla maglietta: e' la prima cosa che si guarda di una
+  // persona, ed e' quello che fa il modello
+  mostra(Math.min(2, sezioni.length - 1));
 
   aggiorna(false);   // primo disegno: non avvisare nessuno
 }

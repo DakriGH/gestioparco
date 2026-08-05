@@ -218,9 +218,9 @@ h2 .ic, .e-panel-k .ic { width: 1.25em; height: 1.25em; }
   display: flex;
   flex-direction: column;
   height: 100dvh;
-  background:
-    radial-gradient(90% 42% at 50% -6%, var(--alone-accento) 0%, transparent 70%),
-    radial-gradient(135% 62% at 50% 0%, var(--bg-top) 0%, var(--bg) 64%);
+  /* piatto come il telaio del modello: le due sfumature radiali (con
+     l'alone d'accento) si vedevano dietro le schede */
+  background: var(--bg);
 }
 
 /* Comandi sempre in alto: sotto arriva la tastiera.
@@ -277,7 +277,7 @@ h2 .ic, .e-panel-k .ic { width: 1.25em; height: 1.25em; }
 .tabs button.on {
   background: var(--sel);
   color: var(--sel-ink);
-  box-shadow: var(--relief), 0 4px 14px rgba(255, 209, 102, 0.28);
+  box-shadow: none;
 }
 .tabs .badge {
   min-width: 21px;
@@ -654,7 +654,7 @@ main {
 .p-blocco.aperto {
   grid-column: 1 / -1;
   overflow: visible;
-  border-color: var(--accent);
+  border-color: transparent;
 }
 /* mentre scegli i vestiti la persona resta in vista: l'anteprima è lei,
    non serve ridisegnarla una seconda volta dentro l'editor */
@@ -1138,7 +1138,7 @@ main {
 .pill.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 .arch-btn { margin-left: auto; }
 
-.entries { display: flex; flex-direction: column; gap: 18px; }
+.entries { display: flex; flex-direction: column; gap: 14px; }
 
 .empty { text-align: center; padding: 80px 20px; color: var(--txt-3); font-size: 18px; font-weight: 600; }
 .empty .em { display: block; font-size: 64px; margin-bottom: 14px; opacity: 0.8; }
@@ -1149,16 +1149,18 @@ main {
    riferimento a destra. I pannelli Bar e Conto si aprono in
    FONDO alla scheda, così niente si sposta sotto le dita.
    ============================================================ */
-.entries { display: flex; flex-direction: column; gap: 18px; }
+.entries { display: flex; flex-direction: column; gap: 14px; }
 
 .entry {
   position: relative;
   display: grid;
-  grid-template-columns: 1fr 240px;
+  grid-template-columns: 1fr 196px;
   background: var(--grad, var(--blk-grigio));
   border: none;
-  border-radius: var(--r-xl);
-  box-shadow: 0 1px 0 rgba(255,255,255,0.12) inset, 0 12px 30px -14px rgba(0,0,0,0.75);
+  border-radius: 22px;
+  /* nessuna ombra: nel modello la scheda e' netta. Il filo di luce che
+     avevo messo sul bordo alto si leggeva come una sfumatura lucida. */
+  box-shadow: none;
   overflow: hidden;
   animation: cardIn 200ms ease;
   color: #fff;
@@ -1981,7 +1983,7 @@ main {
   .wrist-dot.auto, .wrist-dot.senza { height: 38px; padding: 0 12px; font-size: 12.5px; }
 
   /* scheda: pannello un po' più stretto e comandi più compatti */
-  .entry { grid-template-columns: 1fr 200px; }
+  .entry { grid-template-columns: 1fr 196px; }
   .e-avatars .av { width: 128px; height: 128px; }
   .e-kids-badge { min-width: 46px; height: 40px; font-size: 18px; }
   .e-body { padding: 14px; gap: 10px; }
@@ -2386,7 +2388,7 @@ main {
 .entry .e-who { gap: 6px; padding: 11px 12px 13px; }
 /* il corpo distribuisce lo spazio invece di lasciare un buco prima dei
    tasti: le due colonne finiscono pari */
-.entry .e-body { justify-content: space-evenly; padding: 13px 15px; }
+.entry .e-body { justify-content: flex-start; padding: 14px 16px 16px; }
 
 /* avviso "c'è una versione nuova" */
 .avviso-versione {
@@ -2710,3 +2712,40 @@ main {
 /* col velo allo 0,16 del modello la scritta bianca sui tasti scende a
    4,35; a 0,12 la differenza non si vede e passa */
 .entry .e-act { background: rgba(255, 255, 255, 0.12); }
+
+/* il riquadro della persona arriva al bordo della scheda: prima restava
+   scoperta una striscia della sfumatura sul fianco destro */
+.entry .e-who { width: auto; }
+
+/* ---------- gli ultimi scarti da E2, trovati leggendo il codice ----------
+   Erano quattro veli scuri uno sull'altro (0,26 + 0,22 + 0,16 + 0,30):
+   il pannello finiva quasi nero invece che viola. Nel modello i livelli
+   sono due. */
+.blk .p-blocco { background: none; border-color: transparent; }
+.blk .p-editor { background: none; padding: 0; border-top: none; }
+.blk .p-blocco.aperto .p-editor { border-radius: 0; }
+
+/* i tratti: righe di testo, come nel modello */
+.ed-tratti { display: block; }
+.ed-tr { font-size: 13px; font-weight: 600; line-height: 1.5; color: rgba(255,255,255,0.9); }
+
+/* la miniatura galleggia sul fondo del bottone, senza riquadro proprio */
+.ed-opt .ed-mini { background: none; border-radius: 8px; }
+/* il nome puo' andare a capo su due righe: "Zaino e borse" non si taglia */
+.ed-opt > span { white-space: normal; font-size: 11px; }
+.ed-opt { height: 88px; padding: 0; overflow: hidden; }
+.ed-opt.on { background: rgba(255, 209, 102, 0.18); }
+.ed-col { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25); }
+
+/* il titoletto del pannello */
+.ed-pannello > .ed-k:first-child { margin-bottom: 7px; }
+
+/* SU SCHERMO STRETTO il palco si impila: le regole di E2 stavano dopo il
+   media query e lo annullavano, quindi sotto i 700px non funzionava piu' */
+@media (max-width: 700px) {
+  .ed-palco { flex-direction: column; }
+  .ed-persona { width: 100%; display: flex; gap: 12px; align-items: flex-start; text-align: left; }
+  .ed-figura { width: 126px; height: 168px; flex-shrink: 0; }
+  .ed-chi { margin: 0 0 4px; text-align: left; }
+  .ed-parti { grid-template-columns: repeat(4, 1fr); }
+}
