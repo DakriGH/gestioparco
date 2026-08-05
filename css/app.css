@@ -67,6 +67,22 @@
   --shadow:    0 2px 4px rgba(0, 0, 0, 0.18), 0 10px 28px rgba(0, 0, 0, 0.32);
   --shadow-lg: 0 4px 10px rgba(0, 0, 0, 0.28), 0 24px 60px rgba(0, 0, 0, 0.5);
 
+  /* ---- LINGUAGGIO "BLOCCHI" ----
+     Ogni sezione e ogni scheda e' un blocco di colore pieno con testo
+     bianco sopra. Le tinte sono le stesse nei due temi: e' il blocco a
+     portarsi dietro il proprio fondo, quindi il contrasto non dipende
+     dalla pagina. Il colore serve a ritrovare la sezione senza leggerla. */
+  /* Tinte misurate, non scelte a occhio: il BIANCO deve reggere anche sul
+     capo piu' chiaro della sfumatura (>=4.6). L'ambra e il ciano di prima
+     stavano a 2,59 e 3,27: bianco su giallo non si legge. */
+  --blk-blu:    linear-gradient(150deg, #2261B6 0%, #17498D 100%);
+  --blk-viola:  linear-gradient(150deg, #664BC5 0%, #4C3499 100%);
+  --blk-ambra:  linear-gradient(150deg, #825819 0%, #64420F 100%);
+  --blk-verde:  linear-gradient(150deg, #156F53 0%, #0E5640 100%);
+  --blk-rosso:  linear-gradient(150deg, #A64343 0%, #832E2E 100%);
+  --blk-ciano:  linear-gradient(150deg, #1F6978 0%, #14515D 100%);
+  --blk-grigio: linear-gradient(150deg, #4A4A5C 0%, #353544 100%);
+
   /* le barre in alto: velo sul fondo, non due pannelli opachi */
   --velo-barra:  rgba(255, 255, 255, 0.045);
   --velo-barra2: rgba(255, 255, 255, 0.028);
@@ -388,6 +404,59 @@ main {
 .wm-lab { flex: 1; }
 .wm-tip { font-size: 11.5px; font-weight: 700; color: var(--txt-3); }
 
+
+/* ============================================================
+   BLOCCHI DI COLORE
+   Dentro un blocco si riscrivono le variabili del tema: cosi' tutto
+   quello che sta dentro (testi, riquadri, righe, tasti) diventa
+   automaticamente "bianco su colore" senza dover toccare cento regole.
+   ============================================================ */
+.blk {
+  --txt:        #FFFFFF;
+  /* sul colore pieno i grigi non esistono: si scende in trasparenza il
+     minimo indispensabile, altrimenti le etichette spariscono */
+  --txt-2:      rgba(255, 255, 255, 0.92);
+  --txt-3:      rgba(255, 255, 255, 0.85);
+  --line:       rgba(255, 255, 255, 0.16);
+  --line-2:     rgba(255, 255, 255, 0.30);
+  --surface:    rgba(0, 0, 0, 0.24);
+  --surface-2:  rgba(255, 255, 255, 0.14);
+  --surface-3:  rgba(255, 255, 255, 0.19);
+  --relief:     inset 0 1px 0 rgba(255, 255, 255, 0.10);
+  color: #fff;
+}
+
+.card.blk {
+  background: var(--blk, var(--blk-grigio));
+  border: none;
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.10) inset, 0 10px 26px -14px rgba(0,0,0,0.75);
+}
+.card.blk > h2 {
+  margin: 0;
+  padding: 11px 15px;
+  background: none;
+  border-bottom: none;
+  border-radius: 0;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 15.5px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #fff;
+}
+.card.blk > h2 .em { font-size: 17px; }
+.blk-in { padding: 12px 15px 15px; background: rgba(0, 0, 0, 0.26); }
+
+.c-blu   { --blk: var(--blk-blu); }
+.c-viola { --blk: var(--blk-viola); }
+.c-ambra { --blk: var(--blk-ambra); }
+.c-verde { --blk: var(--blk-verde); }
+.c-rosso { --blk: var(--blk-rosso); }
+.c-ciano { --blk: var(--blk-ciano); }
+.c-grigio{ --blk: var(--blk-grigio); }
+
 /* ---------- blocchi ---------- */
 .card {
   background: var(--vel), var(--surface);
@@ -420,13 +489,10 @@ main {
 .hint { font-size: 13px; color: var(--txt-3); margin: -4px 0 10px; }
 .sect-head {
   display: flex; align-items: center; gap: 9px;
-  margin: -10px -13px 10px; padding: 5px 13px 5px;
-  background: var(--surface-2);
-  border-bottom: 1px solid var(--line-2);
-  border-radius: var(--r) var(--r) 0 0;
-  min-height: 38px;
+  padding: 7px 15px;
+  min-height: 44px;
 }
-.sect-head h2 { margin: 0; flex: 1; font-size: 12.5px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--txt-2); font-weight: 700; }
+.sect-head h2 { margin: 0; flex: 1; font-family: 'Fredoka', sans-serif; font-size: 15.5px; letter-spacing: 0; text-transform: none; color: #fff; font-weight: 600; }
 .sect-head h2 .em { font-size: 15px; }
 
 /* riepilogo in cima alla schermata Nuovo */
@@ -704,19 +770,11 @@ main {
 /* Ogni voce su UNA riga: nome a sinistra, scelte a destra.
    Prima ogni voce si mangiava tre righe (titolo, forme, colori) e
    l'editor arrivava a 1700px: una schermata e mezza da scorrere. */
-.ed-row {
-  display: flex;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 6px 10px;
-  padding: 7px 0;
-  border-top: 1px solid var(--line);
-}
-.ed-row:first-of-type { border-top: none; padding-top: 0; }
+.ed-row { display: block; }
 .ed-row.off { opacity: 0.3; pointer-events: none; }
 .ed-k {
-  flex: 0 0 68px;
-  align-self: center;
+  display: block;
+  margin-bottom: 8px;
   font-size: 11.5px;
   font-weight: 800;
   color: var(--txt-2);
@@ -727,27 +785,43 @@ main {
 .ed-opts { display: flex; gap: 6px; flex-wrap: wrap; }
 /* la miniatura è l'etichetta: mostra il pezzo, non serve scriverlo sotto */
 .ed-opt {
-  padding: 3px;
-  border-radius: 9px;
+  width: 84px;
+  height: 86px;
+  padding: 4px 3px 5px;
+  border-radius: 13px;
   background: var(--surface-2);
-  border: 2px solid transparent;
+  border: 3px solid transparent;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  gap: 2px;
   transition: border-color var(--speed), background var(--speed), transform var(--speed);
 }
-.ed-opt > span { display: none; }
+/* IL NOME CI VUOLE: una camicia, una polo e una felpa ritagliate sul
+   busto si somigliano troppo perche' il disegno basti da solo. */
+.ed-opt > span {
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--txt-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.ed-opt.on > span { color: #fff; }
 .ed-opt:active { transform: scale(0.94); }
 .ed-opt.on { border-color: var(--accent); background: var(--accent-soft); }
 .ed-mini {
-  width: 46px;
-  height: 40px;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
   pointer-events: none;
   border-radius: 6px;
   background: var(--surface-3);
 }
-.ed-mini.ed-z-tutto { width: 34px; height: 48px; background: none; }
+.ed-mini.ed-z-tutto { background: none; }
 .ed-mini svg { width: 100%; height: 100%; display: block; }
 
 .ed-cols { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
@@ -1064,24 +1138,35 @@ main {
   position: relative;
   display: grid;
   grid-template-columns: 1fr 240px;
-  background: var(--vel), var(--c-bg);
-  border: 2px solid var(--c-orlo);
+  background: var(--grad, var(--blk-grigio));
+  border: none;
   border-radius: var(--r-xl);
-  box-shadow: var(--relief), var(--shadow), 0 0 0 1px var(--c-alone), 0 10px 34px -12px var(--c-alone);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.12) inset, 0 12px 30px -14px rgba(0,0,0,0.75);
   overflow: hidden;
   animation: cardIn 200ms ease;
-  --c: var(--line-2);
-  --c-bg: var(--surface);
-  --c-bg2: var(--surface-2);
-  --c-orlo: var(--line-2);
-  --c-alone: transparent;
+  color: #fff;
+  /* la scheda E' il colore dello stato: si trova a due metri senza
+     leggere il countdown. Le variabili qui dentro diventano tutte
+     "bianco su colore". */
+  --c: #FFFFFF;
+  --c-bg: rgba(0, 0, 0, 0.24);
+  --c-bg2: rgba(0, 0, 0, 0.24);
+  --txt: #FFFFFF;
+  --txt-2: rgba(255, 255, 255, 0.92);
+  --txt-3: rgba(255, 255, 255, 0.85);
+  --line: rgba(255, 255, 255, 0.16);
+  --line-2: rgba(255, 255, 255, 0.30);
+  --surface: rgba(0, 0, 0, 0.24);
+  --surface-2: rgba(255, 255, 255, 0.14);
+  --surface-3: rgba(255, 255, 255, 0.19);
+  --relief: inset 0 1px 0 rgba(255, 255, 255, 0.10);
 }
 @keyframes cardIn { from { opacity: 0; } }
 
-.entry.s-ok     { --c: var(--ok);     --c-bg: var(--card-ok);     --c-bg2: var(--card-ok-2);     --c-orlo: var(--ok-orlo);     --c-alone: var(--ok-alone); }
-.entry.s-warn   { --c: var(--warn);   --c-bg: var(--card-warn);   --c-bg2: var(--card-warn-2);   --c-orlo: var(--warn-orlo);   --c-alone: var(--warn-alone); }
-.entry.s-danger { --c: var(--danger); --c-bg: var(--card-danger); --c-bg2: var(--card-danger-2); --c-orlo: var(--danger-orlo); --c-alone: var(--danger-alone); }
-.entry.s-later  { --c: var(--late);   --c-bg: var(--card-late);   --c-bg2: var(--card-late-2);   --c-orlo: var(--late-orlo);   --c-alone: var(--late-alone); }
+.entry.s-ok     { --grad: var(--blk-verde); }
+.entry.s-warn   { --grad: var(--blk-ambra); }
+.entry.s-danger { --grad: var(--blk-rosso); }
+.entry.s-later  { --grad: var(--blk-ciano); }
 
 .entry.s-danger::after {
   content: "";
@@ -1090,8 +1175,8 @@ main {
   border-radius: inherit;
   pointer-events: none;
   opacity: 0;
-  box-shadow: inset 0 0 0 3px var(--c);
-  animation: pulseRing 1.3s ease-in-out infinite;
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.85);
+  animation: pulseRing 1.4s ease-in-out infinite;
 }
 @keyframes pulseRing { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
 
@@ -1104,25 +1189,16 @@ main {
   font-size: 36px;
   font-weight: 700;
   line-height: 1.1;
-  color: var(--c);
+  color: #fff;
+  font-size: 40px;
 }
 /* La cifra sfuma dentro la sua tinta. ATTENZIONE: il gradiente va scritto
    QUI e non in una variabile su :root, perche' `--c` esiste solo sulla
    scheda: una variabile di :root che usa var(--c) nasce gia' invalida e il
    numero sparisce. Con background-IMAGE (non la scorciatoia background)
    il ritaglio sul testo resta. */
-@supports (-webkit-background-clip: text) or (background-clip: text) {
-  .e-count {
-    background-image: linear-gradient(170deg, #FFFFFF 4%, var(--c) 62%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-  /* sul chiaro si scurisce verso il basso: partendo dal bianco sparirebbe */
-  :root[data-theme="light"] .e-count {
-    background-image: linear-gradient(170deg, var(--c) 15%, #16121F 135%);
-  }
-}
+/* sul colore pieno il bianco pieno e' il massimo che si possa leggere:
+   niente sfumature ritagliate sul testo, che qui toglierebbero solo forza */
 .e-count-sub { font-size: 14px; font-weight: 700; color: var(--txt-2); }
 .e-range {
   margin-left: auto;
@@ -1135,8 +1211,8 @@ main {
 .e-range .arrow { color: var(--txt-3); font-size: 17px; margin: 0 5px; }
 
 .e-bar-track {
-  height: 10px;
-  background: var(--c-bg2);
+  height: 9px;
+  background: rgba(0, 0, 0, 0.28);
   border-radius: 10px;
   overflow: hidden;
   margin-top: -4px;
@@ -1145,8 +1221,7 @@ main {
   height: 100%;
   width: 100%;
   border-radius: 10px;
-  background: linear-gradient(90deg, var(--c-bg2) 0%, var(--c) 55%, var(--c) 100%);
-  box-shadow: 0 0 12px -2px var(--c);
+  background: rgba(255, 255, 255, 0.92);
   transform-origin: left center;
   transform: scaleX(0);
   transition: transform 1s linear;
@@ -1185,8 +1260,8 @@ main {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: var(--late-soft);
-  color: var(--late);
+  background: rgba(0, 0, 0, 0.26);
+  color: #fff;
   border-radius: var(--r);
   padding: 12px 18px;
   font-size: 15px;
@@ -1208,13 +1283,17 @@ main {
 .e-costs .cost { display: flex; align-items: baseline; gap: 7px; }
 .e-costs .k { color: var(--txt-3); }
 .e-costs .num { color: var(--txt); font-size: 16px; }
-.e-costs .pagato { color: var(--ok); }
+.e-costs .pagato { color: #fff; opacity: 0.75; }
 .e-costs .pagato::after { content: " \2713"; }
 .e-due { margin-left: auto; display: flex; align-items: baseline; gap: 9px; }
 .e-due .k { font-size: 15px; font-weight: 700; color: var(--txt-2); }
 .e-due .v { font-family: 'Fredoka', sans-serif; font-size: 26px; font-weight: 700; }
-.e-due .v.due { color: var(--danger); }
-.e-due .v.paid { color: var(--ok); }
+/* Sopra il colore pieno il bianco e' l'unica cosa che si legge sempre:
+   il "quanto manca" lo dice gia' la scheda col suo colore, non serve
+   ripeterlo con un rosso che sul rosso sparisce. */
+.e-due .v.due { color: #fff; }
+.e-due .v.paid { color: #fff; opacity: 0.72; }
+.e-due .v.paid::after { content: " ¹3"; }
 
 /* riga 4: le azioni. Tutte nel colore della scheda: cambia la scheda,
    cambiano loro, così non c'è un arcobaleno di tasti su ogni riga. */
@@ -1248,7 +1327,7 @@ main {
 .e-act.on { background: var(--vel-forte), var(--c); color: var(--c-bg); border-color: transparent; }
 .e-act.on .badge { background: var(--c-bg); color: var(--c); }
 /* solo l'uscita resta segnata, ma nella stessa famiglia */
-.e-act.out { border-color: var(--c); color: var(--c); }
+.e-act.out { background: #fff; color: #1A1626; }
 
 /* --- pannello riferimento, a destra --- */
 /* Il pannello del riferimento sfuma verso il COLORE DEL BRACCIALE:
@@ -1264,9 +1343,8 @@ main {
   padding: 14px 14px 16px;
   background:
     radial-gradient(150% 105% at 118% 108%, var(--brace, transparent) 0%, transparent 72%),
-    var(--vel),
-    var(--c-bg2);
-  border-left: 2px solid var(--line);
+    rgba(0, 0, 0, 0.26);
+  border-left: none;
 }
 /* e un filo del colore giusto sul bordo esterno */
 .entry.con-bracciale .e-who::before {
@@ -1952,6 +2030,37 @@ main {
   * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 
+
+/* ---------- editor avatar: si sceglie il PEZZO (stile Mii) ---------- */
+.ed-parti {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+  margin-bottom: 11px;
+}
+.ed-parte {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 9px 3px 8px;
+  border-radius: 14px;
+  background: var(--surface-2);
+  border: 2px solid transparent;
+  color: var(--txt);
+  transition: background var(--speed), transform var(--speed);
+}
+.ed-parte .em { font-size: 22px; line-height: 1; }
+.ed-parte .nm { font-size: 12px; font-weight: 700; }
+.ed-parte:active { transform: scale(0.95); }
+.ed-parte.on { background: #FFD166; color: #221A00; border-color: rgba(255,255,255,0.55); }
+.ed-pannello {
+  background: rgba(0, 0, 0, 0.26);
+  border-radius: 16px;
+  padding: 12px 13px 14px;
+}
+.ed-pannello .ed-cols { margin-top: 4px; }
+
 /* ---------- accesso al cloud ----------
    Schermata piena, ma non è un muro: c'è sempre la via d'uscita per
    lavorare su questo tablet, altrimenti un wifi ballerino chiude la cassa. */
@@ -2062,3 +2171,28 @@ main {
 .avviso-dati .ad-txt b { font-size: 15px; color: var(--warn); }
 .avviso-dati .ad-txt span { font-size: 13px; color: var(--txt-2); }
 .avviso-dati .mini-b { width: 40px; height: 40px; font-size: 15px; }
+
+/* un blocco con il contenuto chiuso non deve lasciare una fascia vuota */
+.blk-in:has(> .hidden:only-child) { display: none; }
+
+/* dentro i blocchi colorati non c'e' spazio per tinte tenui: bianco */
+.blk .now-btn, .entry .now-btn { color: #fff; border-color: rgba(255,255,255,0.45); }
+.blk .pill, .entry .pill { background: rgba(0,0,0,0.30); color: #fff; border-color: transparent; }
+.blk .hint, .entry .hint { color: rgba(255,255,255,0.85); }
+.entry .e-count-sub { color: rgba(255,255,255,0.92); }
+.entry .e-bar-chip, .entry .e-act .tag { color: #fff; background: rgba(0,0,0,0.3); }
+.blk .p-preset > summary { color: rgba(255,255,255,0.88); }
+.blk .trait, .entry .trait { color: #fff; }
+/* la pastiglia col totale sta su fondo bianco: il testo la' dentro
+   dev'essere scuro, non la variabile della scheda */
+.entry .badge, .blk .badge { color: #1A1626; }
+/* il tasto che cancella, dentro un blocco colorato */
+.blk .btn-danger { background: #8E2230; color: #fff; border-color: rgba(255,255,255,0.35); }
+/* i tasti che tolgono una riga, dentro un blocco colorato: si devono
+   vedere ma non urlare */
+.blk .rm, .blk .del, .blk .mini-b.del {
+  background: rgba(0, 0, 0, 0.34);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.28);
+}
+.blk .rm:active, .blk .del:active { background: #8E2230; }

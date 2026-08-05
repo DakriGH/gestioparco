@@ -370,8 +370,9 @@ function buildNewView() {
   root.innerHTML = `
     <div class="edit-banner hidden" id="nEditBanner"></div>
 
-    <div class="card">
+    <div class="card blk c-blu">
       <h2><span class="em">\ud83d\udd52</span> Orario di inizio</h2>
+      <div class="blk-in">
       <div class="time-row">
         <button class="round-btn" id="nStartMinus" aria-label="5 minuti prima">\u2212</button>
         <div class="time-display num" id="nStart">--:--</div>
@@ -382,10 +383,12 @@ function buildNewView() {
           <div class="wrist-row" id="nWrist"></div>
         </div>
       </div>
+      </div>
     </div>
 
-    <div class="card sec-dur">
+    <div class="card blk c-ambra sec-dur">
       <h2><span class="em">\u23f3</span> Quanto restano</h2>
+      <div class="blk-in">
       <div class="chips" id="nDur"></div>
       <div class="dur-custom">
         <span class="lab">oppure minuti esatti</span>
@@ -393,10 +396,12 @@ function buildNewView() {
         <input type="number" id="nDurInput" min="1" step="5" inputmode="numeric" value="60">
         <button class="step-b sm plus" id="nDurP">+</button>
       </div>
+      </div>
     </div>
 
-    <div class="card sec-num">
+    <div class="card blk c-verde sec-num">
       <h2><span class="em">\ud83e\uddd2</span> Bambini e attrazioni</h2>
+      <div class="blk-in">
       <div class="counters">
         <div class="counter">
           <div class="c-lab"><span class="em">\ud83e\uddd2</span> Bambini</div>
@@ -411,19 +416,24 @@ function buildNewView() {
           <button class="step-b plus" id="nCrazyP">+</button>
         </div>
       </div>
+      </div>
     </div>
 
-    <div class="card sec-people">
+    <div class="card blk c-viola sec-people">
       <h2><span class="em">\ud83e\uddd1\u200d\ud83e\udd1d\u200d\ud83e\uddd1</span> Chi accompagna</h2>
-      <div class="person-list" id="nPeople"></div>
+      <div class="blk-in">
+        <div class="person-list" id="nPeople"></div>
+      </div>
     </div>
 
-    <div class="card sec-bar">
+    <div class="card blk c-ciano sec-bar">
       <div class="sect-head">
         <h2><span class="em">\ud83e\udd64</span> Bar</h2>
         <button class="pill" id="nBarToggle">Apri</button>
       </div>
-      <div class="bar-wrap hidden" id="nBar"></div>
+      <div class="blk-in">
+        <div class="bar-wrap hidden" id="nBar"></div>
+      </div>
     </div>
 
     <div class="btn-row" id="nEditRow" style="margin-bottom:8px;"></div>
@@ -1332,20 +1342,27 @@ function buildAvatarEditor(box, person, onChange, opts) {
       traits.innerHTML = '';
       AV.traits(av, 5).forEach(t => traits.appendChild(traitChip(t)));
     }
-    box.querySelectorAll('[data-off]').forEach(r => {
-      r.classList.toggle('off', av.top.style === 'vestito' && r.dataset.off === 'pants');
+    sezioni.forEach(sz => {
+      if (sz.node.dataset.off) {
+        sz.node.classList.toggle('off', av.top.style === 'vestito' && sz.node.dataset.off === 'pants');
+      }
     });
     if (avvisa !== false && typeof onChange === 'function') onChange();
   };
 
-  /* mattoni */
+  /* ---- E2: si sceglie il PEZZO, sotto compaiono le sue scelte ----
+     Le sezioni si costruiscono tutte ma restano staccate dalla pagina:
+     a video ce n'e' una sola per volta, quindi non si scorre mai. */
+  const sezioni = [];
+  const EMOJI_PARTE = {
+    capelli: '\ud83d\udc87', cappello: '\ud83e\udde2', maglietta: '\ud83d\udc55',
+    pantaloni: '\ud83d\udc56', scarpe: '\ud83d\udc5f', borsa: '\ud83c\udf92',
+    occhiali: '\ud83d\ude0e', pelle: '\u270b'
+  };
   const riga = (icona, titolo, chiave) => {
     const r = el('div', 'ed-row');
     if (chiave) r.dataset.off = chiave;
-    const k = el('div', 'ed-k');
-    k.innerHTML = '<span>' + titolo + '</span>';
-    r.appendChild(k);
-    box.appendChild(r);
+    sezioni.push({ icona: icona, titolo: titolo, node: r });
     return r;
   };
   const stili = (r, lista, get, set, zona) => {
@@ -1381,7 +1398,9 @@ function buildAvatarEditor(box, person, onChange, opts) {
   };
   /* quando cambia un colore, le miniature vanno rifatte tutte */
   const rifaiTutte = () => {
-    $$('.ed-opts', box).forEach(sc => {
+    const tutte = [];
+    sezioni.forEach(sz => $$('.ed-opts', sz.node).forEach(x => tutte.push(x)));
+    tutte.forEach(sc => {
       const zona = sc.dataset.zona || undefined;
       $$('.ed-opt', sc).forEach(b => {
         const m = $('.ed-mini', b);
@@ -1537,6 +1556,26 @@ function buildAvatarEditor(box, person, onChange, opts) {
 
   const rPelle = riga('pelle', 'Pelle');
   colori(rPelle, AV.SKINS, () => av.skin, v => { av.skin = v; });
+
+  /* il selettore: emoji + nome, tutti a vista, uno acceso per volta */
+  const parti = el('div', 'ed-parti');
+  const pannello = el('div', 'ed-pannello');
+  box.appendChild(parti);
+  box.appendChild(pannello);
+
+  const mostra = (i) => {
+    $$('.ed-parte', parti).forEach((b, j) => b.classList.toggle('on', i === j));
+    pannello.innerHTML = '';
+    pannello.appendChild(sezioni[i].node);
+  };
+  sezioni.forEach((sz, i) => {
+    const b = el('button', 'ed-parte');
+    b.innerHTML = '<span class="em">' + (EMOJI_PARTE[sz.icona] || '\u2728') + '</span>';
+    b.appendChild(el('span', 'nm', sz.titolo));
+    b.onclick = () => mostra(i);
+    parti.appendChild(b);
+  });
+  mostra(0);
 
   aggiorna(false);   // primo disegno: non avvisare nessuno
 }
@@ -2201,16 +2240,19 @@ function confirmSheet(title, text, onYes) {
 function buildSettingsView() {
   const root = $('#view-settings');
   root.innerHTML = `
-    <div class="card">
+    <div class="card blk c-viola">
       <h2><span class="em">🎨</span> Aspetto</h2>
+      <div class="blk-in">
       <button class="switch-row" id="setTheme" role="switch">
         <span class="sw-txt"><b>Tema scuro</b><span>Riposante e con i colori dei bracciali più leggibili.</span></span>
         <span class="switch"></span>
       </button>
+      </div>
     </div>
 
-    <div class="card">
+    <div class="card blk c-ambra">
       <h2><span class="em">⏱️</span> Tempi e prezzi base</h2>
+      <div class="blk-in">
       <button class="switch-row" id="setTariffa" role="switch" style="margin-bottom:12px;">
         <span class="sw-txt"><b>Tariffa sull'intera permanenza</b><span>Chi allunga paga la tariffa del tempo totale (30'+30' = 1 ora), non due volte quella da 30. Spento: ogni aggiunta si paga a parte.</span></span>
         <span class="switch"></span>
@@ -2221,53 +2263,69 @@ function buildSettingsView() {
         <div class="field"><label>Tolleranza dopo scadenza</label><input type="number" inputmode="numeric" min="0" id="sTol"></div>
         <div class="field"><label>Avvisa quando mancano</label><input type="number" inputmode="numeric" min="0" id="sWarn"></div>
       </div>
+      </div>
     </div>
 
-    <div class="card">
+    <div class="card blk c-viola">
       <h2><span class="em">⚡</span> Durate rapide</h2>
+      <div class="blk-in">
       <div class="hint">I tasti grandi che vedi in "Nuovo ingresso".</div>
       <div id="sQuick"></div>
       <button class="btn btn-sm btn-block" id="sAddQuick" style="margin-top:8px;">➕ Aggiungi tasto</button>
+      </div>
     </div>
 
-    <div class="card">
+    <div class="card blk c-verde">
       <h2><span class="em">💶</span> Listino</h2>
+      <div class="blk-in">
       <div class="hint">Il tempo si arrotonda per eccesso a 5 minuti; il totale si moltiplica per i bambini.</div>
       <div id="sTariffs"></div>
       <button class="btn btn-sm btn-block" id="sAddTariff" style="margin-top:8px;">➕ Aggiungi fascia</button>
+      </div>
     </div>
 
-    <div class="card">
+    <div class="card blk c-ciano">
       <h2><span class="em">🥤</span> Menù bar</h2>
+      <div class="blk-in">
       <div id="sBar"></div>
       <button class="btn btn-sm btn-block" id="sAddBar" style="margin-top:8px;">➕ Aggiungi voce</button>
+      </div>
     </div>
 
-    <div class="card">
+    <div class="card blk c-blu">
       <h2><span class="em">🎗️</span> Bracciali per fascia oraria</h2>
+      <div class="blk-in">
       <div id="sWrist"></div>
       <button class="btn btn-sm btn-block" id="sAddWrist" style="margin-top:8px;">➕ Aggiungi fascia</button>
+      </div>
     </div>
 
-    <div class="card">
+    <div class="card blk c-viola">
       <h2><span class="em">🖼️</span> Avatar pronti</h2>
+      <div class="blk-in">
       <div class="hint">Compaiono come scorciatoie quando aggiungi una persona.</div>
       <div class="preset-grid" id="sPresets"></div>
       <button class="btn btn-sm btn-block" id="sAddPreset" style="margin-top:10px;">➕ Nuovo avatar</button>
+      </div>
     </div>
 
-    <div class="card" id="sCloudCard">
+    <div class="card blk c-blu" id="sCloudCard">
       <h2><span class="em">☁️</span> Cloud e accesso</h2>
+      <div class="blk-in">
       <div id="sCloud"></div>
+      </div>
     </div>
 
-    <div class="card" id="sSicuroCard">
+    <div class="card blk c-verde" id="sSicuroCard">
       <h2><span class="em">🔒</span> Sicurezza dei dati</h2>
+      <div class="blk-in">
       <div id="sSicuro"></div>
+      </div>
     </div>
 
-    <div class="card">
+    <div class="card blk c-grigio">
       <h2><span class="em">💾</span> Backup</h2>
+      <div class="blk-in">
       <div class="hint">Il backup su file resta utile anche col cloud acceso: è la tua copia, e funziona senza rete.</div>
       <div class="btn-row" style="margin-bottom:10px;">
         <button class="btn btn-sm" id="sExport">Scarica backup</button>
@@ -2276,6 +2334,7 @@ function buildSettingsView() {
       <input type="file" id="sFile" accept=".json" class="hidden">
       <button class="btn btn-sm btn-danger btn-block" id="sReset">Cancella tutto</button>
       <div class="hint" style="margin:10px 0 0; text-align:center;">Le modifiche qui si salvano da sole.</div>
+      </div>
     </div>`;
 
   aggiornaCartaCloud();
