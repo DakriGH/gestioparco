@@ -2434,7 +2434,9 @@ function renderPresets() {
 function applyTheme() {
   document.documentElement.dataset.theme = settings.theme === 'light' ? 'light' : 'dark';
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute('content', settings.theme === 'light' ? '#EEF2F8' : '#0A0F1C');
+  // la barra di sistema del tablet deve intonarsi all'app, non restare
+  // del blu di due versioni fa
+  if (meta) meta.setAttribute('content', settings.theme === 'light' ? '#FFFFFF' : '#17171E');
 }
 function updateBadge() {
   const n = entries.filter(e => e.status === 'active').length;
