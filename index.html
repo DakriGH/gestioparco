@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#17171E">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Gestione Parco</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<!-- ?v= : alzare il numero a ogni modifica di css/js, così il ricarico è garantito -->
+<link rel="stylesheet" href="./css/app.css?v=84">
+</head>
+<body>
+
+<div id="app">
+  <!-- Tutti i comandi stanno in alto: sotto ci va la tastiera del tablet -->
+  <header class="topbar">
+    <div class="brand"><span class="em">🎡</span> <span class="brand-txt">Gestione Parco</span></div>
+
+    <nav class="tabs">
+      <button data-tab="new" class="on" id="tabNew">Nuovo</button>
+      <button data-tab="active" id="tabActive">In corso <span class="badge" id="tabBadge" data-n="0">0</span></button>
+      <button data-tab="settings" id="tabSet"><span class="tab-txt">Impostazioni</span></button>
+    </nav>
+
+    <div class="clock num" id="clock">--:--</div>
+  </header>
+
+  <!-- un solo banner: lo scontrino di quel che si sta registrando -->
+  <div class="actionbar hidden" id="actionbar">
+    <div class="ab-time">
+      <span class="ab-k">ora</span>
+      <span class="num" id="abNow">--:--</span>
+      <span class="ab-arrow" id="abArrow"></span>
+      <span class="ab-k">fine</span>
+      <span class="num strong" id="abEnd">--:--</span>
+    </div>
+    <div class="ab-voci">
+      <span class="ab-voce"><span class="ab-k">Parco</span><span class="num" id="abParco">0,00 €</span></span>
+      <span class="ab-voce hidden" id="abCrazyBox"><span class="ab-k">Crazy</span><span class="num" id="abCrazy">0,00 €</span></span>
+      <span class="ab-voce hidden" id="abBarBox"><span class="ab-k">Bar</span><span class="num" id="abBar">0,00 €</span></span>
+    </div>
+    <div class="ab-tot">
+      <span class="ab-k">Totale</span>
+      <span class="num" id="abEur">0,00 €</span>
+    </div>
+    <button class="btn btn-primary" id="abSave">Registra</button>
+  </div>
+
+  <main>
+    <!-- compare solo finché i dati non sono al riparo dalle pulizie del browser -->
+    <div id="avvisoDati" class="hidden"></div>
+    <div class="view" id="view-new"></div>
+    <div class="view hidden" id="view-active"></div>
+    <div class="view hidden" id="view-settings"></div>
+  </main>
+</div>
+
+<!-- accesso al cloud: compare solo se il cloud è configurato e non sei entrato -->
+<div id="gate" class="hidden"></div>
+
+<div id="modalRoot" class="hidden"></div>
+<div id="toast" class="toast"></div>
+
+<script src="./js/dati.js?v=84"></script>
+<script src="./js/firebase-config.js?v=84"></script>
+<script src="./js/cloud.js?v=84"></script>
+<script src="./js/avatar.js?v=84"></script>
+<script src="./js/app.js?v=84"></script>
+</body>
+</html>

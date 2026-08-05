@@ -1,0 +1,12 @@
+# vecchie versioni tenute solo in locale: non vanno pubblicate
+index_backup.html
+index_PRIMA_del_restyle_*.html
+patch_*.py
+
+# roba di sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+node_modules/
+.firebase/
+*.log
