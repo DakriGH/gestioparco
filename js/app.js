@@ -973,6 +973,42 @@ function aggiornaCartaCloud() {
   box.appendChild(fuori);
 }
 
+/* ---------- backup automatico su file ----------
+   Il backup non deve dipendere dal fatto che uno se lo ricordi: una volta
+   al giorno, alla prima apertura, il file si scarica da solo nella cartella
+   Download del tablet. Si può spegnere dalle impostazioni. */
+function nomeBackup(d) {
+  const p = n => String(n).padStart(2, '0');
+  return 'parco-' + d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + '.json';
+}
+function contenutoBackup() {
+  return JSON.stringify({
+    app: 'gestioparco', versione: 1, quando: new Date().toISOString(),
+    settings: settings, entries: entries, presets: presets
+  }, null, 2);
+}
+function scaricaFile(nome, testo) {
+  const b = new Blob([testo], { type: 'application/json' });
+  const u = URL.createObjectURL(b);
+  const a = document.createElement('a');
+  a.href = u; a.download = nome;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(u), 4000);
+}
+function backupAutomatico() {
+  if (settings.backupAuto === false) return;
+  const oggi = nomeBackup(new Date());
+  if (load('gp_ultimo_backup') === oggi) return;   // già fatto oggi
+  if (!entries.length) return;                     // niente da salvare
+  save('gp_ultimo_backup', oggi);
+  try {
+    scaricaFile(oggi, contenutoBackup());
+    toast('Backup del giorno salvato 💾');
+  } catch (e) { console.warn('backup automatico', e); }
+}
+
 /* Avviso in cima: i dati non sono ancora al riparo. Sparisce da solo appena
    lo spazio è protetto (installando l'app succede da sé), oppure quando lo
    si mette a tacere. Non è un pannello e non ruba spazio alle schede. */
@@ -1054,6 +1090,33 @@ function aggiornaCartaSicurezza() {
     dettaglio.textContent = 'Occupati ' + mb(s.usato) + (s.quota ? ' su ' + mb(s.quota) + ' disponibili' : '') +
       '. Ogni salvataggio va in due posti diversi su questo tablet.';
   });
+
+  /* il backup automatico su file */
+  const sw = el('button', 'switch-row');
+  sw.style.marginTop = '12px';
+  sw.setAttribute('role', 'switch');
+  const ultimo = load('gp_ultimo_backup');
+  sw.innerHTML = '<span class="sw-txt"><b>Backup automatico ogni giorno</b><span>' +
+    'Alla prima apertura della giornata il file finisce da solo nei Download. ' +
+    (ultimo ? 'Ultimo: <b>' + esc(ultimo) + '</b>' : 'Non ancora fatto.') +
+    '</span></span><span class="switch"></span>';
+  const dipingi = () => {
+    const on = settings.backupAuto !== false;
+    $('.switch', sw).classList.toggle('on', on);
+    sw.setAttribute('aria-checked', on ? 'true' : 'false');
+  };
+  dipingi();
+  sw.onclick = () => { settings.backupAuto = settings.backupAuto === false; saveSettings(); dipingi(); };
+  box.appendChild(sw);
+
+  const ora = el('button', 'btn btn-sm btn-block', '💾 Salva un backup adesso');
+  ora.style.marginTop = '8px';
+  ora.onclick = () => {
+    scaricaFile(nomeBackup(new Date()), contenutoBackup());
+    save('gp_ultimo_backup', nomeBackup(new Date()));
+    toast('Backup salvato 💾');
+  };
+  box.appendChild(ora);
 
   /* le copie del giorno */
   const tit = el('div', 'sez-k', 'Copie dei giorni scorsi');
@@ -1286,6 +1349,8 @@ function buildAvatarEditor(box, person, onChange, opts) {
       b.dataset.key = it.key;
       b.dataset.lista = nomeLista(lista);
       b.appendChild(mini);
+      // il nome resta come suggerimento: a video parla la miniatura
+      b.title = it.label;
       b.appendChild(el('span', null, it.label));
       b.onclick = () => {
         set(it.key);
@@ -1425,14 +1490,10 @@ function buildAvatarEditor(box, person, onChange, opts) {
     return '<svg viewBox="0 0 24 24" width="100%" height="100%">' + (d[key] || d.solid) + '</svg>';
   }
 
-  /* ---- l'ordine che serve davvero: si parte dalla pelle ---- */
-  const rPelle = riga('pelle', 'Pelle');
-  colori(rPelle, AV.SKINS, () => av.skin, v => { av.skin = v; });
-
-  const rViso = riga('occhiali', 'Viso');
-  stili(rViso, AV.GLASSES, () => av.glasses, v => { av.glasses = v; }, 'viso');
-  stili(rViso, AV.FACIAL, () => av.facial, v => { av.facial = v; }, 'viso');
-
+  /* L'ordine è quello di ciò che si NOTA di una persona, dall'alto in
+     basso: capelli, cappello, maglietta, pantaloni. Pelle e viso stanno
+     in fondo perché quasi non si toccano, e prima costringevano a
+     scorrere per arrivare ai vestiti, che sono la cosa che serve. */
   const rCap = riga('capelli', 'Capelli');
   stili(rCap, AV.HAIR, () => av.hair.style, v => { av.hair.style = v; }, 'testa');
   colori(rCap, AV.HAIR_COLORS, () => av.hair.color, v => { av.hair.color = v; });
@@ -1460,6 +1521,13 @@ function buildAvatarEditor(box, person, onChange, opts) {
   const rBag = riga('borsa', 'Zaino e borse');
   stili(rBag, AV.BAG, () => av.bag.style, v => { av.bag.style = v; }, 'lato');
   colori(rBag, AV.COLORS, () => av.bag.color, v => { av.bag.color = v; });
+
+  const rViso = riga('occhiali', 'Viso');
+  stili(rViso, AV.GLASSES, () => av.glasses, v => { av.glasses = v; }, 'viso');
+  stili(rViso, AV.FACIAL, () => av.facial, v => { av.facial = v; }, 'viso');
+
+  const rPelle = riga('pelle', 'Pelle');
+  colori(rPelle, AV.SKINS, () => av.skin, v => { av.skin = v; });
 
   aggiorna(false);   // primo disegno: non avvisare nessuno
 }
@@ -2559,6 +2627,8 @@ function init() {
 
   mostraAvvisoDati();
   avviaCloud();
+  // il backup del giorno parte da solo, ma non nel mezzo dell'apertura
+  setTimeout(backupAutomatico, 3000);
 
   // Funzionamento offline. Con ?nosw nell'indirizzo si disattiva e si
   // ripulisce tutto: serve quando si aggiorna il codice e si vuole essere

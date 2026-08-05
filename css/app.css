@@ -60,6 +60,10 @@
   --shadow:    0 2px 4px rgba(0, 0, 0, 0.18), 0 10px 28px rgba(0, 0, 0, 0.32);
   --shadow-lg: 0 4px 10px rgba(0, 0, 0, 0.28), 0 24px 60px rgba(0, 0, 0, 0.5);
 
+  /* le barre in alto: velo sul fondo, non due pannelli opachi */
+  --velo-barra:  rgba(255, 255, 255, 0.045);
+  --velo-barra2: rgba(255, 255, 255, 0.028);
+
   --sprite-edge: rgba(255, 255, 255, 0.22);
   --safe-b: env(safe-area-inset-bottom, 0px);
   --speed: 150ms;
@@ -105,6 +109,9 @@
   --vel-forte: linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0) 70%);
   --shadow:    0 1px 2px rgba(24, 20, 40, 0.06), 0 8px 22px rgba(24, 20, 40, 0.09);
   --shadow-lg: 0 3px 8px rgba(24, 20, 40, 0.12), 0 22px 52px rgba(24, 20, 40, 0.16);
+
+  --velo-barra:  rgba(255, 255, 255, 0.72);
+  --velo-barra2: rgba(255, 255, 255, 0.42);
 
   --sprite-edge: rgba(24, 20, 40, 0.30);
 }
@@ -159,20 +166,23 @@ h2 .ic, .e-panel-k .ic { width: 1.25em; height: 1.25em; }
   background: radial-gradient(135% 60% at 50% 0%, var(--bg-top) 0%, var(--bg) 62%);
 }
 
-/* comandi sempre in alto: sotto arriva la tastiera */
+/* Comandi sempre in alto: sotto arriva la tastiera.
+   La barra NON è un blocco a sé: è velata sul fondo della pagina, come
+   nell'originale. Un secondo pannello opaco in cima rubava spazio e
+   spezzava la pagina in due. */
 .topbar {
-  background-image: var(--vel);
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 12px 18px;
-  padding-top: calc(12px + env(safe-area-inset-top, 0px));
-  background: var(--surface);
+  gap: 10px;
+  padding: 7px 14px;
+  padding-top: calc(7px + env(safe-area-inset-top, 0px));
+  background: var(--velo-barra);
   border-bottom: 1px solid var(--line);
   flex-shrink: 0;
   z-index: 30;
 }
-.brand { display: flex; align-items: center; gap: 9px; font-size: 20px; flex-shrink: 0; }
+.brand { display: flex; align-items: center; gap: 7px; font-size: 16px; flex-shrink: 0; color: var(--txt-2); }
+.brand .em { font-size: 19px; }
 .brand-mark {
   width: 36px;
   height: 36px;
@@ -188,20 +198,20 @@ h2 .ic, .e-panel-k .ic { width: 1.25em; height: 1.25em; }
   box-shadow: var(--relief);
 }
 
-.tabs { display: flex; gap: 10px; margin-left: auto; }
+.tabs { display: flex; gap: 6px; margin-left: auto; }
 .tabs button {
   display: flex;
   align-items: center;
-  gap: 9px;
-  min-height: 56px;
-  padding: 0 26px;
-  border-radius: var(--r);
+  gap: 7px;
+  min-height: 42px;
+  padding: 0 15px;
+  border-radius: var(--r-sm);
   background: var(--surface-2);
   color: var(--txt-2);
-  font-size: 18px;
+  font-size: 15px;
   transition: background var(--speed), color var(--speed), transform var(--speed);
 }
-.tabs button .em { font-size: 22px; }
+.tabs button .em { font-size: 17px; }
 .tabs button:active { transform: scale(0.96); }
 .tabs button.on {
   background: var(--vel-forte), var(--accent);
@@ -209,13 +219,13 @@ h2 .ic, .e-panel-k .ic { width: 1.25em; height: 1.25em; }
   box-shadow: var(--relief), 0 6px 20px var(--accent-soft);
 }
 .tabs .badge {
-  min-width: 26px;
-  height: 26px;
-  padding: 0 8px;
-  border-radius: 13px;
+  min-width: 21px;
+  height: 21px;
+  padding: 0 6px;
+  border-radius: 11px;
   background: var(--hot);
   color: #fff;
-  font-size: 14px;
+  font-size: 12px;
   font-family: 'Fredoka', sans-serif;
   display: flex;
   align-items: center;
@@ -224,7 +234,7 @@ h2 .ic, .e-panel-k .ic { width: 1.25em; height: 1.25em; }
 .tabs button.on .badge { background: var(--accent-ink); color: var(--accent); }
 .tabs .badge[data-n="0"] { display: none; }
 
-.topbar .clock { font-family: 'Fredoka', sans-serif; font-size: 25px; font-weight: 600; flex-shrink: 0; margin-left: 4px; }
+.topbar .clock { font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 600; flex-shrink: 0; margin-left: 2px; color: var(--txt-2); }
 .icon-btn {
   width: 50px;
   height: 50px;
@@ -244,40 +254,40 @@ h2 .ic, .e-panel-k .ic { width: 1.25em; height: 1.25em; }
 .actionbar {
   display: flex;
   align-items: center;
-  gap: 22px;
+  gap: 16px;
   flex-wrap: wrap;
-  padding: 11px 18px;
-  background: var(--surface-2);
+  padding: 8px 14px;
+  background: var(--velo-barra2);
   border-bottom: 1px solid var(--line);
   flex-shrink: 0;
   z-index: 29;
 }
 .actionbar .ab-k {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
   color: var(--txt-3);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
-.ab-time { display: flex; align-items: baseline; gap: 7px; }
-.ab-time .num { font-family: 'Fredoka', sans-serif; font-size: 22px; font-weight: 600; color: var(--txt-2); }
-.ab-time .num.strong { color: var(--txt); font-size: 26px; }
+.ab-time { display: flex; align-items: baseline; gap: 6px; }
+.ab-time .num { font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 600; color: var(--txt-2); }
+.ab-time .num.strong { color: var(--txt); font-size: 21px; }
 .ab-arrow { color: var(--txt-3); display: inline-flex; align-items: center; }
-.ab-arrow .ic { width: 20px; height: 20px; }
+.ab-arrow .ic { width: 16px; height: 16px; }
 
-.ab-voci { display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap; }
-.ab-voce { display: flex; align-items: baseline; gap: 6px; }
-.ab-voce .num { font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 600; color: var(--txt-2); }
+.ab-voci { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.ab-voce { display: flex; align-items: baseline; gap: 5px; }
+.ab-voce .num { font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 600; color: var(--txt-2); }
 
-.ab-tot { display: flex; align-items: baseline; gap: 8px; margin-left: auto; }
-.ab-tot .num { font-family: 'Fredoka', sans-serif; font-size: 28px; font-weight: 700; color: var(--accent); }
-.actionbar .btn { min-width: 170px; }
+.ab-tot { display: flex; align-items: baseline; gap: 7px; margin-left: auto; }
+.ab-tot .num { font-family: 'Fredoka', sans-serif; font-size: 23px; font-weight: 700; color: var(--accent); }
+.actionbar .btn { min-width: 140px; min-height: 42px; font-size: 15px; }
 
 main {
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 14px 16px;
+  padding: 12px 14px;
   padding-bottom: calc(24px + var(--safe-b));
 }
 .view { max-width: 980px; margin: 0 auto; }
@@ -348,25 +358,42 @@ main {
 .card {
   background: var(--vel), var(--surface);
   background-blend-mode: overlay, normal;
-  border: 1px solid var(--line);
-  border-radius: var(--r-xl);
-  padding: 14px 16px;
-  margin-bottom: 12px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  padding: 10px 13px 12px;
+  margin-bottom: 10px;
   box-shadow: var(--relief), var(--shadow);
 }
+/* il titolo con la sua riga: separa il "di cosa parliamo" dal contenuto
+   senza bisogno di ingrandire niente */
 .card > h2 {
-  margin: 0 0 10px;
-  font-size: 18px;
-  font-weight: 600;
+  margin: -10px -13px 10px;
+  padding: 7px 13px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line-2);
+  border-radius: var(--r) var(--r) 0 0;
+  font-size: 12.5px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--txt-2);
+  font-weight: 700;
   color: var(--txt);
   display: flex;
   align-items: center;
   gap: 10px;
 }
-.card > h2 .em { font-size: 24px; }
-.hint { font-size: 14px; color: var(--txt-3); margin: -6px 0 14px; }
-.sect-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-.sect-head h2 { margin: 0; flex: 1; }
+.card > h2 .em { font-size: 15px; }
+.hint { font-size: 13px; color: var(--txt-3); margin: -4px 0 10px; }
+.sect-head {
+  display: flex; align-items: center; gap: 9px;
+  margin: -10px -13px 10px; padding: 5px 13px 5px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line-2);
+  border-radius: var(--r) var(--r) 0 0;
+  min-height: 38px;
+}
+.sect-head h2 { margin: 0; flex: 1; font-size: 12.5px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--txt-2); font-weight: 700; }
+.sect-head h2 .em { font-size: 15px; }
 
 /* riepilogo in cima alla schermata Nuovo */
 .hero {
@@ -614,7 +641,7 @@ main {
 /* editor avatar, aperto sotto la persona */
 .p-editor {
   border-top: 1px solid var(--line);
-  padding: 13px 14px 14px;
+  padding: 9px 12px 11px;
   background: var(--surface);
 }
 .ed-top { display: flex; gap: 14px; margin-bottom: 14px; }
@@ -640,59 +667,66 @@ main {
   font-weight: 600;
 }
 
-.ed-row { margin-bottom: 13px; }
+/* Ogni voce su UNA riga: nome a sinistra, scelte a destra.
+   Prima ogni voce si mangiava tre righe (titolo, forme, colori) e
+   l'editor arrivava a 1700px: una schermata e mezza da scorrere. */
+.ed-row {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  padding: 7px 0;
+  border-top: 1px solid var(--line);
+}
+.ed-row:first-of-type { border-top: none; padding-top: 0; }
 .ed-row.off { opacity: 0.3; pointer-events: none; }
 .ed-k {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
+  flex: 0 0 68px;
+  align-self: center;
+  font-size: 11.5px;
   font-weight: 800;
   color: var(--txt-2);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 8px;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
 }
-.ed-opts { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.ed-opts { display: flex; gap: 6px; flex-wrap: wrap; }
+/* la miniatura è l'etichetta: mostra il pezzo, non serve scriverlo sotto */
 .ed-opt {
-  width: 78px;
-  padding: 5px 4px 6px;
-  border-radius: var(--r-sm);
+  padding: 3px;
+  border-radius: 9px;
   background: var(--surface-2);
   border: 2px solid transparent;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 2px;
-  font-size: 11.5px;
-  font-weight: 700;
-  color: var(--txt-3);
+  justify-content: center;
   transition: border-color var(--speed), background var(--speed), transform var(--speed);
 }
+.ed-opt > span { display: none; }
 .ed-opt:active { transform: scale(0.94); }
-.ed-opt.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.ed-opt.on { border-color: var(--accent); background: var(--accent-soft); }
 .ed-mini {
-  width: 58px;
-  height: 52px;
+  width: 46px;
+  height: 40px;
   overflow: hidden;
   pointer-events: none;
-  border-radius: 8px;
+  border-radius: 6px;
   background: var(--surface-3);
 }
-.ed-mini.ed-z-tutto { width: 44px; height: 62px; background: none; }
+.ed-mini.ed-z-tutto { width: 34px; height: 48px; background: none; }
 .ed-mini svg { width: 100%; height: 100%; display: block; }
 
-.ed-cols { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 6px; }
+.ed-cols { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .ed-sub {
-  width: 100%;
-  font-size: 11.5px;
+  align-self: center;
+  font-size: 10.5px;
   font-weight: 700;
   color: var(--txt-3);
-  margin-bottom: -2px;
+  white-space: nowrap;
 }
 .ed-col {
-  width: 42px;
-  height: 42px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   border: 3px solid transparent;
   box-shadow: inset 0 0 0 1px var(--line-2);
@@ -961,7 +995,7 @@ main {
 
 /* ---------- lista ---------- */
 .list-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-.list-head h2 { margin: 0; font-size: 26px; font-weight: 600; flex: 1; }
+.list-head h2 { margin: 0; font-size: 15px; font-weight: 600; flex: 1; }
 .pill {
   min-height: 48px;
   padding: 0 18px;
@@ -1247,7 +1281,7 @@ main {
   font-size: 13.5px;
   color: var(--txt-2);
   line-height: 1.5;
-  text-align: center;
+  text-align: left;
   background: var(--c-bg);
   border-radius: var(--r-sm);
   padding: 9px 12px;
@@ -1265,10 +1299,16 @@ main {
   color: var(--txt-2);
   line-height: 1.45;
   white-space: normal;
-  justify-content: center;
+  /* allineati a sinistra e con il pallino in cima: i tratti lunghi
+     ("Scarpe da ginnastica bianche") vanno a capo e centrati non si
+     leggevano piu' */
+  justify-content: flex-start;
+  align-items: flex-start;
+  text-align: left;
 }
+.e-traits .trait .sw, .e-traits .trait > .em { margin-top: 4px; flex-shrink: 0; }
 .e-traits .trait .sw { width: 11px; height: 11px; }
-.e-note { font-size: 12.5px; color: var(--txt-3); font-style: italic; text-align: center; line-height: 1.35; }
+.e-note { font-size: 12.5px; color: var(--txt-3); font-style: italic; text-align: left; line-height: 1.35; }
 .e-noone {
   background: var(--warn-soft);
   color: var(--warn);
@@ -1638,7 +1678,7 @@ main {
   margin-bottom: 10px;
 }
 .switch-row .sw-txt { flex: 1; min-width: 0; }
-.switch-row .sw-txt b { display: block; font-size: 18px; font-family: 'Fredoka', sans-serif; font-weight: 600; }
+.switch-row .sw-txt b { display: block; font-size: 15px; font-family: 'Fredoka', sans-serif; font-weight: 600; }
 .switch-row .sw-txt span { font-size: 14px; color: var(--txt-3); }
 .switch {
   width: 64px;
