@@ -2416,3 +2416,75 @@ main {
   .ed-chi { margin: 0 0 4px; text-align: left; }
   .ed-parti { grid-template-columns: repeat(4, 1fr); }
 }
+
+/* =============== BAR & CONTO: tendina, spazi, resto =============== */
+.e-panel { display: flex; flex-direction: column; gap: 11px; }
+
+/* il bar chiuso: una riga sola che dice quanto han preso */
+.bar-tendina {
+  background: rgba(0, 0, 0, 0.26);
+  border-radius: 13px;
+  overflow: hidden;
+}
+.bar-tendina > summary {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 46px;
+  padding: 0 13px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.bar-tendina > summary::-webkit-details-marker { display: none; }
+.bar-tendina .bt-k { font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 600; }
+.bar-tendina .bt-hint { font-size: 12px; color: rgba(255, 255, 255, 0.6); }
+.bar-tendina .bt-tot { margin-left: auto; font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 700; }
+.bar-tendina .bt-frec { font-size: 12px; opacity: 0.7; transition: transform 160ms; }
+.bar-tendina[open] .bt-frec { transform: rotate(180deg); }
+.bar-tendina[open] .bt-hint { display: none; }
+.bar-dentro { padding: 2px 11px 11px; display: flex; flex-direction: column; gap: 9px; }
+
+/* il conto: via lo spazio sprecato, le categorie non si attaccano */
+.pay-cats { display: flex; flex-direction: column; gap: 10px; }
+.pay-cat { background: rgba(0, 0, 0, 0.26); border-radius: 13px; padding: 9px 11px 11px; }
+.pay-cat-k {
+  display: flex; align-items: center; gap: 9px;
+  font-family: 'Fredoka', sans-serif; font-size: 14.5px; font-weight: 600;
+  margin-bottom: 8px;
+}
+.pay-all { margin-left: auto; }
+.pay-grid { display: flex; flex-wrap: wrap; gap: 7px; }
+.pay-tot { display: flex; flex-direction: column; gap: 3px; padding: 2px 2px 0; }
+.pay-acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.pay-acts .btn { flex: 1 1 auto; }
+.btn-resto { background: rgba(255, 255, 255, 0.16); color: #fff; flex: 0 1 auto; }
+.btn-resto.on { background: #fff; color: #123A2C; }
+
+/* il calcolo del resto */
+.resto-box {
+  background: rgba(0, 0, 0, 0.32);
+  border-radius: 13px;
+  padding: 11px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.resto-alto { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; }
+.resto-alto .k {
+  display: block; font-size: 10.5px; font-weight: 800; letter-spacing: 0.07em;
+  text-transform: uppercase; color: rgba(255, 255, 255, 0.75);
+}
+.resto-alto .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 27px; font-weight: 700; line-height: 1.05; }
+.resto-alto .da { margin-left: auto; text-align: right; color: #FFD166; }
+.resto-tagli { display: grid; grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); gap: 7px; }
+.resto-tagli button, .resto-pad button {
+  min-height: 44px; border: none; border-radius: 12px;
+  background: rgba(255, 255, 255, 0.16); color: #fff;
+  font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer;
+}
+.resto-tagli button.mon, .resto-pad button.min { background: rgba(255, 255, 255, 0.09); font-size: 14px; }
+.resto-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+.resto-pad button { min-height: 46px; font-size: 19px; }
+.resto-azioni { display: flex; gap: 8px; flex-wrap: wrap; }
+.resto-azioni .btn-ok { flex: 1 1 160px; }

@@ -1838,12 +1838,18 @@ function entryCard(entry) {
 
   /* Il Conto si porta dentro il Bar, com'e' nel modello: un pannello solo */
   const payPanel = el('div', 'e-panel hidden');
-  const barBox = el('div');
-  const barTitolo = el('div', 'e-panel-k');
-  barTitolo.innerHTML = '\ud83e\udd64 Bar';
+  /* Il bar sta in una tendina CHIUSA: quasi sempre si apre il conto per
+     incassare, non per aggiungere una Coca. */
+  const barTendina = el('details', 'bar-tendina');
+  const barSomma = el('summary');
+  barSomma.innerHTML = '<span class="bt-k">\ud83e\udd64 Bar</span>' +
+    '<span class="bt-hint">aggiungi consumazioni</span>' +
+    '<span class="bt-tot num"></span><span class="bt-frec">\u25be</span>';
+  barTendina.appendChild(barSomma);
+  const barBox = el('div', 'bar-dentro');
+  barTendina.appendChild(barBox);
   const payBox = el('div');
-  payPanel.appendChild(barTitolo);
-  payPanel.appendChild(barBox);
+  payPanel.appendChild(barTendina);
   payPanel.appendChild(payBox);
   buildBarRows(barBox, () => (entry.barItems = entry.barItems || []), () => {
     saveEntries();
@@ -1862,7 +1868,13 @@ function entryCard(entry) {
     chiudiPannelli(entry.id);
     payPanel.classList.toggle('hidden', !chiuso);
     payBtn.classList.toggle('on', chiuso);
-    if (chiuso) { syncBarRows(barBox, entry.barItems); buildPay(); }
+    if (chiuso) {
+      syncBarRows(barBox, entry.barItems);
+      buildPay();
+      const t = barSomma.querySelector('.bt-tot');
+      const b = barTotal(entry);
+      t.textContent = b > 0 ? eur(b) : '';
+    }
   });
   mkAct('\ud83d\udeaa Uscita', 'forte', (ev) => { ev.stopPropagation(); chiudiIngresso(entry); });
 
@@ -2057,8 +2069,103 @@ function buildPaymentPanel(panel, entry, onChange) {
       toast('Incassati ' + eur(due.total));
     };
     row.appendChild(tutto);
+
+    const resto = el('button', 'btn btn-resto', '\ud83e\uddee Calcola il resto');
+    resto.onclick = () => {
+      const gia = panel.querySelector('.resto-box');
+      if (gia) { gia.remove(); resto.classList.remove('on'); return; }
+      resto.classList.add('on');
+      panel.appendChild(pannelloResto(entry, due.total, (preso) => {
+        entry.paidPark = Math.round((num(entry.paidPark, 0) + Math.min(preso, due.parkDue)) * 100) / 100;
+        const avanza = Math.max(0, Math.round((preso - due.parkDue) * 100) / 100);
+        if (avanza > 0) entry.paidBar = Math.round((num(entry.paidBar, 0) + Math.min(avanza, due.barDue)) * 100) / 100;
+        if (preso >= due.total) items.forEach(x => entry.paidLines[x.id] = true);
+        ridisegna();
+        toast('Incassati ' + eur(preso));
+      }));
+    };
+    row.appendChild(resto);
   }
   panel.appendChild(row);
+}
+
+/* Il calcolo del resto: si toccano i tagli che la persona mette in
+   mano (20 + 10) e dice quanto ridare. Chi preferisce battere la cifra
+   ha il tastierino. */
+function pannelloResto(entry, dovuto, onIncassa) {
+  const box = el('div', 'resto-box');
+  let dato = 0;
+  let tastierino = false;
+  let digitato = '';
+
+  const eurNum = c => (c / 100).toFixed(2).replace('.', ',') + ' \u20ac';
+  const TAGLI = [[5000, '50 \u20ac'], [2000, '20 \u20ac'], [1000, '10 \u20ac'], [500, '5 \u20ac'],
+                 [200, '2 \u20ac'], [100, '1 \u20ac'], [50, '50c'], [20, '20c']];
+
+  function disegna() {
+    box.innerHTML = '';
+    const cent = Math.round(dovuto * 100);
+    const avanza = dato - cent;
+
+    const alto = el('div', 'resto-alto');
+    const a1 = el('div');
+    a1.appendChild(el('span', 'k', 'ti ha dato'));
+    a1.appendChild(el('span', 'v num', eurNum(dato)));
+    alto.appendChild(a1);
+    if (dato > 0) {
+      const a2 = el('div', 'da');
+      a2.appendChild(el('span', 'k', avanza >= 0 ? 'resto da dare' : 'mancano ancora'));
+      a2.appendChild(el('span', 'v num', eurNum(Math.abs(avanza))));
+      alto.appendChild(a2);
+    }
+    box.appendChild(alto);
+
+    if (!tastierino) {
+      const g = el('div', 'resto-tagli');
+      TAGLI.forEach(t => {
+        const b = el('button', t[0] < 500 ? 'mon' : '');
+        b.textContent = t[1];
+        b.onclick = () => { dato += t[0]; disegna(); };
+        g.appendChild(b);
+      });
+      box.appendChild(g);
+    } else {
+      const d = el('div', 'resto-pad');
+      const batti = (c) => {
+        if (c === 'c') digitato = digitato.slice(0, -1);
+        else if (digitato.length < 6) digitato += c;
+        dato = parseInt(digitato || '0', 10);
+        disegna();
+      };
+      ['1','2','3','4','5','6','7','8','9','00','0','c'].forEach(c => {
+        const b = el('button', c === 'c' || c === '00' ? 'min' : '');
+        b.textContent = c === 'c' ? '\u232b' : c;
+        b.onclick = () => batti(c);
+        d.appendChild(b);
+      });
+      box.appendChild(d);
+    }
+
+    const azioni = el('div', 'resto-azioni');
+    const cambia = el('button', 'btn btn-sm');
+    cambia.innerHTML = tastierino ? '\ud83d\udcb6 Tagli' : '\u2328\ufe0f Cifra esatta';
+    cambia.onclick = () => { tastierino = !tastierino; digitato = ''; disegna(); };
+    azioni.appendChild(cambia);
+    const zero = el('button', 'btn btn-sm', '\u21ba Azzera');
+    zero.onclick = () => { dato = 0; digitato = ''; disegna(); };
+    azioni.appendChild(zero);
+    if (dato > 0) {
+      const ok = el('button', 'btn btn-ok');
+      const preso = Math.min(dato, cent) / 100;
+      ok.textContent = 'Incassa ' + eurNum(Math.min(dato, cent)) +
+        (avanza > 0 ? ' \u00b7 rendi ' + eurNum(avanza) : '');
+      ok.onclick = () => { box.remove(); onIncassa(preso); };
+      azioni.appendChild(ok);
+    }
+    box.appendChild(azioni);
+  }
+  disegna();
+  return box;
 }
 
 /* voci del conto: una riga per bambino, per crazy e per consumazione */
