@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bar &amp; Conto — studio, sei impostazioni</title>
+<link rel="stylesheet" href="./css/fonts.css">
+<style>
+/* ============================================================
+   Studio del pannello Bar & Conto come COSA A SE': niente banner
+   della persona, niente contorno dell'app. Sei impostazioni prese
+   dai banconi veri (supermercato, fast food, ristorante, cassa a
+   tastierino). In tutte si puo' TOGLIERE, non solo aggiungere.
+   Ogni cornice e' un tablet 820x1180 e porta un pallino misurato.
+   ============================================================ */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #0E0E14; color: #E9E9F2; padding: 0 0 70px; }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 22px 18px; }
+h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 10px; }
+.intro { color: #A8A8BD; font-size: 15px; line-height: 1.55; margin: 0 0 8px; max-width: 72ch; }
+.intro b { color: #FFD166; font-weight: 600; }
+.strada { padding: 32px 0 4px; }
+.strada > header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.strada > header .n { font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 700; background: #23232F; color: #FFD166; border-radius: 20px; padding: 4px 12px; }
+.strada > header h2 { font-family: 'Fredoka', sans-serif; font-size: 22px; margin: 0; }
+.perche { color: #9A9AB0; font-size: 14.5px; line-height: 1.55; margin: 9px 0 12px; max-width: 72ch; }
+.perche b { color: #FFD166; font-weight: 600; }
+.perche .ko { color: #FF9AA2; font-weight: 600; }
+.perche .da { color: #7FE8C1; font-weight: 600; }
+
+.tablet { position: relative; width: 410px; height: 590px; border-radius: 20px; overflow: hidden;
+  background: #101016; border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 20px 46px rgba(0,0,0,0.5); }
+.tablet > .dentro { width: 820px; height: 1180px; transform: scale(0.5); transform-origin: top left; }
+.misura { position: absolute; top: 9px; right: 9px; z-index: 9; font-size: 11px; font-weight: 800;
+  letter-spacing: 0.04em; text-transform: uppercase; border-radius: 20px; padding: 4px 10px; }
+.misura.ok { background: rgba(25,192,138,0.2); color: #7FE8C1; }
+.misura.ko { background: rgba(255,107,107,0.22); color: #FF9AA2; }
+
+:root { --bar:#F5A63F; --cassa:#19C08A; --parco:#3B8CFF; --ink:#0C1017; }
+
+/* il pannello, senza contorno dell'app */
+.pan { width: 820px; height: 1180px; display: flex; flex-direction: column; background: #14141B; overflow: hidden; }
+.cap { display: flex; align-items: center; gap: 12px; padding: 16px 18px; flex-shrink: 0; }
+.cap h3 { margin: 0; font-family: 'Fredoka', sans-serif; font-size: 22px; font-weight: 600; }
+.cap .via { margin-left: auto; width: 50px; height: 50px; border-radius: 15px; background: rgba(255,255,255,0.12);
+  border: none; color: #fff; font-size: 19px; cursor: pointer; }
+
+.bt { border: none; border-radius: 13px; padding: 12px 16px; font: inherit; font-size: 15px; font-weight: 700;
+  cursor: pointer; background: rgba(255,255,255,0.14); color: #fff; min-height: 48px; }
+.bt.bianco { background: #fff; color: var(--ink); font-family: 'Fredoka', sans-serif; font-size: 16px; }
+.bt.pieno { color: var(--ink); font-family: 'Fredoka', sans-serif; font-size: 16px; }
+.bt.bar { background: var(--bar); } .bt.cassa { background: var(--cassa); } .bt.parco { background: var(--parco); }
+.bt.scuro { background: rgba(0,0,0,0.32); }
+.bt:disabled { opacity: 0.4; }
+
+/* --- tessera prodotto con contatore incorporato --- */
+.griglia { display: grid; gap: 10px; }
+.tess { position: relative; border-radius: 16px; background: rgba(255,255,255,0.07); overflow: hidden;
+  display: flex; flex-direction: column; }
+.tess .su { flex: 1; border: none; background: none; color: #fff; font: inherit; cursor: pointer;
+  padding: 11px 8px 8px; display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center; }
+.tess .em { font-size: 25px; line-height: 1; }
+.tess .nm { font-size: 13.5px; font-weight: 700; line-height: 1.15; }
+.tess .pr { font-family: 'Fredoka', sans-serif; font-size: 13px; color: #A8A8BD; }
+.tess.preso { background: #fff; }
+.tess.preso .su { color: var(--ink); }
+.tess.preso .pr { color: #5A5368; }
+.tess .conta { display: flex; align-items: center; background: rgba(0,0,0,0.3); }
+.tess.preso .conta { background: rgba(0,0,0,0.10); }
+.tess .conta button { flex: 1; min-height: 42px; border: none; background: none; color: inherit;
+  font-family: 'Fredoka', sans-serif; font-size: 20px; font-weight: 700; cursor: pointer; }
+.tess.preso .conta button { color: var(--ink); }
+.tess .conta .n { font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 700; min-width: 30px; text-align: center; }
+.tess .conta.spenta { display: none; }
+
+/* --- riga di lista con quantita' --- */
+.lrow { display: flex; align-items: center; gap: 12px; padding: 10px 13px; border-radius: 14px;
+  background: rgba(255,255,255,0.05); }
+.lrow.preso { background: rgba(245,166,63,0.16); }
+.lrow .em { font-size: 22px; }
+.lrow .nm { flex: 1; min-width: 0; font-size: 15.5px; font-weight: 700; }
+.lrow .nm small { display: block; font-size: 12px; color: #9A9AB0; font-weight: 600; }
+.lrow .q { display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.3); border-radius: 13px; padding: 3px; }
+.lrow .q button { width: 44px; height: 44px; border: none; border-radius: 11px; background: rgba(255,255,255,0.14);
+  color: #fff; font-size: 19px; cursor: pointer; }
+.lrow .q .n { font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 700; min-width: 30px; text-align: center; }
+.lrow .pr { font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 700; min-width: 74px; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* --- lo scontrino --- */
+.scont { display: flex; flex-direction: column; min-height: 0; }
+.srow { display: flex; align-items: center; gap: 10px; padding: 9px 0; }
+.srow + .srow { border-top: 1px solid rgba(255,255,255,0.09); }
+.srow .nm { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; }
+.srow .nm small { display: block; font-size: 11.5px; color: #9A9AB0; font-weight: 500; }
+.srow .pr { font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.srow .q { display: flex; align-items: center; gap: 4px; }
+.srow .q button { width: 38px; height: 38px; border: none; border-radius: 10px; background: rgba(255,255,255,0.14); color: #fff; font-size: 17px; cursor: pointer; }
+.srow .q .n { font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 700; min-width: 24px; text-align: center; }
+
+.sezione { border-radius: 16px; background: #1C1C25; overflow: hidden; }
+.sezione > .k { display: flex; align-items: center; gap: 9px; padding: 10px 14px; color: var(--ink);
+  font-family: 'Fredoka', sans-serif; font-size: 15.5px; font-weight: 600; }
+.sezione > .k .im { margin-left: auto; font-weight: 700; font-variant-numeric: tabular-nums; }
+.sezione.bar > .k { background: var(--bar); }
+.sezione.parco > .k { background: var(--parco); }
+.sezione > .den { padding: 4px 14px 12px; }
+
+.strip { display: flex; gap: 8px; flex-wrap: wrap; }
+.strip button { border: none; border-radius: 20px; padding: 10px 16px; background: rgba(255,255,255,0.08);
+  color: #fff; font: inherit; font-size: 14.5px; font-weight: 700; cursor: pointer; min-height: 44px; }
+.strip button.on { background: var(--bar); color: var(--ink); }
+.rail { display: flex; flex-direction: column; gap: 9px; }
+.rail button { border: none; border-radius: 14px; padding: 12px; background: rgba(255,255,255,0.07); color: #fff;
+  font: inherit; font-size: 14.5px; font-weight: 700; cursor: pointer; min-height: 60px; display: flex;
+  flex-direction: column; align-items: center; gap: 3px; }
+.rail button.on { background: var(--bar); color: var(--ink); }
+.rail .e { font-size: 20px; }
+
+/* la barra della cassa */
+.cassa-barra { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; padding: 14px 18px;
+  background: linear-gradient(140deg,#0C7A57,#075C41); flex-shrink: 0; }
+.cassa-barra .k { display: block; font-size: 11px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: #EAF7F1; }
+.cassa-barra .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 36px; font-weight: 700; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.cassa-barra .tasti { margin-left: auto; display: flex; gap: 9px; flex-wrap: wrap; }
+
+.tagli { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; }
+.tagli button { min-height: 56px; border: none; border-radius: 14px; background: rgba(255,255,255,0.14); color: #fff;
+  font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 700; cursor: pointer; }
+.tagli button.mon { background: rgba(255,255,255,0.07); font-size: 15px; }
+.pad { display: grid; grid-template-columns: repeat(3,1fr); gap: 9px; }
+.pad button { min-height: 62px; border: none; border-radius: 14px; background: rgba(255,255,255,0.1); color: #fff;
+  font-family: 'Fredoka', sans-serif; font-size: 24px; font-weight: 700; cursor: pointer; }
+.pad button.min { background: rgba(255,255,255,0.05); font-size: 17px; }
+
+.vuoto { color: #7A7A90; font-size: 14.5px; padding: 12px 2px; }
+.elenco { color: #9A9AB0; font-size: 14.5px; line-height: 1.75; border-radius: 20px; padding: 14px 16px; background: #16161F; border: 1px solid rgba(255,255,255,0.08); }
+.elenco b { color: #FFD166; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Bar &amp; Conto: sei impostazioni, tutte con il «togli»</h1>
+  <p class="intro">Rifatto da capo con la tua correzione: <b>in tutte si toglie</b>, non solo si
+  aggiunge. E il pannello è una cosa a sé — niente banner della persona, niente cornice dell'app.</p>
+  <p class="intro">Sono presi da banconi che esistono davvero: la cassa del supermercato, il chiosco
+  del fast food, il tablet del ristorante, la cassa a tastierino. Ognuno risolve il «togli» in un
+  modo diverso, ed è lì la differenza vera.</p>
+  <p class="intro">Ogni cornice è un tablet in verticale (820×1180, qui a metà). Il pallino in alto
+  dice se ci sta tutto, ed è <b>misurato mentre disegna</b>.</p>
+
+  <div class="strada">
+    <header><span class="n">S1</span><h2>Tessera con contatore — il « − » sta sul prodotto</h2></header>
+    <p class="perche">Ogni prodotto è una tessera; appena ne prendi uno, sotto compare
+    <b>« − 2 + »</b> dentro la tessera stessa. Aggiungere e togliere si fanno <b>nello stesso
+    punto</b>, senza cercare la riga nel conto. È il modo dei chioschi: il dito resta dov'è.
+    <span class="da">Il togli:</span> il « − » sulla tessera, che sparisce quando torni a zero.
+    <span class="ko">Dove si rompe:</span> le tessere diventano più alte, quindi ne stanno meno
+    per schermata.</p>
+    <div class="tablet" data-p="S1"></div>
+  </div>
+
+  <div class="strada">
+    <header><span class="n">S2</span><h2>Lista unica — tutto il listino, una riga per prodotto</h2></header>
+    <p class="perche">Niente griglia e niente categorie: <b>una lista sola</b> con tutti e
+    diciannove i prodotti, riga alta, nome intero, prezzo, e « − 0 + » a destra. Non devi imparare
+    dove sta niente e non c'è nulla di nascosto: scorri e trovi.
+    <span class="da">Il togli:</span> il « − » sulla riga, sempre nello stesso posto.
+    <span class="ko">Dove si rompe:</span> è l'unica che si scorre davvero — ma in una direzione
+    sola e con l'ordine sempre uguale, che è il modo in cui si impara a memoria.</p>
+    <div class="tablet" data-p="S2"></div>
+  </div>
+
+  <div class="strada">
+    <header><span class="n">S3</span><h2>Scontrino vivo — la riga del conto si comanda</h2></header>
+    <p class="perche">Sopra scegli, sotto <b>lo scontrino si scrive e si comanda</b>: ogni riga ha
+    « − 2 + », quindi correggi guardando quello che hai già segnato invece di ricordarti cosa avevi
+    toccato. È il modo della cassa del supermercato.
+    <span class="da">Il togli:</span> sulla riga dello scontrino, dove leggi l'errore.
+    <span class="ko">Dove si rompe:</span> due posti da guardare, sopra e sotto.</p>
+    <div class="tablet" data-p="S3"></div>
+  </div>
+
+  <div class="strada">
+    <header><span class="n">S4</span><h2>Tastierino — scegli il prodotto, batti quante</h2></header>
+    <p class="perche">Come una cassa vera: tocchi il prodotto e appare il tastierino per dire
+    <b>quante</b>. Tre Coca sono due tocchi invece di tre, e <b>lo zero le toglie tutte</b>.
+    Per chi fa numeri grossi è il più veloce che esista.
+    <span class="da">Il togli:</span> batti zero, oppure « − » nello scontrino.
+    <span class="ko">Dove si rompe:</span> per una cosa sola sono due tocchi invece di uno.</p>
+    <div class="tablet" data-p="S4"></div>
+  </div>
+
+  <div class="strada">
+    <header><span class="n">S5</span><h2>Due colonne da ristorante — catalogo e comanda</h2></header>
+    <p class="perche">A sinistra le categorie in colonna e il catalogo, a destra <b>la comanda</b>
+    con le sue righe comandabili e il pagamento in fondo. I due mondi non si toccano mai e ognuno
+    scorre per conto suo: è il tablet dei ristoranti.
+    <span class="da">Il togli:</span> sulla riga della comanda.
+    <span class="ko">Dove si rompe:</span> su un tablet in verticale le colonne sono strette, le
+    tessere diventano due per riga.</p>
+    <div class="tablet" data-p="S5"></div>
+  </div>
+
+  <div class="strada">
+    <header><span class="n">S6</span><h2>Pagamento a parte — prima cosa prende, poi quanto paga</h2></header>
+    <p class="perche">Il pannello ha <b>due facce</b>: la faccia « bar » è tutta catalogo, la faccia
+    « pagamento » è tutta cassa — sezioni, tagli grossi, resto. Si passa da una all'altra con un
+    tasto largo, e <b>ognuna ha lo schermo intero</b>: è la più riposante, e la distinzione fra bar
+    e pagamento è totale perché sono due schermate diverse.
+    <span class="da">Il togli:</span> sulla tessera, con il contatore.
+    <span class="ko">Dove si rompe:</span> per vedere il conto mentre aggiungi devi girare faccia.</p>
+    <div class="tablet" data-p="S6"></div>
+  </div>
+
+  <div class="strada">
+    <header><span class="n">≡</span><h2>Cosa ho tenuto in tutte</h2></header>
+    <div class="elenco">
+      <b>Si toglie sempre</b>, e in ogni impostazione il « − » sta in un posto solo e sempre lo
+      stesso.<br>
+      <b>Nomi interi</b>: vanno a capo, non diventano mai «Coca Cola…».<br>
+      <b>Bar e pagamento separati</b>: per colore (ambra il bar, verde i soldi) o per schermata.<br>
+      <b>Bersagli grossi</b>: nessun tasto sotto i 42px, la maggior parte 44–62.<br>
+      <b>La ✕ in alto a destra</b> e il totale sempre leggibile senza cercarlo.<br>
+      <b>Il resto in contanti</b> coi tagli grossi, dentro il pannello.
+    </div>
+  </div>
+</div>
+
+<script>
+const eur = c => (c / 100).toFixed(2).replace('.', ',') + ' €';
+const LISTINO = [
+  { id:'acqua', em:'💧', nm:'Acqua', pz:100, cat:'Bevande' },
+  { id:'caffe', em:'☕', nm:'Caffè', pz:120, cat:'Bevande' },
+  { id:'coca', em:'🥤', nm:'Coca Cola', pz:250, cat:'Bevande' },
+  { id:'cocaz', em:'🥤', nm:'Coca Cola Zero', pz:250, cat:'Bevande' },
+  { id:'fanta', em:'🍊', nm:'Fanta', pz:250, cat:'Bevande' },
+  { id:'sprite', em:'🍋', nm:'Sprite', pz:250, cat:'Bevande' },
+  { id:'schw', em:'🥤', nm:'Schweppes', pz:200, cat:'Bevande' },
+  { id:'gazz', em:'🍋', nm:'Gazzosa', pz:200, cat:'Bevande' },
+  { id:'esta', em:'🧃', nm:'Estathè', pz:250, cat:'Bevande' },
+  { id:'bras', em:'🥤', nm:'Brasilena', pz:200, cat:'Bevande' },
+  { id:'pata', em:'🍟', nm:'Patatine', pz:150, cat:'Snack' },
+  { id:'heine', em:'🍺', nm:'Heineken', pz:300, cat:'Birre' },
+  { id:'nastro', em:'🍺', nm:'Nastro Azzurro', pz:300, cat:'Birre' },
+  { id:'ichnu', em:'🍺', nm:'Ichnusa', pz:300, cat:'Birre' },
+  { id:'tenn', em:'🍺', nm:"Tennent's", pz:350, cat:'Birre' },
+  { id:'limon', em:'🍋', nm:'Limoncello', pz:300, cat:'Alcolici' },
+  { id:'amari', em:'🥃', nm:'Amari', pz:300, cat:'Alcolici' },
+  { id:'grappa', em:'🥃', nm:'Grappa', pz:400, cat:'Alcolici' },
+  { id:'spritz', em:'🍹', nm:'Spritz', pz:600, cat:'Alcolici' }
+];
+const CAT = ['Bevande', 'Birre', 'Snack', 'Alcolici'];
+const EMCAT = { Bevande:'🥤', Birre:'🍺', Snack:'🍟', Alcolici:'🥃' };
+const prod = id => LISTINO.find(p => p.id === id);
+
+function nuovo() {
+  return { bar:{ coca:2, pata:1 }, parco:{ ingressi:2400, crazy:400 },
+           pagBar:0, pagParco:0, cat:'Bevande', faccia:'bar', resto:null, pad:null, digit:'' };
+}
+const tBar = s => Object.keys(s.bar).reduce((a,k) => a + s.bar[k]*prod(k).pz, 0);
+const tParco = s => s.parco.ingressi + s.parco.crazy;
+const rBar = s => Math.max(0, tBar(s) - s.pagBar);
+const rParco = s => Math.max(0, tParco(s) - s.pagParco);
+const resta = s => rBar(s) + rParco(s);
+const pezzi = s => Object.keys(s.bar).reduce((a,k) => a + s.bar[k], 0);
+function tocca(s, id, d) {
+  const q = (s.bar[id] || 0) + d;
+  if (q > 0) s.bar[id] = q; else delete s.bar[id];
+}
+
+/* ---------- pezzi ---------- */
+function capo(titolo, extra) {
+  return '<div class="cap"><h3>' + titolo + '</h3>' + (extra || '') + '<button class="via">✕</button></div>';
+}
+function barraCassa(s, tasti) {
+  const R = resta(s);
+  return '<div class="cassa-barra"><div><span class="k">' + (R > 0 ? 'da incassare' : 'tutto pagato') + '</span>' +
+    '<span class="v">' + (R > 0 ? eur(R) : '✓') + '</span></div><div class="tasti">' +
+    (R > 0 ? (tasti !== undefined ? tasti :
+      '<button class="bt bianco" data-p="tutto">Incassa tutto</button>' +
+      '<button class="bt scuro" data-resto>🧮 Resto</button>') : '') + '</div></div>';
+}
+function strisciaCat(s) {
+  return '<div class="strip">' + CAT.map(c => '<button data-cat="' + c + '"' +
+    (s.cat === c ? ' class="on"' : '') + '>' + EMCAT[c] + ' ' + c + '</button>').join('') + '</div>';
+}
+function railCat(s) {
+  return '<div class="rail">' + CAT.map(c => '<button data-cat="' + c + '"' +
+    (s.cat === c ? ' class="on"' : '') + '><span class="e">' + EMCAT[c] + '</span>' + c + '</button>').join('') + '</div>';
+}
+/* tessera CON contatore: il togli sta qui */
+function tessere(s, col, filtro) {
+  const q = LISTINO.filter(p => !filtro || p.cat === s.cat);
+  return '<div class="griglia" style="grid-template-columns:repeat(' + col + ',1fr)">' +
+    q.map(p => { const n = s.bar[p.id] || 0;
+      return '<div class="tess' + (n ? ' preso' : '') + '">' +
+        '<button class="su" data-add="' + p.id + '"><span class="em">' + p.em + '</span>' +
+        '<span class="nm">' + p.nm + '</span><span class="pr">' + eur(p.pz) + '</span></button>' +
+        '<div class="conta' + (n ? '' : ' spenta') + '">' +
+          '<button data-meno="' + p.id + '">−</button><span class="n">' + n + '</span>' +
+          '<button data-add="' + p.id + '">+</button></div></div>';
+    }).join('') + '</div>';
+}
+/* riga di lista: il togli sta a destra */
+function righe(s, filtro) {
+  const q = LISTINO.filter(p => !filtro || p.cat === s.cat);
+  return '<div style="display:flex;flex-direction:column;gap:8px">' + q.map(p => {
+    const n = s.bar[p.id] || 0;
+    return '<div class="lrow' + (n ? ' preso' : '') + '"><span class="em">' + p.em + '</span>' +
+      '<span class="nm">' + p.nm + '<small>' + eur(p.pz) + '</small></span>' +
+      '<span class="q"><button data-meno="' + p.id + '"' + (n ? '' : ' disabled') + '>−</button>' +
+      '<span class="n">' + n + '</span><button data-add="' + p.id + '">+</button></span>' +
+      '<span class="pr">' + (n ? eur(n * p.pz) : '—') + '</span></div>';
+  }).join('') + '</div>';
+}
+/* lo scontrino comandabile: il togli sta sulla riga */
+function scontrino(s, conComandi) {
+  const k = Object.keys(s.bar);
+  if (!k.length) return '<div class="vuoto">Non ha preso niente al bar.</div>';
+  return '<div class="scont">' + k.map(id => { const b = prod(id);
+    return '<div class="srow"><span class="nm">' + b.nm + '<small>' + eur(b.pz) + " l'uno</small></span>" +
+      (conComandi ? '<span class="q"><button data-meno="' + id + '">−</button>' +
+        '<span class="n">' + s.bar[id] + '</span><button data-add="' + id + '">+</button></span>'
+        : '<span class="n" style="font-family:Fredoka,sans-serif;font-weight:700">×' + s.bar[id] + '</span>') +
+      '<span class="pr">' + eur(s.bar[id] * b.pz) + '</span></div>';
+  }).join('') + '</div>';
+}
+function sezioni(s, conComandi) {
+  return '<div class="sezione parco"><div class="k"><span>🎟️</span> Parco<span class="im">' +
+      (rParco(s) > 0 ? eur(rParco(s)) : '✓') + '</span></div><div class="den">' +
+      '<div class="srow"><span class="nm">Ingresso ×2<small>60 minuti</small></span><span class="pr">' + eur(s.parco.ingressi) + '</span></div>' +
+      '<div class="srow"><span class="nm">Crazy Jumping ×1</span><span class="pr">' + eur(s.parco.crazy) + '</span></div>' +
+      (rParco(s) > 0 ? '<button class="bt pieno parco" style="width:100%;margin-top:10px" data-p="parco">Paga il parco · ' + eur(rParco(s)) + '</button>' : '') +
+    '</div></div>' +
+    '<div class="sezione bar" style="margin-top:11px"><div class="k"><span>🥤</span> Bar<span class="im">' +
+      (rBar(s) > 0 ? eur(rBar(s)) : '✓') + '</span></div><div class="den">' + scontrino(s, conComandi) +
+      (rBar(s) > 0 ? '<button class="bt pieno bar" style="width:100%;margin-top:10px" data-p="bar">Paga il bar · ' + eur(rBar(s)) + '</button>' : '') +
+    '</div></div>';
+}
+function pannelloResto(s) {
+  const R = resta(s), d = s.resto.dato, av = d - R;
+  return '<div class="sezione"><div class="den" style="padding:14px">' +
+    '<div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:12px">' +
+      '<div><span style="display:block;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#9A9AB0">ti ha dato</span>' +
+      '<span style="font-family:Fredoka,sans-serif;font-size:32px;font-weight:700">' + eur(d) + '</span></div>' +
+      (d > 0 ? '<div style="margin-left:auto;text-align:right;color:#FFD166">' +
+        '<span style="display:block;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase">' +
+        (av >= 0 ? 'resto da dare' : 'mancano') + '</span>' +
+        '<span style="font-family:Fredoka,sans-serif;font-size:32px;font-weight:700">' + eur(Math.abs(av)) + '</span></div>' : '') +
+    '</div><div class="tagli">' +
+      [[5000,'50 €'],[2000,'20 €'],[1000,'10 €'],[500,'5 €']].map(t => '<button data-tag="' + t[0] + '">' + t[1] + '</button>').join('') +
+      [[200,'2 €'],[100,'1 €'],[50,'50c'],[20,'20c']].map(t => '<button class="mon" data-tag="' + t[0] + '">' + t[1] + '</button>').join('') +
+    '</div><div style="display:flex;gap:9px;margin-top:11px">' +
+      '<button class="bt scuro" data-rzero>↺</button><button class="bt scuro" data-rchiudi>Chiudi</button>' +
+      (d > 0 ? '<button class="bt pieno cassa" style="flex:1" data-rok>Incassa ' + eur(Math.min(d, R)) +
+        (av > 0 ? ' · rendi ' + eur(av) : '') + '</button>' : '') +
+    '</div></div></div>';
+}
+
+/* ---------------- S1 tessere col contatore ---------------- */
+function dS1(s) {
+  return '<div class="pan">' + capo('🥤 Bar &amp; Conto') +
+    '<div style="flex:1;min-height:0;padding:0 18px 14px;display:flex;flex-direction:column;gap:12px">' +
+      strisciaCat(s) +
+      '<div style="overflow-y:auto;min-height:0">' + tessere(s, 4, true) + '</div>' +
+      '<div style="overflow-y:auto;max-height:280px">' + (s.resto ? pannelloResto(s) : sezioni(s, false)) + '</div>' +
+    '</div>' + barraCassa(s) + '</div>';
+}
+/* ---------------- S2 lista unica ---------------- */
+function dS2(s) {
+  return '<div class="pan">' + capo('🥤 Bar &amp; Conto',
+      '<span style="font-family:Fredoka,sans-serif;font-size:17px;color:#A8A8BD">' + pezzi(s) + ' al bar</span>') +
+    '<div style="flex:1;min-height:0;overflow-y:auto;padding:0 18px 14px">' +
+      (s.resto ? pannelloResto(s) : righe(s, false)) + '</div>' +
+    barraCassa(s, '<button class="bt bianco" data-p="tutto">Incassa tutto</button>' +
+      '<button class="bt scuro" data-resto>🧮 Resto</button>') + '</div>';
+}
+/* ---------------- S3 scontrino vivo ---------------- */
+function dS3(s) {
+  return '<div class="pan">' + capo('🥤 Bar &amp; Conto') +
+    '<div style="flex:0 0 auto;padding:0 18px 12px;display:flex;flex-direction:column;gap:11px">' +
+      strisciaCat(s) + tessere(s, 4, true) + '</div>' +
+    '<div style="flex:1;min-height:0;overflow-y:auto;padding:0 18px 14px">' +
+      (s.resto ? pannelloResto(s) : sezioni(s, true)) + '</div>' +
+    barraCassa(s) + '</div>';
+}
+/* ---------------- S4 tastierino ---------------- */
+function dS4(s) {
+  const dentro = s.pad
+    ? (() => { const p = prod(s.pad); const n = s.digit === '' ? (s.bar[s.pad] || 0) : parseInt(s.digit, 10);
+        return '<div style="display:flex;flex-direction:column;gap:12px">' +
+          '<div class="lrow preso"><span class="em">' + p.em + '</span>' +
+          '<span class="nm">' + p.nm + '<small>' + eur(p.pz) + " l'uno</small></span>" +
+          '<span class="pr">' + eur(n * p.pz) + '</span></div>' +
+          '<div style="text-align:center;font-family:Fredoka,sans-serif;font-size:46px;font-weight:700">' + n + '</div>' +
+          '<div class="pad">' + [1,2,3,4,5,6,7,8,9].map(x => '<button data-d="' + x + '">' + x + '</button>').join('') +
+            '<button class="min" data-d="c">⌫</button><button data-d="0">0</button>' +
+            '<button class="min" data-ok>✓</button></div>' +
+          '<button class="bt scuro" data-annulla>Annulla</button></div>'; })()
+    : strisciaCat(s) + '<div style="overflow-y:auto;min-height:0;margin-top:11px">' + tessere(s, 4, true) + '</div>';
+  return '<div class="pan">' + capo(s.pad ? '🔢 Quante?' : '🥤 Bar &amp; Conto') +
+    '<div style="flex:1;min-height:0;padding:0 18px 12px;display:flex;flex-direction:column">' + dentro + '</div>' +
+    (s.pad ? '' : '<div style="flex:0 0 auto;max-height:260px;overflow-y:auto;padding:0 18px 12px">' +
+      (s.resto ? pannelloResto(s) : sezioni(s, true)) + '</div>') +
+    barraCassa(s) + '</div>';
+}
+/* ---------------- S5 due colonne ---------------- */
+function dS5(s) {
+  return '<div class="pan">' + capo('🥤 Bar &amp; Conto') +
+    '<div style="flex:1;min-height:0;display:flex;gap:12px;padding:0 16px 12px">' +
+      '<div style="flex:0 0 120px">' + railCat(s) + '</div>' +
+      '<div style="flex:1.15;min-width:0;overflow-y:auto">' + tessere(s, 2, true) + '</div>' +
+      '<div style="flex:1;min-width:0;overflow-y:auto">' + (s.resto ? pannelloResto(s) : sezioni(s, true)) + '</div>' +
+    '</div>' + barraCassa(s) + '</div>';
+}
+/* ---------------- S6 due facce ---------------- */
+function dS6(s) {
+  const R = resta(s);
+  const gira = '<div style="display:flex;gap:10px;padding:0 18px 12px;flex-shrink:0">' +
+    '<button class="bt" style="flex:1;' + (s.faccia === 'bar' ? 'background:var(--bar);color:var(--ink)' : '') + '" data-f="bar">🥤 Bar' + (pezzi(s) ? ' · ' + pezzi(s) : '') + '</button>' +
+    '<button class="bt" style="flex:1;' + (s.faccia === 'pag' ? 'background:var(--cassa);color:var(--ink)' : '') + '" data-f="pag">💶 Pagamento' + (R > 0 ? ' · ' + eur(R) : ' ✓') + '</button></div>';
+  const dentro = s.faccia === 'bar'
+    ? '<div style="flex:1;min-height:0;padding:0 18px 14px;display:flex;flex-direction:column;gap:11px">' +
+        strisciaCat(s) + '<div style="overflow-y:auto;min-height:0">' + tessere(s, 4, true) + '</div></div>'
+    : '<div style="flex:1;min-height:0;overflow-y:auto;padding:0 18px 14px">' +
+        (s.resto ? pannelloResto(s) : sezioni(s, true)) + '</div>';
+  return '<div class="pan">' + capo(s.faccia === 'bar' ? '🥤 Bar' : '💶 Pagamento') + gira + dentro + barraCassa(s) + '</div>';
+}
+
+/* ---------------- motore ---------------- */
+const VISTE = { S1: dS1, S2: dS2, S3: dS3, S4: dS4, S5: dS5, S6: dS6 };
+document.querySelectorAll('.tablet').forEach(tab => {
+  const p = tab.dataset.p, s = nuovo();
+  tab.innerHTML = '<div class="dentro"></div><span class="misura"></span>';
+  const box = tab.querySelector('.dentro'), badge = tab.querySelector('.misura');
+  function disegna() {
+    box.innerHTML = VISTE[p](s);
+    const $ = q => box.querySelectorAll(q), uno = q => box.querySelector(q);
+    $('[data-add]').forEach(b => b.onclick = () => {
+      if (p === 'S4' && !s.pad && b.classList.contains('su')) { s.pad = b.dataset.add; s.digit = ''; }
+      else tocca(s, b.dataset.add, 1);
+      disegna();
+    });
+    $('[data-meno]').forEach(b => b.onclick = () => { tocca(s, b.dataset.meno, -1); disegna(); });
+    $('[data-cat]').forEach(b => b.onclick = () => { s.cat = b.dataset.cat; disegna(); });
+    $('[data-f]').forEach(b => b.onclick = () => { s.faccia = b.dataset.f; s.resto = null; disegna(); });
+    $('[data-p]').forEach(b => b.onclick = () => {
+      const q = b.dataset.p;
+      if (q === 'bar') s.pagBar = tBar(s);
+      else if (q === 'parco') s.pagParco = tParco(s);
+      else { s.pagBar = tBar(s); s.pagParco = tParco(s); }
+      disegna();
+    });
+    const rr = uno('[data-resto]'); if (rr) rr.onclick = () => { s.resto = { dato: 0 }; if (p === 'S6') s.faccia = 'pag'; disegna(); };
+    $('[data-tag]').forEach(b => b.onclick = () => { s.resto.dato += (+b.dataset.tag); disegna(); });
+    const rz = uno('[data-rzero]'); if (rz) rz.onclick = () => { s.resto.dato = 0; disegna(); };
+    const rc = uno('[data-rchiudi]'); if (rc) rc.onclick = () => { s.resto = null; disegna(); };
+    const ro = uno('[data-rok]'); if (ro) ro.onclick = () => { s.pagBar = tBar(s); s.pagParco = tParco(s); s.resto = null; disegna(); };
+    // tastierino
+    $('[data-d]').forEach(b => b.onclick = () => {
+      const c = b.dataset.d;
+      if (c === 'c') s.digit = s.digit.slice(0, -1);
+      else if (s.digit.length < 3) s.digit += c;
+      disegna();
+    });
+    const ok = uno('[data-ok]'); if (ok) ok.onclick = () => {
+      const n = s.digit === '' ? (s.bar[s.pad] || 0) : parseInt(s.digit, 10);
+      if (n > 0) s.bar[s.pad] = n; else delete s.bar[s.pad];
+      s.pad = null; s.digit = ''; disegna();
+    };
+    const an = uno('[data-annulla]'); if (an) an.onclick = () => { s.pad = null; s.digit = ''; disegna(); };
+    misura();
+  }
+  function misura() {
+    const pan = box.querySelector('.pan');
+    let strisce = 0, quanto = 0;
+    box.querySelectorAll('*').forEach(e => {
+      const d = e.scrollHeight - e.clientHeight;
+      if (d > 2 && e.clientHeight > 60) { strisce++; quanto = Math.max(quanto, d); }
+    });
+    const fuori = pan ? pan.scrollHeight - pan.clientHeight : 0;
+    if (fuori > 2) { badge.className = 'misura ko'; badge.textContent = 'sborda ' + fuori + 'px'; }
+    else if (!strisce) { badge.className = 'misura ok'; badge.textContent = 'ci sta tutto'; }
+    else { badge.className = 'misura ok'; badge.textContent = strisce + (strisce === 1 ? ' fascia scorre' : ' fasce scorrono'); }
+  }
+  disegna();
+});
+</script>
+</body>
+</html>
