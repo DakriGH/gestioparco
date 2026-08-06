@@ -1356,13 +1356,13 @@ main {
   background: rgb(16, 16, 22);
   border-radius: 0 0 16px 16px;
   cursor: default;
-  transition: grid-template-rows 260ms cubic-bezier(.22,.9,.3,1);
+  transition: grid-template-rows 360ms cubic-bezier(.16,.84,.28,1);
 }
 .e-dentro {
   overflow: hidden;
   min-height: 0;
   opacity: 0;
-  transition: opacity 200ms ease 60ms;
+  transition: opacity 260ms ease 110ms;
 }
 .entry.aperto .e-dentro { opacity: 1; }
 .entry.aperto .e-aperta { grid-template-rows: 1fr; }
@@ -2043,10 +2043,18 @@ main {
   color: #1A1626;
   border-color: transparent;
 }
-.blk .bar-row.has-qty, .entry .bar-row.has-qty {
-  background: rgba(255, 255, 255, 0.30);
-  border-color: rgba(255, 255, 255, 0.55);
+/* Scelto = bianco pieno. Il velo al 30% si confondeva col fondo e non
+   si capiva se quella cosa era stata presa o no. */
+.blk .bar-row.has-qty, .entry .bar-row.has-qty, .bar-row.has-qty {
+  background: #fff;
+  color: #1A1626;
+  border-color: transparent;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.30);
 }
+.bar-row.has-qty .bname, .bar-row.has-qty .bqty { color: #1A1626; }
+.bar-row.has-qty .bprice { color: #5A5368; }
+.bar-row.has-qty .step-b { background: rgba(0, 0, 0, 0.10); color: #1A1626; border-color: transparent; }
+.bar-row.has-qty .step-b:active { background: rgba(0, 0, 0, 0.20); }
 .blk .wp-preset { background: rgba(255,255,255,0.24); border-color: rgba(255,255,255,0.4); }
 
 /* interruttori */
@@ -2529,7 +2537,7 @@ main {
   backdrop-filter: blur(7px) saturate(0.85);
   -webkit-backdrop-filter: blur(7px) saturate(0.85);
   opacity: 0;
-  transition: opacity 240ms ease;
+  transition: opacity 420ms ease;
 }
 .velo-scheda.on { opacity: 1; }
 
@@ -2540,11 +2548,11 @@ main {
   overflow-y: auto;
   overscroll-behavior: contain;
   box-shadow: 0 26px 64px rgba(0, 0, 0, 0.6);
-  transition: left 320ms cubic-bezier(.2,.85,.25,1),
-              top 320ms cubic-bezier(.2,.85,.25,1),
-              width 320ms cubic-bezier(.2,.85,.25,1),
-              max-height 320ms cubic-bezier(.2,.85,.25,1),
-              box-shadow 320ms ease;
+  transition: left 480ms cubic-bezier(.16,.84,.28,1),
+              top 480ms cubic-bezier(.16,.84,.28,1),
+              width 480ms cubic-bezier(.16,.84,.28,1),
+              max-height 480ms cubic-bezier(.16,.84,.28,1),
+              box-shadow 480ms ease;
 }
 .segnaposto { flex-shrink: 0; }
 
@@ -2643,9 +2651,48 @@ main {
    animazioni. Per la scheda che vola pero' il movimento SERVE a capire
    dove e' finita: la teniamo, corta. */
 @media (prefers-reduced-motion: reduce) {
-  .entry.vola {
-    transition-duration: 150ms !important;
-  }
-  .velo-scheda { transition-duration: 150ms !important; }
-  .e-aperta, .e-dentro { transition-duration: 150ms !important; }
+  .entry.vola { transition-duration: 380ms !important; }
+  .velo-scheda { transition-duration: 340ms !important; }
+  .e-aperta { transition-duration: 300ms !important; }
+  .e-dentro { transition-duration: 220ms !important; }
 }
+
+/* =============== SCHEDA IN MODIFICA =============== */
+.entry.in-modifica > .e-riga { position: relative; }
+.entry.in-modifica::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 19px;
+  border: 3px dashed #B072FF;
+  pointer-events: none;
+}
+.entry.in-modifica > .e-riga::after {
+  content: "in modifica";
+  position: absolute;
+  top: -9px;
+  right: 14px;
+  background: #B072FF;
+  color: #17092B;
+  border-radius: 20px;
+  padding: 2px 10px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.e-inmod {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: rgba(176, 114, 255, 0.18);
+  border: 1px solid rgba(176, 114, 255, 0.5);
+  border-radius: 13px;
+  padding: 9px 12px;
+  margin-bottom: 11px;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+.e-inmod .btn { margin-left: auto; }
+.e-cella.spento { opacity: 0.45; }

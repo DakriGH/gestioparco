@@ -1712,6 +1712,11 @@ function entryCard(entry) {
     card.classList.add('appena');
     setTimeout(() => card.classList.remove('appena'), APPENA - eta);
   }
+  /* Se questo ingresso e' aperto nel modulo, va detto: toccarne i
+     numeri qui mentre lo modifichi di la' vuol dire perderli appena
+     premi Registra. */
+  const inModifica = (typeof editingId !== 'undefined' && editingId === entry.id);
+  if (inModifica) card.classList.add('in-modifica');
 
   const people = (entry.people || []).map(p => (p.avatar = AV.normalize(p.avatar, p.role), p));
 
@@ -1831,6 +1836,7 @@ function entryCard(entry) {
     };
     minus.onclick = bump(-step);
     plus.onclick = bump(step);
+    if (inModifica) { minus.disabled = true; plus.disabled = true; box.classList.add('spento'); }
     box.appendChild(minus);
     if (kk) box.appendChild(kk);
     box.appendChild(val);
@@ -1844,6 +1850,15 @@ function entryCard(entry) {
   if (entry.payLater) {
     sTime.box.classList.add('hidden');
     fila.appendChild(el('div', 'e-later-tag', '\ud83d\udd57 Paga dopo'));
+  }
+
+  if (inModifica) {
+    const avviso = el('div', 'e-inmod');
+    avviso.appendChild(el('span', null, '\u270f\ufe0f Lo stai modificando in Nuovo'));
+    const vai = el('button', 'btn btn-sm', 'Vai al modulo');
+    vai.onclick = (ev) => { ev.stopPropagation(); switchTab('new'); };
+    avviso.appendChild(vai);
+    dentro.appendChild(avviso);
   }
 
   const azioni = el('div', 'e-azioni');
@@ -1885,6 +1900,10 @@ function entryCard(entry) {
   mkAct('\u270f\ufe0f', 'piccolo', (ev) => { ev.stopPropagation(); vaiAModifica(entry); }).title = 'Modifica';
   const payBtn = mkAct('\ud83e\uddfe Bar & Conto', 'conto', (ev) => {
     ev.stopPropagation();
+    /* la misura va presa ADESSO, prima che il pannello si apra: se la
+       prendo dopo, il buco lasciato nella lista e' troppo corto e tutte
+       le schede sotto saltano su */
+    const misura = card.getBoundingClientRect();
     const chiuso = payPanel.classList.contains('hidden');
     chiudiPannelli(entry.id);
     payPanel.classList.toggle('hidden', !chiuso);
@@ -1897,7 +1916,7 @@ function entryCard(entry) {
       t.textContent = b > 0 ? eur(b) : '';
       /* la scheda si stacca e vola: cosi' il conto ci sta tutto senza
          scorrere mezza pagina, e il resto della lista si sfoca */
-      alza(card);
+      alza(card, misura);
     } else {
       posa(card);
     }
@@ -1975,36 +1994,13 @@ function buildCassaView() {
   const restoQui = el('div');
   root.appendChild(restoQui);
 
-  /* --- il bar: la griglia dei prodotti --- */
-  const cBar = el('div', 'card blk c-ciano');
-  cBar.appendChild(el('h2', null, '\ud83e\udd64 Bar'));
-  const inBar = el('div', 'blk-in');
-  const barBox = el('div');
-  buildBarRows(barBox, () => cassa.bar, () => { rinfresca(); });
-  inBar.appendChild(barBox);
-  cBar.appendChild(inBar);
+  /* Gli stessi blocchi di "Nuovo", nello stesso ordine e con gli stessi
+     pezzi: quanto restano (ambra), bambini e attrazioni (verde), bar
+     (ciano). Prima questa vista aveva una faccia tutta sua. */
 
-  /* --- il parco: bambini, Crazy, tempo --- */
-  const cParco = el('div', 'card blk c-blu');
-  cParco.appendChild(el('h2', null, '\ud83c\udfa0 Ingresso al parco'));
-  const inParco = el('div', 'blk-in');
-  const fila = el('div', 'cassa-fila');
-  const cella = (em, chiave, passo) => {
-    const b = el('div', 'e-cella');
-    const meno = el('button', null, '\u2212');
-    const k = el('span', 'k', em);
-    const v = el('span', 'v num', '0');
-    const piu = el('button', null, '+');
-    meno.onclick = () => { cassa[chiave] = Math.max(0, cassa[chiave] - passo); rinfresca(); };
-    piu.onclick = () => { cassa[chiave] = cassa[chiave] + passo; rinfresca(); };
-    b.appendChild(meno); b.appendChild(k); b.appendChild(v); b.appendChild(piu);
-    fila.appendChild(b);
-    return v;
-  };
-  const vBimbi = cella('\ud83e\uddd2', 'children', 1);
-  const vCrazy = cella('\ud83e\udd38', 'crazy', 1);
-  inParco.appendChild(fila);
-
+  const cTempo = el('div', 'card blk c-ambra');
+  cTempo.innerHTML = '<h2><span class="em">\u23f3</span> Quanto restano</h2>';
+  const inTempo = el('div', 'blk-in');
   const tempi = el('div', 'chips');
   const OPZ = [[10, '10m'], [15, '15m'], [30, '30m'], [60, '1h']];
   const chipTempo = [];
@@ -2015,25 +2011,62 @@ function buildCassaView() {
     chipTempo.push([b, o[0]]);
     tempi.appendChild(b);
   });
-  const altro = el('button', 'chip', 'altro\u2026');
-  altro.onclick = () => {
-    const s2 = sheet('Quanti minuti?');
-    const inp = el('input', 'ed-nota');
-    inp.type = 'number'; inp.min = '5'; inp.step = '5';
-    inp.value = cassa.minutes || 60;
-    s2.body.appendChild(inp);
-    footBtn(s2.foot, 'Va bene', 'btn-primary', () => {
-      cassa.minutes = clamp(parseInt(inp.value, 10) || 60, 5, 600);
-      s2.close(); rinfresca();
-    });
-  };
-  chipTempo.push([altro, -1]);
-  tempi.appendChild(altro);
-  inParco.appendChild(tempi);
-  cParco.appendChild(inParco);
+  const soloBar = el('button', 'chip', '\ud83e\udd64 Solo bar');
+  soloBar.onclick = () => { cassa.minutes = 0; cassa.children = 0; cassa.crazy = 0; rinfresca(); };
+  chipTempo.push([soloBar, 0]);
+  tempi.appendChild(soloBar);
+  inTempo.appendChild(tempi);
 
+  const custom = el('div', 'dur-custom');
+  custom.appendChild(el('span', 'lab', 'oppure minuti esatti'));
+  const meno = el('button', 'step-b sm', '\u2212');
+  const inp = el('input');
+  inp.type = 'number'; inp.min = '5'; inp.step = '5'; inp.inputMode = 'numeric';
+  inp.value = cassa.minutes || 60;
+  const piu = el('button', 'step-b sm plus', '+');
+  meno.onclick = () => { cassa.minutes = Math.max(5, (cassa.minutes || 60) - 5); rinfresca(); };
+  piu.onclick = () => { cassa.minutes = Math.min(600, (cassa.minutes || 0) + 5); rinfresca(); };
+  inp.oninput = () => { cassa.minutes = clamp(parseInt(inp.value, 10) || 0, 0, 600); rinfresca({ nonToccareInput: true }); };
+  custom.appendChild(meno); custom.appendChild(inp); custom.appendChild(piu);
+  inTempo.appendChild(custom);
+  cTempo.appendChild(inTempo);
+
+  const cNum = el('div', 'card blk c-verde');
+  cNum.innerHTML = '<h2><span class="em">\ud83e\uddd2</span> Bambini e attrazioni</h2>';
+  const inNum = el('div', 'blk-in');
+  const conta = el('div', 'counters');
+  const contatore = (em, testo, chiave) => {
+    const box = el('div', 'counter');
+    const lab = el('div', 'c-lab');
+    lab.innerHTML = '<span class="em">' + em + '</span> ' + testo;
+    const m = el('button', 'step-b', '\u2212');
+    const v = el('div', 'c-val num', '0');
+    const p = el('button', 'step-b plus', '+');
+    m.onclick = () => { cassa[chiave] = Math.max(0, cassa[chiave] - 1); rinfresca(); };
+    p.onclick = () => { cassa[chiave] = cassa[chiave] + 1; rinfresca(); };
+    box.appendChild(lab); box.appendChild(m); box.appendChild(v); box.appendChild(p);
+    conta.appendChild(box);
+    return { v: v, m: m };
+  };
+  const cBimbi = contatore('\ud83e\uddd2', 'Bambini', 'children');
+  const cCrazy = contatore('\ud83e\udd38', 'Crazy Jumping', 'crazy');
+  inNum.appendChild(conta);
+  inNum.appendChild(el('div', 'hint', 'Zero bambini vuol dire che \u00e8 passato solo a consumare: il parco non si conta.'));
+  cNum.appendChild(inNum);
+
+  const cBar = el('div', 'card blk c-ciano');
+  const testaBar = el('div', 'sect-head');
+  testaBar.innerHTML = '<h2><span class="em">\ud83e\udd64</span> Bar</h2>';
+  cBar.appendChild(testaBar);
+  const inBar = el('div', 'blk-in');
+  const barBox = el('div');
+  buildBarRows(barBox, () => cassa.bar, () => { rinfresca(); });
+  inBar.appendChild(barBox);
+  cBar.appendChild(inBar);
+
+  root.appendChild(cTempo);
+  root.appendChild(cNum);
   root.appendChild(cBar);
-  root.appendChild(cParco);
 
   /* --- in fondo: svuota, oppure fallo diventare un ingresso vero --- */
   const fondo = el('div', 'cassa-fondo');
@@ -2044,12 +2077,18 @@ function buildCassaView() {
   };
   const diventa = el('button', 'btn btn-primary', '\u27a1\ufe0f Fanne un ingresso');
   diventa.onclick = () => {
+    /* Qui si fa un ingresso NUOVO: se restava acceso "sto modificando
+       quell'altro", premere Registra lo avrebbe sovrascritto. */
+    editingId = null;
     draft.children = Math.max(1, cassa.children);
     draft.crazyJumping = cassa.crazy;
     draft.durationMinutes = cassa.minutes || settings.defaultMinutes || 60;
     draft.barItems = JSON.parse(JSON.stringify(cassa.bar));
     draft.startTime = roundTo5(new Date()).getTime();
     draft.payLater = false;
+    draft.people = [];
+    draft.braceletColor = null;
+    draft.braceletCustom = false;
     draft.touched = true;
     cassa.bar = []; cassa.children = 0; cassa.crazy = 0; cassa.minutes = 0;
     switchTab('new');
@@ -2058,12 +2097,15 @@ function buildCassaView() {
   fondo.appendChild(diventa);
   root.appendChild(fondo);
 
-  function rinfresca() {
+  function rinfresca(opz) {
     const t = cassaTot();
     totV.textContent = eur(t);
-    vBimbi.textContent = cassa.children;
-    vCrazy.textContent = cassa.crazy;
+    cBimbi.v.textContent = cassa.children;
+    cCrazy.v.textContent = cassa.crazy;
+    cBimbi.m.disabled = cassa.children <= 0;
+    cCrazy.m.disabled = cassa.crazy <= 0;
     chipTempo.forEach(([b, m]) => b.classList.toggle('on', m === cassa.minutes));
+    if (!(opz && opz.nonToccareInput) && document.activeElement !== inp) inp.value = cassa.minutes || '';
     incassa.disabled = t <= 0;
     incassa.textContent = t > 0 ? '\u2705 Incassa ' + eur(t) : '\u2705 Incassa';
     diventa.disabled = cassa.children <= 0;
@@ -2113,9 +2155,9 @@ function buildCassaView() {
    Il volo e' un'animazione vera: parte dal punto esatto in cui stava. */
 let volante = null;
 
-function alza(card) {
+function alza(card, misura) {
   if (volante) posa(volante.card);
-  const r = card.getBoundingClientRect();
+  const r = misura || card.getBoundingClientRect();
 
   const buco = el('div', 'segnaposto');
   buco.style.height = r.height + 'px';
@@ -2170,6 +2212,20 @@ function posa(card) {
   };
   const tempo = matchMedia('(prefers-reduced-motion: reduce)').matches ? 160 : 330;
   setTimeout(fine, tempo);
+}
+
+/* Posa senza volo: serve quando si cambia vista, dove l'animazione
+   non si vedrebbe comunque e lascerebbe solo roba appesa. */
+function posaSubito(card) {
+  if (!volante || volante.card !== card) return;
+  const v = volante;
+  volante = null;
+  const rif = cardRefs.get(card.dataset.id);
+  if (rif && rif.payPanel) { rif.payPanel.classList.add('hidden'); rif.payBtn.classList.remove('on'); }
+  card.classList.remove('vola');
+  card.style.left = card.style.top = card.style.width = card.style.maxHeight = '';
+  if (v.buco.parentNode) v.buco.remove();
+  if (v.velo.parentNode) v.velo.remove();
 }
 
 /* Modifica: la lista scivola a sinistra e arriva "Nuovo", cosi' si
@@ -2513,9 +2569,12 @@ function syncCard(entry) {
   if (r.bimbiV) r.bimbiV.textContent = kids;
   r.sCrazy.val.textContent = crazy;
   r.sTime.val.textContent = entry.payLater ? '\u2014' : entry.durationMinutes + '\u2032';
-  r.sKids.minus.disabled = kids <= 0;
-  r.sCrazy.minus.disabled = crazy <= 0;
-  r.sTime.minus.disabled = num(entry.durationMinutes, 0) <= 5;
+  /* se l'ingresso e' aperto nel modulo i suoi numeri restano fermi:
+     toccarli qui vorrebbe dire perderli appena premi Registra */
+  const bloccato = (typeof editingId !== 'undefined' && editingId === entry.id);
+  r.sKids.minus.disabled = bloccato || kids <= 0;
+  r.sCrazy.minus.disabled = bloccato || crazy <= 0;
+  r.sTime.minus.disabled = bloccato || num(entry.durationMinutes, 0) <= 5;
 
   soldiDi(r, entry, due);
 
@@ -2973,6 +3032,9 @@ function updateBadge() {
   b.dataset.n = n;
 }
 function switchTab(t) {
+  /* se una scheda sta volando va posata PRIMA di cambiare vista:
+     altrimenti resta appesa sopra la vista nuova, col velo sfocato */
+  if (typeof volante !== 'undefined' && volante) posaSubito(volante.card);
   tab = t;
   $$('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
   $('#view-new').classList.toggle('hidden', t !== 'new');
@@ -2991,7 +3053,7 @@ function switchTab(t) {
   } else {
     syncActionBar();
   }
-  if (t === 'active') buildActiveView();
+  if (t === 'active') buildActiveView();   // ridisegna: cosi' la scheda in modifica si segna o si libera
   if (t === 'cassa') buildCassaView();
   if (t === 'settings') buildSettingsView();
   updateBadge();
