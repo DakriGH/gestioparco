@@ -202,16 +202,16 @@ h2 .ic, .e-panel-k .ic { width: 1.25em; height: 1.25em; }
 .tabs button {
   display: flex;
   align-items: center;
-  gap: 7px;
-  min-height: 42px;
-  padding: 0 16px;
-  border-radius: 14px;
+  gap: 8px;
+  min-height: 50px;
+  padding: 0 20px;
+  border-radius: 16px;
   background: rgba(255, 255, 255, 0.10);
   color: var(--barra-txt);
-  font-size: 15px;
+  font-size: 16.5px;
   transition: background var(--speed), color var(--speed), transform var(--speed);
 }
-.tabs button .em { font-size: 17px; }
+.tabs button .em { font-size: 19px; }
 .tabs button:active { transform: scale(0.96); }
 .tabs button.on {
   background: var(--sel);
@@ -2715,3 +2715,20 @@ html:not(.anima) .entry,
 html:not(.anima) .view.entra-sx,
 html:not(.anima) .view.entra-dx { animation: none; }
 html:not(.anima) .entry.esce { transition: none; }
+
+/* =============== APP INSTALLATA: stacco dalle notifiche ===============
+   Su Android in standalone il "safe area" spesso torna ZERO anche se la
+   barra di sistema copre lo schermo: i tasti finivano incollati alle
+   notifiche. Qui la fascia scura sale dietro la barra di sistema e i
+   comandi scendono di quel tanto che basta. */
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  .topbar {
+    padding-top: max(30px, calc(10px + env(safe-area-inset-top, 0px)));
+    padding-bottom: 10px;
+  }
+}
+
+/* Su tablet le scritte delle linguette spariscono per far spazio, ma
+   "Bar & Conto" e' quella che si deve trovare al volo: resta scritta.
+   Impostazioni no, quella si tocca una volta ogni tanto. */
+#tabCassa .tab-txt { display: inline !important; }
