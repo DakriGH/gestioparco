@@ -1357,8 +1357,15 @@ function buildAvatarEditor(box, person, onChange, opts) {
   const riga = (icona, titolo, chiave) => {
     const r = el('div', 'ed-row');
     if (chiave) r.dataset.off = chiave;
+    r.dataset.parte = icona;          // serve a segnare cosa e' stato scelto
     sezioni.push({ icona: icona, titolo: titolo, node: r });
     return r;
+  };
+  /* Segna che questo pezzo l'ha scelto una persona: solo i pezzi segnati
+     finiscono nella descrizione della scheda. */
+  const segna = (r) => {
+    const p = r && r.dataset ? r.dataset.parte : '';
+    if (p) { av.scelti = av.scelti || {}; av.scelti[p] = true; }
   };
   const stili = (r, lista, get, set, zona) => {
     const sc = el('div', 'ed-opts');
@@ -1375,6 +1382,7 @@ function buildAvatarEditor(box, person, onChange, opts) {
       b.appendChild(el('span', null, it.label));
       b.onclick = () => {
         set(it.key);
+        segna(r);
         $$('.ed-opt', sc).forEach(o => o.classList.remove('on'));
         b.classList.add('on');
         aggiorna();
@@ -1444,6 +1452,7 @@ function buildAvatarEditor(box, person, onChange, opts) {
       if (String(get()).toLowerCase() === hex.toLowerCase()) b.classList.add('on');
       b.onclick = () => {
         set(hex);
+        segna(r);
         $$('.ed-col', sc).forEach(o => o.classList.remove('on'));
         b.classList.add('on');
         aggiorna();
@@ -1466,6 +1475,7 @@ function buildAvatarEditor(box, person, onChange, opts) {
     inp.value = /^#[0-9a-f]{6}$/i.test(String(get())) ? get() : '#888888';
     inp.oninput = () => {
       set(inp.value);
+      segna(r);
       $$('.ed-col', sc).forEach(o => o.classList.remove('on'));
       wrap.classList.add('on');
       aggiorna();
@@ -1487,6 +1497,7 @@ function buildAvatarEditor(box, person, onChange, opts) {
       b.innerHTML = campionePattern(colGet(), col2Get(), p.key);
       b.onclick = () => {
         set(p.key);
+        segna(r);
         $$('.ed-col', sc).forEach(o => o.classList.remove('on'));
         b.classList.add('on');
         aggiorna();
@@ -1791,10 +1802,10 @@ function entryCard(entry) {
   chi.appendChild(nome);
   const tratti = el('div', 'e-tr');
   if (people.length === 1) {
-    tratti.textContent = AV.traits(people[0].avatar, 3).map(t => t.txt).join(' \u00b7 ');
+    tratti.textContent = AV.traits(people[0].avatar, 3, true).map(t => t.txt).join(' \u00b7 ');
   } else if (people.length) {
     tratti.textContent = people.slice(0, 2)
-      .map(p => (AV.traits(p.avatar, 1)[0] || {}).txt || '').filter(Boolean).join(' \u00b7 ');
+      .map(p => (AV.traits(p.avatar, 1, true)[0] || {}).txt || '').filter(Boolean).join(' \u00b7 ');
   } else {
     tratti.textContent = '\u26a0\ufe0f all\'uscita non avrai riferimenti';
   }

@@ -261,6 +261,9 @@
     const base = defaultFor(role || (av && av.role) || 'altro');
     if (!av || typeof av !== 'object') return base;
     const out = {
+      /* quali pezzi sono stati scelti a mano: senza questo il testo
+         racconterebbe il vestito di partenza come se fosse vero */
+      scelti: Object.assign({}, av.scelti),
       role: av.role || base.role,
       skin: av.skin || base.skin,
       hair: Object.assign({}, base.hair, av.hair),
@@ -625,10 +628,16 @@
 
   /* ---------- tratti scritti ----------
      Ordinati per "quanto aiutano a riconoscere qualcuno da lontano". */
-  function traits(av, max) {
+  /* Con soloScelti = true escono solo i pezzi che qualcuno ha davvero
+     toccato: il resto e' il vestito di partenza del ruolo, non una cosa
+     vista addosso alla persona. */
+  function traits(av, max, soloScelti) {
     av = normalize(av);
+    const scelti = av.scelti || {};
+    const vale = (parte) => !soloScelti || scelti[parte] === true;
     const out = [];
-    const push = (list, key, color, extra) => {
+    const push = (list, key, color, extra, parte) => {
+      if (!vale(parte)) return;
       const it = findIn(list, key);
       if (!it || it.skip) return;
       const cn = color ? colorName(color, it.g) : '';
@@ -641,35 +650,39 @@
 
     // ordine = quanto aiuta a riconoscere una persona da lontano:
     // prima cappello e colore della maglia, poi il resto
-    push(HAT, av.hat.style, av.hat.color);
+    push(HAT, av.hat.style, av.hat.color, '', 'cappello');
 
-    const topIt = findIn(TOP, av.top.style);
-    const pat = PATTERNS.find(p => p.key === av.top.pattern);
-    let patSuf = pat && pat.suf ? pat.suf : '';
-    if (patSuf === ' mimetic') patSuf = topIt.g === 1 || topIt.g === 3 ? ' mimetica' : ' mimetico';
-    out.push({
-      em: topIt.em,
-      txt: (topIt.noun + ' ' + colorName(av.top.color, topIt.g) + patSuf).trim(),
-      color: av.top.color
-    });
-
-    push(BAG, av.bag.style, av.bag.color);
-    if (av.top.style !== 'vestito') push(PANTS, av.pants.style, av.pants.color);
-    push(GLASSES, av.glasses, null);
-    push(FACIAL, av.facial, null);
-
-    const hairIt = findIn(HAIR, av.hair.style);
-    if (hairIt.bare) {
-      out.push({ em: hairIt.em, txt: 'Pelato', color: null });
-    } else {
+    if (vale('maglietta')) {
+      const topIt = findIn(TOP, av.top.style);
+      const pat = PATTERNS.find(p => p.key === av.top.pattern);
+      let patSuf = pat && pat.suf ? pat.suf : '';
+      if (patSuf === ' mimetic') patSuf = topIt.g === 1 || topIt.g === 3 ? ' mimetica' : ' mimetico';
       out.push({
-        em: hairIt.em,
-        txt: (hairIt.noun + ' ' + colorName(av.hair.color, hairIt.g, HAIR_COLORS)).trim(),
-        color: av.hair.color
+        em: topIt.em,
+        txt: (topIt.noun + ' ' + colorName(av.top.color, topIt.g) + patSuf).trim(),
+        color: av.top.color
       });
     }
 
-    push(SHOES, av.shoes.style, av.shoes.color);
+    push(BAG, av.bag.style, av.bag.color, '', 'borsa');
+    if (av.top.style !== 'vestito') push(PANTS, av.pants.style, av.pants.color, '', 'pantaloni');
+    push(GLASSES, av.glasses, null, '', 'occhiali');
+    push(FACIAL, av.facial, null, '', 'occhiali');
+
+    if (vale('capelli')) {
+      const hairIt = findIn(HAIR, av.hair.style);
+      if (hairIt.bare) {
+        out.push({ em: hairIt.em, txt: 'Pelato', color: null });
+      } else {
+        out.push({
+          em: hairIt.em,
+          txt: (hairIt.noun + ' ' + colorName(av.hair.color, hairIt.g, HAIR_COLORS)).trim(),
+          color: av.hair.color
+        });
+      }
+    }
+
+    push(SHOES, av.shoes.style, av.shoes.color, '', 'scarpe');
     return max ? out.slice(0, max) : out;
   }
 
