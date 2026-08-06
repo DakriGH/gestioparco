@@ -189,7 +189,7 @@ body {
 }
 
 /* il font tondo su tutto ciò che si legge al volo: numeri, nomi, titoli */
-.display, h1, h2, h3, .num-big, .ctx-val, .stepper .val, .e-step .v, .brand, .tabs button, .chip, .btn, .e-act, .card-avatar-name, .list-head h2, .m-head h3 {
+.display, h1, h2, h3, .num-big, .ctx-val, .stepper .val, .brand, .tabs button, .chip, .btn, .card-avatar-name, .list-head h2, .m-head h3 {
   font-family: 'Fredoka', 'Inter', system-ui, sans-serif;
   font-weight: 600;
 }
@@ -1154,7 +1154,7 @@ main {
   display: block;
   background: var(--grad, var(--blk-grigio));
   border: none;
-  border-radius: 22px;
+  border-radius: 16px;
   /* nessuna ombra: nel modello la scheda e' netta. Il filo di luce che
      avevo messo sul bordo alto si leggeva come una sfumatura lucida. */
   box-shadow: none;
@@ -1197,15 +1197,15 @@ main {
 @keyframes pulseRing { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
 
 /* =========================================================
-   LA RIGA (modello R1-a): figura intera, chi e', orari,
-   bracciale, countdown e soldi. Una riga, si tocca ovunque.
+   LA RIGA — i valori sono quelli di r1.html, non "circa".
+   figura | chi e' + tratti + orari | bracciale | countdown | soldi
    ========================================================= */
 .e-riga {
-  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 13px 12px;
+  border-radius: 16px;
+  padding: 10px 13px;
   cursor: pointer;
   transition: filter 120ms;
 }
@@ -1214,43 +1214,20 @@ main {
 /* la figura e' SEMPRE intera (3:4): all'uscita servono anche i
    pantaloni e le scarpe per riconoscere chi e'. */
 .e-av {
-  position: relative;
   height: 76px;
   aspect-ratio: 3 / 4;
-  flex-shrink: 0;
   border-radius: 12px;
-  background: var(--surface);
-  display: flex;
+  background: rgba(255, 255, 255, 0.12);
   overflow: visible;
+  flex-shrink: 0;
+  display: flex;
 }
 .e-av .av { width: 100%; height: 100%; }
 .e-av .av svg { width: 100%; height: 100%; display: block; }
 .e-av .av:active { transform: scale(0.95); }
 .e-av.multi { aspect-ratio: 5 / 4; }
 .e-av.multi .av { width: 50%; }
-.e-av .av.vuoto {
-  display: flex; align-items: center; justify-content: center;
-  font-size: 26px; opacity: 0.7;
-}
-.e-kids {
-  position: absolute;
-  right: -7px;
-  bottom: -6px;
-  min-width: 30px;
-  height: 26px;
-  padding: 0 7px;
-  border-radius: 13px;
-  background: #fff;
-  color: #1A1626;
-  font-family: 'Fredoka', sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
-}
+.e-av .av.vuoto { display: flex; align-items: center; justify-content: center; font-size: 26px; opacity: 0.7; }
 
 .e-chi { flex: 1; min-width: 0; }
 .e-chi b {
@@ -1259,27 +1236,19 @@ main {
   font-weight: 600;
   display: block;
   line-height: 1.25;
+}
+.e-tr {
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.88);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-/* due righe, non una: su una sola i pantaloni finivano nei puntini di
-   sospensione, e all'uscita sono proprio quelli che servono. */
-.e-tr {
-  font-size: 12.5px;
-  line-height: 1.3;
-  color: #fff;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.e-tr.avviso { font-weight: 700; }
 .e-orari {
   display: inline-flex;
   align-items: baseline;
   gap: 5px;
-  background: var(--surface);
+  background: rgba(0, 0, 0, 0.24);
   border-radius: 20px;
   padding: 3px 10px;
   margin-top: 4px;
@@ -1288,52 +1257,37 @@ main {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
-.e-orari .fr { font-size: 11px; color: var(--txt-2); margin: 0 2px; }
+.e-orari .fr { font-size: 11px; color: rgba(255, 255, 255, 0.6); margin: 0 2px; }
 
-/* bracciale: pallino piccolo, bersaglio grande */
+/* il pallino e' 21px come nel modello; il bersaglio per il dito e'
+   allargato in modo invisibile, cosi' non sposta niente nel layout */
 .e-brac {
-  width: 42px; height: 42px;
-  flex-shrink: 0;
-  border: none;
-  background: none;
-  border-radius: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
+  position: relative;
+  width: 21px;
+  height: 21px;
   padding: 0;
-}
-.e-brac:active { transform: scale(0.92); }
-.e-brac .dot {
-  width: 21px; height: 21px;
+  border: none;
   border-radius: 50%;
   box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.55);
+  flex-shrink: 0;
+  cursor: pointer;
 }
-.e-brac .dot.vuoto {
-  background: transparent;
-  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.55);
-  border: 2px dashed rgba(255, 255, 255, 0.6);
-}
+.e-brac.vuoto { background: transparent; border: 2px dashed rgba(255, 255, 255, 0.6); }
+.e-brac::after { content: ""; position: absolute; inset: -11px; border-radius: 50%; }
+.e-brac:active { transform: scale(0.9); }
 
-.e-tempo { text-align: right; flex-shrink: 0; }
 .e-conto {
   font-family: 'Fredoka', sans-serif;
   font-size: 29px;
   font-weight: 700;
-  line-height: 1.05;
+  min-width: 100px;
+  text-align: right;
   font-variant-numeric: tabular-nums;
-}
-.e-conto-sub {
-  font-size: 10.5px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #fff;
-  margin-top: 2px;
+  flex-shrink: 0;
 }
 
-/* i soldi: l'etichetta STA SOPRA il numero, cosi' si sa sempre cos'e' */
-.e-soldi { min-width: 118px; text-align: right; flex-shrink: 0; }
+/* i soldi: l'etichetta STA SOPRA il numero (la variante «a») */
+.e-soldi { min-width: 132px; text-align: right; flex-shrink: 0; }
 .e-soldi .k {
   display: block;
   font-size: 10.5px;
@@ -1348,138 +1302,92 @@ main {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
-.e-soldi.pagato .v { color: var(--txt-2); opacity: 0.8; }
-
-/* il tempo che scorre, un filo sul bordo basso: si legge senza aprire */
-.e-barra {
-  position: absolute;
-  left: 13px; right: 13px; bottom: 5px;
-  height: 4px;
-  border-radius: 4px;
-  background: rgba(0, 0, 0, 0.28);
-  overflow: hidden;
-}
-.e-barra-fill {
-  height: 100%;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.85);
-  transform-origin: left center;
-  transition: transform 400ms linear;
-}
+.e-soldi.pagato .v { opacity: 0.8; }
 
 /* =============== QUELLO CHE SI APRE =============== */
 .e-aperta {
   display: none;
-  background: var(--c-bg2);
-  border-top: 2px solid var(--line);
+  background: rgba(0, 0, 0, 0.3);
   padding: 12px 13px 13px;
   cursor: default;
 }
 .entry.aperto .e-aperta { display: block; }
-.entry.aperto .e-riga { cursor: default; }
+.entry.aperto .e-riga { border-radius: 16px 16px 0 0; cursor: default; }
 
-.e-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: stretch; }
-.e-step {
-  flex: 1 1 150px;
-  background: var(--surface);
-  border-radius: var(--r-sm);
-  padding: 8px 10px;
+.e-fila { display: flex; gap: 9px; flex-wrap: wrap; align-items: center; }
+.e-cella {
+  background: rgba(0, 0, 0, 0.26);
+  border-radius: 13px;
+  padding: 6px 10px;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
   align-items: center;
+  gap: 8px;
 }
-.e-step .k {
-  font-size: 13px; font-weight: 800; color: var(--txt-2);
-  white-space: nowrap; display: inline-flex; align-items: center; gap: 6px;
+.e-cella .k { font-size: 11.5px; color: rgba(255, 255, 255, 0.75); }
+.e-cella .v {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 19px;
+  font-weight: 700;
+  min-width: 22px;
+  text-align: center;
 }
-.e-step .k .ic { width: 17px; height: 17px; }
-.e-step .ctrl { display: flex; align-items: center; gap: 7px; justify-content: center; }
-.e-step .v {
-  font-family: 'Fredoka', sans-serif; font-size: 23px;
-  min-width: 38px; text-align: center; font-weight: 700;
+.e-cella button {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.18);
+  border: none;
+  color: #fff;
+  font-size: 17px;
+  cursor: pointer;
 }
-.e-step .step-b { width: 40px; height: 40px; font-size: 20px; }
+/* i 34px del modello restano, ma il dito ne trova 40: i tasti sono
+   distanti almeno 8px, quindi non si accavallano */
+.e-cella button::after { content: ""; position: absolute; inset: -3px; }
+.e-cella button:disabled { opacity: 0.4; }
+
+.e-azioni { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+.e-azioni button {
+  position: relative;
+  background: rgba(255, 255, 255, 0.16);
+  border: none;
+  color: #fff;
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 700;
+  padding: 11px 15px;
+  border-radius: 13px;
+  cursor: pointer;
+}
+.e-azioni button.forte { background: #fff; color: #123A2C; }
+.e-azioni button.on { background: #fff; color: #123A2C; }
 
 .e-later-tag {
-  align-self: center;
-  background: var(--surface);
-  border-radius: 20px;
-  padding: 8px 14px;
+  background: rgba(0, 0, 0, 0.26);
+  border-radius: 13px;
+  padding: 9px 13px;
   font-size: 13px;
   font-weight: 800;
 }
 
-.e-costs {
-  display: flex;
-  align-items: baseline;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin-top: 10px;
-  font-size: 14px;
-  font-weight: 700;
-}
-.e-costs .cost { display: flex; align-items: baseline; gap: 7px; }
-.e-costs .k { color: var(--txt-3); }
-.e-costs .num { color: var(--txt); font-size: 16px; }
-.e-costs .pagato { color: #fff; opacity: 0.75; }
-.e-costs .pagato::after { content: " \2713"; }
-
-.e-note { font-size: 12.5px; color: var(--txt-3); font-style: italic; line-height: 1.35; margin-top: 9px; }
-
-.e-acts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 11px; }
-.e-act {
-  min-height: 52px;
-  border-radius: var(--r-sm);
-  border: 2px solid var(--line-2);
-  background: var(--surface-2);
-  color: var(--txt);
-  font: inherit;
-  font-size: 14px;
-  font-weight: 800;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  position: relative;
-  transition: transform 120ms;
-}
-.e-act:active { transform: scale(0.96); }
-.e-act .em { font-size: 19px; }
-.e-act .em .ic, .e-act .ic { width: 20px; height: 20px; }
-.e-act .badge {
-  position: absolute;
-  top: -8px;
-  right: -6px;
-  background: #fff;
-  color: #1A1626;
-  border-radius: 20px;
-  padding: 2px 8px;
-  font-size: 11.5px;
-  font-weight: 800;
-}
-.e-act.on { background: var(--vel-forte), var(--c); color: var(--c-bg); border-color: transparent; }
-.e-act.on .badge { background: var(--c-bg); color: var(--c); }
-.e-act.out { background: #fff; color: #1A1626; border-color: transparent; }
-
-/* dentro la scheda il fondo e' gia' colorato: il giallo su giallo
-   stava a 3,77. Bianco su nero, e si legge. */
+/* dentro la scheda il fondo e' gia' colorato: giallo su giallo stava
+   a 3,77 di contrasto. Bianco su nero, e si legge. */
 .e-noone {
   background: rgba(0, 0, 0, 0.34);
   color: #fff;
-  border-radius: var(--r-sm);
+  border-radius: 13px;
   padding: 10px 14px;
   font-size: 14px;
   font-weight: 700;
-  text-align: center;
   display: flex;
-  flex-direction: column;
-  gap: 8px;
   align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
   margin-top: 10px;
 }
+.e-note { font-size: 12.5px; color: rgba(255,255,255,0.85); font-style: italic; line-height: 1.35; margin-top: 9px; }
 
 /* --- pannelli in fondo alla scheda: si aprono sotto, non in mezzo --- */
 .e-panel {
@@ -1582,9 +1490,6 @@ main {
 }
 .pay-acts { display: flex; gap: 10px; flex-wrap: wrap; }
 .pay-acts .btn { flex: 1; min-width: 200px; }
-
-/* quattro azioni sulla scheda */
-.e-acts { grid-template-columns: repeat(4, 1fr) !important; }
 
 
 /* archivio *//* archivio */
@@ -2249,7 +2154,7 @@ main {
 .blk .now-btn, .entry .now-btn { color: #fff; border-color: rgba(255,255,255,0.45); }
 .blk .pill, .entry .pill { background: rgba(0,0,0,0.30); color: #fff; border-color: transparent; }
 .blk .hint, .entry .hint { color: rgba(255,255,255,0.85); }
-.entry .e-bar-chip, .entry .e-act .tag { color: #fff; background: rgba(0,0,0,0.3); }
+.entry .e-bar-chip { color: #fff; background: rgba(0,0,0,0.3); }
 .blk .p-preset > summary { color: rgba(255,255,255,0.88); }
 .blk .trait, .entry .trait { color: #fff; }
 /* la pastiglia col totale sta su fondo bianco: il testo la' dentro
@@ -2273,24 +2178,7 @@ main {
    l'avatar in un riquadro (non un tondo) e il bracciale come pastiglia
    scritta sotto i tratti.
    ============================================================ */
-.entry { border-radius: 22px; }
-
-/* i numeri: riquadri scuri arrotondati, etichetta sopra e valore grosso */
-.entry .e-step {
-  background: rgba(0, 0, 0, 0.24);
-  border-radius: 15px;
-  padding: 7px 11px 9px;
-}
-.entry .e-step .k { font-size: 12px; font-weight: 700; color: rgba(255, 255, 255, 0.78); }
-.entry .e-step .v { font-size: 24px; }
-.entry .e-step .step-b { background: rgba(255, 255, 255, 0.20); color: #fff; border: none; }
-.entry .e-step .step-b:disabled { opacity: 0.35; }
-
-/* la riga dei soldi */
-.entry .e-costs { background: rgba(0, 0, 0, 0.24); border-radius: 15px; }
-
-/* i tasti in fondo */
-.entry .e-act { border-radius: 15px; font-weight: 700; }
+.entry { border-radius: 16px; }
 
 /* avviso "c'è una versione nuova" */
 .avviso-versione {
@@ -2309,11 +2197,6 @@ main {
 .avviso-versione .av-txt b { font-size: 15px; }
 .avviso-versione .av-txt span { font-size: 13px; color: rgba(255,255,255,0.85); }
 .avviso-versione .btn { background: rgba(0,0,0,0.3); color: #fff; border-color: rgba(255,255,255,0.3); }
-
-/* tre rimasugli del vecchio tema, trovati misurando */
-/* 1. il tasto aperto: il testo prendeva --c-bg, che dentro la scheda e'
-      un nero trasparente -> nero su bianco quasi invisibile */
-.entry .e-act.on, .blk .e-act.on { background: #fff; color: #1A1626; }
 /* 2. "tutti -> X EUR" era verde su verde slavato */
 .entry .pay-all, .blk .pay-all {
   background: rgba(0, 0, 0, 0.32);
@@ -2341,11 +2224,6 @@ main {
 }
 .blk .p-blocco .prole { color: #fff; }
 .blk .p-editor { background: rgba(0, 0, 0, 0.16); border-top-color: rgba(255,255,255,0.14); }
-/* le tre celle occupano la riga in parti uguali, come nel modello */
-.entry .e-controls { gap: 9px; }
-.entry .e-step { flex: 1 1 118px; min-width: 0; }
-.entry .e-step .ctrl { justify-content: space-between; }
-.entry .e-step .v { flex: 1; }
 
 /* ---------- l'editor esattamente come il modello E2 ----------
    Persona grande a sinistra, pezzi e scelte a destra. Mentre l'editor e'
@@ -2408,39 +2286,6 @@ main {
 .ed-via { background: rgba(0, 0, 0, 0.32); color: #fff; padding: 0 15px; }
 .ed-fatto { background: #fff; color: #1A1626; }
 .ed-via:active, .ed-fatto:active { transform: scale(0.95); }
-/* le tre celle occupano la riga in parti uguali, come nel modello */
-.entry .e-controls { gap: 9px; }
-.entry .e-step { flex: 1 1 118px; min-width: 0; }
-.entry .e-step .ctrl { justify-content: space-between; }
-.entry .e-step .v { flex: 1; }
-
-/* ============================================================
-   PARI AL MODELLO C, misurato elemento per elemento
-   ============================================================ */
-/* 1. i tasti in fondo sono CHIARI sul colore, non scuri: e' quello che
-      cambia di piu' l'aria della scheda.
-      Il velo e' 0,12 e non 0,16 come nel modello: a 0,16 il fondo si
-      schiarisce troppo e la scritta bianca scende a 4,35 (serve 4,5).
-      Il modello non era stato misurato. */
-.entry .e-act {
-  background: rgba(255, 255, 255, 0.12);
-  min-height: 46px;
-  padding: 11px 8px;
-  font-size: 15px;
-}
-.entry .e-act.on, .entry .e-act.out { background: #fff; color: #1A1626; }
-
-/* 2. e 3. tratti e soldi: testo direttamente sul colore, senza riquadro.
-      I riquadri li avevo aggiunti io e appesantivano tutto. */
-.entry .e-costs {
-  background: none;
-  border-radius: 0;
-  padding: 0;
-  gap: 14px;
-  font-size: 15px;
-}
-.entry .e-step { padding: 8px 12px; }
-.entry .e-step .v { font-size: 22px; }
 
 /* ============================================================
    IDENTICO AL MODELLO C — stili.html, misurato
@@ -2452,25 +2297,9 @@ main {
   --blk-ambra:  linear-gradient(150deg, #D9922A 0%, #B26F12 100%);
   --blk-rosso:  linear-gradient(150deg, #E05A5A 0%, #B93636 100%);
 }
-.entry .e-controls { gap: 9px; }
-.entry .e-step { background: rgba(0,0,0,0.24); border-radius: 15px; padding: 8px 12px; }
-.entry .e-step .k { font-size: 11.5px; font-weight: 700; color: rgba(255,255,255,0.7); }
-.entry .e-step .v { font-family: 'Fredoka', sans-serif; font-size: 22px; font-weight: 700; color: #fff; }
-.entry .e-costs { margin-top: 12px; font-size: 14.5px; font-weight: 600; color: rgba(255,255,255,0.85); }
-.entry .e-acts { margin-top: 13px; gap: 9px; }
-.entry .e-act {
-  background: rgba(255,255,255,0.16);
-  border-radius: 15px;
-  min-height: 46px;
-  padding: 13px 0;
-  font-size: 15px;
-  font-weight: 700;
-}
-.entry .e-act.on, .entry .e-act.out { background: #fff; color: #123A2C; }
 
 /* ultimi scarti dal modello, misurati */
 .entry { font-size: 16px; }
-.entry .e-act { height: 46px; min-height: 46px; padding: 0; }
 
 /* ============================================================
    IDENTICO AL MODELLO E2 — stili2.html, misurato
@@ -2526,10 +2355,6 @@ main {
   --blk-rosso:  linear-gradient(150deg, #A64343 0%, #832E2E 100%);
   --blk-ciano:  linear-gradient(150deg, #1F6978 0%, #14515D 100%);
 }
-
-/* col velo allo 0,16 del modello la scritta bianca sui tasti scende a
-   4,35; a 0,12 la differenza non si vede e passa */
-.entry .e-act { background: rgba(255, 255, 255, 0.12); }
 
 /* ---------- gli ultimi scarti da E2, trovati leggendo il codice ----------
    Erano quattro veli scuri uno sull'altro (0,26 + 0,22 + 0,16 + 0,30):

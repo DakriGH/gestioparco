@@ -1767,14 +1767,12 @@ function entryCard(entry) {
 
   const people = (entry.people || []).map(p => (p.avatar = AV.normalize(p.avatar, p.role), p));
 
-  /* ================= LA RIGA =================
-     Tutto quello che serve per riconoscere una persona e sapere quanto
-     deve, su UNA riga: figura intera, chi e', orari, bracciale, countdown
-     e soldi. Si tocca ovunque e si apre. */
+  /* ================= LA RIGA (modello R1-a) =================
+     figura | chi e' + tratti + orari | bracciale | countdown | soldi */
   const riga = el('div', 'e-riga');
 
-  /* La figura non si taglia mai: all'uscita servono anche i pantaloni e
-     le scarpe per capire chi e'. */
+  /* la figura non si taglia mai: all'uscita servono anche i pantaloni
+     e le scarpe per capire chi e'. */
   const avBox = el('div', 'e-av' + (people.length > 1 ? ' multi' : ''));
   if (!people.length) {
     avBox.appendChild(el('div', 'av vuoto', '\u2753'));
@@ -1790,11 +1788,6 @@ function entryCard(entry) {
       avBox.appendChild(a);
     });
   }
-  const kidsBadge = el('div', 'e-kids');
-  kidsBadge.innerHTML = '\ud83e\uddd2';
-  const kidsBadgeV = el('span', 'num', '0');
-  kidsBadge.appendChild(kidsBadgeV);
-  avBox.appendChild(kidsBadge);
   riga.appendChild(avBox);
 
   const chi = el('div', 'e-chi');
@@ -1811,32 +1804,26 @@ function entryCard(entry) {
       .map(p => (AV.traits(p.avatar, 1)[0] || {}).txt || '').filter(Boolean).join(' \u00b7 ');
   } else {
     tratti.textContent = '\u26a0\ufe0f all\'uscita non avrai riferimenti';
-    tratti.classList.add('avviso');
   }
   chi.appendChild(tratti);
   const range = el('div', 'e-orari');
   chi.appendChild(range);
   riga.appendChild(chi);
 
-  /* bracciale: un tocco apre le scelte qui accanto, senza finestre */
+  /* il bracciale e' il pallino del modello: 21px. Il bersaglio per il
+     dito e' allargato in modo invisibile, senza spostare niente. */
   const autoSlot = braceletFor(entry.startTime);
   const wristColor = entry.braceletColor || (autoSlot ? autoSlot.color : null);
   const wrist = el('button', 'e-brac');
   wrist.title = wristColor
     ? 'Bracciale ' + ((autoSlot && !entry.braceletCustom && autoSlot.label) ? autoSlot.label : (AV.colorName(wristColor, 0) || '')) + ' \u2014 tocca per cambiare'
     : 'Nessun bracciale \u2014 tocca per sceglierlo';
-  const dot = el('span', 'dot');
-  if (wristColor) dot.style.background = wristColor; else dot.classList.add('vuoto');
-  wrist.appendChild(dot);
+  if (wristColor) wrist.style.background = wristColor; else wrist.classList.add('vuoto');
   wrist.onclick = (ev) => { ev.stopPropagation(); apriMenuBracciale(wrist, entry); };
   riga.appendChild(wrist);
 
-  const tempo = el('div', 'e-tempo');
   const count = el('div', 'e-conto num', '--:--');
-  const sub = el('div', 'e-conto-sub', '');
-  tempo.appendChild(count);
-  tempo.appendChild(sub);
-  riga.appendChild(tempo);
+  riga.appendChild(count);
 
   /* i soldi: etichetta sopra, numero sotto */
   const soldi = el('div', 'e-soldi');
@@ -1846,26 +1833,20 @@ function entryCard(entry) {
   soldi.appendChild(soldiV);
   riga.appendChild(soldi);
 
-  /* la barra che si svuota: un filo sul bordo basso, si legge senza aprire */
-  const track = el('div', 'e-barra');
-  const fill = el('div', 'e-barra-fill');
-  track.appendChild(fill);
-  riga.appendChild(track);
-
   card.appendChild(riga);
 
-  /* ================= QUELLO CHE SI APRE ================= */
+  /* ================= QUELLO CHE SI APRE =================
+     una fila sola: tre celle compatte e i tasti a destra */
   const aperta = el('div', 'e-aperta');
+  const fila = el('div', 'e-fila');
 
-  const ctrls = el('div', 'e-controls');
-  const mkStep = (label, key, step) => {
-    const box = el('div', 'e-step');
-    const kk = el('div', 'k'); kk.innerHTML = label; box.appendChild(kk);
-    const ctrl = el('div', 'ctrl');
-    const minus = el('button', 'step-b');
+  const mkCella = (emoji, key, step, suffisso) => {
+    const box = el('div', 'e-cella');
+    const minus = el('button');
     minus.textContent = step > 1 ? '\u2212' + step : '\u2212';
+    const kk = emoji ? el('span', 'k', emoji) : null;
     const val = el('span', 'v num', '0');
-    const plus = el('button', 'step-b plus');
+    const plus = el('button');
     plus.textContent = step > 1 ? '+' + step : '+';
     const bump = (d) => (ev) => {
       ev.stopPropagation();
@@ -1876,38 +1857,63 @@ function entryCard(entry) {
     };
     minus.onclick = bump(-step);
     plus.onclick = bump(step);
-    ctrl.appendChild(minus);
-    ctrl.appendChild(val);
-    ctrl.appendChild(plus);
-    box.appendChild(ctrl);
-    ctrls.appendChild(box);
+    box.appendChild(minus);
+    if (kk) box.appendChild(kk);
+    box.appendChild(val);
+    box.appendChild(plus);
+    fila.appendChild(box);
     return { box, val, minus };
   };
-  const sKids = mkStep('\ud83e\uddd2 Bambini:', 'children', 1);
-  const sCrazy = mkStep('\ud83e\udd38 Crazy Jumping:', 'crazyJumping', 1);
-  const sTime = mkStep('\u23f1\ufe0f Tempo:', 'durationMinutes', 5);
+  const sKids = mkCella('\ud83e\uddd2', 'children', 1);
+  const sCrazy = mkCella('\ud83e\udd38', 'crazyJumping', 1);
+  const sTime = mkCella(null, 'durationMinutes', 5);
   if (entry.payLater) {
     sTime.box.classList.add('hidden');
-    ctrls.appendChild(el('div', 'e-later-tag', '\ud83d\udd57 Paga dopo'));
+    fila.appendChild(el('div', 'e-later-tag', '\ud83d\udd57 Paga dopo'));
   }
-  aperta.appendChild(ctrls);
 
-  const costs = el('div', 'e-costs');
-  const cPark = el('span', 'cost');
-  cPark.appendChild(el('span', 'k', 'Parco:'));
-  const cParkV = el('span', 'num', '');
-  cPark.appendChild(cParkV);
-  const cBar = el('span', 'cost');
-  cBar.appendChild(el('span', 'k', 'Bar:'));
-  const cBarV = el('span', 'num', '');
-  cBar.appendChild(cBarV);
-  costs.appendChild(cPark);
-  costs.appendChild(cBar);
-  aperta.appendChild(costs);
+  const azioni = el('div', 'e-azioni');
+  const mkAct = (testo, cls, fn) => {
+    const b = el('button', cls || '');
+    b.textContent = testo;
+    b.onclick = fn;
+    azioni.appendChild(b);
+    return b;
+  };
+  fila.appendChild(azioni);
+  aperta.appendChild(fila);
+
+  /* Il Conto si porta dentro il Bar, com'e' nel modello: un pannello solo */
+  const payPanel = el('div', 'e-panel hidden');
+  const barBox = el('div');
+  const barTitolo = el('div', 'e-panel-k');
+  barTitolo.innerHTML = '\ud83e\udd64 Bar';
+  const payBox = el('div');
+  payPanel.appendChild(barTitolo);
+  payPanel.appendChild(barBox);
+  payPanel.appendChild(payBox);
+  buildBarRows(barBox, () => (entry.barItems = entry.barItems || []), () => {
+    saveEntries();
+    syncBarRows(barBox, entry.barItems);
+    syncCard(entry);
+  });
+  const buildPay = () => buildPaymentPanel(payBox, entry, () => { syncCard(entry); });
+  aperta.appendChild(payPanel);
+
+  const payBtn = mkAct('\ud83e\uddfe Conto', 'conto', (ev) => {
+    ev.stopPropagation();
+    const chiuso = payPanel.classList.contains('hidden');
+    chiudiPannelli(entry.id);
+    payPanel.classList.toggle('hidden', !chiuso);
+    payBtn.classList.toggle('on', chiuso);
+    if (chiuso) { syncBarRows(barBox, entry.barItems); buildPay(); }
+  });
+  mkAct('\u270f\ufe0f Modifica', '', (ev) => { ev.stopPropagation(); editEntry(entry); });
+  mkAct('\ud83d\udeaa Uscita', 'forte', (ev) => { ev.stopPropagation(); chiudiIngresso(entry); });
 
   if (!people.length) {
     const warn = el('div', 'e-noone');
-    warn.appendChild(el('div', null, '\u26a0\ufe0f All\'uscita non avrai riferimenti'));
+    warn.appendChild(el('span', null, '\u26a0\ufe0f All\'uscita non avrai riferimenti'));
     const add = el('button', 'btn btn-sm', '\u2795 Aggiungi');
     warn.appendChild(add);
     add.onclick = (ev) => {
@@ -1921,64 +1927,15 @@ function entryCard(entry) {
     };
     aperta.appendChild(warn);
   }
-
   const notes = people.filter(p => p.note && p.note.trim());
   if (notes.length) {
     aperta.appendChild(el('div', 'e-note', notes.map(p => '\ud83d\udcdd ' + p.note.trim()).join(' \u00b7 ')));
   }
 
-  const acts = el('div', 'e-acts');
-  const mkAct = (em, label, cls, fn) => {
-    const b = el('button', 'e-act ' + (cls || ''));
-    b.innerHTML = '<span class="em">' + em + '</span>';
-    b.appendChild(el('span', null, label));
-    b.onclick = fn;
-    acts.appendChild(b);
-    return b;
-  };
-  aperta.appendChild(acts);
-
-  const barPanel = el('div', 'e-panel hidden');
-  const bk = el('div', 'e-panel-k'); bk.innerHTML = '\ud83e\udd64 Bar'; barPanel.appendChild(bk);
-  const barBox = el('div');
-  barPanel.appendChild(barBox);
-  buildBarRows(barBox, () => (entry.barItems = entry.barItems || []), () => {
-    saveEntries();
-    syncBarRows(barBox, entry.barItems);
-    syncCard(entry);
-  });
-  aperta.appendChild(barPanel);
-
-  const payPanel = el('div', 'e-panel hidden');
-  aperta.appendChild(payPanel);
-  const buildPay = () => buildPaymentPanel(payPanel, entry, () => { syncCard(entry); });
-
-  const panels = [];
-  const toggle = (panel, btn, onOpen) => (ev) => {
-    if (ev) ev.stopPropagation();
-    const open = panel.classList.contains('hidden');
-    chiudiPannelli(entry.id);
-    panels.forEach(([p, b]) => { p.classList.add('hidden'); b.classList.remove('on'); });
-    if (open) {
-      panel.classList.remove('hidden');
-      btn.classList.add('on');
-      if (onOpen) onOpen();
-    }
-  };
-  const barBtn = mkAct('\ud83e\udd64', 'Bar', 'bar', () => {});
-  const barBadge = el('span', 'badge', eur(0));
-  barBtn.appendChild(barBadge);
-  const payBtn = mkAct('\ud83d\udcb6', 'Conto', 'pay', () => {});
-  mkAct('\u270f\ufe0f', 'Modifica', '', (ev) => { ev.stopPropagation(); editEntry(entry); });
-  mkAct('\ud83d\udeaa', 'Uscita', 'out', (ev) => { ev.stopPropagation(); chiudiIngresso(entry); });
-  panels.push([barPanel, barBtn], [payPanel, payBtn]);
-  card.panels = panels;
-  barBtn.onclick = toggle(barPanel, barBtn, () => syncBarRows(barBox, entry.barItems));
-  payBtn.onclick = toggle(payPanel, payBtn, buildPay);
-
+  card.panels = [[payPanel, payBtn]];
   card.appendChild(aperta);
 
-  /* un tocco ovunque sulla riga apre; toccando dentro non si chiude */
+  /* un tocco ovunque sulla riga apre; dentro non si chiude */
   riga.onclick = () => {
     const gia = card.classList.contains('aperto');
     chiudiSchede(null);
@@ -1987,9 +1944,9 @@ function entryCard(entry) {
   aperta.onclick = (ev) => ev.stopPropagation();
 
   cardRefs.set(entry.id, {
-    card, count, sub, fill, range, sKids, sCrazy, sTime,
-    cParkV, cBarV, dueVal: soldiV, soldiK, soldi, barBadge, barBox, barPanel, barBtn,
-    payPanel, payBtn, buildPay, kidsBadgeV
+    card, count, range, sKids, sCrazy, sTime,
+    dueVal: soldiV, soldiK, soldi, barBox,
+    barPanel: payPanel, barBtn: payBtn, payPanel, payBtn, buildPay
   });
   syncCard(entry);
   return card;
@@ -2235,13 +2192,7 @@ function syncCard(entry) {
   r.sKids.minus.disabled = kids <= 0;
   r.sCrazy.minus.disabled = crazy <= 0;
   r.sTime.minus.disabled = num(entry.durationMinutes, 0) <= 5;
-  if (r.kidsBadgeV) r.kidsBadgeV.textContent = kids;
 
-  r.barBadge.textContent = eur(due.bar);
-  r.cParkV.textContent = eur(due.parkDue);
-  r.cParkV.className = 'num' + (due.park > 0 && due.parkDue === 0 ? ' pagato' : '');
-  r.cBarV.textContent = due.bar > 0 ? eur(due.barDue) : '\u2014';
-  r.cBarV.className = 'num' + (due.bar > 0 && due.barDue === 0 ? ' pagato' : '');
   soldiDi(r, entry, due);
 
   // se il conto è aperto lo riallineo: i prezzi possono essere cambiati
@@ -2293,18 +2244,9 @@ function tick() {
       // l'orario d'inizio è arrotondato ai 5 minuti e può cadere
       // qualche minuto avanti: non mostro un tempo trascorso negativo
       r.count.textContent = fmtClock(Math.max(0, now - entry.startTime));
-      r.sub.textContent = 'dentro da';
-      r.fill.style.transform = 'scaleX(1)';
       soldiDi(r, entry, dueOf(entry));                     // il conto sale col tempo
     } else {
-      const end = endTimeOf(entry);
-      const totale = Math.max(1, end - entry.startTime);
-      const left = end - now;
-      r.count.textContent = fmtClock(left);
-      r.sub.textContent = left >= 0
-        ? 'alla scadenza'
-        : (st === 'danger' ? '\u26a0\ufe0f oltre la tolleranza' : 'scaduto, in tolleranza');
-      r.fill.style.transform = 'scaleX(' + clamp(left / totale, 0, 1).toFixed(3) + ')';
+      r.count.textContent = fmtClock(endTimeOf(entry) - now);
     }
   });
 }
