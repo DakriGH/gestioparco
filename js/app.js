@@ -155,12 +155,27 @@ function defaultSettings() {
       { m: 80, p: 16.5 }, { m: 90, p: 19 }, { m: 100, p: 22 }, { m: 110, p: 24 }, { m: 120, p: 24 }
     ],
     quickDurations: [15, 30, 60, 90],
+    /* Il listino di Birbalandia, dal cartello. */
     barMenu: [
-      { id: 'b1', name: 'Acqua', price: 1, em: '💧', cat: 'Bevande' },
-      { id: 'b2', name: 'Coca Cola', price: 2.5, em: '🥤', cat: 'Bevande' },
-      { id: 'b3', name: 'Caffè', price: 1.2, em: '☕', cat: 'Bevande' },
-      { id: 'b4', name: 'Merendina', price: 2, em: '🍪', cat: 'Snack' },
-      { id: 'b5', name: 'Panino', price: 4, em: '🥪', cat: 'Snack' }
+      { id: 'b1',  name: 'Acqua',           price: 1,    em: '\ud83d\udca7', cat: 'Bevande' },
+      { id: 'b2',  name: 'Caff\u00e8',           price: 1.2,  em: '\u2615',       cat: 'Bevande' },
+      { id: 'b3',  name: 'Coca Cola',       price: 2.5,  em: '\ud83e\udd64', cat: 'Bevande' },
+      { id: 'b4',  name: 'Coca Cola Zero',  price: 2.5,  em: '\ud83e\udd64', cat: 'Bevande' },
+      { id: 'b5',  name: 'Fanta',           price: 2.5,  em: '\ud83c\udf4a', cat: 'Bevande' },
+      { id: 'b6',  name: 'Sprite',          price: 2.5,  em: '\ud83c\udf4b', cat: 'Bevande' },
+      { id: 'b7',  name: 'Schweppes',       price: 2,    em: '\ud83e\udd64', cat: 'Bevande' },
+      { id: 'b8',  name: 'Gazzosa',         price: 2,    em: '\ud83c\udf4b', cat: 'Bevande' },
+      { id: 'b9',  name: 'Estath\u00e8',        price: 2.5,  em: '\ud83e\uddc3', cat: 'Bevande' },
+      { id: 'b10', name: 'Brasilena',       price: 2,    em: '\ud83e\udd64', cat: 'Bevande' },
+      { id: 'b11', name: 'Patatine',        price: 1.5,  em: '\ud83c\udf5f', cat: 'Snack' },
+      { id: 'b12', name: 'Heineken',        price: 3,    em: '\ud83c\udf7a', cat: 'Birre' },
+      { id: 'b13', name: 'Nastro Azzurro',  price: 3,    em: '\ud83c\udf7a', cat: 'Birre' },
+      { id: 'b14', name: 'Ichnusa',         price: 3,    em: '\ud83c\udf7a', cat: 'Birre' },
+      { id: 'b15', name: "Tennent's",       price: 3.5,  em: '\ud83c\udf7a', cat: 'Birre' },
+      { id: 'b16', name: 'Limoncello',      price: 3,    em: '\ud83c\udf4b', cat: 'Alcolici' },
+      { id: 'b17', name: 'Amari',           price: 3,    em: '\ud83e\udd43', cat: 'Alcolici' },
+      { id: 'b18', name: 'Grappa',          price: 4,    em: '\ud83e\udd43', cat: 'Alcolici' },
+      { id: 'b19', name: 'Spritz',          price: 6,    em: '\ud83c\udf79', cat: 'Alcolici' }
     ],
     animazioni: true,
     braceletSlots: [
@@ -3038,6 +3053,39 @@ function renderPresets() {
 /* ============================================================
    GUSCIO
    ============================================================ */
+/* I prezzi stanno sul dispositivo e vincono su quelli base: senza
+   questo, su un tablet gia' usato resterebbero i valori FINTI di prova.
+   Sostituisce solo se sono ancora quelli: se qualcuno li ha ritoccati
+   a mano non tocca niente. */
+function aggiornaListinoFinto() {
+  const d = defaultSettings();
+  let cambiato = [];
+
+  const firmaBar = (m) => (m || []).map(x => x.name + ':' + x.price).join('|');
+  const BAR_FINTO = 'Acqua:1|Coca Cola:2.5|Caff\u00e8:1.2|Merendina:2|Panino:4';
+  if (firmaBar(settings.barMenu) === BAR_FINTO) {
+    settings.barMenu = JSON.parse(JSON.stringify(d.barMenu));
+    cambiato.push('il bar');
+  }
+
+  const firmaTar = (t) => (t || []).map(x => x.m + ':' + x.p).join('|');
+  const TAR_FINTE = '10:2|15:3|30:5|45:7|60:9|75:10|90:12|105:13|120:15|150:18|180:21';
+  if (firmaTar(settings.tariffs) === TAR_FINTE) {
+    settings.tariffs = JSON.parse(JSON.stringify(d.tariffs));
+    cambiato.push('le tariffe');
+  }
+
+  if (num(settings.crazyJumpingPrice, 0) === 3) {
+    settings.crazyJumpingPrice = d.crazyJumpingPrice;
+    cambiato.push('il Crazy Jumping');
+  }
+
+  if (cambiato.length) {
+    saveSettings();
+    setTimeout(() => toast('Listino aggiornato: ' + cambiato.join(', ')), 1200);
+  }
+}
+
 function applyTheme() {
   document.documentElement.dataset.theme = 'dark';   // tema unico: il chiaro non serviva
   // tinte: quelle del modello (di serie) o quelle misurate
@@ -3107,6 +3155,7 @@ function normalizeEntries(list) {
 
 function init() {
   settings = Object.assign(defaultSettings(), load(SK.settings) || {});
+  aggiornaListinoFinto();
   // migrazione dal vecchio interruttore darkMode
   if (typeof settings.darkMode === 'boolean' && !load(SK.settings)?.theme) {
     settings.theme = settings.darkMode ? 'dark' : 'light';
