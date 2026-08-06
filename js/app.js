@@ -1774,8 +1774,22 @@ function entryCard(entry) {
   /* la figura non si taglia mai: all'uscita servono anche i pantaloni
      e le scarpe per capire chi e'. */
   const avBox = el('div', 'e-av' + (people.length > 1 ? ' multi' : ''));
+  /* Senza riferimento il posto della figura DIVENTA il tasto per
+     metterlo: si tocca li', dove l'occhio guarda gia'. */
   if (!people.length) {
-    avBox.appendChild(el('div', 'av vuoto', '\u2753'));
+    avBox.classList.add('manca');
+    avBox.title = 'Nessun riferimento \u2014 tocca per metterlo';
+    avBox.appendChild(el('div', 'segno', '\u2795'));
+    avBox.appendChild(el('div', 'dillo', 'metti chi \u00e8'));
+    avBox.onclick = (ev) => {
+      ev.stopPropagation();
+      pickRole(p => {
+        entry.people = entry.people || [];
+        entry.people.push(p);
+        saveEntries();
+        openCustomizer(p, () => { saveEntries(); redrawCard(entry); });
+      });
+    };
   } else {
     people.slice(0, 2).forEach(p => {
       const a = el('div', 'av');
@@ -1911,22 +1925,6 @@ function entryCard(entry) {
   mkAct('\u270f\ufe0f Modifica', '', (ev) => { ev.stopPropagation(); editEntry(entry); });
   mkAct('\ud83d\udeaa Uscita', 'forte', (ev) => { ev.stopPropagation(); chiudiIngresso(entry); });
 
-  if (!people.length) {
-    const warn = el('div', 'e-noone');
-    warn.appendChild(el('span', null, '\u26a0\ufe0f All\'uscita non avrai riferimenti'));
-    const add = el('button', 'btn btn-sm', '\u2795 Aggiungi');
-    warn.appendChild(add);
-    add.onclick = (ev) => {
-      ev.stopPropagation();
-      pickRole(p => {
-        entry.people = entry.people || [];
-        entry.people.push(p);
-        saveEntries();
-        openCustomizer(p, () => { saveEntries(); redrawCard(entry); });
-      });
-    };
-    aperta.appendChild(warn);
-  }
   const notes = people.filter(p => p.note && p.note.trim());
   if (notes.length) {
     aperta.appendChild(el('div', 'e-note', notes.map(p => '\ud83d\udcdd ' + p.note.trim()).join(' \u00b7 ')));

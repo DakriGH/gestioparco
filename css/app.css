@@ -1230,7 +1230,29 @@ main {
 .e-av .av:active { transform: scale(0.95); }
 .e-av.multi { aspect-ratio: 5 / 4; }
 .e-av.multi .av { width: 50%; }
-.e-av .av.vuoto { display: flex; align-items: center; justify-content: center; font-size: 26px; opacity: 0.7; }
+
+/* Senza riferimento il posto della figura DIVENTA il tasto per
+   metterlo: si tocca li', dove guardi gia'. Niente pulsante sotto. */
+.e-av.manca {
+  border: 2px dashed rgba(255, 255, 255, 0.55);
+  background: rgba(0, 0, 0, 0.24);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1px;
+}
+.e-av.manca:active { transform: scale(0.95); }
+.e-av.manca .segno { font-size: 22px; line-height: 1; }
+.e-av.manca .dillo {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1.15;
+  padding: 0 3px;
+}
 
 .e-chi { flex: 1; min-width: 0; }
 .e-chi b {
@@ -1322,10 +1344,10 @@ main {
 .e-cella {
   background: rgba(0, 0, 0, 0.26);
   border-radius: 13px;
-  padding: 6px 10px;
+  padding: 6px 8px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 .e-cella .k { font-size: 11.5px; color: rgba(255, 255, 255, 0.75); }
 .e-cella .v {
@@ -1351,18 +1373,19 @@ main {
 .e-cella button::after { content: ""; position: absolute; inset: -3px; }
 .e-cella button:disabled { opacity: 0.4; }
 
-.e-azioni { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+.e-azioni { display: flex; gap: 6px; margin-left: auto; flex-wrap: nowrap; }
 .e-azioni button {
   position: relative;
   background: rgba(255, 255, 255, 0.16);
   border: none;
   color: #fff;
   font: inherit;
-  font-size: 14.5px;
+  font-size: 13.5px;
   font-weight: 700;
-  padding: 11px 15px;
+  padding: 11px 8px;
   border-radius: 13px;
   cursor: pointer;
+  white-space: nowrap;
 }
 .e-azioni button.forte { background: #fff; color: #123A2C; }
 .e-azioni button.on { background: #fff; color: #123A2C; }
@@ -1375,22 +1398,6 @@ main {
   font-weight: 800;
 }
 
-/* dentro la scheda il fondo e' gia' colorato: giallo su giallo stava
-   a 3,77 di contrasto. Bianco su nero, e si legge. */
-.e-noone {
-  background: rgba(0, 0, 0, 0.34);
-  color: #fff;
-  border-radius: 13px;
-  padding: 10px 14px;
-  font-size: 14px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 10px;
-}
 .e-note { font-size: 12.5px; color: rgba(255,255,255,0.85); font-style: italic; line-height: 1.35; margin-top: 9px; }
 
 /* --- pannelli in fondo alla scheda: si aprono sotto, non in mezzo --- */
