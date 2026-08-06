@@ -2527,3 +2527,42 @@ main {
   .entry.vola, .velo-scheda { transition: none; }
   .view.esce-sx, .view.entra-dx { animation: none; }
 }
+
+/* =============== CASSA RAPIDA =============== */
+#view-cassa { display: flex; flex-direction: column; gap: 12px; }
+.cassa-testa {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 14px 13px;
+  border-radius: 18px;
+  background: linear-gradient(140deg, #0C7A57, #075C41);
+  color: #fff;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.32);
+}
+.cassa-tot .k {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #EAF7F1;
+}
+.cassa-tot .v {
+  display: block;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+.cassa-tasti { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+.cassa-tasti .btn:disabled { opacity: 0.45; }
+.cassa-fila { display: flex; gap: 9px; flex-wrap: wrap; margin-bottom: 11px; }
+.cassa-fondo { display: flex; gap: 9px; flex-wrap: wrap; }
+.cassa-fondo .btn { flex: 1 1 160px; }
+#view-cassa .resto-box { margin: 0; }

@@ -1908,6 +1908,183 @@ function entryCard(entry) {
   return card;
 }
 
+
+/* ============================================================
+   CASSA RAPIDA — la terza linguetta.
+   Per chi passa solo a consumare, o per segnare una cosa al volo
+   senza aprire un ingresso. Ci sono comunque bambini, Crazy e le
+   fasce di tempo, cosi' da qui parte anche un ingresso vero.
+   ============================================================ */
+const cassa = { bar: [], children: 0, crazy: 0, minutes: 0 };
+
+function cassaBarTot() {
+  return cassa.bar.reduce((a, i) => a + num(i.price, 0) * num(i.qty, 0), 0);
+}
+/* Il parco si conta SOLO se c'e' almeno un bambino: qui zero bambini
+   vuol dire "e' passato solo a bere", non "un ingresso da uno". */
+function cassaParcoTot() {
+  if (cassa.children <= 0) return 0;
+  const finto = {
+    children: cassa.children, crazyJumping: cassa.crazy,
+    durationMinutes: cassa.minutes || settings.defaultMinutes || 60,
+    payLater: false, barItems: []
+  };
+  const c = costOf(finto);
+  return Math.round((c.parkTotal + c.crazyCost) * 100) / 100;
+}
+function cassaTot() { return Math.round((cassaBarTot() + cassaParcoTot()) * 100) / 100; }
+
+function buildCassaView() {
+  const root = $('#view-cassa');
+  root.innerHTML = '';
+
+  const testa = el('div', 'cassa-testa');
+  const tot = el('div', 'cassa-tot');
+  tot.appendChild(el('span', 'k', 'da incassare'));
+  const totV = el('span', 'v num', eur(0));
+  tot.appendChild(totV);
+  testa.appendChild(tot);
+  const tasti = el('div', 'cassa-tasti');
+  const incassa = el('button', 'btn btn-ok', '\u2705 Incassa');
+  const restoBtn = el('button', 'btn btn-resto', '\ud83e\uddee Resto');
+  tasti.appendChild(incassa);
+  tasti.appendChild(restoBtn);
+  testa.appendChild(tasti);
+  root.appendChild(testa);
+  const restoQui = el('div');
+  root.appendChild(restoQui);
+
+  /* --- il bar: la griglia dei prodotti --- */
+  const cBar = el('div', 'card blk c-ciano');
+  cBar.appendChild(el('h2', null, '\ud83e\udd64 Bar'));
+  const inBar = el('div', 'blk-in');
+  const barBox = el('div');
+  buildBarRows(barBox, () => cassa.bar, () => { rinfresca(); });
+  inBar.appendChild(barBox);
+  cBar.appendChild(inBar);
+
+  /* --- il parco: bambini, Crazy, tempo --- */
+  const cParco = el('div', 'card blk c-blu');
+  cParco.appendChild(el('h2', null, '\ud83c\udfa0 Ingresso al parco'));
+  const inParco = el('div', 'blk-in');
+  const fila = el('div', 'cassa-fila');
+  const cella = (em, chiave, passo) => {
+    const b = el('div', 'e-cella');
+    const meno = el('button', null, '\u2212');
+    const k = el('span', 'k', em);
+    const v = el('span', 'v num', '0');
+    const piu = el('button', null, '+');
+    meno.onclick = () => { cassa[chiave] = Math.max(0, cassa[chiave] - passo); rinfresca(); };
+    piu.onclick = () => { cassa[chiave] = cassa[chiave] + passo; rinfresca(); };
+    b.appendChild(meno); b.appendChild(k); b.appendChild(v); b.appendChild(piu);
+    fila.appendChild(b);
+    return v;
+  };
+  const vBimbi = cella('\ud83e\uddd2', 'children', 1);
+  const vCrazy = cella('\ud83e\udd38', 'crazy', 1);
+  inParco.appendChild(fila);
+
+  const tempi = el('div', 'chips');
+  const OPZ = [[10, '10m'], [15, '15m'], [30, '30m'], [60, '1h']];
+  const chipTempo = [];
+  OPZ.forEach(o => {
+    const b = el('button', 'chip');
+    b.textContent = o[1];
+    b.onclick = () => { cassa.minutes = o[0]; rinfresca(); };
+    chipTempo.push([b, o[0]]);
+    tempi.appendChild(b);
+  });
+  const altro = el('button', 'chip', 'altro\u2026');
+  altro.onclick = () => {
+    const s2 = sheet('Quanti minuti?');
+    const inp = el('input', 'ed-nota');
+    inp.type = 'number'; inp.min = '5'; inp.step = '5';
+    inp.value = cassa.minutes || 60;
+    s2.body.appendChild(inp);
+    footBtn(s2.foot, 'Va bene', 'btn-primary', () => {
+      cassa.minutes = clamp(parseInt(inp.value, 10) || 60, 5, 600);
+      s2.close(); rinfresca();
+    });
+  };
+  chipTempo.push([altro, -1]);
+  tempi.appendChild(altro);
+  inParco.appendChild(tempi);
+  cParco.appendChild(inParco);
+
+  root.appendChild(cBar);
+  root.appendChild(cParco);
+
+  /* --- in fondo: svuota, oppure fallo diventare un ingresso vero --- */
+  const fondo = el('div', 'cassa-fondo');
+  const svuota = el('button', 'btn', '\ud83e\uddf9 Svuota');
+  svuota.onclick = () => {
+    cassa.bar = []; cassa.children = 0; cassa.crazy = 0; cassa.minutes = 0;
+    buildCassaView();
+  };
+  const diventa = el('button', 'btn btn-primary', '\u27a1\ufe0f Fanne un ingresso');
+  diventa.onclick = () => {
+    draft.children = Math.max(1, cassa.children);
+    draft.crazyJumping = cassa.crazy;
+    draft.durationMinutes = cassa.minutes || settings.defaultMinutes || 60;
+    draft.barItems = JSON.parse(JSON.stringify(cassa.bar));
+    draft.startTime = roundTo5(new Date()).getTime();
+    draft.payLater = false;
+    draft.touched = true;
+    cassa.bar = []; cassa.children = 0; cassa.crazy = 0; cassa.minutes = 0;
+    switchTab('new');
+  };
+  fondo.appendChild(svuota);
+  fondo.appendChild(diventa);
+  root.appendChild(fondo);
+
+  function rinfresca() {
+    const t = cassaTot();
+    totV.textContent = eur(t);
+    vBimbi.textContent = cassa.children;
+    vCrazy.textContent = cassa.crazy;
+    chipTempo.forEach(([b, m]) => b.classList.toggle('on', m === cassa.minutes));
+    incassa.disabled = t <= 0;
+    incassa.textContent = t > 0 ? '\u2705 Incassa ' + eur(t) : '\u2705 Incassa';
+    diventa.disabled = cassa.children <= 0;
+    syncBarRows(barBox, cassa.bar);
+  }
+
+  const registra = (preso) => {
+    /* finisce in archivio come conto gia' saldato: cosi' entra nei
+       totali del giorno e nelle copie, senza un magazzino a parte */
+    entries.push({
+      id: uid(), createdAt: Date.now(), startTime: Date.now(),
+      durationMinutes: cassa.minutes || 0, payLater: false,
+      children: cassa.children, crazyJumping: cassa.crazy,
+      people: [], barItems: JSON.parse(JSON.stringify(cassa.bar)),
+      braceletColor: null, braceletCustom: true,
+      status: 'closed', closedAt: Date.now(), cassaRapida: true,
+      paidLines: {}, paidPark: cassaParcoTot(), paidBar: cassaBarTot(),
+      barPaid: 0, parkPaid: false
+    });
+    saveEntries();
+    cassa.bar = []; cassa.children = 0; cassa.crazy = 0; cassa.minutes = 0;
+    buildCassaView();
+    updateBadge();
+    toast('Incassati ' + eur(preso));
+  };
+
+  incassa.onclick = () => { const t = cassaTot(); if (t > 0) registra(t); };
+  restoBtn.onclick = () => {
+    const gia = restoQui.querySelector('.resto-box');
+    if (gia) { gia.remove(); restoBtn.classList.remove('on'); return; }
+    const t = cassaTot();
+    if (t <= 0) return;
+    restoBtn.classList.add('on');
+    restoQui.appendChild(pannelloResto(null, t, (preso) => {
+      restoBtn.classList.remove('on');
+      registra(preso);
+    }));
+  };
+
+  rinfresca();
+}
+
 /* ================= LA SCHEDA CHE VOLA =================
    Con Bar & Conto la scheda si stacca dalla lista e si mette al centro
    dello schermo, sopra tutto, con il resto sfocato dietro. Al suo posto
@@ -2775,6 +2952,7 @@ function switchTab(t) {
   $$('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
   $('#view-new').classList.toggle('hidden', t !== 'new');
   $('#view-active').classList.toggle('hidden', t !== 'active');
+  $('#view-cassa').classList.toggle('hidden', t !== 'cassa');
   $('#view-settings').classList.toggle('hidden', t !== 'settings');
   $('main').scrollTop = 0;
 
@@ -2789,6 +2967,7 @@ function switchTab(t) {
     syncActionBar();
   }
   if (t === 'active') buildActiveView();
+  if (t === 'cassa') buildCassaView();
   if (t === 'settings') buildSettingsView();
   updateBadge();
 }
