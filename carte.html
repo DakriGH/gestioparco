@@ -112,6 +112,439 @@ body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #1212
 .R4 .conto { font-family: 'Fredoka', sans-serif; font-size: 27px; font-weight: 700; margin-left: auto; min-width: 96px; text-align: right; }
 .R4 .eur { font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 700; min-width: 78px; text-align: right; }
 .R4 .piu { width: 42px; height: 42px; border-radius: 12px; background: rgba(255,255,255,0.16); border: none; color: #fff; font-size: 19px; flex-shrink: 0; }
+
+/* ============ R5 — LA LINEA DEL TEMPO ============ */
+/* ============ R5 — LA LINEA DEL TEMPO ============ */
+.R5 .linea { position: relative; }
+.R5 .linea::before {
+  content: ''; position: absolute; left: 65px; top: 12px; bottom: 12px; width: 2px; border-radius: 2px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.26) 10%, rgba(255,255,255,0.26) 90%, rgba(255,255,255,0.05));
+}
+.R5 .riga { display: flex; align-items: center; position: relative; }
+.R5 .ora { width: 52px; flex-shrink: 0; text-align: right; padding-right: 7px; font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 700; color: #D2D2E4; letter-spacing: -0.01em; }
+.R5 .riga.tardi .ora { color: #FF9AA2; }
+.R5 .punto { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; margin: 0 7px; box-shadow: 0 0 0 3px #17171F, inset 0 0 0 2px rgba(255,255,255,0.55); }
+.R5 .scheda { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; position: relative; overflow: hidden; border-radius: 14px; padding: 9px 11px; min-height: 70px; color: #fff; }
+.R5 .av { width: 52px; height: 52px; border-radius: 13px; background: rgba(255,255,255,0.12); overflow: hidden; flex-shrink: 0; }
+.R5 .av svg { width: 160%; height: 160%; margin: -14% 0 0 -30%; }
+.R5 .chi { flex: 1; min-width: 0; }
+.R5 .chi b { font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 600; display: block; line-height: 1.2; }
+.R5 .chi span { display: block; font-size: 13px; color: rgba(255,255,255,0.88); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.R5 .quando { font-family: 'Fredoka', sans-serif; font-size: 13.5px; font-weight: 700; background: rgba(0,0,0,0.3); border-radius: 20px; padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }
+.R5 .quando.tardi { background: #fff; color: #8E1F27; }
+.R5 .brac { display: inline-flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.3); border-radius: 20px; padding: 4px 10px 4px 4px; font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; flex-shrink: 0; }
+.R5 .brac i { width: 16px; height: 16px; border-radius: 50%; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.5); flex-shrink: 0; }
+.R5 .eur { font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 700; min-width: 82px; text-align: right; flex-shrink: 0; }
+.R5 .via { width: 44px; height: 44px; flex-shrink: 0; border: none; border-radius: 13px; background: rgba(255,255,255,0.16); color: #fff; font-size: 19px; }
+.R5 .barra { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: rgba(0,0,0,0.28); }
+.R5 .barra i { display: block; height: 100%; background: rgba(255,255,255,0.9); border-radius: 0 3px 3px 0; }
+.R5 .barra.finita { background: repeating-linear-gradient(-45deg, rgba(255,255,255,0.4) 0 5px, rgba(0,0,0,0.24) 5px 10px); }
+.R5 .salto { position: relative; }
+.R5 .salto span { position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 52px; text-align: right; padding-right: 7px; font-size: 10.5px; font-weight: 700; color: #6E6E86; }
+.R5 .adesso { display: flex; align-items: center; height: 30px; }
+.R5 .adesso .ora { color: #FFD166; }
+.R5 .adesso .punto { background: #FFD166; box-shadow: 0 0 0 3px #17171F, 0 0 0 7px rgba(255,209,102,0.18); }
+.R5 .adesso .etic { font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #FFD166; margin-right: 9px; }
+.R5 .adesso .filo { flex: 1; height: 2px; background: linear-gradient(90deg, rgba(255,209,102,0.8), rgba(255,209,102,0)); }
+.R5 .coda { margin-top: 16px; }
+.R5 .coda .riga + .riga { margin-top: 6px; }
+.R5 .fuori { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #7C7C93; }
+.R5 .fuori::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.16); }
+.R5 .fine { border-top: 2px dashed rgba(255,255,255,0.22); margin: 10px 0 4px; padding-top: 6px; font-size: 11.5px; font-weight: 800; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.06em; }
+.R5 .nota { margin-top: 12px; font-size: 12.5px; color: #8A8AA0; }
+
+/* ============ R6 — SOLO SEMAFORO E FACCIA ============ */
+/* ---- il muro dei semafori ---- */
+.R6 .muro { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+.R6 .sem { position: relative; display: flex; align-items: center; gap: 10px; height: 76px; margin: 0; padding: 7px 12px 7px 7px; border: 0; border-radius: 18px; color: #fff; font: inherit; text-align: left; cursor: pointer; }
+.R6 .sem:active { filter: brightness(1.12); }
+
+/* la faccia: ritaglio sul volto dello sprite a figura intera (viewBox 100x150) */
+.R6 .av { display: block; width: 60px; height: 60px; flex: 0 0 auto; border-radius: 50%; overflow: hidden; background: rgba(255,255,255,0.16); box-shadow: 0 0 0 2px rgba(0,0,0,0.32), 0 0 0 5px var(--brac, #fff); }
+.R6 .av svg { display: block; width: 172%; height: 258%; margin: -10% 0 0 -36%; }
+
+.R6 .tempo { margin-left: auto; font-family: 'Fredoka', sans-serif; font-size: 30px; font-weight: 700; line-height: 1; letter-spacing: -0.02em; white-space: nowrap; }
+.R6 .tempo.parola { font-size: 16px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.92; }
+
+/* i rossi respirano, così l'occhio ci cade sopra da solo */
+@keyframes R6battito { 0% { box-shadow: 0 0 0 0 rgba(255,120,120,0.65); } 70% { box-shadow: 0 0 0 9px rgba(255,120,120,0); } 100% { box-shadow: 0 0 0 0 rgba(255,120,120,0); } }
+.R6 .sem.late { animation: R6battito 2s ease-out infinite; }
+.R6 .sem.aperto { animation: none; box-shadow: 0 0 0 3px #fff; }
+
+.R6 .fine { border-top: 2px dashed rgba(255,255,255,0.24); margin-top: 12px; padding-top: 7px; font-size: 11.5px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255,255,255,0.45); }
+
+/* ---- il foglio: tutto il resto, un gruppo alla volta ---- */
+.R6 .foglio { position: relative; margin-top: 14px; padding: 12px 14px 14px; border-radius: 22px; color: #fff; box-shadow: 0 -14px 34px rgba(0,0,0,0.5); }
+.R6 .maniglia { width: 54px; height: 5px; margin: 0 auto 12px; border-radius: 3px; background: rgba(255,255,255,0.5); }
+.R6 .chiudi { position: absolute; top: 10px; right: 10px; width: 40px; height: 40px; border: 0; border-radius: 13px; background: rgba(0,0,0,0.26); color: #fff; font-size: 17px; cursor: pointer; }
+.R6 .fsu { display: flex; align-items: center; gap: 14px; padding-right: 46px; }
+.R6 .fsu .av { width: 74px; height: 74px; }
+.R6 .fchi { min-width: 0; }
+.R6 .fchi b { display: block; font-family: 'Fredoka', sans-serif; font-size: 22px; font-weight: 600; line-height: 1.25; }
+.R6 .fchi .tr { font-size: 13.5px; color: rgba(255,255,255,0.9); }
+.R6 .brac { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; padding: 3px 11px 3px 3px; border-radius: 20px; background: rgba(0,0,0,0.3); font-size: 11px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
+.R6 .brac i { width: 16px; height: 16px; border-radius: 50%; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.55); }
+.R6 .fnum { margin-left: auto; text-align: right; }
+.R6 .fnum .t { font-family: 'Fredoka', sans-serif; font-size: 34px; font-weight: 700; line-height: 1; }
+.R6 .fnum .e { margin-top: 3px; font-family: 'Fredoka', sans-serif; font-size: 20px; font-weight: 700; }
+.R6 .fgiu { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.R6 .cella { display: flex; align-items: center; gap: 6px; padding: 4px; border-radius: 15px; background: rgba(0,0,0,0.28); }
+.R6 .cella .v { min-width: 52px; text-align: center; font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 700; }
+.R6 .cella button { width: 40px; height: 40px; border: 0; border-radius: 12px; background: rgba(255,255,255,0.18); color: #fff; font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 700; cursor: pointer; }
+.R6 .azioni { display: flex; gap: 8px; margin-left: auto; }
+.R6 .azioni button { min-width: 48px; height: 48px; padding: 0 13px; border: 0; border-radius: 14px; background: rgba(255,255,255,0.16); color: #fff; font-size: 18px; cursor: pointer; }
+.R6 .azioni button.forte { background: #fff; color: #1A2430; font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 700; }
+.R6 .nota { margin-top: 12px; font-size: 12.5px; line-height: 1.5; color: rgba(255,255,255,0.5); }
+
+/* ============ R7 — MURO DI FACCE ============ */
+.R7 .muro { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+
+.R7 .cella {
+  position: relative; display: block; width: 100%; min-width: 0; text-align: left;
+  font: inherit; color: #fff; border: none; padding: 7px; border-radius: 20px;
+  -webkit-appearance: none; appearance: none; cursor: pointer;
+  box-shadow: 0 2px 0 rgba(0,0,0,0.28);
+}
+.R7 .cella:active { transform: translateY(1px); }
+.R7 .cella.late { box-shadow: 0 0 0 3px rgba(255,255,255,0.55), 0 2px 0 rgba(0,0,0,0.28); }
+
+.R7 .faccia {
+  position: relative; width: 100%; aspect-ratio: 1 / 1; overflow: hidden;
+  border-radius: 14px; background: rgba(0,0,0,0.24);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.15);
+}
+/* lo sprite è a figura intera (viewBox 0 0 100 150): qui lo ingrandisco e lo
+   sposto in modo che nel quadrato resti solo la zona x 8-92, y 8-92, cioè
+   cappello, testa, spalle e maglietta. */
+.R7 .faccia > svg { position: absolute; display: block; width: 119%; height: 178.5%; left: -9.5%; top: -9.5%; }
+.R7 .faccia::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 44%;
+  background: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,0.42)); pointer-events: none;
+}
+
+.R7 .brac {
+  position: absolute; top: 7px; right: 7px; z-index: 2;
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(0,0,0,0.55); border-radius: 20px; padding: 3px 9px 3px 4px;
+  font-size: 10.5px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
+}
+.R7 .brac i { width: 16px; height: 16px; border-radius: 50%; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.7); }
+
+.R7 .numeri {
+  position: absolute; left: 6px; bottom: 6px; z-index: 2;
+  background: rgba(0,0,0,0.58); border-radius: 12px; padding: 4px 8px 5px; line-height: 1;
+}
+.R7 .numeri .t { display: block; font-family: 'Fredoka', sans-serif; font-size: 21px; font-weight: 700; }
+.R7 .numeri .t.senza { font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 700; padding: 4px 0 3px; }
+.R7 .numeri .e { display: block; margin-top: 3px; font-size: 11.5px; font-weight: 700; color: rgba(255,255,255,0.88); }
+
+.R7 .gente {
+  position: absolute; right: 6px; bottom: 6px; z-index: 2;
+  background: rgba(0,0,0,0.5); border-radius: 10px; padding: 4px 7px;
+  font-size: 11px; font-weight: 700; line-height: 1;
+}
+
+.R7 .nome {
+  font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 600; line-height: 1.18;
+  margin: 6px 3px 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.28);
+}
+.R7 .tratti { margin: 0 3px; font-size: 11.5px; line-height: 1.3; color: rgba(255,255,255,0.94); text-shadow: 0 1px 2px rgba(0,0,0,0.28); }
+.R7 .tratti span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+@media (max-width: 620px) { .R7 .muro { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 420px) { .R7 .muro { grid-template-columns: repeat(2, 1fr); } }
+
+/* ============ R8 — LISTINO DI CASSA ============ */
+/* ============ R8 — TABELLA DA CASSA ============ */
+.R8 { --cols: minmax(0,1fr) 94px 44px 44px 56px 126px 92px 42px; }
+.R8 .tab { border-radius: 14px; overflow: hidden; background: #0E0E14; border: 1px solid rgba(255,255,255,0.10); }
+
+.R8 .testa { display: grid; grid-template-columns: var(--cols); background: #272734; padding-left: 6px; position: sticky; top: 0; z-index: 3; }
+.R8 .testa div { font-size: 10px; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; color: #A2A2BA; padding: 9px 8px; white-space: nowrap; overflow: hidden; }
+.R8 .testa .mid { text-align: center; padding-left: 2px; padding-right: 2px; }
+.R8 .testa .dx { text-align: right; }
+
+/* la riga porta la classe di stato: il colore esce dai 6px di sinistra e dalla cella "scade" */
+.R8 .riga { display: grid; grid-template-columns: var(--cols); height: 46px; padding-left: 6px; cursor: pointer; }
+.R8 .riga > div { background: rgba(14,14,20,0.80); display: flex; align-items: center; padding: 0 8px; min-width: 0; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.07); box-shadow: inset -1px 0 0 rgba(255,255,255,0.05); }
+
+.R8 .riga .chi { gap: 9px; }
+.R8 .riga .av { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: rgba(255,255,255,0.12); }
+.R8 .riga .av svg { width: 156%; height: 234%; margin: -9% 0 0 -28%; display: block; }
+.R8 .riga .nomi { min-width: 0; }
+.R8 .riga .nomi b { font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 600; line-height: 1.12; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.R8 .riga .nomi span { font-size: 11px; line-height: 1.2; color: rgba(255,255,255,0.66); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.R8 .riga .brac { gap: 6px; }
+.R8 .riga .brac i { width: 15px; height: 15px; border-radius: 50%; flex-shrink: 0; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.45); }
+.R8 .riga .brac span { font-size: 10px; font-weight: 800; letter-spacing: 0.03em; text-transform: uppercase; color: rgba(255,255,255,0.85); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.R8 .riga .n { justify-content: center; padding: 0 2px; font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 700; }
+.R8 .riga .n.zero { color: rgba(255,255,255,0.26); }
+.R8 .riga .tempo { justify-content: center; padding: 0 2px; font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.82); }
+
+.R8 .riga .scade { background: none; box-shadow: none; justify-content: center; padding: 0 4px; font-family: 'Fredoka', sans-serif; font-size: 21px; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.32); border-bottom-color: rgba(0,0,0,0.16); }
+.R8 .riga .scade.parola { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; }
+
+.R8 .riga .eur { justify-content: flex-end; font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 700; }
+.R8 .riga .eur.vuoto { color: rgba(255,255,255,0.3); }
+
+.R8 .riga .az { justify-content: center; padding: 0 2px; box-shadow: none; }
+.R8 .riga .az button { width: 100%; height: 38px; border: none; border-radius: 10px; background: rgba(255,255,255,0.13); color: #fff; font-size: 16px; line-height: 1; cursor: pointer; }
+
+/* la striscia che si apre sotto la riga toccata (una alla volta) */
+.R8 .apri { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; padding: 7px 8px 8px 6px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.R8 .apri .cella { display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.30); border-radius: 11px; padding: 3px 6px; color: #fff; }
+.R8 .apri .cella em { font-style: normal; font-size: 12px; opacity: 0.9; }
+.R8 .apri .cella .v { font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 700; min-width: 26px; text-align: center; }
+.R8 .apri .cella button { width: 38px; height: 38px; border: none; border-radius: 10px; background: rgba(255,255,255,0.18); color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
+.R8 .apri .tasti { display: flex; gap: 6px; margin-left: auto; }
+.R8 .apri .tasti button { height: 38px; min-width: 44px; padding: 0 12px; border: none; border-radius: 11px; background: rgba(255,255,255,0.16); color: #fff; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.R8 .apri .tasti button.forte { background: #fff; color: #17171F; }
+
+.R8 .piede { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; background: #22222E; padding: 9px 12px; font-size: 12px; color: #A2A2BA; }
+.R8 .piede b { font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 700; color: #fff; }
+.R8 .piede .sp { margin-left: auto; font-size: 11px; }
+
+/* ============ R9 — FONDO NEUTRO, COLORE SOLO SUL BORDO ============ */
+/* R9 — il colore sta solo sul bordo sinistro, il resto è neutro */
+.R9 .riga { display: flex; align-items: stretch; background: #1C1C26; border: 1px solid rgba(255,255,255,0.08); border-radius: 15px; overflow: hidden; margin-bottom: 8px; }
+.R9 .riga[data-s="late"] { background: #251A1F; }
+
+/* la fascia: binario spento + riempimento che sale col tempo consumato */
+.R9 .fascia { position: relative; flex: 0 0 13px; width: 13px; background: rgba(255,255,255,0.06); }
+.R9 .riga[data-s="late"] .fascia { flex-basis: 19px; width: 19px; }
+.R9 .fascia i { position: absolute; left: 0; right: 0; bottom: 0; display: block; }
+
+.R9 .corpo { flex: 1; min-width: 0; display: flex; align-items: center; gap: 11px; padding: 9px 12px; }
+
+/* faccia ritagliata dalla figura intera, con l'anello del braccialetto */
+.R9 .av { flex: 0 0 60px; width: 60px; height: 60px; border-radius: 17px; border: 3px solid #555; background: #262633; overflow: hidden; }
+.R9 .av svg, .R9 .av img { width: 172%; height: 172%; display: block; margin: -16% 0 0 -35%; }
+
+.R9 .chi { flex: 1 1 auto; min-width: 0; }
+.R9 .nome { display: flex; align-items: baseline; gap: 7px; min-width: 0; }
+.R9 .nome b { font-family: 'Fredoka', sans-serif; font-size: 17.5px; font-weight: 600; color: #F3F3F9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.R9 .nome em { font-style: normal; font-size: 10.5px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; white-space: nowrap; }
+.R9 .tr { font-size: 12.5px; line-height: 1.33; color: #9A9AB0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.R9 .num { flex: 0 0 auto; display: flex; gap: 5px; }
+.R9 .num span { background: rgba(255,255,255,0.06); border-radius: 9px; padding: 4px 7px; font-size: 12px; font-weight: 700; color: #C2C2D4; white-space: nowrap; }
+
+.R9 .dx { flex: 0 0 104px; text-align: right; }
+.R9 .conto { font-family: 'Fredoka', sans-serif; font-size: 30px; font-weight: 700; line-height: 1.05; letter-spacing: -0.005em; }
+.R9 .conto.testo { font-size: 15px; font-weight: 600; line-height: 1.65; }
+.R9 .eur { font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 600; color: #E2E2EE; }
+
+.R9 .tasti { flex: 0 0 auto; display: flex; gap: 7px; }
+.R9 .tasti button { width: 44px; height: 44px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.07); color: #EDEDF5; font-size: 19px; line-height: 1; cursor: pointer; }
+.R9 .tasti button.forte { background: #F2F2F8; color: #15151C; border-color: transparent; }
+.R9 .tasti button:active { transform: scale(0.94); }
+
+.R9 .fine { border-top: 2px dashed rgba(255,255,255,0.22); margin: 10px 0 4px; padding-top: 6px; font-size: 11.5px; font-weight: 800; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* se la finestra è stretta lascio cadere le pastigliette, non i tasti */
+@media (max-width: 700px) { .R9 .num { display: none; } }
+
+/* ============ R10 — RAGGRUPPATE PER STATO ============ */
+.R10 .blocco { border-radius: 16px; padding-bottom: 5px; margin-bottom: 9px; color: #fff; }
+.R10 .blocco.neutro { background: rgba(255,255,255,0.09); }
+.R10 .blocco:last-child { margin-bottom: 0; }
+
+.R10 .testa { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 9px; padding: 6px 12px; background: rgba(0,0,0,0.30); border-radius: 16px 16px 0 0; }
+.R10 .testa h3 { font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 600; margin: 0; }
+.R10 .testa .conta { font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 700; background: rgba(255,255,255,0.22); border-radius: 20px; padding: 0 9px; }
+.R10 .testa .somma { margin-left: auto; font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 700; color: rgba(255,255,255,0.92); }
+
+.R10 .righe { padding: 0 6px; }
+.R10 .riga { display: flex; align-items: center; gap: 10px; padding: 6px; border-top: 1px solid rgba(255,255,255,0.16); }
+.R10 .riga:first-child { border-top: none; }
+.R10 .riga:active { background: rgba(0,0,0,0.18); border-radius: 12px; }
+
+.R10 .av { width: 42px; height: 42px; border-radius: 12px; background: rgba(255,255,255,0.13); overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.R10 .av svg { width: 200%; height: 200%; margin: -8% 0 0 -50%; display: block; }
+.R10 .av .ini { font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 700; }
+
+.R10 .chi { flex: 1; min-width: 0; }
+.R10 .nome { display: flex; align-items: center; gap: 8px; }
+.R10 .nome b { font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 600; }
+.R10 .brac { display: inline-flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.30); border-radius: 20px; padding: 1px 8px 1px 2px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; flex-shrink: 0; }
+.R10 .brac i { width: 13px; height: 13px; border-radius: 50%; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.55); }
+.R10 .sotto { display: flex; align-items: center; gap: 8px; }
+.R10 .tr { font-size: 11.5px; color: rgba(255,255,255,0.86); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.R10 .num { display: flex; gap: 5px; margin-left: auto; flex-shrink: 0; }
+.R10 .num span { font-size: 10.5px; font-weight: 700; background: rgba(0,0,0,0.24); border-radius: 8px; padding: 1px 6px; color: rgba(255,255,255,0.9); }
+
+.R10 .quanto { flex-shrink: 0; min-width: 96px; text-align: right; }
+.R10 .conto { font-family: 'Fredoka', sans-serif; font-size: 23px; font-weight: 700; line-height: 1.04; }
+.R10 .conto.testo { font-size: 14px; letter-spacing: 0.02em; }
+.R10 .eur { font-family: 'Fredoka', sans-serif; font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.9); line-height: 1.15; }
+.R10 .esci { width: 42px; height: 42px; border-radius: 12px; background: rgba(255,255,255,0.16); border: none; color: #fff; font-size: 18px; flex-shrink: 0; }
+
+.R10 .vuoto { display: flex; align-items: center; gap: 9px; padding: 6px 12px; border-radius: 14px; margin-bottom: 9px; background: rgba(255,255,255,0.05); font-size: 12.5px; color: rgba(255,255,255,0.55); }
+.R10 .vuoto .tinta { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+.R10 .vuoto b { font-family: 'Fredoka', sans-serif; font-size: 13.5px; font-weight: 600; color: rgba(255,255,255,0.72); }
+
+/* ============ R11 — ANELLO DEL TEMPO ============ */
+/* ============ R11 — ANELLO DEL TEMPO ============
+   Il tempo che resta e' un anello che si svuota attorno al volto.
+   Anello grosso = tempo (tinta dello stato) · filo sottile esterno = braccialetto. */
+.R11 .riga{
+  display:flex; align-items:center; gap:12px; color:#fff;
+  border-radius:20px; padding:8px 10px 10px 8px; margin-bottom:8px;
+}
+
+/* --- il tondo: anello + volto + minuti --- */
+.R11 .orb{ position:relative; width:78px; height:78px; flex:0 0 78px; }
+.R11 .anello{ position:absolute; inset:0; width:78px; height:78px; display:block; transform:rotate(-90deg); }
+/* scanalatura scura: fa staccare il braccialetto anche quando e' del colore dello stato */
+.R11 .anello .solco{ fill:none; stroke:rgba(0,0,0,.42); stroke-width:4.6; }
+.R11 .anello .polso{ fill:none; stroke-width:2.8; }                          /* colore del braccialetto */
+.R11 .anello .cerchio{ fill:none; stroke:rgba(0,0,0,.30); stroke-width:7; }   /* tempo gia' consumato */
+.R11 .anello .arco{ fill:none; stroke:var(--anello,#fff); stroke-width:7; stroke-linecap:round; }
+.R11 .anello.senza .arco{ opacity:.55; }                                     /* nessun conto alla rovescia */
+.R11 .anello.fuori .arco{ transform-box:fill-box; transform-origin:center; animation:R11gira 9s linear infinite; }
+@keyframes R11gira{ to{ transform:rotate(360deg); } }
+@media (prefers-reduced-motion:reduce){ .R11 .anello.fuori .arco{ animation:none; } }
+
+/* volto: lo sprite e' figura intera (viewBox 100x150, testa a cy 40), qui e' ingrandito
+   e spostato coi margini negativi finche' la testa non riempie il cerchio */
+.R11 .faccia{
+  position:absolute; left:11px; top:11px; width:56px; height:56px;
+  border-radius:50%; overflow:hidden; background:rgba(0,0,0,.26);
+}
+.R11 .faccia svg{ width:82px; height:123px; margin:-4px 0 0 -13px; display:block; }
+.R11 .quanto{
+  position:absolute; left:50%; bottom:-9px; transform:translateX(-50%);
+  font-family:'Fredoka',sans-serif; font-size:14.5px; font-weight:700; line-height:1;
+  padding:5px 9px; border-radius:11px; white-space:nowrap;
+  background:rgba(0,0,0,.55); box-shadow:0 0 0 2px rgba(255,255,255,.30);
+}
+
+/* --- chi e' --- */
+.R11 .chi{ flex:1 1 auto; min-width:0; }
+.R11 .capo{ display:flex; align-items:baseline; gap:8px; min-width:0; }
+.R11 .capo b{
+  font-family:'Fredoka',sans-serif; font-size:19px; font-weight:600;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.R11 .bl{
+  flex:0 0 auto; font-size:10.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+  background:rgba(0,0,0,.32); border-radius:20px; padding:3px 9px; white-space:nowrap;
+}
+.R11 .tratti{ display:flex; gap:6px; margin-top:7px; min-width:0; }
+.R11 .tratti span{
+  font-size:12.5px; background:rgba(0,0,0,.26); border-radius:9px; padding:4px 9px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
+/* --- quanto deve, e il tasto --- */
+.R11 .soldi{ flex:0 0 auto; text-align:right; }
+.R11 .soldi .eur{ display:block; font-family:'Fredoka',sans-serif; font-size:26px; font-weight:700; line-height:1.05; }
+.R11 .soldi .cnt{ display:block; margin-top:5px; font-size:12px; color:rgba(255,255,255,.85); white-space:nowrap; }
+.R11 .agire{
+  flex:0 0 44px; width:44px; height:44px; border:none; border-radius:14px;
+  background:rgba(255,255,255,.16); color:#fff; font-size:20px; line-height:1;
+}
+
+/* ============ R12 — TAGLIANDO DA STRAPPARE ============ */
+/* ============ R12 — TAGLIANDO ============ */
+.R12 { --perf: rgba(255,255,255,.48); }
+
+.R12 .tag{
+  position:relative; display:flex; flex-direction:column; color:#fff;
+  border-radius:4px 12px 12px 4px; margin-bottom:8px; cursor:pointer;
+  -webkit-mask-image:radial-gradient(circle 7px at 0 50%, transparent 7px, #000 7.5px);
+          mask-image:radial-gradient(circle 7px at 0 50%, transparent 7px, #000 7.5px);
+  -webkit-mask-size:100% 16.666%;  mask-size:100% 16.666%;
+  -webkit-mask-repeat:repeat-y;    mask-repeat:repeat-y;
+}
+.R12 .tag.aperto{ border-radius:4px 12px 0 0; margin-bottom:0; }
+.R12 .tag:active{ filter:brightness(1.06); }
+
+.R12 .banda{
+  height:15px; flex:none; display:flex; align-items:center; justify-content:space-between;
+  padding:0 12px 0 18px;
+  background-image:repeating-linear-gradient(115deg, rgba(255,255,255,.30) 0 3px, rgba(255,255,255,0) 3px 10px);
+  box-shadow: inset 0 -1px 0 rgba(0,0,0,.30);
+}
+.R12 .banda span{ font-size:9px; font-weight:800; letter-spacing:.14em; text-transform:uppercase;
+  color:rgba(0,0,0,.66); text-shadow:0 1px 0 rgba(255,255,255,.20); }
+
+.R12 .corpo{ display:flex; align-items:center; gap:11px; padding:7px 10px 7px 18px; }
+
+.R12 .foto{ position:relative; width:52px; height:66px; flex:none; border-radius:4px; overflow:hidden;
+  background:rgba(255,255,255,.12); box-shadow: inset 0 0 0 1px rgba(255,255,255,.34); }
+.R12 .foto svg{ display:block; width:150%; height:150%; margin:-8% 0 0 -25%; }
+.R12 .bollo{ display:none; position:absolute; left:5px; right:5px; bottom:4px; text-align:center;
+  transform:rotate(-8deg); font-size:7px; font-weight:800; letter-spacing:.05em; text-transform:uppercase;
+  white-space:nowrap; padding:2px 0; border:1.5px solid rgba(255,255,255,.85); border-radius:3px;
+  background:rgba(0,0,0,.34); }
+.R12 .tag.late .bollo{ display:block; }
+
+.R12 .dati{ flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; }
+.R12 .capo{ display:flex; align-items:baseline; gap:9px; }
+.R12 .nome{ font-family:'Fredoka',sans-serif; font-size:18px; font-weight:600; letter-spacing:.02em;
+  text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.R12 .serie{ font-size:9px; font-weight:800; letter-spacing:.13em; text-transform:uppercase;
+  color:rgba(255,255,255,.6); margin-left:auto; white-space:nowrap; }
+.R12 .tratti{ font-size:11.5px; letter-spacing:.045em; text-transform:uppercase; color:rgba(255,255,255,.94);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.R12 .tratti i{ font-style:normal; color:rgba(255,255,255,.5); margin:0 5px; }
+.R12 .voci{ display:flex; align-items:center; gap:7px; font-size:9.5px; letter-spacing:.11em;
+  text-transform:uppercase; color:rgba(255,255,255,.78); overflow:hidden; }
+.R12 .voci span{ white-space:nowrap; }
+.R12 .voci b{ font-family:'Fredoka',sans-serif; font-size:12.5px; font-weight:700; letter-spacing:0; color:#fff; }
+.R12 .voci .pun{ flex:1; min-width:10px; border-bottom:1px dotted rgba(255,255,255,.4); transform:translateY(-3px); }
+
+.R12 .perf{ flex:none; align-self:stretch; width:0; margin:-3px 4px -3px 0;
+  border-left:2px dashed var(--perf); position:relative; }
+.R12 .perf::before, .R12 .perf::after{ content:''; position:absolute; left:-6px; width:11px; height:11px;
+  border-radius:50%; background:rgba(0,0,0,.34); box-shadow: inset 0 1px 2px rgba(0,0,0,.45); }
+.R12 .perf::before{ top:-6px; }
+.R12 .perf::after{ bottom:-6px; }
+
+.R12 .matrice{ flex:none; width:152px; display:flex; flex-direction:column; align-items:flex-end;
+  justify-content:center; gap:4px; }
+.R12 .conto{ font-family:'Fredoka',sans-serif; font-size:27px; font-weight:700; line-height:1;
+  font-variant-numeric:tabular-nums; }
+.R12 .conto.testo{ font-size:14px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; padding:6px 0 5px; }
+.R12 .tot{ display:flex; align-items:baseline; width:100%; border-top:3px double rgba(255,255,255,.5); padding-top:3px; }
+.R12 .tot .k{ font-size:9px; font-weight:800; letter-spacing:.13em; text-transform:uppercase;
+  color:rgba(255,255,255,.7); margin-right:auto; }
+.R12 .eur{ font-family:'Fredoka',sans-serif; font-size:18px; font-weight:700; font-variant-numeric:tabular-nums; }
+
+.R12 .strappa{ flex:none; width:44px; height:44px; margin-left:10px; border:none; border-radius:10px;
+  background:rgba(255,255,255,.17); color:#fff; font-size:19px; font-family:inherit; }
+.R12 .strappa:active{ transform:scale(.94); }
+
+.R12 .strappo{ position:relative; margin:0 0 8px; padding:11px 12px 12px 18px; color:#fff;
+  border-radius:0 0 12px 4px; border-top:2px dashed rgba(255,255,255,.42);
+  box-shadow: inset 0 0 0 999px rgba(0,0,0,.30);
+  display:flex; flex-wrap:wrap; align-items:center; gap:8px;
+  -webkit-mask-image:radial-gradient(circle 7px at 0 50%, transparent 7px, #000 7.5px);
+          mask-image:radial-gradient(circle 7px at 0 50%, transparent 7px, #000 7.5px);
+  -webkit-mask-size:100% 25%;  mask-size:100% 25%;
+  -webkit-mask-repeat:repeat-y; mask-repeat:repeat-y;
+}
+.R12 .strappo[hidden]{ display:none; }
+.R12 .cella{ display:flex; align-items:center; gap:5px; background:rgba(0,0,0,.26); border-radius:10px; padding:3px 6px; }
+.R12 .cella .k{ font-size:14px; }
+.R12 .cella .v{ font-family:'Fredoka',sans-serif; font-size:16px; font-weight:700; min-width:28px; text-align:center; }
+.R12 .cella button{ width:38px; height:38px; border:none; border-radius:9px; background:rgba(255,255,255,.16);
+  color:#fff; font-size:15px; font-family:inherit; }
+.R12 .azioni{ display:flex; gap:6px; margin-left:auto; }
+.R12 .azioni button{ height:40px; min-width:40px; padding:0 10px; border:none; border-radius:9px;
+  background:rgba(255,255,255,.15); color:#fff; font:inherit; font-size:11.5px; font-weight:800;
+  letter-spacing:.06em; text-transform:uppercase; }
+.R12 .azioni button.forte{ background:#fff; color:#1B1B24; }
+
+.rompe { background: #241A1E; border-left: 3px solid #FF9AA2; border-radius: 0 12px 12px 0;
+  padding: 9px 13px; margin: -6px 0 14px; font-size: 13.5px; line-height: 1.5; color: #C9AFB4; }
+.rompe b { color: #FF9AA2; }
+.rompe i { color: #9A9AB0; }
+
 </style>
 </head>
 <body>
@@ -164,6 +597,70 @@ body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #1212
   compaiono col tocco. Tredici gruppi a schermata: da qui si governa un parco pieno.
   Il rischio: la riga è densa, e i tratti della persona non ci stanno.</p>
   <div class="telaio R4" id="R4"></div>
+</div>
+
+<div class="strada">
+  <header><span class="n">R5</span><h2>La linea del tempo</h2></header>
+  <div class="veloce"><span class="buono">📏 70px la scheda</span><span class="buono">👁️ 10 gruppi, 12 se il parco è pieno</span><span class="buono">🕐 l'ordine dice già quando</span><span class="cosi">🔍 avatar a 52px</span><span class="male">🎯 le righe si spostano da sole</span></div>
+  <p class="perche">Qui i gruppi non sono un elenco ma stanno appesi a un asse del tempo: in alto chi è già scaduto, poi la riga ADESSO, sotto chi deve ancora uscire, e l'orario di uscita è scritto sull'asse a sinistra come in un'agenda, con la tacca colorata dello stato e la barra che si accorcia sul fondo della scheda. Lo spazio vuoto fra due schede è tempo vero: se sono attaccate scadono a un minuto l'una dall'altra, se c'è un buco hai mezz'ora di respiro — così il countdown scritto resta solo dove serve davvero, cioè sui gruppi in ritardo e su quelli che scadono entro cinque minuti. Il prezzo è che quello spazio, pur essendo informazione, sono pixel che non stai usando per mostrare gruppi: a parco scarico ne entrano una decina invece dei tredici di una lista fitta, e l'avatar scende a 52px ritagliato sul volto, quindi riconoscere la persona è un filo più faticoso che con le schede grandi. Il rischio vero però è un altro: l'ordine cambia da solo col passare del tempo, una scheda scivola in su e può finire sotto il dito al posto di un'altra, ed è il motivo per cui l'unico tasto diretto è l'uscita e tutto il resto si apre toccando la scheda.</p>
+  <p class="rompe"><b>Dove si rompe:</b>Il lettore del countdown di R5 conosce solo mm:ss. La funzione accetta ^(-)?(\d+):(\d+)$, ma l'app scrive h:mm:ss appena manca piu' di un'ora (fmtClock, ). Chi non viene letto diventa null e finisce nel riquadro in fondo 'fuori linea - pagano all'uscita'. · Il +5 sposta la scheda invece di modificarla. L'ordine e' l'orario di uscita, e i tasti ±5 tempo e ±1 crazy stanno sulla scheda ( righe 1811-1813, ogni pressione chiama syncCard e tick). · Le schede saltano da sole di 34px, e l'unico tasto diretto e' quello che chiude l'ingresso. Quando un gruppo attraversa ADESSO la riga gialla gli passa sotto e la sua scheda risale di 34px (30 della riga + il salto); il tasto 🚪 e' alto 44px.<br><i>Va bene al capoturno che guarda il parco dall'alto e vuole sapere quando arriva l'ondata; non va bene a me in cassa, perche' mi fa pagare la lettura del tempo - che l'ordine della lista gia' mi dava gratis - con il nome della persona, il numero dei bambini e una lista che si sposta mentre la tocco.</i></p>
+  <div class="telaio R5" id="R5"></div>
+</div>
+
+<div class="strada">
+  <header><span class="n">R6</span><h2>Solo semaforo e faccia</h2></header>
+  <div class="veloce"><span class="buono">76px, ma tre per riga</span><span class="buono">~30 gruppi a schermata</span><span class="cosi">2 tocchi per incassare</span><span class="male">nome ed euro invisibili</span></div>
+  <p class="perche">Qui la scheda diventa il semaforo e basta: il colore di stato riempie tutto il riquadro, e dentro ci sono soltanto la faccia ritagliata sul volto — con l'anello del braccialetto intorno — e quanto manca. Nome, euro, bambini, crazy e tempo non si vedono più: escono tutti insieme nel foglio che sale toccando un semaforo, e finché resta aperto ti copre le ultime due file del muro. Ci si guadagna parecchio, perché ogni semaforo è alto 76px ma ne stanno tre per riga: una trentina di gruppi tutti in vista senza scorrere, e per giunta con la faccia più grande di adesso (60px di solo volto invece della figura intera in miniatura). Si paga in due modi, e sono seri: un gruppo non lo cerchi più per nome, perché il nome non è scritto da nessuna parte e l'ordine è per urgenza e non alfabetico; e per incassare servono due tocchi invece di uno, perché prima devi aprire il foglio.</p>
+  <p class="rompe"><b>Dove si rompe:</b>Un gruppo = una faccia sola. Nel muro E nel foglio compare solo la prima persona; oggi la scheda mostra fino a 3 sprite affiancati (96px), i ruoli di TUTTI ("👩 Mamma · 👨 Papà · 👦 Ragazzo · 👧 Ragazza") e i tratti di due persone. Non è una scorciatoia del mockup: tre facce da 60px più il countdown chiedono ~315px per tessera, cioè 2 colonne invece di 3 — e la densità che giustifica tutto R6 si dimezza. · Il ritaglio butta via proprio il tratto che serve. Misurato in pagina: la finestra visibile è x 20,9–79,1 e y 5,8–64 su uno sprite 100×150. La testa sta a y 17,5–62,5, il BUSTO a 68–102: la maglietta è fuori inquadratura al 100%, insieme a pantaloni, gonna, borsa, zaino e scarpe. ordina i tratti dichiarando "quanto aiuta a riconoscere una persona da lontano: prima cappello e colore della maglia": R6 tiene il primo (e al cappello di paglia taglia la tesa, che va da x 17 a 83) e cancella il secondo. Resta la varietà più povera che c'è: 8 pelli × 8 capelli × 3 occhiali × 3 barbe. Tutta la ricchezza (11 colori × 8 fantasie × 6 tipi di maglia) sta nel busto tagliato. · Il colore del bracciale diventa illeggibile, perché gli si mette sotto il colore di stato. Contrasto misurato fra l'anello da 3px e la tessera: azzurro su arancione 1,07 · rosso su rosso 1,16 · viola su verde 1,25 · verde su verde 1,48. Il massimo su tutte le combinazioni è 2,18 (giallo su rosso). Oggi il bracciale non è un anello: tinge tutta la scheda (--brace a 0,46), fa l'orlo destro da 4px e l'alone dietro l'avatar — è la cosa più grande della scheda dopo il countdown.<br><i>Va bene a chi ha gruppi da una o due persone e usa il muro solo come cruscotto delle scadenze — la densità è vera (3 colonne e ~30 tessere sul tablet in verticale, misurate) e la testa a 60px è davvero più grande dei ~38px di testa che vedi oggi dentro l'avatar a figura intera; va male al cassiere vero, perché per guadagnare quella densità taglia via le tre cose su cui si regge il lavoro — chi è il gruppo (una faccia sola su quattro persone, e senza maglietta), quale braccialetto ha (anello a contrasto 1,07–2,18 sul colore di stato) e quanto deve — e le rimette dietro a un foglio che copre tre file e sale dal lato dello schermo che l'app si era vietata.</i></p>
+  <div class="telaio R6" id="R6"></div>
+</div>
+
+<div class="strada">
+  <header><span class="n">R7</span><h2>Muro di facce</h2></header>
+  <div class="veloce"><span class="buono">🙂 faccia da 182px</span><span class="buono">👁️ 16 gruppi a schermata</span><span class="male">⏱️ countdown a 21px in un angolo</span><span class="cosi">👆 1 tocco prima di qualsiasi azione</span></div>
+  <p class="perche">Questa è la vista per chi sta all'uscita: sedici facce grandi tutte insieme, ognuna dentro una cornice del colore di stato, col braccialetto scritto in alto a destra e i due tratti sotto al nome, così la domanda «chi è questo?» si risolve guardando, senza leggere. Il prezzo è che il countdown e l'importo si riducono a una pastigliona in un angolo della foto: chi sta scadendo lo capisci dal colore della cornice, ma tra «−12:40» e «04:12» non distingui più a colpo d'occhio chi è messo peggio, e per ordinare la giornata devi comunque scorrere. Sulla scheda non c'è nessun tasto: aggiungere un bambino, allungare il tempo o incassare vuol dire prima toccare la faccia e aprire il gruppo, quindi ogni operazione costa un tocco in più di adesso. La terrei come seconda vista, quella che tieni aperta al varco d'uscita; alla cassa, quando devi solo battere, ti rallenta rispetto a un elenco a righe.</p>
+  <p class="rompe"><b>Dove si rompe:</b>Il numerone non dice più se sta scendendo o salendo: hai tolto la riga di sotto ('alla scadenza' / 'dentro da'). Un 'paga dopo' mostra il tempo TRASCORSO con le stesse identiche cifre di un countdown. · Questa è la vista senza tasti, e la metti al varco d'uscita — che in questo parco È la cassa: si paga uscendo (il tasto Uscita chiude e apre il conto, e c'è pure la modalità 'paga dopo'). · La fascia ambra copre da +10:00 a −10:00 (warnBeforeMinutes 10 + toleranceMinutes 10). Venti minuti dentro un solo colore, e tu il numero lo mandi a 21px in un angolo sopra il disegno.<br><i>Va bene solo come schermo appeso e mai toccato, su una finestra larga, per chi deve unicamente riconoscere una faccia; non va bene per me alla cassa né al varco d'uscita, perché toglie i tasti proprio dove si incassa, riduce a un trattino da sei pixel la differenza tra chi è in tempo e chi è oltre, confonde il colore del braccialetto con quello dello stato, e sul telefono in verticale mostra 4 gruppi per schermata con countdown e contapersone che si sovrappongono.</i></p>
+  <div class="telaio R7" id="R7"></div>
+</div>
+
+<div class="strada">
+  <header><span class="n">R8</span><h2>Listino di cassa</h2></header>
+  <div class="veloce"><span class="buono">46px a riga</span><span class="buono">21 gruppi a schermata</span><span class="buono">totale in fondo</span><span class="cosi">1 tocco per agire</span><span class="male">faccia da 32px</span></div>
+  <p class="perche">Le schede diventano righe di un listino: intestazione in cima, le stesse colonne per tutti (chi, bracciale, bimbi, crazy, tempo, scade, dovuto) e il totale in fondo. Non leggi più sei riquadri, scorri una colonna sola — quella dello «scade», dove il colore di stato forma una striscia continua da cima a fondo — e in una schermata ci stanno 21 gruppi invece di 2. Il prezzo lo paghi sul riconoscimento all'uscita: la figura scende a 32px ritagliati sul viso e i due tratti stanno su una riga da 11px, quindi l'appiglio vero diventa il colore del braccialetto e la faccina serve solo da conferma. E dalla riga spariscono i tasti: per cambiare un numero o per incassare devi toccare il gruppo e aprire la striscia sotto, cioè un tocco in più ogni volta che agisci.</p>
+  <p class="rompe"><b>Dove si rompe:</b>Le colonne fisse sono 498px: sul telefono in verticale la colonna «dovuto» e il tasto ⋯ finiscono fuori e vengono TAGLIATI, perché.tab ha overflow:hidden e non scorre · Aprire una riga fa saltare la lista sotto il dito, e nel punto dove atterra c'è il tasto bianco «Uscita» · La striscia è agganciata alla posizione nella lista, non al gruppo — e la lista si riordina da sola per scadenza<br><i>Va bene al titolare che a fine turno vuole vedere in colonna chi è dentro e quanto c'è da incassare; non va bene al cassiere con la fila davanti, perché toglie spazio proprio alle due cose per cui apre l'app — capire chi ha davanti all'uscita e incassare senza pensarci — e in più fa muovere le righe sotto il dito: tenetela come seconda vista «Elenco», non come schermata di lavoro.</i></p>
+  <div class="telaio R8" id="R8"></div>
+</div>
+
+<div class="strada">
+  <header><span class="n">R9</span><h2>Fondo neutro, colore solo sul bordo</h2></header>
+  <div class="veloce"><span class="buono">80px l'una</span><span class="buono">11 gruppi a schermata</span><span class="buono">braccialetto finalmente leggibile</span><span class="male">da lontano si nota meno</span></div>
+  <p class="perche">Qui il colore dello stato non riempie più la scheda: resta una fascia spessa sul bordo sinistro, che si riempie dal basso man mano che il tempo si consuma, più il countdown scritto nel colore dello stato. Il fondo neutro serve a due cose: undici righe di fila non diventano un muro di verde e di rosso, e il colore del braccialetto — che qui è l'anello attorno alla faccia — finalmente si legge per quello che è, invece di sparire su una scheda della stessa tinta. Il prezzo lo paghi sulla distanza: un rettangolo pieno lo riconosci con la coda dell'occhio mentre stai incassando, una striscia da 13px no, devi guardare lo schermo. E restano dirette solo due azioni, conto e uscita: per cambiare bambini, crazy o minuti serve un tocco in più.</p>
+  <p class="rompe"><b>Dove si rompe:</b>La fascia mente su tutto quello che supera l'ora. legge "1:47:23" col regex e prende "1:47" = 1,78 minuti, quindi riempie al 97%. Misurato: 90' appena comprati = 76px di colore su 78, identico a chi ha 1 minuto di vita (76px). E nell'istante in cui il conto passa da 1:00:01 a 59:59 la fascia crolla da 76px a 11px senza che sia successo niente. · "Paga dopo" e "in orario" sono due numeri uguali di colore quasi identico, e vogliono dire il contrario. Il paga-dopo conta all'INSÙ (nell'app c'è la scritta 'dentro da' sotto il numero) e il conto sale col tempo; il normale conta all'ingiù. R9 toglie la scritta e lascia solo il numero: ciano #5FD3E8 e verde #35D6A0 hanno lo stesso peso di luce (rapporto 1,06:1), stessa dimensione, stessa forma. · Sul telefono verticale — che è il bersaglio dichiarato dell'app — il nome non esiste. Misurato: a 390px il blocco nome+tratti è largo 24px e il nome 0px; a 430px il nome è 16px; a 480px il gruppo da 4 persone ha già nome 0px. Sotto i 700px spariscono anche le pastigliette 🧒/🤸/⏱, cioè il numero di bambini, che è quello che fa il prezzo. Sotto i 330px il tasto Uscita finisce fuori dalla riga e viene tagliato da overflow:hidden (irraggiungibile, non si scrolla).<br><i>Va bene a chi guarda l'elenco da fermo su un tablet verticale grande e con pochi gruppi dentro; non va bene a chi incassa — al sole restano due numeri di colore uguale e un solo tasto visibile, che è l'Uscita, la fascia dice il falso su tutti i 90', e sul telefono il nome sparisce del tutto.</i></p>
+  <div class="telaio R9" id="R9"></div>
+</div>
+
+<div class="strada">
+  <header><span class="n">R10</span><h2>Raggruppate per stato</h2></header>
+  <div class="veloce"><span class="buono">📏 54px a riga</span><span class="buono">👁️ 15 gruppi a schermata</span><span class="cosi">🗂️ 31px per ogni titoletto</span><span class="male">🔍 avatar 42px</span></div>
+  <p class="perche">Qui non c'è più un elenco unico: i gruppi sono impilati in blocchi per stato, con un titoletto che dice quanti sono e quanto c'è da incassare in quel blocco ("Oltre la tolleranza · 2 · 37,50 €"), e dentro ogni blocco vengono ordinati da chi sta messo peggio in giù. Chi è fuori tolleranza è sempre in cima, quindi all'apertura del turno non devi cercare niente: guardi le prime due righe e sai chi rincorrere. Il prezzo più alto è che le righe si muovono da sole: quando un gruppo scade salta dal blocco verde a quello ambra, e l'abitudine "quel gruppo sta lì a metà schermo" non funziona più. Poi ogni titoletto si mangia 31px, quindi con quattro blocchi ne perdi 180 di schermo, e l'avatar scende a 42px: la persona all'uscita la riconosci più dai tratti scritti e dal colore del braccialetto che dalla figura, che è piccola.</p>
+  <p class="rompe"><b>Dove si rompe:</b>I tratti scritti — la cosa con cui riconosci la persona all'uscita — non si vedono affatto. Ho renderizzato il CSS di R10 e misurato: a 375px di viewport il campo è largo **0px** su tutte le righe (gliene servirebbero 135–175). Le tre pastiglie 🧒/🤸/⏱ sono e occupano 120px dei 113px disponibili per la colonna centrale; ha overflow:hidden quindi si schiaccia a zero senza nemmeno mostrare i puntini. A 414px arriva a 24px (due lettere). Torna leggibile solo sopra i ~540–600px. E intanto l'avatar è sceso a 42px con +, che ritaglia testa e spalle: pantaloni, gonna, scarpe, borsa e zaino non si vedono più. Quindi contemporaneamente sparisce la figura E la scritta che doveva sostituirla. · La pastiglia del bracciale sborda sopra la colonna dei soldi. non ha né overflow, quindi non si può stringere sotto la larghezza del nome, e è: quello che avanza esce dalla colonna e finisce sopra il countdown e l'importo. Misurato a 375px: 'Alessandra' → il chip arriva a x=234,7 mentre la colonna del denaro comincia a x=201 (**33px di sovrapposizione**); 'Fam. Mazzucchelli' → **62px**, e la riga diventa alta 65px invece di 54 perché il nome va a capo. Anche 'Ragazzo' e 'Ragazza' sbordano di 2–20px. · Il bracciale non identifica il gruppo, identifica l'ORARIO, e si mangia 63–80px della riga per non dirti niente. Nelle impostazioni ci sono 4 fasce da 3 ore (verde 9–12, giallo 12–15, azzurro 15–18, rosso 18–21): tutti quelli entrati nella stessa fascia hanno lo stesso colore. Con 15 gruppi dentro e durate da 45–90 minuti, il blocco intero mostra 'VERDE VERDE VERDE VERDE'. Peggio: siccome il colore dipende dall'ora d'ingresso e l'ordinamento dentro il blocco dipende dall'ora di scadenza, il chip è quasi perfettamente correlato alla posizione nella lista — occupa i pixel che servono al nome per ripetere una cosa che già vedi.<br><i>Su un tablet largo (≥600px), con gruppi da una persona e nomi corti, R10 fa quello che promette: apri il turno e le due righe in cima sono chi devi rincorrere; su telefono verticale — il formato per cui l'app è stata rifatta — la riga cancella i tratti (0px misurati) e stampa il bracciale sopra il conto, cioè perde proprio le due cose che servono a riconoscere la gente e a incassare.</i></p>
+  <div class="telaio R10" id="R10"></div>
+</div>
+
+<div class="strada">
+  <header><span class="n">R11</span><h2>Anello del tempo</h2></header>
+  <div class="veloce"><span class="buono">96px l'una</span><span class="buono">10 gruppi a schermata</span><span class="buono">quanto manca si vede senza leggere</span><span class="cosi">ritaglio sul volto: i vestiti si perdono</span></div>
+  <p class="perche">Serve a capire quanto manca senza leggere niente: l'anello attorno alla faccia si svuota man mano, quindi 4 minuti su 45 sono un'unghia di colore in cima e 28 su 60 sono mezzo giro — cosa che il solo «04:12» non ti dice. Il filo sottile che gira fuori è il colore del braccialetto, così il tondo da solo risponde già a chi è, che braccialetto ha e quanto manca; a destra restano nome, i due tratti scritti e il dovuto. Il prezzo però c'è: la riga sta a 96px contro i 78 di una riga secca, quindi 10 gruppi a schermata invece di 12, e l'anello resta comunque un secondo modo di dire quello che dice già il countdown — lo paghi solo se ti fidi più della proporzione che del numero. E soprattutto il ritaglio è sul volto: della maglietta gialla si vede si e no un dito in fondo al cerchio, il resto vive solo nelle due pastigliette scritte, quindi se all'uscita riconosci la gente dai vestiti questa impaginazione ti toglie proprio quello; in più l'anello è onesto solo se il totale (i 45 minuti) è quello vero, perché se allunghi il tempo il cerchio fa un salto all'indietro.</p>
+  <p class="rompe"><b>Dove si rompe:</b>L'anello legge male il countdown appena supera l'ora: 1:29:55 diventa «1 minuto e 29 secondi» · Il gruppo da 4 persone: una faccia sola su quattro, otto pastiglie tagliate a 4-5 lettere, e da nessuna parte scritto che sono in quattro · I tre numeri che cambi cinquanta volte al giorno diventano testo non toccabile: minuti, bambini, Crazy Jumping<br><i>Va bene a chi ha una sola durata di biglietto, gruppi da una persona e uno schermo all'ombra; a te no, perché con 90 minuti l'anello disegna un'unghia mentre ne restano ottantotto, con la famiglia da quattro resta una faccia sola e otto pastiglie tagliate a cinque lettere, e i minuti tornano a cambiarsi cambiando schermata.</i></p>
+  <div class="telaio R11" id="R11"></div>
+</div>
+
+<div class="strada">
+  <header><span class="n">R12</span><h2>Tagliando da strappare</h2></header>
+  <div class="veloce"><span class="buono">95px l'una</span><span class="buono">10 gruppi a schermata</span><span class="cosi">1 tocco per i tasti</span><span class="male">foto 52×66, solo busto</span></div>
+  <p class="perche">Qui la scheda diventa proprio un biglietto: la banda del braccialetto è stampata in cima come quelle di carta, il bordo sinistro è dentellato, le scritte sono in maiuscolo spaziato da scontrino e a destra c'è la matrice con il countdown, il totale sotto la doppia riga e il tasto per strapparlo all'uscita. La sostanza è quella di una riga compatta — 95px l'una, dieci gruppi a schermata invece di due — perché i tasti dei numeri e le azioni stanno nella parte che si stacca: si apre con un tocco sul biglietto e si richiude da sola appena ne apri un altro. Il prezzo lo paga la faccia: la foto è 52×66 e inquadra solo testa e busto, quindi di pantaloni e scarpe non vedi niente e all'uscita finisci per fidarti più dei due tratti scritti che dell'immagine. E c'è un costo di stile: il maiuscolo spaziato è bello ma si legge un filo più lento del testo normale, e la dentellatura si mangia una decina di px a sinistra che sono decorazione pura, non informazione.</p>
+  <p class="rompe"><b>Dove si rompe:</b>Un solo viso per gruppo, e due tratti soli — presi tutti dalla stessa persona. Il JS fa e e butta via il resto senza dirlo; l'app oggi mostra fino a 3 sprite e 2+2 tratti. · Tocchi l'ultima riga che vedi e non succede niente: lo strappo si apre 69px sotto la piega e il JS non scrolla (misurato a 834×1150: finisce a 1150, strappo da 1150 a 1219, resta 0). · La lista salta di 69px quando apri un gruppo più in basso di quello aperto (misurato: 9 righe su 15 si spostano in su di 69px = 0,7 di riga). Lo strappo di prima si chiude e porta via lo spazio.<br><i>Va bene a chi guarda la lista da lontano per capire chi sta scadendo — dieci gruppi a schermata e il countdown grosso a destra sono un guadagno vero; non va bene a chi ci lavora dentro, perché toglie il braccialetto, gli orari e tre facce su quattro, e ogni tocco muove la lista di 69px sotto il dito.</i></p>
+  <div class="telaio R12" id="R12"></div>
 </div>
 
 <div class="strada">
@@ -287,6 +784,692 @@ GRUPPI.forEach(g => {
   r4.appendChild(d);
 });
 const s4 = document.createElement('div'); s4.className = 'schermo'; s4.textContent = '↑ ci stanno 13 gruppi'; r4.appendChild(s4);
+
+(function(GRUPPI, box){ try {
+var ALT = 70, SCHERMO = 1040;
+var ora = new Date();
+var adesso = ora.getHours() * 60 + ora.getMinutes() + ora.getSeconds() / 60;
+
+function min(c){
+  var s = String(c == null ? '' : c).replace(/[−–—]/g, '-').trim();
+  var m = s.match(/^(-)?(\d+):(\d+)$/);
+  if (!m) return null;
+  var v = parseInt(m[2], 10) + parseInt(m[3], 10) / 60;
+  return m[1] ? -v : v;
+}
+function orologio(x){
+  var t = Math.round(x) % 1440; if (t < 0) t += 1440;
+  var h = Math.floor(t / 60), q = t % 60;
+  return (h < 10 ? '0' : '') + h + ':' + (q < 10 ? '0' : '') + q;
+}
+function durata(t){
+  var n = parseInt(String(t == null ? '' : t).replace(/[^0-9]/g, ''), 10);
+  return (isFinite(n) && n > 0) ? n : 60;
+}
+function tratti(tr){
+  return String(tr == null ? '' : tr).split(/\s+[·\-–—]\s+/).filter(Boolean).slice(0, 2).join(' · ');
+}
+
+var linea = document.createElement('div'); linea.className = 'linea';
+var alto = 0, segnato = false;
+function agg(dove, el, h){
+  dove.appendChild(el); alto += h;
+  if (!segnato && alto > SCHERMO){
+    segnato = true;
+    var s = document.createElement('div'); s.className = 'fine'; s.textContent = 'fine schermata';
+    dove.appendChild(s);
+  }
+}
+function salto(dm){
+  var px = Math.max(4, Math.min(46, Math.round(dm * 1.6)));
+  var d = document.createElement('div'); d.className = 'salto'; d.style.height = px + 'px';
+  if (dm >= 10) d.innerHTML = '<span>' + Math.round(dm) + '′</span>';
+  return { el: d, h: px };
+}
+function scheda(g){
+  var m = min(g.conto), fuori = (m === null);
+  var f = fuori ? 0 : Math.max(0, Math.min(1, m / durata(g.t)));
+  var r = document.createElement('div');
+  r.className = 'riga' + (!fuori && m < 0 ? ' tardi' : '');
+  var chip = '';
+  if (fuori) chip = '<span class="quando">' + g.conto + '</span>';
+  else if (m < 0) chip = '<span class="quando tardi">' + Math.round(-m) + '′ fa</span>';
+  else if (m <= 5) chip = '<span class="quando">tra ' + Math.round(m) + '′</span>';
+  r.innerHTML =
+    '<div class="ora">' + (fuori ? '—' : orologio(adesso + m)) + '</div>' +
+    '<span class="punto ' + g.stato + '"></span>' +
+    '<div class="scheda ' + g.stato + '">' +
+      '<div class="av">' + (g.sprite || '') + '</div>' +
+      '<div class="chi"><b>' + g.nome + '</b><span>' + tratti(g.tr) + '</span></div>' +
+      chip +
+      '<span class="brac"><i style="background:' + g.brac + '"></i>' + g.bl + '</span>' +
+      '<div class="eur">' + g.eur + '</div>' +
+      '<button class="via" aria-label="uscita">🚪</button>' +
+      (fuori ? '' : '<div class="barra' + (f <= 0 ? ' finita' : '') + '"><i style="width:' + (f * 100).toFixed(1) + '%"></i></div>') +
+    '</div>';
+  return r;
+}
+function rigaAdesso(){
+  var d = document.createElement('div'); d.className = 'adesso';
+  d.innerHTML = '<div class="ora">' + orologio(adesso) + '</div><span class="punto"></span>' +
+                '<span class="etic">adesso</span><span class="filo"></span>';
+  return d;
+}
+
+var conOra = [], senzaOra = [];
+GRUPPI.forEach(function(g){ (min(g.conto) === null ? senzaOra : conOra).push(g); });
+conOra.sort(function(a, b){ return min(a.conto) - min(b.conto); });
+
+var prec = null, messa = false, s;
+conOra.forEach(function(g){
+  var m = min(g.conto);
+  if (!messa && m >= 0){
+    if (prec !== null){ s = salto(0 - prec); agg(linea, s.el, s.h); }
+    agg(linea, rigaAdesso(), 30);
+    prec = 0; messa = true;
+  }
+  if (prec !== null){ s = salto(m - prec); agg(linea, s.el, s.h); }
+  agg(linea, scheda(g), ALT);
+  prec = m;
+});
+if (!messa){
+  if (prec !== null){ s = salto(0 - prec); agg(linea, s.el, s.h); }
+  agg(linea, rigaAdesso(), 30);
+}
+box.appendChild(linea);
+
+if (senzaOra.length){
+  var coda = document.createElement('div'); coda.className = 'coda';
+  var tit = document.createElement('div'); tit.className = 'fuori';
+  tit.innerHTML = '<span>fuori linea · pagano all’uscita</span>';
+  agg(coda, tit, 34);
+  senzaOra.forEach(function(g){ agg(coda, scheda(g), ALT + 6); });
+  box.appendChild(coda);
+}
+
+if (!segnato){
+  var media = alto / Math.max(1, GRUPPI.length);
+  var nota = document.createElement('div'); nota.className = 'nota';
+  nota.textContent = '↑ con questi orari in una schermata ne entrano circa ' +
+                     Math.floor(SCHERMO / media) + ' — media ' + Math.round(media) + 'px a gruppo';
+  box.appendChild(nota);
+}
+} catch(e) { box.innerHTML = '<p style="color:#FF9AA2">R5 non disegnata: ' + e.message + '</p>'; console.error('R5', e); } })(GRUPPI, document.getElementById('R5'));
+(function(GRUPPI, box){ try {
+/* R6 — semaforo essenziale: colore, faccia, quanto manca. Basta. */
+var PESO = { late: 0, warn: 1, ok: 2, dopo: 3 };
+function peso(g) { var p = PESO[g.stato]; return p === undefined ? 9 : p; }
+
+/* L'ordine non è più alfabetico ma per urgenza: i rossi stanno sempre in alto.
+   I gruppi di prova sono ripetuti fino a 30 per far vedere quanto ci sta. */
+var pool = [];
+for (var r = 0; r < 5; r++) { for (var i = 0; i < GRUPPI.length; i++) pool.push(GRUPPI[i]); }
+pool.sort(function (a, b) { return peso(a) - peso(b); });
+
+function faccia(g) {
+  var s = document.createElement('span');
+  s.className = 'av';
+  s.style.setProperty('--brac', g.brac || '#fff');
+  s.innerHTML = g.sprite || '';
+  return s;
+}
+
+var muro = document.createElement('div');
+muro.className = 'muro';
+pool.forEach(function (g, i) {
+  var b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'sem ' + g.stato + (i === 0 ? ' aperto' : '');
+  b.setAttribute('aria-label', g.nome + ' — ' + g.conto);
+  b.appendChild(faccia(g));
+  var t = document.createElement('span');
+  var numerico = String(g.conto).indexOf(':') > -1;
+  t.className = 'tempo' + (numerico ? '' : ' parola');
+  t.textContent = g.conto;
+  b.appendChild(t);
+  muro.appendChild(b);
+});
+box.appendChild(muro);
+
+var fine = document.createElement('div');
+fine.className = 'fine';
+fine.textContent = '↑ fin qui è una schermata del tablet: 30 gruppi (oggi ne vedi 2)';
+box.appendChild(fine);
+
+/* Il foglio: nome, tratti, soldi, numeri e azioni. Solo per il gruppo toccato. */
+var g0 = pool[0];
+var tratti = String(g0.tr || '').split(/\s+[·\-–—]\s+/);
+var f = document.createElement('div');
+f.className = 'foglio ' + g0.stato;
+
+var man = document.createElement('div'); man.className = 'maniglia'; f.appendChild(man);
+var chiudi = document.createElement('button'); chiudi.type = 'button'; chiudi.className = 'chiudi'; chiudi.textContent = '✕'; f.appendChild(chiudi);
+
+var su = document.createElement('div');
+su.className = 'fsu';
+su.appendChild(faccia(g0));
+var chi = document.createElement('div');
+chi.className = 'fchi';
+chi.innerHTML = '<b>' + g0.nome + '</b><div class="tr">' + tratti.join(' · ') + '</div>' +
+  '<span class="brac"><i style="background:' + g0.brac + '"></i>' + (g0.bl || '') + '</span>';
+su.appendChild(chi);
+var num = document.createElement('div');
+num.className = 'fnum';
+num.innerHTML = '<div class="t">' + g0.conto + '</div><div class="e">' + g0.eur + '</div>';
+su.appendChild(num);
+f.appendChild(su);
+
+var giu = document.createElement('div');
+giu.className = 'fgiu';
+[['🧒', g0.k, '−', '+'], ['🤸', g0.c, '−', '+'], ['⏱️', g0.t, '−5', '+5']].forEach(function (c) {
+  var d = document.createElement('div');
+  d.className = 'cella';
+  d.innerHTML = '<button type="button">' + c[2] + '</button><span class="v">' + c[0] + ' ' + c[1] + '</span><button type="button">' + c[3] + '</button>';
+  giu.appendChild(d);
+});
+var az = document.createElement('div');
+az.className = 'azioni';
+az.innerHTML = '<button type="button">🥤</button><button type="button">🧾</button><button type="button">✏️</button><button type="button" class="forte">🚪 Uscita</button>';
+giu.appendChild(az);
+f.appendChild(giu);
+box.appendChild(f);
+
+var nota = document.createElement('div');
+nota.className = 'nota';
+nota.textContent = 'I gruppi sono ripetuti per riempire il muro. Il foglio qui sopra è quello che si apre toccando un semaforo: nell’app sale dal basso e copre le ultime due file, che restano ferme al loro posto.';
+box.appendChild(nota);
+} catch(e) { box.innerHTML = '<p style="color:#FF9AA2">R6 non disegnata: ' + e.message + '</p>'; console.error('R6', e); } })(GRUPPI, document.getElementById('R6'));
+(function(GRUPPI, box){ try {
+/* Muro di facce: una griglia a 4 colonne, ogni riquadro è tutto tasto.
+   Il colore di stato fa da cornice, il braccialetto sta in alto a destra,
+   countdown e importo si accucciano nell'angolo in basso a sinistra. */
+var esc = function (v) {
+  return String(v == null ? '' : v).replace(/[&<>"]/g, function (c) {
+    return { '&': '&', '<': '<', '>': '>', '"': '"' }[c];
+  });
+};
+
+var muro = document.createElement('div');
+muro.className = 'muro';
+
+GRUPPI.forEach(function (g) {
+  // i due tratti scritti, separati da " - " o da " · "
+  var tratti = String(g.tr || '').split(/\s*[·–\-]\s*/).filter(function (s) { return s; }).slice(0, 2);
+  var conto = String(g.conto == null ? '' : g.conto);
+  var numerico = /\d/.test(conto);          // "paga dopo" non è un orario: va scritto più piccolo
+  var gente = [];
+  if (g.k) gente.push('🧒' + g.k);
+  if (g.c) gente.push('🤸' + g.c);
+
+  var cella = document.createElement('button');
+  cella.type = 'button';
+  cella.className = 'cella ' + (g.stato || 'ok');
+  cella.title = g.nome + ' — braccialetto ' + (g.bl || '');
+  cella.innerHTML =
+    '<div class="faccia">' +
+      (g.sprite || '') +
+      '<span class="brac"><i style="background:' + esc(g.brac) + '"></i>' + esc(g.bl) + '</span>' +
+      '<div class="numeri">' +
+        '<span class="t' + (numerico ? '' : ' senza') + '">' + esc(conto) + '</span>' +
+        '<span class="e">' + esc(g.eur) + '</span>' +
+      '</div>' +
+      (gente.length ? '<span class="gente">' + gente.join(' ') + '</span>' : '') +
+    '</div>' +
+    '<div class="nome">' + esc(g.nome) + '</div>' +
+    '<div class="tratti">' +
+      '<span>' + esc(tratti[0] || '') + '</span>' +
+      '<span>' + esc(tratti[1] || '') + '</span>' +
+    '</div>';
+  muro.appendChild(cella);
+});
+
+box.appendChild(muro);
+} catch(e) { box.innerHTML = '<p style="color:#FF9AA2">R7 non disegnata: ' + e.message + '</p>'; console.error('R7', e); } })(GRUPPI, document.getElementById('R7'));
+(function(GRUPPI, box){ try {
+/* R8 — un listino: intestazione, righe incolonnate, totale in fondo */
+const tab = document.createElement('div');
+tab.className = 'tab';
+
+const testa = document.createElement('div');
+testa.className = 'testa';
+testa.innerHTML =
+  '<div>Chi</div>' +
+  '<div>Bracciale</div>' +
+  '<div class="mid">Bimbi</div>' +
+  '<div class="mid">Crazy</div>' +
+  '<div class="mid">Tempo</div>' +
+  '<div class="mid">Scade</div>' +
+  '<div class="dx">Dovuto</div>' +
+  '<div></div>';
+tab.appendChild(testa);
+
+/* la striscia che compare sotto la riga toccata: numeri e azioni */
+function striscia(g) {
+  const a = document.createElement('div');
+  a.className = 'apri ' + g.stato;
+  a.innerHTML =
+    '<div class="cella"><button>−</button><em>🧒</em><div class="v">' + g.k + '</div><button>+</button></div>' +
+    '<div class="cella"><button>−</button><em>🤸</em><div class="v">' + g.c + '</div><button>+</button></div>' +
+    '<div class="cella"><button>−5</button><div class="v">' + g.t + '</div><button>+5</button></div>' +
+    '<div class="tasti"><button>🥤</button><button>🧾 Conto</button><button>✏️</button>' +
+    '<button class="forte">🚪 Uscita</button></div>';
+  return a;
+}
+
+let totale = 0, scaduti = 0;
+
+GRUPPI.forEach(function (g, i) {
+  const num = parseFloat(String(g.eur).replace(/[^\d,.-]/g, '').replace(',', '.'));
+  if (!isNaN(num)) totale += num;
+  if (g.stato === 'late') scaduti++;
+
+  /* due tratti al massimo, su una riga sola */
+  const tratti = String(g.tr || '').split(/\s+[·\-–]\s+/).slice(0, 2).join(' · ');
+  const orologio = /\d/.test(String(g.conto));   /* "12:40" sì, "paga dopo" no */
+
+  const r = document.createElement('div');
+  r.className = 'riga ' + g.stato;
+  r.innerHTML =
+    '<div class="chi"><div class="av">' + g.sprite + '</div>' +
+      '<div class="nomi"><b>' + g.nome + '</b><span>' + tratti + '</span></div></div>' +
+    '<div class="brac"><i style="background:' + g.brac + '"></i><span>' + g.bl + '</span></div>' +
+    '<div class="n' + (g.k ? '' : ' zero') + '">' + g.k + '</div>' +
+    '<div class="n' + (g.c ? '' : ' zero') + '">' + g.c + '</div>' +
+    '<div class="tempo">' + g.t + '</div>' +
+    '<div class="scade' + (orologio ? '' : ' parola') + '">' + g.conto + '</div>' +
+    '<div class="eur' + (isNaN(num) ? ' vuoto' : '') + '">' + g.eur + '</div>' +
+    '<div class="az"><button>⋯</button></div>';
+
+  r.addEventListener('click', function () {
+    const aperta = r.nextElementSibling && r.nextElementSibling.classList.contains('apri');
+    const vecchie = tab.querySelectorAll('.apri');
+    for (let j = 0; j < vecchie.length; j++) vecchie[j].parentNode.removeChild(vecchie[j]);
+    if (!aperta) tab.insertBefore(striscia(g), r.nextSibling);
+  });
+
+  tab.appendChild(r);
+  if (i === 0) tab.appendChild(striscia(g));   /* la prima è già aperta, per far vedere come */
+});
+
+const piede = document.createElement('div');
+piede.className = 'piede';
+piede.innerHTML =
+  '<span><b>' + GRUPPI.length + '</b> gruppi dentro</span>' +
+  '<span><b>' + totale.toFixed(2).replace('.', ',') + ' €</b> da incassare</span>' +
+  (scaduti ? '<span><b>' + scaduti + '</b> oltre l\'orario</span>' : '') +
+  '<span class="sp">riga da 46px · 21 a schermata</span>';
+tab.appendChild(piede);
+
+box.appendChild(tab);
+} catch(e) { box.innerHTML = '<p style="color:#FF9AA2">R8 non disegnata: ' + e.message + '</p>'; console.error('R8', e); } })(GRUPPI, document.getElementById('R8'));
+(function(GRUPPI, box){ try {
+/* R9 — fondo neutro, colore solo sulla fascia di sinistra */
+var T = {
+  ok:   { c: '#35D6A0', b: 'rgba(53,214,160,.26)' },
+  warn: { c: '#FFC24D', b: 'rgba(255,194,77,.30)' },
+  late: { c: '#FF8080', b: 'rgba(255,128,128,.52)' },
+  dopo: { c: '#5FD3E8', b: 'rgba(95,211,232,.26)' }
+};
+
+/* quanto colore mostrare: cresce man mano che il tempo finisce */
+function quota(g) {
+  if (g.stato === 'late') return 100;
+  if (g.stato === 'dopo') return 24;
+  var m = String(g.conto).match(/(\d+)\s*:\s*(\d+)/);
+  var min = m ? (+m[1] + (+m[2]) / 60) : 30;
+  return Math.max(14, Math.min(100, Math.round(100 - min * 1.7)));
+}
+
+box.innerHTML = '';
+GRUPPI.forEach(function (g, i) {
+  var t = T[g.stato] || T.ok;
+  var p = String(g.tr || '').split(/\s+[-–—·]\s+/);
+  var cron = /\d\s*:\s*\d/.test(String(g.conto));
+  var tempo = String(g.t == null ? '' : g.t).replace(/\s*minut[oi]\b/i, '′');
+
+  var d = document.createElement('div');
+  d.className = 'riga';
+  d.setAttribute('data-s', g.stato);
+  d.style.borderColor = t.b;
+  d.innerHTML =
+    '<div class="fascia"><i class="' + g.stato + '" style="height:' + quota(g) + '%"></i></div>' +
+    '<div class="corpo">' +
+      '<div class="av" style="border-color:' + g.brac + '">' + (g.sprite || '') + '</div>' +
+      '<div class="chi">' +
+        '<div class="nome"><b>' + g.nome + '</b>' +
+          '<em style="color:' + g.brac + '">' + (g.bl || '') + '</em></div>' +
+        '<div class="tr">' + (p[0] || '') + '</div>' +
+        '<div class="tr">' + (p[1] || '') + '</div>' +
+      '</div>' +
+      '<div class="num">' +
+        '<span>🧒 ' + g.k + '</span>' +
+        '<span>🤸 ' + g.c + '</span>' +
+        '<span>⏱ ' + tempo + '</span>' +
+      '</div>' +
+      '<div class="dx">' +
+        '<div class="conto' + (cron ? '' : ' testo') + '" style="color:' + t.c + '">' + g.conto + '</div>' +
+        '<div class="eur">' + g.eur + '</div>' +
+      '</div>' +
+      '<div class="tasti">' +
+        '<button title="Conto">🧾</button>' +
+        '<button class="forte" title="Uscita">🚪</button>' +
+      '</div>' +
+    '</div>';
+  box.appendChild(d);
+
+  if (i === 10) {
+    var f = document.createElement('div');
+    f.className = 'fine';
+    f.textContent = '↑ qui finisce lo schermo del tablet — 11 gruppi';
+    box.appendChild(f);
+  }
+});
+} catch(e) { box.innerHTML = '<p style="color:#FF9AA2">R9 non disegnata: ' + e.message + '</p>'; console.error('R9', e); } })(GRUPPI, document.getElementById('R9'));
+(function(GRUPPI, box){ try {
+  var SEZ = [
+    { st: 'late', tit: 'Oltre la tolleranza', vuoto: 'nessuno oltre la tolleranza' },
+    { st: 'warn', tit: 'Stanno scadendo',     vuoto: 'nessuno in scadenza' },
+    { st: 'ok',   tit: 'In tempo',            vuoto: 'nessuno dentro' },
+    { st: 'dopo', tit: 'Pagano dopo',         vuoto: 'nessun conto aperto' }
+  ];
+
+  var esc = function (t) {
+    return String(t == null ? '' : t).replace(/&/g, '&').replace(/</g, '<')
+      .replace(/>/g, '>').replace(/"/g, '"');
+  };
+  /* countdown -> secondi con segno: serve per mettere in cima chi e' messo peggio */
+  var secondi = function (t) {
+    var s = String(t == null ? '' : t).replace(/−/g, '-');
+    var m = s.match(/(-?)\s*(?:(\d+):)?(\d+):(\d{2})/);
+    if (!m) return 1e9;
+    var v = (m[2] ? parseInt(m[2], 10) * 3600 : 0) + parseInt(m[3], 10) * 60 + parseInt(m[4], 10);
+    return m[1] === '-' ? -v : v;
+  };
+  var soldi = function (t) {
+    var m = String(t == null ? '' : t).replace(/\./g, '').match(/(\d+)(?:,(\d{1,2}))?/);
+    return m ? parseInt(m[1], 10) + (m[2] ? parseInt((m[2] + '0').slice(0, 2), 10) / 100 : 0) : 0;
+  };
+
+  var mappa = {}, resto = [];
+  SEZ.forEach(function (s) { mappa[s.st] = []; });
+  (GRUPPI || []).forEach(function (g) {
+    var st = g && g.stato;
+    var dove = Object.prototype.hasOwnProperty.call(mappa, st) ? mappa[st] : resto;
+    dove.push(g);
+  });
+  SEZ.forEach(function (s) {
+    mappa[s.st].sort(function (a, b) { return secondi(a.conto) - secondi(b.conto); });
+  });
+
+  var riga = function (g) {
+    var d = document.createElement('div');
+    d.className = 'riga';
+    var tratti = String(g.tr == null ? '' : g.tr).replace(/\s+[-–—]\s+/g, ' · ');
+    var testo = secondi(g.conto) === 1e9;
+    d.innerHTML =
+      '<div class="av">' + (g.sprite || '<span class="ini">' + esc(String(g.nome || '?').charAt(0)) + '</span>') + '</div>' +
+      '<div class="chi">' +
+        '<div class="nome"><b>' + esc(g.nome) + '</b>' +
+          '<span class="brac"><i style="background:' + esc(g.brac || '#8A8A9A') + '"></i>' + esc(g.bl) + '</span>' +
+        '</div>' +
+        '<div class="sotto"><span class="tr">' + esc(tratti) + '</span>' +
+          '<span class="num"><span>🧒 ' + esc(g.k) + '</span><span>🤸 ' + esc(g.c) + '</span><span>⏱ ' + esc(g.t) + '</span></span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="quanto">' +
+        '<div class="conto' + (testo ? ' testo' : '') + '">' + esc(g.conto) + '</div>' +
+        '<div class="eur">' + esc(g.eur) + '</div>' +
+      '</div>' +
+      '<button class="esci" aria-label="Uscita ' + esc(g.nome) + '">🚪</button>';
+    return d;
+  };
+
+  var tutte = SEZ.slice();
+  if (resto.length) tutte.push({ st: '', tit: 'Altri', vuoto: '' });
+
+  tutte.forEach(function (s) {
+    var lista = s.st ? mappa[s.st] : resto;
+
+    /* sezione vuota: una striscia sottile, perche' "nessuno fuori tolleranza" e' una notizia */
+    if (!lista.length) {
+      var v = document.createElement('div');
+      v.className = 'vuoto';
+      v.innerHTML = '<span class="tinta ' + s.st + '"></span><b>' + esc(s.tit) + '</b>' +
+        '<span>' + esc(s.vuoto) + '</span>';
+      box.appendChild(v);
+      return;
+    }
+
+    var tot = 0;
+    lista.forEach(function (g) { tot += soldi(g.eur); });
+
+    var sez = document.createElement('section');
+    sez.className = 'blocco ' + (s.st || 'neutro');
+
+    var testa = document.createElement('div');
+    testa.className = 'testa';
+    testa.innerHTML =
+      '<h3>' + esc(s.tit) + '</h3>' +
+      '<span class="conta">' + lista.length + '</span>' +
+      '<span class="somma">' + (tot > 0 ? tot.toFixed(2).replace('.', ',') + ' €' : '') + '</span>';
+    sez.appendChild(testa);
+
+    var righe = document.createElement('div');
+    righe.className = 'righe';
+    lista.forEach(function (g) { righe.appendChild(riga(g)); });
+    sez.appendChild(righe);
+
+    box.appendChild(sez);
+  });
+} catch(e) { box.innerHTML = '<p style="color:#FF9AA2">R10 non disegnata: ' + e.message + '</p>'; console.error('R10', e); } })(GRUPPI, document.getElementById('R10'));
+(function(GRUPPI, box){ try {
+/* R11 — ANELLO DEL TEMPO
+   Il tempo che resta si svuota attorno al volto. Tinte chiare dello stato,
+   perche' l'anello deve reggere sopra la scheda gia' colorata dello stato. */
+var TINTA = { ok:'#C6F7E2', warn:'#FFE7BE', late:'#FFD6D6', dopo:'#CFEFFA' };
+var GIRO  = 2 * Math.PI * 41;   /* circonferenza dell'anello, in unita' del viewBox */
+
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){
+    return { '&':'&', '<':'<', '>':'>', '"':'"' }[c];
+  });
+}
+/* minuti che restano: '−12:40' -> -12.67 · '04:12' -> 4.2 · 'paga dopo' -> null */
+function restano(v){
+  var s = String(v == null ? '' : v).trim();
+  var m = s.match(/(\d+)\s*[:.]\s*(\d{1,2})/);
+  if (!m) return null;
+  var q = parseInt(m[1], 10) + parseInt(m[2], 10) / 60;
+  return /^[-−–]/.test(s) ? -q : q;
+}
+/* durata pagata: '45 minuti' -> 45 */
+function durata(v){
+  var m = String(v == null ? '' : v).match(/\d+/);
+  return m ? parseInt(m[0], 10) : 0;
+}
+
+GRUPPI.forEach(function(g){
+  var res = restano(g.conto), tot = durata(g.t);
+  var modo = '', dash, off;
+
+  if (res !== null && res <= 0){          /* tempo finito: anello a pallini che gira piano */
+    modo = 'fuori'; dash = '7 7'; off = 0;
+  } else if (res === null || tot <= 0){   /* niente conto alla rovescia: anello punteggiato */
+    modo = 'senza'; dash = '1.5 8'; off = 0;
+  } else {                                /* anello che si svuota, minimo un'unghia visibile */
+    var fr = Math.max(0.035, Math.min(1, res / tot));
+    dash = GIRO; off = GIRO * (1 - fr);
+  }
+
+  var tratti = String(g.tr || '').split(/\s+[-–—·•]\s+/).filter(Boolean);
+
+  var riga = document.createElement('div');
+  riga.className = 'riga ' + g.stato;
+  riga.style.setProperty('--anello', TINTA[g.stato] || '#FFFFFF');
+  riga.innerHTML =
+    '<div class="orb">' +
+      '<svg class="anello ' + modo + '" viewBox="0 0 100 100" aria-hidden="true">' +
+        '<circle class="solco" cx="50" cy="50" r="47.6"/>' +
+        '<circle class="polso" cx="50" cy="50" r="47.6" stroke="' + esc(g.brac) + '"/>' +
+        '<circle class="cerchio" cx="50" cy="50" r="41"/>' +
+        '<circle class="arco" cx="50" cy="50" r="41" stroke-dasharray="' + dash + '" stroke-dashoffset="' + off + '"/>' +
+      '</svg>' +
+      '<div class="faccia">' + (g.sprite || '') + '</div>' +
+      '<div class="quanto">' + esc(g.stato === 'dopo' ? 'dopo' : g.conto) + '</div>' +
+    '</div>' +
+    '<div class="chi">' +
+      '<div class="capo"><b>' + esc(g.nome) + '</b><span class="bl">' + esc(g.bl) + '</span></div>' +
+      '<div class="tratti">' +
+        tratti.map(function(t){ return '<span>' + esc(t) + '</span>'; }).join('') +
+      '</div>' +
+    '</div>' +
+    '<div class="soldi">' +
+      '<span class="eur">' + esc(g.eur) + '</span>' +
+      '<span class="cnt">🧒 ' + esc(g.k) + ' · 🤸 ' + esc(g.c) + ' · ' + esc(g.t) + '</span>' +
+    '</div>' +
+    '<button class="agire" aria-label="azioni">⋯</button>';
+
+  box.appendChild(riga);
+});
+} catch(e) { box.innerHTML = '<p style="color:#FF9AA2">R11 non disegnata: ' + e.message + '</p>'; console.error('R11', e); } })(GRUPPI, document.getElementById('R11'));
+(function(GRUPPI, box){ try {
+box.innerHTML = '';
+var due = function (s) { return String(s == null ? '' : s); };
+
+GRUPPI.forEach(function (g, i) {
+  var tratti = due(g.tr).split(/\s*[·–—-]\s*/).filter(function (x) { return x; });
+  var t1 = tratti[0] || '', t2 = tratti[1] || '';
+  var dur = due(g.t).replace(/\s*minuti?\b/i, '′').replace(/\s*min\b/i, '′');
+  var numerico = /\d/.test(due(g.conto));
+  var bollo = g.stato === 'late' ? 'scaduto' : '';
+  var serie = 'N° ' + ('00' + (i + 1)).slice(-3);
+
+  var tag = document.createElement('article');
+  tag.className = 'tag ' + g.stato;
+  tag.innerHTML =
+    '<div class="banda" style="background-color:' + g.brac + '">' +
+      '<span>Braccialetto ' + due(g.bl) + '</span>' +
+      '<span>Tagliando d’ingresso</span>' +
+    '</div>' +
+    '<div class="corpo">' +
+      '<div class="foto">' + due(g.sprite) +
+        (bollo ? '<span class="bollo">' + bollo + '</span>' : '') +
+      '</div>' +
+      '<div class="dati">' +
+        '<div class="capo"><span class="nome">' + due(g.nome) + '</span>' +
+          '<span class="serie">' + serie + '</span></div>' +
+        '<div class="tratti">' + t1 + (t2 ? '<i>·</i>' + t2 : '') + '</div>' +
+        '<div class="voci">' +
+          '<span><b>' + due(g.k) + '</b> bambini</span><i class="pun"></i>' +
+          '<span><b>' + due(g.c) + '</b> crazy</span><i class="pun"></i>' +
+          '<span>durata <b>' + dur + '</b></span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="perf"></div>' +
+      '<div class="matrice">' +
+        '<div class="conto' + (numerico ? '' : ' testo') + '">' + due(g.conto) + '</div>' +
+        '<div class="tot"><span class="k">da pagare</span><span class="eur">' + due(g.eur) + '</span></div>' +
+      '</div>' +
+      '<button class="strappa" title="Uscita">🚪</button>' +
+    '</div>';
+
+  var str = document.createElement('div');
+  str.className = 'strappo ' + g.stato;
+  str.innerHTML =
+    '<div class="cella"><span class="k">🧒</span><button>−</button>' +
+      '<span class="v">' + due(g.k) + '</span><button>+</button></div>' +
+    '<div class="cella"><span class="k">🤸</span><button>−</button>' +
+      '<span class="v">' + due(g.c) + '</span><button>+</button></div>' +
+    '<div class="cella"><span class="k">⏱</span><button>−5</button>' +
+      '<span class="v">' + dur + '</span><button>+5</button></div>' +
+    '<div class="azioni"><button>Bar</button><button>Conto</button>' +
+      '<button>✏️</button><button class="forte">🚪 Uscita</button></div>';
+  if (i !== 0) { str.hidden = true; } else { tag.classList.add('aperto'); }
+
+  tag.addEventListener('click', function (ev) {
+    if (ev.target.closest && ev.target.closest('button')) { return; }
+    var apri = str.hidden;
+    Array.prototype.forEach.call(box.querySelectorAll('.strappo'), function (o) { o.hidden = true; });
+    Array.prototype.forEach.call(box.querySelectorAll('.tag'), function (o) { o.classList.remove('aperto'); });
+    if (apri) { str.hidden = false; tag.classList.add('aperto'); }
+  });
+
+  box.appendChild(tag);
+  box.appendChild(str);
+});
+} catch(e) { box.innerHTML = '<p style="color:#FF9AA2">R12 non disegnata: ' + e.message + '</p>'; console.error('R12', e); } })(GRUPPI, document.getElementById('R12'));
+
+/* ------------------------------------------------------------------
+   Le targhette "quanti gruppi a schermata" NON sono stime: si misurano
+   qui, a pagina disegnata. Ogni volta che cambio un'impaginazione il
+   numero si aggiorna da solo, e non posso raccontarmi frottole.
+   ------------------------------------------------------------------ */
+setTimeout(function () {
+  var SCHERMO = 1040;                 // tablet 1150 meno barra e intestazione
+  var NOMI = ['Nonna', 'Ragazzo', 'Mamma', 'Papà', 'Nonno', 'Ragazza'];
+
+  function gruppiDi(box) {
+    var trovati = [];
+    NOMI.forEach(function (n) {
+      var c = [].slice.call(box.querySelectorAll('*')).filter(function (e) {
+        return (e.textContent || '').indexOf(n) > -1;
+      });
+      if (!c.length) return;
+      c.sort(function (a, b) {
+        var ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+        return ra.width * ra.height - rb.width * rb.height;
+      });
+      var e = c[0];
+      while (e && e.getBoundingClientRect().height < 40 && e.parentElement && e.parentElement !== box) e = e.parentElement;
+      if (e && trovati.indexOf(e) < 0) trovati.push(e);
+    });
+    if (trovati.length >= 2) return trovati;
+    // impaginazioni senza nomi scritti (il semaforo): cerco il contenitore
+    // i cui figli sono tutti alti UGUALI, cioe' le tessere ripetute
+    var best = null, punteggio = 0;
+    [].slice.call(box.querySelectorAll('*')).forEach(function (e) {
+      var f = [].slice.call(e.children);
+      if (f.length < 4) return;
+      var h = f.map(function (x) { return Math.round(x.getBoundingClientRect().height); });
+      var uguali = h.filter(function (x) { return Math.abs(x - h[0]) <= 2; }).length;
+      if (uguali < f.length * 0.8 || h[0] < 24) return;
+      if (f.length > punteggio) { punteggio = f.length; best = e; }
+    });
+    return best ? [].slice.call(best.children) : [];
+  }
+
+  [].slice.call(document.querySelectorAll('.telaio')).forEach(function (box) {
+    var g = gruppiDi(box);
+    if (g.length < 2) return;
+    var tops = [];
+    g.forEach(function (e) {
+      var t = Math.round(e.getBoundingClientRect().top);
+      if (tops.indexOf(t) < 0) tops.push(t);
+    });
+    tops.sort(function (a, b) { return a - b; });
+    var passo = tops.length > 1
+      ? (tops[tops.length - 1] - tops[0]) / (tops.length - 1)
+      : g[0].getBoundingClientRect().height;
+    if (!passo || passo < 20) return;
+    var perRiga = Math.max(1, Math.round(g.length / tops.length));
+    var quanti = Math.floor(SCHERMO / passo) * perRiga;
+
+    var barra = box.parentElement.querySelector('.veloce');
+    if (!barra) return;
+    [].slice.call(barra.children).forEach(function (x) {
+      if (/gruppi|schermat|px l/i.test(x.textContent)) x.remove();
+    });
+    var a = document.createElement('span');
+    a.className = 'buono';
+    a.textContent = '👁️ ' + quanti + ' gruppi a schermata';
+    var b = document.createElement('span');
+    b.className = passo <= 110 ? 'buono' : (passo <= 170 ? 'cosi' : 'male');
+    b.textContent = '📏 ' + Math.round(passo) + 'px per riga';
+    barra.insertBefore(a, barra.firstChild);
+    barra.insertBefore(b, barra.firstChild);
+  });
+}, 300);
+
 </script>
 </body>
 </html>
