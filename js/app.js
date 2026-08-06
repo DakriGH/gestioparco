@@ -1764,37 +1764,111 @@ function archiveCard(entry) {
 function entryCard(entry) {
   const card = el('div', 'entry s-' + stateOf(entry, Date.now()));
   card.dataset.id = entry.id;
-  const body = el('div', 'e-body');
 
-  /* riga 1: countdown e stato sulla STESSA riga, orari a destra in
-     pastiglia — come nel modello scelto. */
-  const time = el('div', 'e-time');
-  const count = el('div', 'e-count num', '--:--');
-  const sub = el('div', 'e-count-sub', '');
-  time.appendChild(count);
-  time.appendChild(sub);
-  const range = el('div', 'e-range');
-  range.innerHTML = fmtTime(entry.startTime) + '<span class="arrow">\u2192</span>' + (entry.payLater ? '?' : fmtTime(endTimeOf(entry)));
-  time.appendChild(range);
-  body.appendChild(time);
+  const people = (entry.people || []).map(p => (p.avatar = AV.normalize(p.avatar, p.role), p));
 
-  const track = el('div', 'e-bar-track');
-  const fill = el('div', 'e-bar-fill');
+  /* ================= LA RIGA =================
+     Tutto quello che serve per riconoscere una persona e sapere quanto
+     deve, su UNA riga: figura intera, chi e', orari, bracciale, countdown
+     e soldi. Si tocca ovunque e si apre. */
+  const riga = el('div', 'e-riga');
+
+  /* La figura non si taglia mai: all'uscita servono anche i pantaloni e
+     le scarpe per capire chi e'. */
+  const avBox = el('div', 'e-av' + (people.length > 1 ? ' multi' : ''));
+  if (!people.length) {
+    avBox.appendChild(el('div', 'av vuoto', '\u2753'));
+  } else {
+    people.slice(0, 2).forEach(p => {
+      const a = el('div', 'av');
+      a.innerHTML = AV.build(p.avatar);
+      a.title = 'Modifica ' + nameOf(p);
+      a.onclick = (ev) => {
+        ev.stopPropagation();
+        openCustomizer(p, () => { saveEntries(); redrawCard(entry); });
+      };
+      avBox.appendChild(a);
+    });
+  }
+  const kidsBadge = el('div', 'e-kids');
+  kidsBadge.innerHTML = '\ud83e\uddd2';
+  const kidsBadgeV = el('span', 'num', '0');
+  kidsBadge.appendChild(kidsBadgeV);
+  avBox.appendChild(kidsBadge);
+  riga.appendChild(avBox);
+
+  const chi = el('div', 'e-chi');
+  const nome = el('b');
+  nome.textContent = people.length
+    ? people.map(p => roleOf(p.role).em + ' ' + nameOf(p)).join(' \u00b7 ')
+    : 'Nessun riferimento';
+  chi.appendChild(nome);
+  const tratti = el('div', 'e-tr');
+  if (people.length === 1) {
+    tratti.textContent = AV.traits(people[0].avatar, 3).map(t => t.txt).join(' \u00b7 ');
+  } else if (people.length) {
+    tratti.textContent = people.slice(0, 2)
+      .map(p => (AV.traits(p.avatar, 1)[0] || {}).txt || '').filter(Boolean).join(' \u00b7 ');
+  } else {
+    tratti.textContent = '\u26a0\ufe0f all\'uscita non avrai riferimenti';
+    tratti.classList.add('avviso');
+  }
+  chi.appendChild(tratti);
+  const range = el('div', 'e-orari');
+  chi.appendChild(range);
+  riga.appendChild(chi);
+
+  /* bracciale: un tocco apre le scelte qui accanto, senza finestre */
+  const autoSlot = braceletFor(entry.startTime);
+  const wristColor = entry.braceletColor || (autoSlot ? autoSlot.color : null);
+  const wrist = el('button', 'e-brac');
+  wrist.title = wristColor
+    ? 'Bracciale ' + ((autoSlot && !entry.braceletCustom && autoSlot.label) ? autoSlot.label : (AV.colorName(wristColor, 0) || '')) + ' \u2014 tocca per cambiare'
+    : 'Nessun bracciale \u2014 tocca per sceglierlo';
+  const dot = el('span', 'dot');
+  if (wristColor) dot.style.background = wristColor; else dot.classList.add('vuoto');
+  wrist.appendChild(dot);
+  wrist.onclick = (ev) => { ev.stopPropagation(); apriMenuBracciale(wrist, entry); };
+  riga.appendChild(wrist);
+
+  const tempo = el('div', 'e-tempo');
+  const count = el('div', 'e-conto num', '--:--');
+  const sub = el('div', 'e-conto-sub', '');
+  tempo.appendChild(count);
+  tempo.appendChild(sub);
+  riga.appendChild(tempo);
+
+  /* i soldi: etichetta sopra, numero sotto */
+  const soldi = el('div', 'e-soldi');
+  const soldiK = el('span', 'k', '');
+  const soldiV = el('span', 'v num', '');
+  soldi.appendChild(soldiK);
+  soldi.appendChild(soldiV);
+  riga.appendChild(soldi);
+
+  /* la barra che si svuota: un filo sul bordo basso, si legge senza aprire */
+  const track = el('div', 'e-barra');
+  const fill = el('div', 'e-barra-fill');
   track.appendChild(fill);
-  body.appendChild(track);
+  riga.appendChild(track);
 
-  /* riga 2: stepper con l'etichetta scritta */
+  card.appendChild(riga);
+
+  /* ================= QUELLO CHE SI APRE ================= */
+  const aperta = el('div', 'e-aperta');
+
   const ctrls = el('div', 'e-controls');
   const mkStep = (label, key, step) => {
     const box = el('div', 'e-step');
     const kk = el('div', 'k'); kk.innerHTML = label; box.appendChild(kk);
     const ctrl = el('div', 'ctrl');
     const minus = el('button', 'step-b');
-    minus.textContent = step > 1 ? '−' + step : '−';
+    minus.textContent = step > 1 ? '\u2212' + step : '\u2212';
     const val = el('span', 'v num', '0');
     const plus = el('button', 'step-b plus');
     plus.textContent = step > 1 ? '+' + step : '+';
-    const bump = (d) => () => {
+    const bump = (d) => (ev) => {
+      ev.stopPropagation();
       entry[key] = clamp(num(entry[key], 0) + d, 0, 99999);
       saveEntries();
       syncCard(entry);
@@ -1816,9 +1890,8 @@ function entryCard(entry) {
     sTime.box.classList.add('hidden');
     ctrls.appendChild(el('div', 'e-later-tag', '\ud83d\udd57 Paga dopo'));
   }
-  body.appendChild(ctrls);
+  aperta.appendChild(ctrls);
 
-  /* riga 3: i costi */
   const costs = el('div', 'e-costs');
   const cPark = el('span', 'cost');
   cPark.appendChild(el('span', 'k', 'Parco:'));
@@ -1830,14 +1903,30 @@ function entryCard(entry) {
   cBar.appendChild(cBarV);
   costs.appendChild(cPark);
   costs.appendChild(cBar);
-  const due = el('div', 'e-due');
-  due.appendChild(el('span', 'k', 'Da incassare:'));
-  const dueVal = el('span', 'v num', eur(dueOf(entry).total));
-  due.appendChild(dueVal);
-  costs.appendChild(due);
-  body.appendChild(costs);
+  aperta.appendChild(costs);
 
-  /* riga 4: tre azioni */
+  if (!people.length) {
+    const warn = el('div', 'e-noone');
+    warn.appendChild(el('div', null, '\u26a0\ufe0f All\'uscita non avrai riferimenti'));
+    const add = el('button', 'btn btn-sm', '\u2795 Aggiungi');
+    warn.appendChild(add);
+    add.onclick = (ev) => {
+      ev.stopPropagation();
+      pickRole(p => {
+        entry.people = entry.people || [];
+        entry.people.push(p);
+        saveEntries();
+        openCustomizer(p, () => { saveEntries(); redrawCard(entry); });
+      });
+    };
+    aperta.appendChild(warn);
+  }
+
+  const notes = people.filter(p => p.note && p.note.trim());
+  if (notes.length) {
+    aperta.appendChild(el('div', 'e-note', notes.map(p => '\ud83d\udcdd ' + p.note.trim()).join(' \u00b7 ')));
+  }
+
   const acts = el('div', 'e-acts');
   const mkAct = (em, label, cls, fn) => {
     const b = el('button', 'e-act ' + (cls || ''));
@@ -1847,88 +1936,8 @@ function entryCard(entry) {
     acts.appendChild(b);
     return b;
   };
-  body.appendChild(acts);
-  card.appendChild(body);
+  aperta.appendChild(acts);
 
-  /* --- pannello riferimento --- */
-  const who = el('div', 'e-who');
-  const autoSlot = braceletFor(entry.startTime);
-  const wristColor = entry.braceletColor || (autoSlot ? autoSlot.color : null);
-  /* La scheda sfuma verso il colore del bracciale: è il modo più veloce
-     per abbinare la persona al braccialetto senza andare a cercare il
-     pallino. Se il bracciale non c'è, niente sfumatura. */
-  card.style.setProperty('--brace', wristColor ? conAlfa(wristColor, 0.46) : 'transparent');
-  card.style.setProperty('--brace-orlo', wristColor ? conAlfa(wristColor, 0.75) : 'transparent');
-  card.classList.toggle('con-bracciale', !!wristColor);
-  const wrist = el('button', 'e-wrist');
-  wrist.title = 'Cambia bracciale';
-  const dot = el('span', 'dot');
-  dot.style.background = wristColor || 'transparent';
-  if (!wristColor) dot.style.borderStyle = 'dashed';
-  wrist.appendChild(dot);
-  wrist.appendChild(el('span', 'lab', wristColor
-    ? ((autoSlot && !entry.braceletCustom && autoSlot.label) ? autoSlot.label : (AV.colorName(wristColor, 0) || ''))
-    : 'nessuno'));
-  // un tocco apre le scelte qui accanto, senza finestre
-  wrist.onclick = (ev) => {
-    ev.stopPropagation();
-    apriMenuBracciale(wrist, entry);
-  };
-  who.appendChild(wrist);
-
-  const people = (entry.people || []).map(p => (p.avatar = AV.normalize(p.avatar, p.role), p));
-  if (!people.length) {
-    who.appendChild(el('div', 'e-role', 'Nessun riferimento'));
-    const warn = el('div', 'e-noone');
-    warn.appendChild(el('div', null, '\u26a0\ufe0f All\'uscita non avrai riferimenti'));
-    const add = el('button', 'btn btn-sm', '\u2795 Aggiungi');
-    warn.appendChild(add);
-    add.onclick = () => pickRole(p => {
-      entry.people = entry.people || [];
-      entry.people.push(p);
-      saveEntries();
-      openCustomizer(p, () => { saveEntries(); redrawCard(entry); });
-    });
-    who.appendChild(warn);
-  } else {
-    // il ruolo conta piu' del nome: sta sopra e in grande
-    who.appendChild(el('div', 'e-role', people.map(p => roleOf(p.role).em + ' ' + roleOf(p.role).label).join(' \u00b7 ')));
-    const nomi = people.filter(p => p.name && p.name.trim()).map(p => p.name.trim());
-    if (nomi.length) who.appendChild(el('div', 'e-names', nomi.join(' \u00b7 ')));
-
-    const avs = el('div', 'e-avatars' + (people.length > 1 ? ' multi' : ''));
-    people.slice(0, 3).forEach(p => {
-      const a = el('div', 'av');
-      a.innerHTML = AV.build(p.avatar);
-      a.title = 'Modifica ' + nameOf(p);
-      a.onclick = (ev) => {
-        ev.stopPropagation();
-        openCustomizer(p, () => { saveEntries(); redrawCard(entry); });
-      };
-      avs.appendChild(a);
-    });
-    // quanti bambini, appeso allo sprite
-    const kidsBadge = el('div', 'e-kids-badge');
-    kidsBadge.innerHTML = '\ud83e\uddd2';
-    const kidsBadgeV = el('span', 'num', '0');
-    kidsBadge.appendChild(kidsBadgeV);
-    avs.appendChild(kidsBadge);
-    who.appendChild(avs);
-    who.kidsBadgeV = kidsBadgeV;
-
-    const tr = el('div', 'e-traits');
-    if (people.length === 1) {
-      AV.traits(people[0].avatar, 4).forEach(t => tr.appendChild(traitChip(t)));
-    } else {
-      people.slice(0, 2).forEach(p => AV.traits(p.avatar, 2).forEach(t => tr.appendChild(traitChip(t))));
-    }
-    who.appendChild(tr);
-    const notes = people.filter(p => p.note && p.note.trim());
-    if (notes.length) who.appendChild(el('div', 'e-note', notes.map(p => '\ud83d\udcdd ' + p.note.trim()).join(' \u00b7 ')));
-  }
-  card.appendChild(who);
-
-  /* --- pannelli, in fondo alla scheda --- */
   const barPanel = el('div', 'e-panel hidden');
   const bk = el('div', 'e-panel-k'); bk.innerHTML = '\ud83e\udd64 Bar'; barPanel.appendChild(bk);
   const barBox = el('div');
@@ -1938,17 +1947,17 @@ function entryCard(entry) {
     syncBarRows(barBox, entry.barItems);
     syncCard(entry);
   });
-  card.appendChild(barPanel);
+  aperta.appendChild(barPanel);
 
   const payPanel = el('div', 'e-panel hidden');
-  card.appendChild(payPanel);
+  aperta.appendChild(payPanel);
   const buildPay = () => buildPaymentPanel(payPanel, entry, () => { syncCard(entry); });
 
-  /* i tasti: un pannello per volta */
   const panels = [];
-  const toggle = (panel, btn, onOpen) => () => {
+  const toggle = (panel, btn, onOpen) => (ev) => {
+    if (ev) ev.stopPropagation();
     const open = panel.classList.contains('hidden');
-    chiudiPannelli(entry.id);          // un pannello aperto in tutta la lista
+    chiudiPannelli(entry.id);
     panels.forEach(([p, b]) => { p.classList.add('hidden'); b.classList.remove('on'); });
     if (open) {
       panel.classList.remove('hidden');
@@ -1960,21 +1969,38 @@ function entryCard(entry) {
   const barBadge = el('span', 'badge', eur(0));
   barBtn.appendChild(barBadge);
   const payBtn = mkAct('\ud83d\udcb6', 'Conto', 'pay', () => {});
-  mkAct('\u270f\ufe0f', 'Modifica', '', () => editEntry(entry));
-  // l'uscita e' un tasto a se': il conto si fa anche prima di entrare
-  mkAct('\ud83d\udeaa', 'Uscita', 'out', () => chiudiIngresso(entry));
+  mkAct('\u270f\ufe0f', 'Modifica', '', (ev) => { ev.stopPropagation(); editEntry(entry); });
+  mkAct('\ud83d\udeaa', 'Uscita', 'out', (ev) => { ev.stopPropagation(); chiudiIngresso(entry); });
   panels.push([barPanel, barBtn], [payPanel, payBtn]);
   card.panels = panels;
   barBtn.onclick = toggle(barPanel, barBtn, () => syncBarRows(barBox, entry.barItems));
   payBtn.onclick = toggle(payPanel, payBtn, buildPay);
 
+  card.appendChild(aperta);
+
+  /* un tocco ovunque sulla riga apre; toccando dentro non si chiude */
+  riga.onclick = () => {
+    const gia = card.classList.contains('aperto');
+    chiudiSchede(null);
+    if (!gia) card.classList.add('aperto');
+  };
+  aperta.onclick = (ev) => ev.stopPropagation();
+
   cardRefs.set(entry.id, {
     card, count, sub, fill, range, sKids, sCrazy, sTime,
-    cParkV, cBarV, dueVal, barBadge, barBox, barPanel, barBtn,
-    payPanel, payBtn, buildPay, kidsBadgeV: who.kidsBadgeV
+    cParkV, cBarV, dueVal: soldiV, soldiK, soldi, barBadge, barBox, barPanel, barBtn,
+    payPanel, payBtn, buildPay, kidsBadgeV
   });
   syncCard(entry);
   return card;
+}
+
+/* una scheda aperta per volta: due aperte non ci stanno sullo schermo */
+function chiudiSchede(tranne) {
+  cardRefs.forEach((r, id) => {
+    if (id === tranne || !r.card.isConnected) return;
+    r.card.classList.remove('aperto');
+  });
 }
 
 /* Le scelte del bracciale, aperte accanto al pallino.
@@ -2181,6 +2207,21 @@ function paymentLines(entry) {
 }
 
 /* aggiorna i numeri di una scheda senza ricostruirla */
+/* I soldi con l'etichetta sopra il numero: dice sempre COSA e' quella
+   cifra, che era la cosa ambigua della colonna a destra. */
+function soldiDi(r, entry, due) {
+  const resta = due.total;
+  const pagato = due.parkPaid + due.barPaid;
+  if (resta <= 0) {
+    r.soldiK.textContent = 'pagato';
+    r.dueVal.textContent = '\u2713';
+  } else {
+    r.soldiK.textContent = pagato > 0 ? 'restano' : 'da pagare';
+    r.dueVal.textContent = eur(resta);
+  }
+  r.soldi.classList.toggle('pagato', resta <= 0);
+}
+
 function syncCard(entry) {
   const r = cardRefs.get(entry.id);
   if (!r) return;
@@ -2201,13 +2242,13 @@ function syncCard(entry) {
   r.cParkV.className = 'num' + (due.park > 0 && due.parkDue === 0 ? ' pagato' : '');
   r.cBarV.textContent = due.bar > 0 ? eur(due.barDue) : '\u2014';
   r.cBarV.className = 'num' + (due.bar > 0 && due.barDue === 0 ? ' pagato' : '');
-  r.dueVal.textContent = eur(due.total);
-  r.dueVal.className = 'v num ' + (due.total > 0 ? 'due' : 'paid');
+  soldiDi(r, entry, due);
 
   // se il conto è aperto lo riallineo: i prezzi possono essere cambiati
   if (r.payPanel && !r.payPanel.classList.contains('hidden')) r.buildPay();
 
-  r.range.innerHTML = fmtTime(entry.startTime) + '<span class="arrow">\u2192</span>' + (entry.payLater ? '?' : fmtTime(endTimeOf(entry)));
+  r.range.innerHTML = '<span class="fr">dalle</span>' + fmtTime(entry.startTime) +
+    '<span class="fr">alle</span>' + (entry.payLater ? '?' : fmtTime(endTimeOf(entry)));
   updateBadge();
 }
 
@@ -2215,8 +2256,10 @@ function syncCard(entry) {
 function redrawCard(entry) {
   const r = cardRefs.get(entry.id);
   if (!r || !r.card.parentNode) return;
+  const era = r.card.classList.contains('aperto');
   const fresh = entryCard(entry);
   r.card.replaceWith(fresh);
+  if (era) fresh.classList.add('aperto');
   tick();
 }
 /* ridisegna ma lascia aperto il pannello che si stava usando */
@@ -2239,8 +2282,12 @@ function tick() {
     const entry = entries.find(e => e.id === id);
     if (!entry || !r.card.isConnected) return;
     const st = stateOf(entry, now);
-    const cls = 'entry s-' + st;
-    if (r.card.className !== cls) r.card.className = cls;
+    /* solo la classe di stato: azzerare className cancellava anche
+       «aperto» e la scheda si richiudeva da sola ogni secondo */
+    if (!r.card.classList.contains('s-' + st)) {
+      ['ok', 'warn', 'danger', 'later'].forEach(x => r.card.classList.remove('s-' + x));
+      r.card.classList.add('s-' + st);
+    }
 
     if (entry.payLater) {
       // l'orario d'inizio è arrotondato ai 5 minuti e può cadere
@@ -2248,9 +2295,7 @@ function tick() {
       r.count.textContent = fmtClock(Math.max(0, now - entry.startTime));
       r.sub.textContent = 'dentro da';
       r.fill.style.transform = 'scaleX(1)';
-      const d = dueOf(entry);                              // il conto sale col tempo
-      r.dueVal.textContent = eur(d.total);
-      r.dueVal.className = 'v num ' + (d.total > 0 ? 'due' : 'paid');
+      soldiDi(r, entry, dueOf(entry));                     // il conto sale col tempo
     } else {
       const end = endTimeOf(entry);
       const totale = Math.max(1, end - entry.startTime);
@@ -2766,10 +2811,12 @@ function init() {
     copiaDiOggi();
   }
 
-  // toccando fuori da una scheda, i pannelli aperti si chiudono
+  // toccando fuori da una scheda si chiudono pannelli E scheda
   document.addEventListener('pointerdown', (ev) => {
     const dentro = ev.target.closest('.entry');
-    chiudiPannelli(dentro ? dentro.dataset.id : null);
+    const id = dentro ? dentro.dataset.id : null;
+    chiudiPannelli(id);
+    chiudiSchede(id);
   }, true);
 
   switchTab(entries.some(e => e.status === 'active') ? 'active' : 'new');

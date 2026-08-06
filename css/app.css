@@ -189,9 +189,7 @@ body {
 }
 
 /* il font tondo su tutto ciò che si legge al volo: numeri, nomi, titoli */
-.display, h1, h2, h3, .num-big, .e-count, .ctx-val, .stepper .val,
-.e-step .v, .e-due .v, .brand, .tabs button, .chip, .btn, .e-act,
-.e-names, .card-avatar-name, .list-head h2, .m-head h3 {
+.display, h1, h2, h3, .num-big, .ctx-val, .stepper .val, .e-step .v, .brand, .tabs button, .chip, .btn, .e-act, .card-avatar-name, .list-head h2, .m-head h3 {
   font-family: 'Fredoka', 'Inter', system-ui, sans-serif;
   font-weight: 600;
 }
@@ -1153,8 +1151,7 @@ main {
 
 .entry {
   position: relative;
-  display: grid;
-  grid-template-columns: 1fr 196px;
+  display: block;
   background: var(--grad, var(--blk-grigio));
   border: none;
   border-radius: 22px;
@@ -1199,301 +1196,279 @@ main {
 }
 @keyframes pulseRing { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
 
-.e-body { min-width: 0; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
-
-/* riga 1: countdown + orari + barra che si svuota */
-.e-time { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.e-count {
-  font-family: 'Fredoka', sans-serif;
-  font-size: 36px;
-  font-weight: 700;
-  line-height: 1.1;
-  color: #fff;
-  font-size: 40px;
-}
-/* La cifra sfuma dentro la sua tinta. ATTENZIONE: il gradiente va scritto
-   QUI e non in una variabile su :root, perche' `--c` esiste solo sulla
-   scheda: una variabile di :root che usa var(--c) nasce gia' invalida e il
-   numero sparisce. Con background-IMAGE (non la scorciatoia background)
-   il ritaglio sul testo resta. */
-/* sul colore pieno il bianco pieno e' il massimo che si possa leggere:
-   niente sfumature ritagliate sul testo, che qui toglierebbero solo forza */
-.e-count-sub { font-size: 14px; font-weight: 700; color: var(--txt-2); }
-.e-range {
-  margin-left: auto;
-  font-family: 'Fredoka', sans-serif;
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--txt);
-  white-space: nowrap;
-}
-.e-range .arrow { color: var(--txt-3); font-size: 17px; margin: 0 5px; }
-
-.e-bar-track {
-  height: 9px;
-  background: rgba(0, 0, 0, 0.28);
-  border-radius: 10px;
-  overflow: hidden;
-  margin-top: -4px;
-}
-.e-bar-fill {
-  height: 100%;
-  width: 100%;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.92);
-  transform-origin: left center;
-  transform: scaleX(0);
-  transition: transform 1s linear;
-}
-
-/* riga 2: gli stepper, con l'etichetta scritta sopra */
-.e-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: stretch; }
-.e-step {
+/* =========================================================
+   LA RIGA (modello R1-a): figura intera, chi e', orari,
+   bracciale, countdown e soldi. Una riga, si tocca ovunque.
+   ========================================================= */
+.e-riga {
+  position: relative;
   display: flex;
-  flex-direction: column;
-  gap: 5px;
-  background: var(--c-bg2);
-  border-radius: var(--r);
-  padding: 8px 10px 9px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 13px 12px;
+  cursor: pointer;
+  transition: filter 120ms;
 }
-.e-step .k { font-size: 13px; font-weight: 800; color: var(--txt-2); white-space: nowrap; }
-.e-step .ctrl { display: flex; align-items: center; gap: 7px; justify-content: center; }
-.e-step .v { font-family: 'Fredoka', sans-serif; font-size: 23px; min-width: 38px; text-align: center; font-weight: 700; }
-.e-step .step-b { width: 40px; height: 40px; font-size: 20px; }
-.step-b .ic { width: 22px; height: 22px; }
-.step-b .stp { font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 700; }
-.round-btn .ic { width: 26px; height: 26px; }
-.now-btn { display: inline-flex; align-items: center; gap: 8px; }
-.e-act .em .ic, .e-act .ic { width: 20px; height: 20px; }
-.mini-b .ic { width: 20px; height: 20px; }
-.tabs button .ic { width: 21px; height: 21px; }
-.c-lab .ic { width: 22px; height: 22px; }
-.e-step .k { display: inline-flex; align-items: center; gap: 6px; }
-.e-step .k .ic { width: 17px; height: 17px; }
-.pay-cat-k .ic { width: 18px; height: 18px; }
-.pay-cat-k > span:first-child { display: inline-flex; align-items: center; gap: 7px; }
-.list-head h2 { display: flex; align-items: center; gap: 9px; }
-.arch-btn { display: inline-flex; align-items: center; gap: 7px; }
-.btn .ic { width: 20px; height: 20px; }
-.e-later-tag {
+.e-riga:active { filter: brightness(1.08); }
+
+/* la figura e' SEMPRE intera (3:4): all'uscita servono anche i
+   pantaloni e le scarpe per riconoscere chi e'. */
+.e-av {
+  position: relative;
+  height: 76px;
+  aspect-ratio: 3 / 4;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: var(--surface);
+  display: flex;
+  overflow: visible;
+}
+.e-av .av { width: 100%; height: 100%; }
+.e-av .av svg { width: 100%; height: 100%; display: block; }
+.e-av .av:active { transform: scale(0.95); }
+.e-av.multi { aspect-ratio: 5 / 4; }
+.e-av.multi .av { width: 50%; }
+.e-av .av.vuoto {
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; opacity: 0.7;
+}
+.e-kids {
+  position: absolute;
+  right: -7px;
+  bottom: -6px;
+  min-width: 30px;
+  height: 26px;
+  padding: 0 7px;
+  border-radius: 13px;
+  background: #fff;
+  color: #1A1626;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  background: rgba(0, 0, 0, 0.26);
+  justify-content: center;
+  gap: 2px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.e-chi { flex: 1; min-width: 0; }
+.e-chi b {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  display: block;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* due righe, non una: su una sola i pantaloni finivano nei puntini di
+   sospensione, e all'uscita sono proprio quelli che servono. */
+.e-tr {
+  font-size: 12.5px;
+  line-height: 1.3;
   color: #fff;
-  border-radius: var(--r);
-  padding: 12px 18px;
-  font-size: 15px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.e-tr.avviso { font-weight: 700; }
+.e-orari {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 3px 10px;
+  margin-top: 4px;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.e-orari .fr { font-size: 11px; color: var(--txt-2); margin: 0 2px; }
+
+/* bracciale: pallino piccolo, bersaglio grande */
+.e-brac {
+  width: 42px; height: 42px;
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+.e-brac:active { transform: scale(0.92); }
+.e-brac .dot {
+  width: 21px; height: 21px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.55);
+}
+.e-brac .dot.vuoto {
+  background: transparent;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.55);
+  border: 2px dashed rgba(255, 255, 255, 0.6);
+}
+
+.e-tempo { text-align: right; flex-shrink: 0; }
+.e-conto {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 29px;
+  font-weight: 700;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+.e-conto-sub {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+  margin-top: 2px;
+}
+
+/* i soldi: l'etichetta STA SOPRA il numero, cosi' si sa sempre cos'e' */
+.e-soldi { min-width: 118px; text-align: right; flex-shrink: 0; }
+.e-soldi .k {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #fff;
+}
+.e-soldi .v {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 21px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.e-soldi.pagato .v { color: var(--txt-2); opacity: 0.8; }
+
+/* il tempo che scorre, un filo sul bordo basso: si legge senza aprire */
+.e-barra {
+  position: absolute;
+  left: 13px; right: 13px; bottom: 5px;
+  height: 4px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.28);
+  overflow: hidden;
+}
+.e-barra-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.85);
+  transform-origin: left center;
+  transition: transform 400ms linear;
+}
+
+/* =============== QUELLO CHE SI APRE =============== */
+.e-aperta {
+  display: none;
+  background: var(--c-bg2);
+  border-top: 2px solid var(--line);
+  padding: 12px 13px 13px;
+  cursor: default;
+}
+.entry.aperto .e-aperta { display: block; }
+.entry.aperto .e-riga { cursor: default; }
+
+.e-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: stretch; }
+.e-step {
+  flex: 1 1 150px;
+  background: var(--surface);
+  border-radius: var(--r-sm);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+.e-step .k {
+  font-size: 13px; font-weight: 800; color: var(--txt-2);
+  white-space: nowrap; display: inline-flex; align-items: center; gap: 6px;
+}
+.e-step .k .ic { width: 17px; height: 17px; }
+.e-step .ctrl { display: flex; align-items: center; gap: 7px; justify-content: center; }
+.e-step .v {
+  font-family: 'Fredoka', sans-serif; font-size: 23px;
+  min-width: 38px; text-align: center; font-weight: 700;
+}
+.e-step .step-b { width: 40px; height: 40px; font-size: 20px; }
+
+.e-later-tag {
+  align-self: center;
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 8px 14px;
+  font-size: 13px;
   font-weight: 800;
 }
 
-/* riga 3: i costi */
 .e-costs {
   display: flex;
-  gap: 18px;
-  flex-wrap: wrap;
   align-items: baseline;
-  font-size: 15px;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  font-size: 14px;
   font-weight: 700;
-  padding: 10px 15px;
-  background: var(--c-bg2);
-  border-radius: var(--r);
 }
 .e-costs .cost { display: flex; align-items: baseline; gap: 7px; }
 .e-costs .k { color: var(--txt-3); }
 .e-costs .num { color: var(--txt); font-size: 16px; }
 .e-costs .pagato { color: #fff; opacity: 0.75; }
 .e-costs .pagato::after { content: " \2713"; }
-.e-due { margin-left: auto; display: flex; align-items: baseline; gap: 9px; }
-.e-due .k { font-size: 15px; font-weight: 700; color: var(--txt-2); }
-.e-due .v { font-family: 'Fredoka', sans-serif; font-size: 26px; font-weight: 700; }
-/* Sopra il colore pieno il bianco e' l'unica cosa che si legge sempre:
-   il "quanto manca" lo dice gia' la scheda col suo colore, non serve
-   ripeterlo con un rosso che sul rosso sparisce. */
-.e-due .v.due { color: #fff; }
-.e-due .v.paid { color: #fff; opacity: 0.72; }
-.e-due .v.paid::after { content: " ¹3"; }
 
-/* riga 4: le azioni. Tutte nel colore della scheda: cambia la scheda,
-   cambiano loro, così non c'è un arcobaleno di tasti su ogni riga. */
-.e-acts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: auto; }
+.e-note { font-size: 12.5px; color: var(--txt-3); font-style: italic; line-height: 1.35; margin-top: 9px; }
+
+.e-acts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 11px; }
 .e-act {
-  min-height: 54px;
-  border-radius: var(--r);
-  padding: 12px 10px;
-  font-size: 16px;
-  font-weight: 700;
+  min-height: 52px;
+  border-radius: var(--r-sm);
+  border: 2px solid var(--line-2);
+  background: var(--surface-2);
+  color: var(--txt);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  background: var(--c-bg2);
-  color: var(--txt);
-  border: 2px solid transparent;
-  transition: transform var(--speed), background var(--speed), border-color var(--speed);
+  gap: 2px;
+  position: relative;
+  transition: transform 120ms;
 }
 .e-act:active { transform: scale(0.96); }
 .e-act .em { font-size: 19px; }
+.e-act .em .ic, .e-act .ic { width: 20px; height: 20px; }
 .e-act .badge {
-  background: var(--c);
-  color: var(--c-bg);
-  border-radius: 9px;
-  padding: 2px 9px;
-  font-size: 13px;
-  font-weight: 700;
+  position: absolute;
+  top: -8px;
+  right: -6px;
+  background: #fff;
+  color: #1A1626;
+  border-radius: 20px;
+  padding: 2px 8px;
+  font-size: 11.5px;
+  font-weight: 800;
 }
-/* il pannello aperto si riconosce: tasto pieno nel colore della scheda */
 .e-act.on { background: var(--vel-forte), var(--c); color: var(--c-bg); border-color: transparent; }
 .e-act.on .badge { background: var(--c-bg); color: var(--c); }
-/* solo l'uscita resta segnata, ma nella stessa famiglia */
-.e-act.out { background: #fff; color: #1A1626; }
+.e-act.out { background: #fff; color: #1A1626; border-color: transparent; }
 
-/* --- pannello riferimento, a destra --- */
-/* Il pannello del riferimento sfuma verso il COLORE DEL BRACCIALE:
-   guardi la persona e vedi già di che colore ha il polso. La tinta di
-   stato (verde/giallo/rosso/viola) resta il fondo, la sfumatura porta
-   l'altra informazione. Niente decorazione fine a sé stessa. */
-.e-who {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 14px 14px 16px;
-  background:
-    radial-gradient(150% 105% at 118% 108%, var(--brace, transparent) 0%, transparent 72%),
-    rgba(0, 0, 0, 0.26);
-  border-left: none;
-}
-/* e un filo del colore giusto sul bordo esterno */
-.entry.con-bracciale .e-who::before {
-  content: "";
-  position: absolute;
-  top: 0; right: 0; bottom: 0;
-  width: 4px;
-  background: linear-gradient(180deg, transparent, var(--brace-orlo) 30%, var(--brace-orlo) 70%, transparent);
-}
-/* ruolo in alto e in grande: conta più del nome */
-.e-role {
-  font-family: 'Fredoka', sans-serif;
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--txt);
-  text-align: center;
-  line-height: 1.1;
-  padding-right: 46px;
-  align-self: flex-start;
-}
-.e-names { font-size: 14px; font-weight: 700; color: var(--txt-3); text-align: left; align-self: flex-start; padding-right: 46px; line-height: 1.2; }
-
-/* il bracciale: pallino grande, si vede subito */
-.e-wrist {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  padding: 4px 6px 5px;
-  border-radius: 14px;
-  background: none;
-  border: none;
-  transition: background var(--speed), transform var(--speed);
-}
-.e-wrist:active { transform: scale(0.92); }
-.e-wrist:hover { background: var(--c-bg); }
-.e-wrist .dot {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  border: 3px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
-}
-.e-wrist .lab { font-size: 11px; font-weight: 800; color: var(--txt-3); text-transform: uppercase; letter-spacing: .03em; }
-
-.e-avatars { position: relative; display: flex; justify-content: center; margin-top: 2px; }
-/* un alone del colore del bracciale dietro la persona: si abbina il polso
-   guardando la faccia, senza cercare il pallino */
-.entry.con-bracciale .e-avatars::before {
-  content: "";
-  position: absolute;
-  inset: -10px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 55%, var(--brace) 0%, transparent 66%);
-  pointer-events: none;
-}
-.e-avatars .av {
-  position: relative;
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  overflow: hidden;
-  background: var(--c-bg);
-  box-shadow: inset 0 0 0 3px var(--brace-orlo, var(--line-2)), 0 4px 16px rgba(0, 0, 0, 0.28);
-  transition: transform var(--speed);
-}
-.e-avatars .av svg { width: 100%; height: 100%; display: block; }
-.e-avatars .av:active { transform: scale(0.95); }
-.e-avatars.multi .av { width: 96px; height: 96px; margin-left: -26px; }
-.e-avatars.multi .av:first-child { margin-left: 0; }
-
-/* quanti bambini, appeso all'avatar */
-.e-kids-badge {
-  position: absolute;
-  right: -2px;
-  bottom: -2px;
-  min-width: 52px;
-  height: 44px;
-  padding: 0 10px;
-  border-radius: 22px;
-  background: var(--c);
-  color: var(--accent-ink);
-  font-family: 'Fredoka', sans-serif;
-  font-size: 20px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  border: 3px solid var(--c-bg2);
-}
-
-.e-traits {
-  font-size: 13.5px;
-  color: var(--txt-2);
-  line-height: 1.5;
-  text-align: left;
-  background: var(--c-bg);
-  border-radius: var(--r-sm);
-  padding: 9px 12px;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.e-traits .trait {
-  background: none;
-  padding: 0;
-  border-radius: 0;
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--txt-2);
-  line-height: 1.45;
-  white-space: normal;
-  /* allineati a sinistra e con il pallino in cima: i tratti lunghi
-     ("Scarpe da ginnastica bianche") vanno a capo e centrati non si
-     leggevano piu' */
-  justify-content: flex-start;
-  align-items: flex-start;
-  text-align: left;
-}
-.e-traits .trait .sw, .e-traits .trait > .em { margin-top: 4px; flex-shrink: 0; }
-.e-traits .trait .sw { width: 11px; height: 11px; }
-.e-note { font-size: 12.5px; color: var(--txt-3); font-style: italic; text-align: left; line-height: 1.35; }
+/* dentro la scheda il fondo e' gia' colorato: il giallo su giallo
+   stava a 3,77. Bianco su nero, e si legge. */
 .e-noone {
-  background: var(--warn-soft);
-  color: var(--warn);
+  background: rgba(0, 0, 0, 0.34);
+  color: #fff;
   border-radius: var(--r-sm);
   padding: 10px 14px;
   font-size: 14px;
@@ -1503,14 +1478,15 @@ main {
   flex-direction: column;
   gap: 8px;
   align-items: center;
+  margin-top: 10px;
 }
 
 /* --- pannelli in fondo alla scheda: si aprono sotto, non in mezzo --- */
 .e-panel {
-  grid-column: 1 / -1;
-  background: var(--c-bg2);
-  border-top: 2px solid var(--line);
-  padding: 14px 18px 16px;
+  background: var(--surface);
+  border-radius: var(--r-sm);
+  margin-top: 11px;
+  padding: 12px 13px 13px;
 }
 .e-panel-k {
   font-size: 13px;
@@ -2273,7 +2249,6 @@ main {
 .blk .now-btn, .entry .now-btn { color: #fff; border-color: rgba(255,255,255,0.45); }
 .blk .pill, .entry .pill { background: rgba(0,0,0,0.30); color: #fff; border-color: transparent; }
 .blk .hint, .entry .hint { color: rgba(255,255,255,0.85); }
-.entry .e-count-sub { color: rgba(255,255,255,0.92); }
 .entry .e-bar-chip, .entry .e-act .tag { color: #fff; background: rgba(0,0,0,0.3); }
 .blk .p-preset > summary { color: rgba(255,255,255,0.88); }
 .blk .trait, .entry .trait { color: #fff; }
@@ -2300,15 +2275,6 @@ main {
    ============================================================ */
 .entry { border-radius: 22px; }
 
-/* gli orari: pastiglia scura, non testo nudo */
-.entry .e-range {
-  background: rgba(0, 0, 0, 0.24);
-  border-radius: 20px;
-  padding: 5px 13px;
-  font-size: 17px;
-}
-.entry .e-range .arrow { color: rgba(255, 255, 255, 0.7); }
-
 /* i numeri: riquadri scuri arrotondati, etichetta sopra e valore grosso */
 .entry .e-step {
   background: rgba(0, 0, 0, 0.24);
@@ -2325,70 +2291,6 @@ main {
 
 /* i tasti in fondo */
 .entry .e-act { border-radius: 15px; font-weight: 700; }
-
-/* --- il pannello del riferimento --- */
-.entry .e-who { padding: 13px 13px 15px; gap: 8px; }
-.entry .e-role { font-size: 19px; }
-.entry .e-names { font-size: 13.5px; padding-right: 0; text-align: center; align-self: center; color: rgba(255,255,255,0.82); }
-
-/* l'avatar in un RIQUADRO arrotondato, come nel modello */
-.entry .e-avatars .av {
-  width: 128px;
-  height: 168px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.10);
-  box-shadow: inset 0 0 0 2px var(--brace-orlo, rgba(255,255,255,0.22));
-}
-.entry .e-avatars.multi .av { width: 92px; height: 124px; margin-left: -18px; border-radius: 15px; }
-.entry .e-avatars.multi .av:first-child { margin-left: 0; }
-.entry.con-bracciale .e-avatars::before {
-  inset: -6px;
-  border-radius: 22px;
-  background: radial-gradient(circle at 50% 55%, var(--brace) 0%, transparent 70%);
-}
-
-/* il bracciale: pastiglia scritta, sotto i tratti */
-.entry .e-wrist {
-  position: static;
-  flex-direction: row;
-  gap: 8px;
-  align-self: center;
-  padding: 6px 14px 6px 7px;
-  border-radius: 20px;
-  background: rgba(0, 0, 0, 0.30);
-  margin-top: 2px;
-}
-.entry .e-wrist .dot {
-  width: 20px;
-  height: 20px;
-  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.5);
-}
-.entry .e-wrist .lab { font-size: 12px; color: #fff; letter-spacing: 0.05em; }
-.entry .e-wrist:hover { background: rgba(0, 0, 0, 0.42); }
-
-/* i tratti: elenco puntato a sinistra dentro il riquadro scuro */
-.entry .e-traits { background: rgba(0, 0, 0, 0.24); border-radius: 14px; padding: 9px 12px; }
-
-/* il numero dei bambini appeso all'avatar */
-.entry .e-kids-badge { border-radius: 16px; }
-
-/* nel modello la pastiglia del bracciale sta IN FONDO, sotto i tratti:
-   prima si guarda chi e', poi di che colore ha il polso */
-.entry .e-who > * { order: 2; }
-.entry .e-who .e-role { order: 1; }
-.entry .e-who .e-names { order: 1; }
-.entry .e-who .e-avatars { order: 1; }
-.entry .e-who .e-traits { order: 3; }
-.entry .e-who .e-note { order: 4; }
-.entry .e-who .e-wrist { order: 5; margin-top: 4px; }
-/* un filo piu' compatto: cosi' le due colonne finiscono quasi pari e
-   non resta l'aria in mezzo alla scheda */
-.entry .e-avatars .av { width: 112px; height: 140px; }
-.entry .e-traits { font-size: 12.8px; line-height: 1.32; padding: 8px 11px; }
-.entry .e-who { gap: 6px; padding: 11px 12px 13px; }
-/* il corpo distribuisce lo spazio invece di lasciare un buco prima dei
-   tasti: le due colonne finiscono pari */
-.entry .e-body { justify-content: flex-start; padding: 14px 16px 16px; }
 
 /* avviso "c'è una versione nuova" */
 .avviso-versione {
@@ -2439,18 +2341,6 @@ main {
 }
 .blk .p-blocco .prole { color: #fff; }
 .blk .p-editor { background: rgba(0, 0, 0, 0.16); border-top-color: rgba(255,255,255,0.14); }
-
-/* ---------- la scheda esattamente come il modello C ---------- */
-.entry .e-time { align-items: baseline; gap: 11px; flex-wrap: nowrap; }
-.entry .e-count { font-size: 40px; }
-.entry .e-count-sub {
-  font-size: 12.5px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.88);
-  white-space: nowrap;
-}
 /* le tre celle occupano la riga in parti uguali, come nel modello */
 .entry .e-controls { gap: 9px; }
 .entry .e-step { flex: 1 1 118px; min-width: 0; }
@@ -2518,18 +2408,6 @@ main {
 .ed-via { background: rgba(0, 0, 0, 0.32); color: #fff; padding: 0 15px; }
 .ed-fatto { background: #fff; color: #1A1626; }
 .ed-via:active, .ed-fatto:active { transform: scale(0.95); }
-
-/* ---------- la scheda esattamente come il modello C ---------- */
-.entry .e-time { align-items: baseline; gap: 11px; flex-wrap: nowrap; }
-.entry .e-count { font-size: 40px; }
-.entry .e-count-sub {
-  font-size: 12.5px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.88);
-  white-space: nowrap;
-}
 /* le tre celle occupano la riga in parti uguali, come nel modello */
 .entry .e-controls { gap: 9px; }
 .entry .e-step { flex: 1 1 118px; min-width: 0; }
@@ -2561,27 +2439,8 @@ main {
   gap: 14px;
   font-size: 15px;
 }
-.entry .e-traits {
-  background: none;
-  padding: 0;
-  border-radius: 0;
-  font-size: 13px;
-  gap: 3px;
-}
-
-/* le misure del modello */
-.entry .e-body { padding: 14px 16px 16px; gap: 11px; }
-.entry .e-count { font-size: 42px; }
 .entry .e-step { padding: 8px 12px; }
 .entry .e-step .v { font-size: 22px; }
-.entry .e-bar-track { height: 8px; }
-.entry .e-due .v { font-size: 26px; }
-.entry .e-who { width: auto; padding: 14px; gap: 7px; }
-.entry .e-role { font-size: 18px; padding-right: 0; text-align: center; align-self: center; }
-.entry .e-avatars .av { width: 116px; height: 156px; }
-.entry .e-wrist { padding: 5px 12px 5px 6px; }
-.entry .e-wrist .dot { width: 17px; height: 17px; }
-.entry .e-wrist .lab { font-size: 11.5px; font-weight: 800; }
 
 /* ============================================================
    IDENTICO AL MODELLO C — stili.html, misurato
@@ -2593,49 +2452,11 @@ main {
   --blk-ambra:  linear-gradient(150deg, #D9922A 0%, #B26F12 100%);
   --blk-rosso:  linear-gradient(150deg, #E05A5A 0%, #B93636 100%);
 }
-
-/* il pannello del riferimento e' PIATTO: nel modello non c'e' nessun
-   alone. La sfumatura verso il bracciale era una mia aggiunta. */
-.entry .e-who {
-  background: rgba(0, 0, 0, 0.24);
-  width: 196px;
-  padding: 14px;
-  gap: 0;
-  justify-content: flex-start;
-}
-.entry.con-bracciale .e-who::before { display: none; }
-.entry.con-bracciale .e-avatars::before { display: none; }
-.entry .e-avatars .av {
-  width: 116px;
-  height: 156px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.10);
-  box-shadow: none;
-}
-/* le misure del modello, riga per riga */
-.entry .e-role { font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 600; margin-bottom: 4px; }
-.entry .e-names { display: none; }
-.entry .e-avatars { margin: 0 auto; }
-.entry .e-traits { margin-top: 9px; font-size: 13px; font-weight: 600; line-height: 1.5; color: rgba(255,255,255,0.92); }
-.entry .e-wrist { margin-top: 9px; font-size: 12px; padding: 5px 12px; gap: 7px; }
-.entry .e-wrist .dot { width: 15px; height: 15px; box-shadow: 0 0 0 2px rgba(255,255,255,0.5); }
-.entry .e-wrist .lab { font-size: 12px; font-weight: 800; letter-spacing: 0.05em; }
-.entry .e-kids-badge { bottom: 4px; right: 4px; }
-
-/* il corpo */
-.entry .e-body { padding: 14px 16px 16px; gap: 0; }
-.entry .e-time { margin-bottom: 0; }
-.entry .e-count { font-size: 42px; line-height: 1; }
-.entry .e-count-sub { font-size: 12.5px; font-weight: 800; letter-spacing: 0.06em; }
-.entry .e-range { font-size: 17px; font-weight: 400; padding: 5px 11px; background: rgba(0,0,0,0.22); border-radius: 20px; }
-.entry .e-bar-track { height: 8px; border-radius: 8px; background: rgba(0,0,0,0.25); margin: 11px 0 13px; }
-.entry .e-bar-fill { border-radius: 8px; background: #fff; opacity: 0.9; box-shadow: none; }
 .entry .e-controls { gap: 9px; }
 .entry .e-step { background: rgba(0,0,0,0.24); border-radius: 15px; padding: 8px 12px; }
 .entry .e-step .k { font-size: 11.5px; font-weight: 700; color: rgba(255,255,255,0.7); }
 .entry .e-step .v { font-family: 'Fredoka', sans-serif; font-size: 22px; font-weight: 700; color: #fff; }
 .entry .e-costs { margin-top: 12px; font-size: 14.5px; font-weight: 600; color: rgba(255,255,255,0.85); }
-.entry .e-due .v { font-family: 'Fredoka', sans-serif; font-size: 26px; font-weight: 700; }
 .entry .e-acts { margin-top: 13px; gap: 9px; }
 .entry .e-act {
   background: rgba(255,255,255,0.16);
@@ -2650,9 +2471,6 @@ main {
 /* ultimi scarti dal modello, misurati */
 .entry { font-size: 16px; }
 .entry .e-act { height: 46px; min-height: 46px; padding: 0; }
-/* nel modello la pastiglia del bracciale e' larga quanto il pannello */
-.entry .e-wrist { display: flex; width: 100%; justify-content: center; }
-.entry .e-range { font-size: 17px; padding: 5px 11px; }
 
 /* ============================================================
    IDENTICO AL MODELLO E2 — stili2.html, misurato
@@ -2712,10 +2530,6 @@ main {
 /* col velo allo 0,16 del modello la scritta bianca sui tasti scende a
    4,35; a 0,12 la differenza non si vede e passa */
 .entry .e-act { background: rgba(255, 255, 255, 0.12); }
-
-/* il riquadro della persona arriva al bordo della scheda: prima restava
-   scoperta una striscia della sfumatura sul fianco destro */
-.entry .e-who { width: auto; }
 
 /* ---------- gli ultimi scarti da E2, trovati leggendo il codice ----------
    Erano quattro veli scuri uno sull'altro (0,26 + 0,22 + 0,16 + 0,30):
