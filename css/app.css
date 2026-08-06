@@ -1255,9 +1255,10 @@ main {
   font-family: 'Fredoka', sans-serif;
   font-size: 13.5px;
   font-weight: 600;
+  line-height: 16px;
   font-variant-numeric: tabular-nums;
 }
-.e-orari .fr { font-size: 11px; color: rgba(255, 255, 255, 0.6); margin: 0 2px; }
+.e-orari .fr { font-size: 11px; line-height: normal; color: rgba(255, 255, 255, 0.6); margin: 0 2px; }
 
 /* il pallino e' 21px come nel modello; il bersaglio per il dito e'
    allargato in modo invisibile, cosi' non sposta niente nel layout */
@@ -1294,7 +1295,7 @@ main {
   font-weight: 800;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: #fff;
+  color: rgba(255, 255, 255, 0.7);
 }
 .e-soldi .v {
   font-family: 'Fredoka', sans-serif;
