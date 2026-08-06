@@ -629,6 +629,14 @@ function syncBarRows(container, items) {
    Si ridisegna solo se qualcosa è davvero cambiato: senza questo controllo
    ogni tocco su "+1 bambino" ricostruirebbe anche tutti gli sprite. */
 function syncPeople(container, people, onChange) {
+  /* Se arriva un ELENCO diverso (per esempio si apre in modifica un
+     altro ingresso) va ridisegnato anche se il contenuto e' uguale:
+     altrimenti i tasti restano agganciati all'elenco di prima e la
+     persona finisce nell'ingresso sbagliato. */
+  if (container.__lista !== people) {
+    container.__lista = people;
+    container.dataset.sig = '';
+  }
   const sig = people.map(p => p.id + '|' + (p.name || '') + '|' + (p.note || '') + '|' + JSON.stringify(p.avatar)).join('\u00a7')
     + '|apri:' + (container.dataset.apri || '');
   if (container.dataset.sig === sig) return;
@@ -643,122 +651,46 @@ function syncPeople(container, people, onChange) {
     rinfresca();
   };
 
-  /* le persone già scelte */
+  /* La persona: solo l'editor. Il banner compatto che stava qui sopra
+     (avatar piccolo, nome, pennello, X e tratti colorati) faceva vedere
+     due volte le stesse cose. E il riferimento e' UNO solo. */
   people.forEach(p => {
     p.avatar = AV.normalize(p.avatar, p.role);
-    const aperto = container.dataset.apri === p.id;
-    const blocco = el('div', 'p-blocco' + (aperto ? ' aperto' : ''));
-    const row = el('div', 'person-row');
+    const blocco = el('div', 'p-blocco aperto');
+    const ed = el('div', 'p-editor');
 
-    const pv = el('div', 'pv');
-    pv.innerHTML = AV.build(p.avatar);
-    row.appendChild(pv);
-
-    const info = el('div', 'pinfo');
-    info.appendChild(el('div', 'prole', roleOf(p.role).label));
-    const nome = el('input', 'pname-in');
-    nome.value = p.name || '';
+    const barra = el('div', 'ed-barra');
+    barra.appendChild(el('span', 'ed-tit', '\ud83c\udfa8 Com\u2019\u00e8 vestito ' + roleOf(p.role).label.toLowerCase()));
+    const nome = el('input', 'ed-nome');
     nome.placeholder = 'Nome (facoltativo)';
+    nome.value = p.name || '';
     nome.oninput = () => { p.name = nome.value; onChange(); };
-    info.appendChild(nome);
-    row.appendChild(info);
-
-    /* i tratti vanno sotto, larghi quanto il riquadro: incolonnati nello
-       spazio stretto accanto all'avatar occupavano quattro righe a testa */
-    const foot = el('div', 'pfoot');
-    const tr = el('div', 'ptraits');
-    AV.traits(p.avatar, 3).forEach(t => tr.appendChild(traitChip(t)));
-    foot.appendChild(tr);
-    const pnote = el('div', 'pnote' + (p.note ? '' : ' hidden'), p.note || '');
-    foot.appendChild(pnote);
-
-    const acts = el('div', 'pact');
-    const edit = el('button', 'mini-b' + (aperto ? ' on' : ''));
-    edit.innerHTML = '\ud83c\udfa8';
-    edit.title = 'Com\u2019\u00e8 vestito';
-    edit.onclick = () => {
-      container.dataset.apri = aperto ? '' : p.id;
-      rinfresca();
-    };
-    const del = el('button', 'mini-b del');
-    del.innerHTML = '\u2715';
-    del.title = 'Togli';
-    del.onclick = () => {
-      const i = people.indexOf(p);
-      if (i > -1) people.splice(i, 1);
-      if (container.dataset.apri === p.id) container.dataset.apri = '';
+    barra.appendChild(nome);
+    const via = el('button', 'ed-via', '\u2715');
+    via.title = 'Togli questa persona';
+    via.onclick = () => {
+      const k = people.indexOf(p);
+      if (k > -1) people.splice(k, 1);
       onChange();
       rinfresca();
     };
-    acts.appendChild(edit);
-    acts.appendChild(del);
-    row.appendChild(acts);
-    row.appendChild(foot);
-    pv.onclick = edit.onclick;
-    blocco.appendChild(row);
+    barra.appendChild(via);
 
-    /* l'editor si apre qui sotto, non in una finestra, e SENZA anteprima:
-       la persona qui sopra resta appesa in cima ed è lei che si aggiorna.
-       Aggiorna solo questa riga: se rifacesse la lista si richiamerebbe
-       da solo all'infinito. */
-    if (aperto) {
-      const ed = el('div', 'p-editor');
-      /* la riga compatta sparisce mentre l'editor e' aperto, quindi il
-         tasto per chiudere deve stare QUI dentro */
-      const fine = el('button', 'ed-fatto', '\u2713 Fatto');
-      fine.onclick = () => { container.dataset.apri = ''; rinfresca(); };
-      const via = el('button', 'ed-via', '\u2715');
-      via.title = 'Togli questa persona';
-      via.onclick = () => {
-        const i = people.indexOf(p);
-        if (i > -1) people.splice(i, 1);
-        container.dataset.apri = '';
-        onChange();
-        rinfresca();
-      };
-      let ultimo = JSON.stringify(p.avatar);
-      buildAvatarEditor(ed, p, () => {
-        const ora = JSON.stringify(p.avatar);
-        if (ora !== ultimo) {          // scrivere una nota non ridisegna lo sprite
-          ultimo = ora;
-          pv.innerHTML = AV.build(p.avatar);
-          tr.innerHTML = '';
-          AV.traits(p.avatar, 3).forEach(t => tr.appendChild(traitChip(t)));
-        }
-        pnote.textContent = p.note || '';
-        pnote.classList.toggle('hidden', !p.note);
-        container.dataset.sig = '';   // la prossima volta ridisegna davvero
-        onChange();
-      });
-      const barra = el('div', 'ed-barra');
-      barra.appendChild(el('span', 'ed-tit', '\ud83c\udfa8 Come \u00e8 vestito ' + roleOf(p.role).label.toLowerCase()));
-      barra.appendChild(via);
-      barra.appendChild(fine);
-      ed.insertBefore(barra, ed.firstChild);
-      blocco.appendChild(ed);
-    }
+    buildAvatarEditor(ed, p, () => {
+      container.dataset.sig = '';   // la prossima volta ridisegna davvero
+      onChange();
+    });
+    ed.insertBefore(barra, ed.firstChild);
+    blocco.appendChild(ed);
     container.appendChild(blocco);
   });
 
   /* la scelta: subito visibile se non c'è nessuno, dietro un "+" se ce n'è già */
   const scelta = el('div', 'p-scelta');
-  const mostraScelta = people.length === 0 || container.dataset.scegli === '1';
+  /* il riferimento e' uno solo: finche' c'e' una persona non si sceglie */
+  const mostraScelta = people.length === 0;
 
-  if (!mostraScelta) {
-    const add = el('button', 'btn btn-sm add-person');
-    add.innerHTML = '\u2795 Aggiungi un\u2019altra persona';
-    add.onclick = () => { container.dataset.scegli = '1'; rinfresca(); };
-    scelta.appendChild(add);
-  } else {
-    if (people.length) {
-      const t = el('div', 'p-scelta-k');
-      t.appendChild(el('span', null, 'Chi altro entra?'));
-      const chiudi = el('button', 'mini-b');
-      chiudi.innerHTML = '\u2715';
-      chiudi.onclick = () => { container.dataset.scegli = ''; rinfresca(); };
-      t.appendChild(chiudi);
-      scelta.appendChild(t);
-    }
+  if (mostraScelta) {
     /* i ruoli: la scelta principale. Emoji grande, si trova a colpo d'occhio
        molto prima di uno sprite. Chi si aggiunge parte NEUTRO (AV.baseFor):
        caratteristiche del ruolo, niente accessori, tinte da cambiare al volo. */
@@ -1650,7 +1582,7 @@ function openCustomizer(person, onDone) {
   nome.oninput = () => { person.name = nome.value; };
   s.body.appendChild(nome);
   const box = el('div', 'p-editor');
-  buildAvatarEditor(box, person, () => {}, { anteprima: true });
+  buildAvatarEditor(box, person, () => {});
   s.body.appendChild(box);
   footBtn(s.foot, 'Fatto', 'btn-primary', s.close);
 }
@@ -1709,8 +1641,8 @@ function buildActiveView() {
   h2.innerHTML = showArchive ? '\ud83d\uddc2\ufe0f Archivio' : '\ud83c\udf9f\ufe0f In corso';
   head.appendChild(h2);
   if (!showArchive) {
-    head.appendChild(el('span', 'pill', attivi.length + (attivi.length === 1 ? ' gruppo' : ' gruppi')));
-    head.appendChild(el('span', 'pill', bimbi + (bimbi === 1 ? ' bambino' : ' bambini')));
+    head.appendChild(el('span', 'pill conta', attivi.length + (attivi.length === 1 ? ' gruppo' : ' gruppi')));
+    head.appendChild(el('span', 'pill conta', bimbi + (bimbi === 1 ? ' bambino' : ' bambini')));
   }
   const arch = el('button', 'pill arch-btn' + (showArchive ? ' on' : ''));
   arch.innerHTML = showArchive ? '\u2190 Torna agli attivi' : ('\ud83d\uddc2\ufe0f Archivio (' + archived().length + ')');

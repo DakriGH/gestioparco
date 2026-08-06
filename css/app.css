@@ -1120,6 +1120,15 @@ main {
   transition: background var(--speed), color var(--speed);
 }
 .pill.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+/* "1 gruppo, 3 bambini" e' un CONTEGGIO, non un tasto: senza fondo ne'
+   contorno nessuno prova piu' a premerlo. */
+.pill.conta, .blk .pill.conta, .entry .pill.conta {
+  background: none;
+  border: none;
+  padding: 0 4px;
+  min-height: 0;
+  color: var(--txt-2);
+}
 .arch-btn { margin-left: auto; }
 
 .entries { display: flex; flex-direction: column; gap: 14px; }
@@ -2271,8 +2280,24 @@ main {
   gap: 9px;
   margin-bottom: 11px;
 }
-.ed-tit {
+/* il nome vive nella barra dell'editor: prima stava nel banner
+   compatto che e' sparito */
+.ed-nome {
   flex: 1;
+  min-width: 90px;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.26);
+  border: 1px solid var(--line);
+  color: var(--txt);
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 700;
+}
+.ed-nome::placeholder { color: var(--txt-3); font-weight: 600; }
+.ed-tit {
+  flex: 0 1 auto;
   font-family: 'Fredoka', sans-serif;
   font-size: 15.5px;
   font-weight: 600;
