@@ -1700,9 +1700,18 @@ function archiveCard(entry) {
   return d;
 }
 
+const APPENA = 30000;   // mezzo minuto: il tempo di accorgersi di un errore
+
 function entryCard(entry) {
   const card = el('div', 'entry s-' + stateOf(entry, Date.now()));
   card.dataset.id = entry.id;
+  /* L'ultimo inserito resta segnato per mezzo minuto: se hai sbagliato
+     qualcosa lo correggi subito, senza cercarlo a memoria nell'elenco. */
+  const eta = Date.now() - num(entry.createdAt, 0);
+  if (eta >= 0 && eta < APPENA) {
+    card.classList.add('appena');
+    setTimeout(() => card.classList.remove('appena'), APPENA - eta);
+  }
 
   const people = (entry.people || []).map(p => (p.avatar = AV.normalize(p.avatar, p.role), p));
 
@@ -1759,8 +1768,16 @@ function entryCard(entry) {
     tratti.textContent = '\u26a0\ufe0f all\'uscita non avrai riferimenti';
   }
   chi.appendChild(tratti);
+  const sotto = el('div', 'e-sotto');
   const range = el('div', 'e-orari');
-  chi.appendChild(range);
+  sotto.appendChild(range);
+  /* quanti bambini si deve poter leggere SENZA aprire la scheda */
+  const bimbi = el('div', 'e-bimbi');
+  bimbi.innerHTML = '\ud83e\uddd2';
+  const bimbiV = el('span', 'num', '0');
+  bimbi.appendChild(bimbiV);
+  sotto.appendChild(bimbi);
+  chi.appendChild(sotto);
   riga.appendChild(chi);
 
   /* il bracciale e' il pallino del modello: 21px. Il bersaglio per il
@@ -1791,6 +1808,10 @@ function entryCard(entry) {
   /* ================= QUELLO CHE SI APRE =================
      una fila sola: tre celle compatte e i tasti a destra */
   const aperta = el('div', 'e-aperta');
+  /* l'involucro serve all'animazione: e' lui che si apre da 0 a tutta
+     altezza, invece del salto secco di display:none */
+  const dentro = el('div', 'e-dentro');
+  aperta.appendChild(dentro);
   const fila = el('div', 'e-fila');
 
   const mkCella = (emoji, key, step, suffisso) => {
@@ -1834,7 +1855,7 @@ function entryCard(entry) {
     return b;
   };
   fila.appendChild(azioni);
-  aperta.appendChild(fila);
+  dentro.appendChild(fila);
 
   /* Il Conto si porta dentro il Bar, com'e' nel modello: un pannello solo */
   const payPanel = el('div', 'e-panel hidden');
@@ -1857,7 +1878,7 @@ function entryCard(entry) {
     syncCard(entry);
   });
   const buildPay = () => buildPaymentPanel(payBox, entry, () => { syncCard(entry); });
-  aperta.appendChild(payPanel);
+  dentro.appendChild(payPanel);
 
   /* Modifica e' quello che si tocca meno: solo la matita, piccola e a
      sinistra, cosi' lo spazio va a Bar & Conto e all'Uscita */
@@ -1885,7 +1906,7 @@ function entryCard(entry) {
 
   const notes = people.filter(p => p.note && p.note.trim());
   if (notes.length) {
-    aperta.appendChild(el('div', 'e-note', notes.map(p => '\ud83d\udcdd ' + p.note.trim()).join(' \u00b7 ')));
+    dentro.appendChild(el('div', 'e-note', notes.map(p => '\ud83d\udcdd ' + p.note.trim()).join(' \u00b7 ')));
   }
 
   card.panels = [[payPanel, payBtn]];
@@ -1901,7 +1922,7 @@ function entryCard(entry) {
 
   cardRefs.set(entry.id, {
     card, count, range, sKids, sCrazy, sTime,
-    dueVal: soldiV, soldiK, soldi, barBox, wrist,
+    dueVal: soldiV, soldiK, soldi, barBox, wrist, bimbiV,
     barPanel: payPanel, barBtn: payBtn, payPanel, payBtn, buildPay
   });
   syncCard(entry);
@@ -2111,14 +2132,17 @@ function alza(card) {
   volante = { card: card, buco: buco, velo: velo, da: r };
   velo.onclick = () => posa(card);
 
-  requestAnimationFrame(() => {
+  /* il browser deve "vedere" la posizione di partenza prima di
+     ricevere quella d'arrivo, altrimenti salta senza animare */
+  void card.offsetWidth;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
     velo.classList.add('on');
     const larg = Math.min(Math.max(r.width, 320), window.innerWidth - 20);
     card.style.left = Math.round((window.innerWidth - larg) / 2) + 'px';
     card.style.top = '10px';
     card.style.width = larg + 'px';
     card.style.maxHeight = (window.innerHeight - 20) + 'px';
-  });
+  }));
 }
 
 function posa(card) {
@@ -2144,7 +2168,7 @@ function posa(card) {
     if (v.buco.parentNode) v.buco.remove();
     if (v.velo.parentNode) v.velo.remove();
   };
-  const tempo = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 260;
+  const tempo = matchMedia('(prefers-reduced-motion: reduce)').matches ? 160 : 330;
   setTimeout(fine, tempo);
 }
 
@@ -2486,6 +2510,7 @@ function syncCard(entry) {
   const crazy = clamp(entry.crazyJumping, 0, 1e6);
 
   r.sKids.val.textContent = kids;
+  if (r.bimbiV) r.bimbiV.textContent = kids;
   r.sCrazy.val.textContent = crazy;
   r.sTime.val.textContent = entry.payLater ? '\u2014' : entry.durationMinutes + '\u2032';
   r.sKids.minus.disabled = kids <= 0;
