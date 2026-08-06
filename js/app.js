@@ -1670,8 +1670,37 @@ function commitEntry() {
 /* ============================================================
    VISTA: IN CORSO
    ============================================================ */
+/* FLIP: prima di rifare l'elenco mi segno DOVE stava ogni scheda, poi
+   la faccio partire da li' e scivolare al posto nuovo. Senza, quando una
+   scade e cambia ordine, tutte saltano di colpo e non si capisce quale
+   si e' mossa. */
+function posizioniSchede() {
+  const m = new Map();
+  document.querySelectorAll('#view-active .entry').forEach(c => {
+    if (c.dataset.id) m.set(c.dataset.id, c.getBoundingClientRect().top);
+  });
+  return m;
+}
+function scivolaAlPosto(prima) {
+  if (!anima() || !prima.size) return;
+  document.querySelectorAll('#view-active .entry').forEach(c => {
+    const era = prima.get(c.dataset.id);
+    if (era === undefined) return;
+    const salto = era - c.getBoundingClientRect().top;
+    if (Math.abs(salto) < 2) return;
+    c.style.transition = 'none';
+    c.style.transform = 'translateY(' + salto + 'px)';
+    requestAnimationFrame(() => {
+      c.style.transition = 'transform 420ms cubic-bezier(.4,.02,.2,1)';
+      c.style.transform = '';
+      setTimeout(() => { c.style.transition = ''; }, 460);
+    });
+  });
+}
+
 function buildActiveView() {
   const root = $('#view-active');
+  const dovErano = posizioniSchede();
   cardRefs.clear();
   root.innerHTML = '';
 
@@ -1710,6 +1739,7 @@ function buildActiveView() {
 
   const box = el('div', 'entries');
   list.forEach(entry => box.appendChild(showArchive ? archiveCard(entry) : entryCard(entry)));
+  scivolaAlPosto(dovErano);
   root.appendChild(box);
   if (!showArchive) tick();
 }
@@ -2371,9 +2401,17 @@ function chiudiIngresso(entry) {
     entry.status = 'closed';
     entry.closedAt = Date.now();
     saveEntries();
-    buildActiveView();
-    updateBadge();
-    toast('Uscita registrata \u2705');
+    /* prima si accartoccia, poi sparisce: cosi' si vede QUALE se n'e'
+       andata invece di trovarne una in meno */
+    const r = cardRefs.get(entry.id);
+    const dopo = () => { buildActiveView(); updateBadge(); toast('Uscita registrata \u2705'); };
+    if (r && r.card.isConnected && anima() && !volante) {
+      r.card.style.height = r.card.getBoundingClientRect().height + 'px';
+      requestAnimationFrame(() => {
+        r.card.classList.add('esce');
+        setTimeout(dopo, 320);
+      });
+    } else dopo();
   };
   const d = dueOf(entry);
   if (d.total > 0) {
@@ -3128,16 +3166,31 @@ function updateBadge() {
   b.textContent = n;
   b.dataset.n = n;
 }
+let tabPrec = null;
 function switchTab(t) {
   /* se una scheda sta volando va posata PRIMA di cambiare vista:
      altrimenti resta appesa sopra la vista nuova, col velo sfocato */
   if (typeof volante !== 'undefined' && volante) posaSubito(volante.card);
   tab = t;
   $$('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  const primaEra = tabPrec;
+  tabPrec = t;
   $('#view-new').classList.toggle('hidden', t !== 'new');
   $('#view-active').classList.toggle('hidden', t !== 'active');
   $('#view-cassa').classList.toggle('hidden', t !== 'cassa');
   $('#view-settings').classList.toggle('hidden', t !== 'settings');
+  /* La vista che arriva entra dal lato da cui si veniva: dice da dove
+     sei arrivato invece di comparire e basta. */
+  if (anima() && primaEra && primaEra !== t) {
+    const ordine = ['new', 'active', 'cassa', 'settings'];
+    const vista = $('#view-' + t);
+    if (vista) {
+      vista.classList.remove('entra-dx', 'entra-sx');
+      void vista.offsetWidth;
+      vista.classList.add(ordine.indexOf(t) > ordine.indexOf(primaEra) ? 'entra-dx' : 'entra-sx');
+      setTimeout(() => vista.classList.remove('entra-dx', 'entra-sx'), 320);
+    }
+  }
   $('main').scrollTop = 0;
 
   if (t === 'new') {

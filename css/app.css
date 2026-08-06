@@ -2678,3 +2678,40 @@ html:not(.anima) .entry.appena::before { animation: none; opacity: 1; }
 
 /* quando non e' stato ancora scelto niente */
 .ed-tr.vuoto { opacity: 0.55; font-style: italic; }
+
+/* =============== PIU' MOVIMENTO =============== */
+
+/* la scheda nuova entra dall'alto invece di apparire */
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(-14px) scale(0.985); }
+}
+.entry { animation: cardIn 300ms cubic-bezier(.4,.02,.2,1); }
+
+/* quella che esce si accartoccia: si vede QUALE se n'e' andata */
+.entry.esce {
+  overflow: hidden;
+  transition: height 300ms cubic-bezier(.4,.02,.2,1),
+              opacity 220ms ease,
+              margin 300ms cubic-bezier(.4,.02,.2,1),
+              transform 300ms cubic-bezier(.4,.02,.2,1);
+  height: 0 !important;
+  opacity: 0;
+  margin-bottom: 0 !important;
+  transform: scale(0.96);
+}
+
+/* la vista che arriva entra dal lato giusto */
+.view.entra-sx { animation: entraSx 300ms cubic-bezier(.4,.02,.2,1); }
+@keyframes entraSx { from { transform: translateX(-34px); opacity: 0; } }
+
+/* la tendina del bar si apre come il sottomenu, non di scatto */
+.bar-tendina > .bar-dentro {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+}
+.bar-tendina .bar-dentro > * { min-height: 0; }
+
+html:not(.anima) .entry,
+html:not(.anima) .view.entra-sx,
+html:not(.anima) .view.entra-dx { animation: none; }
+html:not(.anima) .entry.esce { transition: none; }
