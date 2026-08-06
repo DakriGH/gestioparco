@@ -508,47 +508,70 @@ function buildDurationChips() {
   later.onclick = () => { draft.payLater = !draft.payLater; draft.touched = true; syncNew(); };
 }
 
-/* Bracciali in linea: si tocca il colore, non si apre nessuna finestra. */
-function buildWristRow() {
-  R.nWrist.innerHTML = '';
+/* Bracciali in linea: si tocca il colore, non si apre nessuna finestra.
+   E' la STESSA riga in "Nuovo" e nel menu volante della scheda: prima
+   erano due cose diverse e non si capiva che facevano la stessa cosa. */
+function costruisciBracciali(box, scegli) {
+  box.innerHTML = '';
   /* si parte da "Senza": il colore va messo apposta, così non si scorda */
   const senza = el('button', 'wrist-dot senza', 'Senza');
   senza.title = 'Nessun bracciale';
-  senza.onclick = () => {
-    draft.braceletColor = null;
-    draft.braceletCustom = true;
-    draft.touched = true;
-    syncNew();
-  };
-  R.nWrist.appendChild(senza);
+  senza.onclick = (ev) => { ev.stopPropagation(); scegli(null, true); };
+  box.appendChild(senza);
 
   const auto = el('button', 'wrist-dot auto', 'Auto');
   auto.title = 'Segue la fascia oraria';
-  auto.onclick = () => {
-    draft.braceletCustom = false;
-    draft.braceletColor = null;
-    draft.touched = true;
-    syncNew();
-  };
-  R.nWrist.appendChild(auto);
+  auto.onclick = (ev) => { ev.stopPropagation(); scegli(null, false); };
+  box.appendChild(auto);
 
   /* i colori delle fasce orarie: quelli veri del parco */
   const usati = [];
-  (settings.braceletSlots || []).forEach(s => {
-    if (s.color && !usati.some(u => u.toLowerCase() === s.color.toLowerCase())) usati.push(s.color);
+  (settings.braceletSlots || []).forEach(sl => {
+    if (sl.color && !usati.some(u => u.toLowerCase() === sl.color.toLowerCase())) usati.push(sl.color);
   });
   usati.forEach(hex => {
     const b = el('button', 'wrist-dot');
     b.style.background = hex;
     b.dataset.color = hex;
     b.title = AV.colorName(hex, 0);
-    b.onclick = () => {
-      draft.braceletColor = hex;
-      draft.braceletCustom = true;
-      draft.touched = true;
-      syncNew();
-    };
-    R.nWrist.appendChild(b);
+    b.onclick = (ev) => { ev.stopPropagation(); scegli(hex, true); };
+    box.appendChild(b);
+  });
+  return box;
+}
+
+/* Accende quello scelto. Sul tasto "Auto" fa vedere il colore della
+   fascia PRIMA di toccarlo: pieno se Auto e' gia' attivo, altrimenti
+   solo il contorno. Serve sapere quale bracciale mettere al polso
+   guardando, senza dover premere per scoprirlo. */
+function sincronizzaBracciali(box, inizio, colore, custom) {
+  const slot = braceletFor(inizio);
+  const senzaBracciale = custom && !colore;
+  $$('.wrist-dot', box).forEach(b => {
+    if (b.classList.contains('senza')) {
+      b.classList.toggle('on', senzaBracciale);
+    } else if (b.classList.contains('auto')) {
+      b.classList.toggle('on', !custom);
+      // su schermi stretti basta "Auto": il colore parla da solo
+      const stretto = window.innerWidth < 1040;
+      b.textContent = (slot && !stretto) ? 'Auto \u00b7 ' + (slot.label || '\u2014') : 'Auto';
+      b.style.background = (slot && !custom) ? slot.color : '';
+      b.style.color = (slot && !custom) ? '#fff' : '';
+      b.style.borderColor = (slot && custom) ? slot.color : '';
+      b.style.borderWidth = (slot && custom) ? '4px' : '';   // stacca dagli altri, che ne hanno 3
+    } else {
+      b.classList.toggle('on', !!(custom && colore &&
+        b.dataset.color.toLowerCase() === String(colore).toLowerCase()));
+    }
+  });
+}
+
+function buildWristRow() {
+  costruisciBracciali(R.nWrist, (hex, custom) => {
+    draft.braceletColor = hex;
+    draft.braceletCustom = custom;
+    draft.touched = true;
+    syncNew();
   });
 }
 
@@ -1218,24 +1241,8 @@ function syncNew(opts) {
   opts = opts || {};
   R.nStart.textContent = fmtTime(draft.startTime);
 
-  // bracciale: acceso quello scelto, oppure "Auto" se segue la fascia oraria
-  const autoSlot = braceletFor(draft.startTime);
-  const activeColor = draft.braceletCustom ? draft.braceletColor : null;
-  const senzaBracciale = draft.braceletCustom && !draft.braceletColor;
-  $$('.wrist-dot', R.nWrist).forEach(b => {
-    if (b.classList.contains('senza')) {
-      b.classList.toggle('on', senzaBracciale);
-    } else if (b.classList.contains('auto')) {
-      b.classList.toggle('on', !draft.braceletCustom);
-      // su schermi stretti basta "Auto": il colore si vede dallo sfondo
-      const stretto = window.innerWidth < 1040;
-      b.textContent = (autoSlot && !stretto) ? 'Auto · ' + (autoSlot.label || '—') : 'Auto';
-      b.style.background = !draft.braceletCustom && autoSlot ? autoSlot.color : '';
-      b.style.color = !draft.braceletCustom && autoSlot ? '#fff' : '';
-    } else {
-      b.classList.toggle('on', !!activeColor && b.dataset.color.toLowerCase() === String(activeColor).toLowerCase());
-    }
-  });
+  // bracciale: la stessa riga, aggiornata dalla stessa funzione della scheda
+  sincronizzaBracciali(R.nWrist, draft.startTime, draft.braceletColor, draft.braceletCustom);
 
   $$('[data-min]', R.nDur).forEach(b => {
     const v = b.dataset.min;
@@ -1914,7 +1921,10 @@ function entryCard(entry) {
   const buildPay = () => buildPaymentPanel(payBox, entry, () => { syncCard(entry); });
   aperta.appendChild(payPanel);
 
-  const payBtn = mkAct('\ud83e\uddfe Conto', 'conto', (ev) => {
+  /* Modifica e' quello che si tocca meno: solo la matita, piccola e a
+     sinistra, cosi' lo spazio va a Bar & Conto e all'Uscita */
+  mkAct('\u270f\ufe0f', 'piccolo', (ev) => { ev.stopPropagation(); editEntry(entry); }).title = 'Modifica';
+  const payBtn = mkAct('\ud83e\uddfe Bar & Conto', 'conto', (ev) => {
     ev.stopPropagation();
     const chiuso = payPanel.classList.contains('hidden');
     chiudiPannelli(entry.id);
@@ -1922,7 +1932,6 @@ function entryCard(entry) {
     payBtn.classList.toggle('on', chiuso);
     if (chiuso) { syncBarRows(barBox, entry.barItems); buildPay(); }
   });
-  mkAct('\u270f\ufe0f Modifica', '', (ev) => { ev.stopPropagation(); editEntry(entry); });
   mkAct('\ud83d\udeaa Uscita', 'forte', (ev) => { ev.stopPropagation(); chiudiIngresso(entry); });
 
   const notes = people.filter(p => p.note && p.note.trim());
@@ -1943,7 +1952,7 @@ function entryCard(entry) {
 
   cardRefs.set(entry.id, {
     card, count, range, sKids, sCrazy, sTime,
-    dueVal: soldiV, soldiK, soldi, barBox,
+    dueVal: soldiV, soldiK, soldi, barBox, wrist,
     barPanel: payPanel, barBtn: payBtn, payPanel, payBtn, buildPay
   });
   syncCard(entry);
@@ -1963,42 +1972,18 @@ function chiudiSchede(tranne) {
 function apriMenuBracciale(ancora, entry) {
   document.querySelectorAll('.wrist-menu').forEach(m => m.remove());
   const menu = el('div', 'wrist-menu');
-  const slot = braceletFor(entry.startTime);
-  const attuale = entry.braceletColor || null;
-
-  const riga = (etichetta, colore, attivo, azione, consigliato) => {
-    const b = el('button', 'wm-row' + (attivo ? ' on' : ''));
-    const d = el('span', 'wm-dot');
-    if (colore) d.style.background = colore; else d.classList.add('vuoto');
-    b.appendChild(d);
-    b.appendChild(el('span', 'wm-lab', etichetta));
-    if (consigliato) b.appendChild(el('span', 'wm-tip', "per le " + fmtTime(entry.startTime)));
-    b.onclick = (ev) => {
-      ev.stopPropagation();
-      azione();
-      saveEntries();
-      menu.remove();
-      redrawCardKeepingPanels(entry);
-    };
-    menu.appendChild(b);
-  };
-
-  if (slot && slot.color) {
-    riga(slot.label || AV.colorName(slot.color, 0), slot.color, !entry.braceletCustom,
-      () => { entry.braceletColor = null; entry.braceletCustom = false; }, true);
-  }
-  const visti = [];
-  (settings.braceletSlots || []).forEach(sl => {
-    if (!sl.color) return;
-    if (slot && slot.color && sl.color.toLowerCase() === slot.color.toLowerCase()) return;
-    if (visti.indexOf(sl.color.toLowerCase()) > -1) return;
-    visti.push(sl.color.toLowerCase());
-    riga(sl.label || AV.colorName(sl.color, 0), sl.color,
-      !!(entry.braceletCustom && attuale && attuale.toLowerCase() === sl.color.toLowerCase()),
-      () => { entry.braceletColor = sl.color; entry.braceletCustom = true; });
+  menu.appendChild(el('div', 'wm-k', '\ud83c\udf97\ufe0f Bracciale'));
+  const riga = el('div', 'wrist-row');
+  menu.appendChild(riga);
+  /* la stessa identica riga di "Nuovo": stessi tasti, stesso ordine */
+  costruisciBracciali(riga, (hex, custom) => {
+    entry.braceletColor = hex;
+    entry.braceletCustom = custom;
+    saveEntries();
+    sincronizzaBracciali(riga, entry.startTime, entry.braceletColor, entry.braceletCustom);
+    aggiornaPallino(entry);
   });
-  riga('Senza bracciale', null, !!(entry.braceletCustom && !attuale),
-    () => { entry.braceletColor = null; entry.braceletCustom = true; });
+  sincronizzaBracciali(riga, entry.startTime, entry.braceletColor, entry.braceletCustom);
 
   ancora.appendChild(menu);
   const chiudi = (ev) => {
@@ -2007,6 +1992,17 @@ function apriMenuBracciale(ancora, entry) {
     document.removeEventListener('pointerdown', chiudi, true);
   };
   setTimeout(() => document.addEventListener('pointerdown', chiudi, true), 0);
+}
+
+/* Ritinge il pallino sulla riga senza rifare la scheda: se la
+   ridisegnassi, il menu aperto sparirebbe a ogni colore provato. */
+function aggiornaPallino(entry) {
+  const r = cardRefs.get(entry.id);
+  if (!r || !r.wrist) return;
+  const slot = braceletFor(entry.startTime);
+  const col = entry.braceletCustom ? entry.braceletColor : (slot ? slot.color : null);
+  r.wrist.classList.toggle('vuoto', !col);
+  r.wrist.style.background = col || '';
 }
 
 /* chiude i pannelli aperti; con "tranne" si risparmia una scheda */

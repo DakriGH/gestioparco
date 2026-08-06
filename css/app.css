@@ -376,48 +376,31 @@ main {
 #app.in-modifica .actionbar { background: var(--warn-soft); border-bottom-color: var(--warn); }
 
 /* le scelte del bracciale, accanto al pallino */
+/* il menu volante del bracciale: dentro c'e' la STESSA riga di tondi
+   che sta in "Nuovo", non un elenco diverso */
 .wrist-menu {
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + 8px);
   right: 0;
   z-index: 20;
-  min-width: 210px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 6px;
-  border-radius: var(--r);
-  background: var(--surface-2);
-  border: 1px solid var(--line-2);
-  box-shadow: var(--shadow-lg);
+  padding: 10px 12px 12px;
+  border-radius: 16px;
+  background: #1B1B24;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.55);
   animation: popIn 140ms ease;
+  cursor: default;
 }
-.wm-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 10px;
-  border-radius: var(--r-sm);
-  background: none;
-  border: 2px solid transparent;
-  color: var(--txt);
-  font-size: 15px;
-  font-weight: 700;
-  text-align: left;
+.wm-k {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+  margin-bottom: 2px;
   white-space: nowrap;
 }
-.wm-row:hover { background: var(--surface-3); }
-.wm-row.on { border-color: var(--accent); background: var(--accent-soft); }
-.wm-dot {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.6);
-  flex-shrink: 0;
-}
-.wm-dot.vuoto { background: none; border-style: dashed; border-color: var(--line-2); }
-.wm-lab { flex: 1; }
-.wm-tip { font-size: 11.5px; font-weight: 700; color: var(--txt-3); }
+.wrist-menu .wrist-row { margin-top: 4px; }
 
 
 /* ============================================================
@@ -555,10 +538,13 @@ main {
 }
 .wrist-dot.on { border-color: var(--txt); transform: scale(1.1); }
 .wrist-dot:active { transform: scale(0.9); }
+/* il contorno dice quale bracciale tocca a quell'ora, prima di
+   toccare il tasto: va visto da lontano, quindi 3px pieni */
 .wrist-dot.auto {
   width: auto;
   padding: 0 15px;
   height: 44px;
+  border-width: 3px;
   border-radius: 22px;
   background: var(--surface-3);
   color: var(--txt);
@@ -1160,7 +1146,9 @@ main {
   /* nessuna ombra: nel modello la scheda e' netta. Il filo di luce che
      avevo messo sul bordo alto si leggeva come una sfumatura lucida. */
   box-shadow: none;
-  overflow: hidden;
+  /* niente ritaglio: il menu del bracciale deve poter uscire sotto il
+     bordo. Gli angoli li fanno la riga e il sottomenu, uno per uno. */
+  overflow: visible;
   animation: cardIn 200ms ease;
   color: #fff;
   /* la scheda E' il colore dello stato: si trova a due metri senza
@@ -1334,6 +1322,7 @@ main {
 .e-aperta {
   display: none;
   background: rgb(16, 16, 22);
+  border-radius: 0 0 16px 16px;
   padding: 12px 13px 13px;
   cursor: default;
 }
@@ -1388,6 +1377,9 @@ main {
   white-space: nowrap;
 }
 .e-azioni button.forte { background: #fff; color: #123A2C; }
+/* Modifica e' quello che si tocca meno: sta a sinistra e piccolo,
+   cosi' non ruba spazio a Bar & Conto e all'Uscita */
+.e-azioni button.piccolo { padding: 11px 11px; font-size: 15px; background: rgba(255, 255, 255, 0.11); }
 .e-azioni button.on { background: #fff; color: #123A2C; }
 
 .e-later-tag {
