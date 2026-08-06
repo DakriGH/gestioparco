@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Bar e conto — cinque modi</title>
+<title>Bar e conto — dodici modi</title>
 <link rel="stylesheet" href="./css/fonts.css">
 <style>
 /* ============================================================
@@ -28,6 +28,7 @@ h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 8px; }
 .telaio { border-radius: 20px; padding: 12px; background: #17171F; border: 1px solid rgba(255,255,255,0.09); }
 .elenco { color: #9A9AB0; font-size: 14.5px; line-height: 1.75; }
 .elenco b { color: #FFD166; font-weight: 600; }
+.elenco a { color: #9BD9FF; text-decoration: none; border-bottom: 1px solid rgba(155,217,255,0.35); }
 
 /* ---- mattoni comuni al pannello ---- */
 .pan { border-radius: 20px; overflow: hidden; background: linear-gradient(150deg,#1E9E76,#137A5A); color: #fff; }
@@ -102,19 +103,92 @@ h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 8px; }
 .tagli button.mon { background: rgba(255,255,255,0.08); font-size: 14px; }
 .resto-riga { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; }
 .resto-riga .da { margin-left: auto; text-align: right; color: #FFD166; }
+
+/* ---- C6 scontrino: la carta vera, quella che la gente riconosce ---- */
+.scontrino { background: #FAF5E9; color: #211F19; border-radius: 14px; padding: 15px 16px 13px; }
+.scontrino .int { text-align: center; font-family: 'Fredoka', sans-serif; font-size: 14px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; padding-bottom: 9px; border-bottom: 2px dashed #C8C0AB; }
+.sr { display: flex; align-items: baseline; gap: 7px; padding: 7px 0; font-size: 14.5px; }
+.sr .nn { font-weight: 600; }
+.sr .pt { flex: 1; border-bottom: 1px dotted #B5AC96; transform: translateY(-4px); min-width: 14px; }
+.sr .im { font-family: 'Fredoka', sans-serif; font-weight: 700; font-variant-numeric: tabular-nums; }
+.scontrino .fine { border-top: 2px dashed #C8C0AB; margin-top: 7px; padding-top: 10px; }
+.scontrino .fine .sr { font-size: 17px; }
+.scontrino .fine .im { font-size: 21px; }
+.scontrino .gia { color: #4B7A64; }
+.timbro { display: inline-block; border: 3px solid #2E7D5B; color: #2E7D5B; border-radius: 9px; padding: 4px 12px; font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.1em; transform: rotate(-6deg); margin-top: 8px; }
+
+/* ---- C7 due tasti giganti ---- */
+.gigante { width: 100%; border: none; border-radius: 18px; padding: 20px 18px; font: inherit; font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 600; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 13px; }
+.gigante .gem { font-size: 27px; }
+.gigante small { display: block; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; opacity: 0.75; margin-top: 2px; }
+.gigante.si { background: #fff; color: #123A2C; }
+.gigante.forse { background: rgba(255,255,255,0.16); color: #fff; }
+
+/* ---- C8 tastierino da cassa ---- */
+.pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 11px; }
+.pad button { padding: 15px 0; border: none; border-radius: 13px; background: rgba(255,255,255,0.14); color: #fff; font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 700; cursor: pointer; }
+.pad button.chiaro { background: rgba(0,0,0,0.28); font-size: 15px; }
+.display { background: rgba(0,0,0,0.4); border-radius: 14px; padding: 12px 15px; display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; }
+.display .gr { font-family: 'Fredoka', sans-serif; font-size: 36px; font-weight: 700; line-height: 1.05; font-variant-numeric: tabular-nums; }
+
+/* ---- C9 barre di avanzamento per riga ---- */
+.rgb { display: block; padding: 10px 0; }
+.rgb + .rgb { border-top: 1px solid rgba(255,255,255,0.09); }
+.rgb .su { display: flex; align-items: center; gap: 10px; }
+.rgb .barra { height: 7px; border-radius: 5px; background: rgba(0,0,0,0.32); overflow: hidden; margin-top: 7px; }
+.rgb .barra i { display: block; height: 100%; background: #7FE8C1; border-radius: 5px; }
+.rgb .sotto { display: flex; justify-content: space-between; font-size: 11.5px; color: rgba(255,255,255,0.6); margin-top: 4px; }
+
+/* ---- C10 fisarmonica a sezioni colorate ---- */
+.sez { border-radius: 16px; overflow: hidden; margin-bottom: 10px; }
+.sez.parco { background: rgba(127,232,193,0.13); }
+.sez.bar { background: rgba(255,209,102,0.15); }
+.sez > .cap { display: flex; align-items: center; gap: 11px; padding: 13px 14px; cursor: pointer; }
+.sez > .cap .em { font-size: 21px; }
+.sez > .cap .nm { flex: 1; font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 600; }
+.sez > .cap .im { font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 700; }
+.sez > .cap .frec { opacity: 0.65; font-size: 13px; }
+.sez > .den { padding: 0 14px 13px; }
+.sez .rg + .rg { border-top-color: rgba(255,255,255,0.13); }
+
+/* ---- C11 barra cassa appiccicata in alto ---- */
+.fissa { position: sticky; top: 0; z-index: 4; background: #0E3B2C; margin: -13px -14px 12px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; box-shadow: 0 6px 14px rgba(0,0,0,0.3); }
+.fissa .k { font-size: 10.5px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: rgba(255,255,255,0.7); display: block; }
+.fissa .v { font-family: 'Fredoka', sans-serif; font-size: 27px; font-weight: 700; line-height: 1.05; }
+.scorri { max-height: 290px; overflow-y: auto; }
+
+/* ---- C12 diviso per persona ---- */
+.pers { background: rgba(255,255,255,0.07); border-radius: 16px; padding: 11px 13px 12px; margin-bottom: 9px; }
+.pers .cap { display: flex; align-items: center; gap: 10px; }
+.pers .cap .em { font-size: 22px; }
+.pers .cap .nm { flex: 1; font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 600; }
+.pers .cap .im { font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 700; }
+.pers .det { font-size: 12px; color: rgba(255,255,255,0.62); margin: 4px 0 9px; }
+.pers.ok { opacity: 0.5; }
+
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Bar e conto: cinque modi, uno solo vince</h1>
+  <h1>Bar e conto: dodici modi, uno solo vince</h1>
   <p class="intro">Ho capito cosa confondeva, ed era colpa mia: su ogni riga c'erano <b>due numeri
   sulla stessa cosa</b>. «Coca Cola ×2» = quante ne ha prese. «0/2» = quante ne hai incassate.
   Sono due domande diverse — <i>cosa ha preso</i> e <i>cosa hai già preso tu</i> — schiacciate
   nella stessa riga.</p>
-  <p class="intro">Qui sotto cinque modi di tenerle separate. Funzionano tutti davvero: aggiungi,
+  <p class="intro">Qui sotto dodici modi di tenerle separate. Funzionano tutti davvero: aggiungi,
   incassa, annulla, calcola il resto. Provali col dito e dimmi quale ti viene naturale.</p>
 
-  <div class="strada">
+  <div class="telaio elenco" style="margin-top:16px">
+    <b>Le dodici in breve.</b> Tocca il nome per saltarci.<br>
+    <a href="#s-C1">C1 solo importi</a> · <a href="#s-C2">C2 spunte</a> ·
+    <a href="#s-C3">C3 due colonne</a> · <a href="#s-C4">C4 tre tasti</a> ·
+    <a href="#s-C5">C5 a passi</a> · <a href="#s-C6">C6 scontrino</a> ·
+    <a href="#s-C7">C7 due tasti giganti</a> · <a href="#s-C8">C8 tastierino da cassa</a> ·
+    <a href="#s-C9">C9 barre per riga</a> · <a href="#s-C10">C10 fisarmonica</a> ·
+    <a href="#s-C11">C11 cassa appiccicata in alto</a> · <a href="#s-C12">C12 diviso per persona</a>
+  </div>
+
+  <div class="strada" id="s-C1">
     <header><span class="n">C1</span><h2>Solo importi — non spunti niente</h2></header>
     <p class="perche">Il carrello dice <b>solo cosa ha preso</b>. Per incassare non scegli righe:
     scegli <b>un importo</b>, con le scorciatoie già pronte — tutto, solo il parco, solo il bar.
@@ -124,7 +198,7 @@ h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 8px; }
     <div class="telaio"><div class="pan" id="C1"></div></div>
   </div>
 
-  <div class="strada">
+  <div class="strada" id="s-C2">
     <header><span class="n">C2</span><h2>Spunti quello che ti sta pagando</h2></header>
     <p class="perche">Come una lista della spesa: <b>segni</b> le righe che ti sta pagando adesso,
     il tasto ti dice quanto fa, e quelle saldate restano spente. La spunta è un'<b>azione tua</b>,
@@ -135,7 +209,7 @@ h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 8px; }
     <div class="telaio"><div class="pan" id="C2"></div></div>
   </div>
 
-  <div class="strada">
+  <div class="strada" id="s-C3">
     <header><span class="n">C3</span><h2>Due colonne: il carrello e la cassa</h2></header>
     <p class="perche">Le due domande stanno <b>in due posti fisicamente diversi</b>: a sinistra
     cosa ha preso, a destra cosa hai incassato tu, col registro degli orari. Non si possono più
@@ -145,7 +219,7 @@ h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 8px; }
     <div class="telaio"><div class="pan" id="C3"></div></div>
   </div>
 
-  <div class="strada">
+  <div class="strada" id="s-C4">
     <header><span class="n">C4</span><h2>Tre tasti grandi, niente da spuntare</h2></header>
     <p class="perche">Nessuna riga da toccare e nessun importo da digitare: <b>paga il parco</b>,
     <b>paga il bar</b>, <b>paga tutto</b>, con la cifra scritta sopra il tasto. Il carrello resta
@@ -155,7 +229,7 @@ h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 8px; }
     <div class="telaio"><div class="pan" id="C4"></div></div>
   </div>
 
-  <div class="strada">
+  <div class="strada" id="s-C5">
     <header><span class="n">C5</span><h2>A passi: prima cosa prende, poi quanto paga</h2></header>
     <p class="perche">Una domanda alla volta: <b>1 · cosa prende</b>, <b>2 · quanto incassi</b>,
     <b>3 · il resto</b>. Impossibile confondersi perché a ogni passo c'è una cosa sola da fare —
@@ -165,8 +239,79 @@ h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 8px; }
     <div class="telaio"><div class="pan" id="C5"></div></div>
   </div>
 
+
+  <div class="strada" id="s-C6">
+    <header><span class="n">C6</span><h2>Lo scontrino</h2></header>
+    <p class="perche">La metafora che chiunque riconosce senza spiegazioni: <b>carta, voci
+    incolonnate, totale in fondo</b>. Le righe già pagate diventano verdi e alla fine compare il
+    timbro PAGATO. Il carrello e la cassa non si confondono perché la carta dice cosa ha preso e
+    il riquadro sotto dice cosa hai in mano.
+    <span class="ko">Dove si rompe:</span> è bello da leggere ma ci si tocca poco — per
+    modificare devi passare da «Inserisci».</p>
+    <div class="telaio"><div class="pan" id="C6"></div></div>
+  </div>
+
+  <div class="strada" id="s-C7">
+    <header><span class="n">C7</span><h2>Due tasti giganti e basta</h2></header>
+    <p class="perche">La domanda vera alla cassa è una: <b>ti sta pagando tutto o solo una
+    parte?</b> Due tasti enormi, impossibili da sbagliare col dito, e la parte complicata
+    (quanto, con che pezzi) compare solo se scegli «una parte».
+    <span class="ko">Dove si rompe:</span> vedi meno dettaglio in partenza: cosa ha preso sta
+    sotto, va cercato.</p>
+    <div class="telaio"><div class="pan" id="C7"></div></div>
+  </div>
+
+  <div class="strada" id="s-C8">
+    <header><span class="n">C8</span><h2>Il tastierino, come una cassa vera</h2></header>
+    <p class="perche">Chi ha lavorato a una cassa cerca il tastierino: <b>batti quanto ti ha
+    dato</b> e il resto compare grosso. Ci sono anche i tagli pronti (50, 20, 10) perché nove
+    volte su dieci sono quelli.
+    <span class="ko">Dove si rompe:</span> battere le cifre è più lento che toccare «20 + 10» se
+    la gente paga con banconote tonde.</p>
+    <div class="telaio"><div class="pan" id="C8"></div></div>
+  </div>
+
+  <div class="strada" id="s-C9">
+    <header><span class="n">C9</span><h2>Una barra per riga: quanto è coperto</h2></header>
+    <p class="perche">Ogni voce ha la sua <b>barretta che si riempie</b>: a colpo d'occhio vedi
+    cosa è coperto e cosa no, anche a metà. Tocchi la riga e la salda. È l'unico che mostra i
+    <b>pagamenti parziali dentro una singola voce</b> senza scrivere due numeri.
+    <span class="ko">Dove si rompe:</span> le barrette sono belle ma occupano spazio: la lista
+    diventa più alta.</p>
+    <div class="telaio"><div class="pan" id="C9"></div></div>
+  </div>
+
+  <div class="strada" id="s-C10">
+    <header><span class="n">C10</span><h2>Fisarmonica: Parco e Bar, due colori</h2></header>
+    <p class="perche">Due sezioni <b>di colore diverso</b>, chiuse: vedi solo i due totali e i
+    due tasti per pagarle. Apri quella che ti serve. È il più ordinato quando il conto è lungo,
+    e i colori diversi fanno metà del lavoro di distinguere.
+    <span class="ko">Dove si rompe:</span> un tocco in più per vedere le voci.</p>
+    <div class="telaio"><div class="pan" id="C10"></div></div>
+  </div>
+
+  <div class="strada" id="s-C11">
+    <header><span class="n">C11</span><h2>La cassa appiccicata in alto</h2></header>
+    <p class="perche">Quanto resta da avere e il tasto per incassare <b>restano fermi in alto</b>
+    mentre scorri i prodotti: non li perdi mai di vista, e stanno lontani dalla tastiera che
+    copre il fondo dello schermo.
+    <span class="ko">Dove si rompe:</span> la barra mangia una striscia di spazio sempre, anche
+    quando non serve.</p>
+    <div class="telaio"><div class="pan" id="C11"></div></div>
+  </div>
+
+  <div class="strada" id="s-C12">
+    <header><span class="n">C12</span><h2>Diviso per persona</h2></header>
+    <p class="perche">«Pagano a pezzi» spesso vuol dire che <b>ognuno paga il suo</b>: un
+    genitore salda il proprio bambino, l'altro il suo, e il bar si divide o lo prende uno solo.
+    Qui ogni bambino è un conto suo, col suo tasto.
+    <span class="ko">Dove si rompe:</span> se pagano tutti insieme è un giro in più; e va deciso
+    a chi mettere il bar.</p>
+    <div class="telaio"><div class="pan" id="C12"></div></div>
+  </div>
+
   <div class="strada">
-    <header><span class="n">≡</span><h2>Quello che vale per tutti e cinque</h2></header>
+    <header><span class="n">≡</span><h2>Quello che vale per tutte</h2></header>
     <div class="telaio elenco">
       <b>Un tasto solo</b> nella scheda: «🛒 Bar e conto», col pallino di quanto resta da avere.<br>
       <b>Niente “fai uscire” qui dentro</b>: è un'altra cosa e resta nella scheda.<br>
@@ -416,8 +561,234 @@ function dC5(s) {
     '</div>' + dentro + '</div>';
 }
 
+
+/* ---------------- C6 - lo scontrino ---------------- */
+function dC6(st) {
+  const R = resta(st);
+  if (st.vista === 'inserisci') return testa() + linguette(st) + '<div class="corpo">' + inserisci(st) + '</div>';
+  const righe = vociDi(st).map(v => '<div class="sr' + (st.saldate[v.k] ? ' gia' : '') + '">' +
+    '<span class="nn">' + v.nm + '</span><span class="pt"></span>' +
+    '<span class="im">' + eur(v.pr) + '</span></div>').join('');
+  return testa() + linguette(st) + '<div class="corpo">' +
+    '<div class="scontrino"><div class="int">Il conto di Nonna</div>' + righe +
+      '<div class="fine">' +
+        '<div class="sr"><span class="nn">Totale</span><span class="pt"></span><span class="im">' + eur(tot(st)) + '</span></div>' +
+        (inc(st) > 0 ? '<div class="sr gia"><span class="nn">gia\u2019 incassato</span><span class="pt"></span><span class="im">\u2212' + eur(inc(st)) + '</span></div>' : '') +
+        (R > 0 ? '<div class="sr"><span class="nn">Da pagare</span><span class="pt"></span><span class="im">' + eur(R) + '</span></div>'
+               : '<div style="text-align:center"><span class="timbro">PAGATO</span></div>') +
+      '</div></div>' +
+    '<div class="cassa" style="margin-top:12px"><div class="alto">' +
+      '<div><span class="k">' + (R > 0 ? 'da incassare' : 'tutto pagato') + '</span>' +
+        '<span class="v' + (R > 0 ? '' : ' zero') + '">' + (R > 0 ? eur(R) : '\u2713') + '</span></div>' +
+      '<div class="tastiRiga">' + (R > 0 ?
+        '<button class="bt forte" data-p="tutto">Incassa tutto</button>' +
+        (rParco(st) > 0 ? '<button class="bt" data-p="parco">Solo parco</button>' : '') +
+        (rBar(st) > 0 ? '<button class="bt" data-p="bar">Solo bar</button>' : '') +
+        '<button class="bt" data-resto>\ud83e\uddee Resto</button>' : '') + '</div></div>' +
+      storia(st) + '</div>' + (st.resto ? tagliResto(st) : '') + '</div>';
+}
+
+/* ---------------- C7 - due tasti giganti ---------------- */
+function dC7(st) {
+  const R = resta(st);
+  if (st.vista === 'inserisci') return testa() + linguette(st) + '<div class="corpo">' + inserisci(st) + '</div>';
+  return testa() + linguette(st) + '<div class="corpo">' +
+    '<div class="cassa" style="margin-bottom:12px"><span class="k">' + (R > 0 ? 'il conto \u00e8' : 'tutto pagato') + '</span>' +
+      '<span class="v' + (R > 0 ? '' : ' zero') + '">' + (R > 0 ? eur(R) : '\u2713') + '</span>' + storia(st) + '</div>' +
+    (R > 0 ? '<div style="display:flex;flex-direction:column;gap:9px;margin-bottom:12px">' +
+      '<button class="gigante si" data-p="tutto"><span class="gem">\ud83d\udcb6</span>' +
+        '<span>Paga tutto<small>incassi ' + eur(R) + ' e il conto \u00e8 chiuso</small></span></button>' +
+      '<button class="gigante forse" data-resto><span class="gem">\u2702\ufe0f</span>' +
+        '<span>Paga una parte<small>dimmi quanto ti ha dato</small></span></button></div>' : '') +
+    (st.resto ? tagliResto(st) : '') +
+    '<div class="tit">Cosa ha preso</div><div class="blocco">' + righeCarrello(st) + '</div></div>';
+}
+
+/* ---------------- C8 - il tastierino ---------------- */
+function dC8(st) {
+  const R = resta(st);
+  if (st.pad === undefined) st.pad = '';
+  const d = parseInt(st.pad || '0', 10), avanza = d - R;
+  if (st.vista === 'inserisci') return testa() + linguette(st) + '<div class="corpo">' + inserisci(st) + '</div>';
+  return testa() + linguette(st) + '<div class="corpo">' +
+    '<div class="display">' +
+      '<div><span class="k" style="font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.7);display:block">' +
+        (R > 0 ? 'da incassare' : 'tutto pagato') + '</span><span class="gr">' + (R > 0 ? eur(R) : '\u2713') + '</span></div>' +
+      '<div style="margin-left:auto;text-align:right"><span class="k" style="font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.7);display:block">ti ha dato</span>' +
+        '<span class="gr">' + eur(d) + '</span></div></div>' +
+    (d > 0 ? '<div class="cassa" style="margin-top:9px;text-align:right"><span class="k">' +
+        (avanza >= 0 ? 'resto da dare' : 'mancano ancora') + '</span>' +
+        '<span class="v" style="color:#FFD166">' + eur(Math.abs(avanza)) + '</span></div>' : '') +
+    '<div class="pad">' + [1,2,3,4,5,6,7,8,9].map(n => '<button data-pad="' + n + '">' + n + '</button>').join('') +
+      '<button class="chiaro" data-pad="00">00</button><button data-pad="0">0</button>' +
+      '<button class="chiaro" data-padc>\u232b</button></div>' +
+    '<div class="tagli">' + [[5000,'50 \u20ac'],[2000,'20 \u20ac'],[1000,'10 \u20ac'],[500,'5 \u20ac']]
+      .map(t => '<button data-padt="' + t[0] + '">' + t[1] + '</button>').join('') + '</div>' +
+    (R > 0 ? '<div style="display:flex;gap:8px;margin-top:10px">' +
+      (d > 0 ? '<button class="bt forte" style="flex:1" data-padok>Incassa ' + eur(Math.min(d, R)) +
+          (avanza > 0 ? ' \u00b7 rendi ' + eur(avanza) : '') + '</button>'
+             : '<button class="bt forte" style="flex:1" data-p="tutto">Incassa tutto ' + eur(R) + '</button>') +
+      '</div>' : '') +
+    '<div class="cassa" style="margin-top:11px;padding-top:9px">' + (storia(st) || '<span class="k">nessun incasso ancora</span>') + '</div>' +
+    '</div>';
+}
+
+/* ---------------- C9 - una barra per riga ----------------
+   Qui il conto e' PER RIGA, non per sezione: e' l'unico modo per far
+   vedere una voce coperta a meta' senza scrivere due numeri. */
+function av9(st) { if (!st.pagR) st.pagR = {}; }
+const pagR9  = (st, k) => st.pagR[k] || 0;
+const resta9 = st => vociDi(st).reduce((a, v) => a + Math.max(0, v.pr - pagR9(st, v.k)), 0);
+const inc9   = st => vociDi(st).reduce((a, v) => a + Math.min(v.pr, pagR9(st, v.k)), 0);
+function paga9(st, ds, quali, quanto) {
+  const prima = JSON.parse(JSON.stringify(st.pagR));
+  let r = quanto;
+  quali.forEach(v => {
+    const manca = Math.max(0, v.pr - pagR9(st, v.k));
+    const q = Math.min(r, manca);
+    st.pagR[v.k] = pagR9(st, v.k) + q; r -= q;
+  });
+  const im = quanto - r;
+  if (im > 0) st.incassi.push({ ora: ora(), ds: ds, im: im, prima: prima });
+}
+function dC9(st) {
+  av9(st);
+  const R = resta9(st);
+  if (st.vista === 'inserisci') return testa() + linguette(st) + '<div class="corpo">' + inserisci(st) + '</div>';
+  const righe = vociDi(st).map(v => {
+    const p = Math.min(v.pr, pagR9(st, v.k)), q = v.pr ? Math.round(p / v.pr * 100) : 100;
+    return '<div class="rgb" data-rig="' + v.k + '"><div class="su">' +
+      '<span class="em">' + v.em + '</span><span class="nm">' + v.nm + '</span>' +
+      '<span class="pr">' + eur(v.pr) + '</span></div>' +
+      '<div class="barra"><i style="width:' + q + '%"></i></div>' +
+      '<div class="sotto"><span>' + (q >= 100 ? 'saldata' : (p > 0 ? 'coperta ' + eur(p) : 'da pagare')) + '</span>' +
+        '<span>' + (q >= 100 ? '\u2713' : 'mancano ' + eur(v.pr - p)) + '</span></div></div>';
+  }).join('');
+  return testa() + linguette(st) + '<div class="corpo">' +
+    '<div class="tit">Tocca una riga per saldarla</div><div class="blocco">' + righe + '</div>' +
+    '<div class="cassa"><div class="alto">' +
+      '<div><span class="k">' + (R > 0 ? 'da incassare' : 'tutto pagato') + '</span>' +
+        '<span class="v' + (R > 0 ? '' : ' zero') + '">' + (R > 0 ? eur(R) : '\u2713') + '</span></div>' +
+      '<div class="tastiRiga">' + (R > 0 ?
+        '<button class="bt forte" data-p9>Incassa tutto ' + eur(R) + '</button>' +
+        '<button class="bt" data-resto>\ud83e\uddee Resto</button>' : '') + '</div></div>' +
+      (st.incassi.length ? '<div class="storia">Gia\u2019 incassato <b>' + eur(inc9(st)) + '</b> \u00b7 ultimo ' +
+        st.incassi[st.incassi.length-1].ora + ' \u00b7 ' + st.incassi[st.incassi.length-1].ds +
+        ' <button data-ann9>annulla</button></div>' : '') + '</div>' +
+    (st.resto ? tagliResto9(st) : '') + '</div>';
+}
+function tagliResto9(st) {
+  const R = resta9(st), d = st.resto.dato, avanza = d - R;
+  return '<div class="cassa" style="margin-top:11px">' +
+    '<div class="resto-riga"><div><span class="k">ti ha dato</span><span class="v">' + eur(d) + '</span></div>' +
+    (d > 0 ? '<div class="da"><span class="k">' + (avanza >= 0 ? 'resto da dare' : 'mancano ancora') + '</span>' +
+      '<span class="v">' + eur(Math.abs(avanza)) + '</span></div>' : '') + '</div>' +
+    '<div class="tagli">' + [[5000,'50 \u20ac'],[2000,'20 \u20ac'],[1000,'10 \u20ac'],[500,'5 \u20ac']].map(t => '<button data-tag="' + t[0] + '">' + t[1] + '</button>').join('') +
+      [[200,'2 \u20ac'],[100,'1 \u20ac'],[50,'50c'],[20,'20c']].map(t => '<button class="mon" data-tag="' + t[0] + '">' + t[1] + '</button>').join('') + '</div>' +
+    '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">' +
+      '<button class="bt piano" data-rzero>\u21ba Azzera</button>' +
+      '<button class="bt piano" data-rchiudi>Chiudi</button>' +
+      (d > 0 ? '<button class="bt forte" style="flex:1" data-rok9>Incassa ' + eur(Math.min(d, R)) +
+        (avanza > 0 ? ' \u00b7 rendi ' + eur(avanza) : '') + '</button>' : '') + '</div></div>';
+}
+
+/* ---------------- C10 - fisarmonica ---------------- */
+function dC10(st) {
+  if (!st.aperta) st.aperta = { parco:false, bar:false };
+  const R = resta(st);
+  if (st.vista === 'inserisci') return testa() + linguette(st) + '<div class="corpo">' + inserisci(st) + '</div>';
+  function sezione(id, em, nm, tot_, rest, voci) {
+    const ap = st.aperta[id];
+    return '<div class="sez ' + id + '"><div class="cap" data-ap="' + id + '">' +
+      '<span class="em">' + em + '</span><span class="nm">' + nm + '</span>' +
+      '<span class="im">' + (rest > 0 ? eur(rest) : '\u2713 saldato') + '</span>' +
+      '<span class="frec">' + (ap ? '\u25b2' : '\u25bc') + '</span></div>' +
+      (ap ? '<div class="den"><div style="margin-bottom:10px">' + voci + '</div>' +
+        (rest > 0 ? '<button class="bt forte" style="width:100%" data-p="' + id + '">Paga ' + nm.toLowerCase() + ' \u00b7 ' + eur(rest) + '</button>' : '') +
+        '</div>' : '') + '</div>';
+  }
+  const vp = vociDi(st).filter(v => v.sez === 'parco'), vb = vociDi(st).filter(v => v.sez === 'bar');
+  const dis = l => l.map(v => '<div class="rg"><span class="em">' + v.em + '</span>' +
+    '<span class="nm">' + v.nm + '<small>' + v.sub + '</small></span>' +
+    '<span class="pr">' + eur(v.pr) + '</span></div>').join('');
+  return testa() + linguette(st) + '<div class="corpo">' +
+    sezione('parco', '\ud83c\udfa1', 'Parco', tParco(st), rParco(st), dis(vp)) +
+    sezione('bar', '\ud83e\udd64', 'Bar', tBar(st), rBar(st), dis(vb)) +
+    '<div class="cassa"><div class="alto">' +
+      '<div><span class="k">' + (R > 0 ? 'in tutto restano' : 'tutto pagato') + '</span>' +
+        '<span class="v' + (R > 0 ? '' : ' zero') + '">' + (R > 0 ? eur(R) : '\u2713') + '</span></div>' +
+      '<div class="tastiRiga">' + (R > 0 ? '<button class="bt forte" data-p="tutto">Paga tutto</button>' +
+        '<button class="bt" data-resto>\ud83e\uddee Resto</button>' : '') + '</div></div>' +
+      storia(st) + '</div>' + (st.resto ? tagliResto(st) : '') + '</div>';
+}
+
+/* ---------------- C11 - la cassa appiccicata in alto ---------------- */
+function dC11(st) {
+  const R = resta(st);
+  return testa() + '<div class="corpo">' +
+    '<div class="fissa"><div><span class="k">' + (R > 0 ? 'da incassare' : 'tutto pagato') + '</span>' +
+      '<span class="v">' + (R > 0 ? eur(R) : '\u2713') + '</span></div>' +
+      '<div class="tastiRiga">' + (R > 0 ? '<button class="bt forte" data-p="tutto">Incassa tutto</button>' +
+        '<button class="bt" data-resto>\ud83e\uddee</button>' : '') + '</div></div>' +
+    (st.resto ? tagliResto(st) : '') +
+    '<div class="scorri">' +
+      '<div class="tit">Cosa ha preso</div><div class="blocco">' + righeCarrello(st, { qta:true }) + '</div>' +
+      '<div class="tit">Aggiungi al bar</div>' + scaffale(st) +
+    '</div>' +
+    (st.incassi.length ? '<div class="cassa">' + storia(st) + '</div>' : '') + '</div>';
+}
+
+/* ---------------- C12 - diviso per persona ---------------- */
+function av12(st) {
+  if (!st.persone) {
+    st.persone = [{ nm:'Marco', em:'\ud83e\uddd2', crazy:1 }, { nm:'Sara', em:'\ud83d\udc67', crazy:0 }];
+    st.pagP = [0, 0];
+  }
+}
+const tP12    = (st, p) => st.tariffa + p.crazy * 300;
+const rP12    = (st, i) => Math.max(0, tP12(st, st.persone[i]) - st.pagP[i]);
+const resta12 = st => st.persone.reduce((a, p, i) => a + rP12(st, i), 0) + rBar(st);
+const inc12   = st => st.persone.reduce((a, p, i) => a + Math.min(tP12(st, p), st.pagP[i]), 0) + Math.min(tBar(st), st.pag.bar);
+function paga12(st, ds, fn) {
+  const prima = { p: st.pagP.slice(), b: st.pag.bar }, era = inc12(st);
+  fn();
+  const im = inc12(st) - era;
+  if (im > 0) st.incassi.push({ ora: ora(), ds: ds, im: im, prima12: prima });
+}
+function dC12(st) {
+  av12(st);
+  const R = resta12(st);
+  if (st.vista === 'inserisci') return testa() + linguette(st) + '<div class="corpo">' + inserisci(st) + '</div>';
+  const pers = st.persone.map((p, i) => {
+    const r = rP12(st, i);
+    return '<div class="pers' + (r ? '' : ' ok') + '"><div class="cap">' +
+      '<span class="em">' + p.em + '</span><span class="nm">' + p.nm + '</span>' +
+      '<span class="im">' + (r > 0 ? eur(r) : '\u2713') + '</span></div>' +
+      '<div class="det">ingresso ' + eur(st.tariffa) + (p.crazy ? ' + Crazy Jumping ' + eur(p.crazy * 300) : '') + '</div>' +
+      (r > 0 ? '<button class="bt forte" style="width:100%" data-p12="' + i + '">Paga ' + p.nm + ' \u00b7 ' + eur(r) + '</button>' : '') +
+      '</div>';
+  }).join('');
+  const rb = rBar(st);
+  return testa() + linguette(st) + '<div class="corpo">' +
+    '<div class="tit">Ognuno il suo</div>' + pers +
+    '<div class="tit">Il bar, in comune</div>' +
+    '<div class="pers' + (rb ? '' : ' ok') + '"><div class="cap"><span class="em">\ud83e\udd64</span>' +
+      '<span class="nm">Bar</span><span class="im">' + (rb > 0 ? eur(rb) : '\u2713') + '</span></div>' +
+      '<div class="det">' + vociDi(st).filter(v => v.sez === 'bar').map(v => v.nm).join(', ') + '</div>' +
+      (rb > 0 ? '<button class="bt forte" style="width:100%" data-p12="bar">Paga il bar \u00b7 ' + eur(rb) + '</button>' : '') +
+    '</div>' +
+    '<div class="cassa" style="margin-top:11px"><div class="alto">' +
+      '<div><span class="k">' + (R > 0 ? 'in tutto restano' : 'tutto pagato') + '</span>' +
+        '<span class="v' + (R > 0 ? '' : ' zero') + '">' + (R > 0 ? eur(R) : '\u2713') + '</span></div>' +
+      '<div class="tastiRiga">' + (R > 0 ? '<button class="bt forte" data-p12="tutto">Paga tutto</button>' : '') + '</div></div>' +
+      (st.incassi.length ? '<div class="storia">Gia\u2019 incassato <b>' + eur(inc12(st)) + '</b> \u00b7 ultimo ' +
+        st.incassi[st.incassi.length-1].ora + ' \u00b7 ' + st.incassi[st.incassi.length-1].ds +
+        ' <button data-ann12>annulla</button></div>' : '') + '</div></div>';
+}
+
 /* ---------------- motore comune ---------------- */
-const VISTE = { C1: dC1, C2: dC2, C3: dC3, C4: dC4, C5: dC5 };
+const VISTE = { C1: dC1, C2: dC2, C3: dC3, C4: dC4, C5: dC5, C6: dC6, C7: dC7,
+                C8: dC8, C9: dC9, C10: dC10, C11: dC11, C12: dC12 };
 const STATI = {};
 Object.keys(VISTE).forEach(id => { STATI[id] = nuovo(); });
 
@@ -473,6 +844,62 @@ function render(id) {
   $('[data-passo]').forEach(b => b.onclick = () => {
     s.passo = +b.dataset.passo; if (s.passo !== 3) s.resto = null; render(id);
   });
+
+  /* --- C8 tastierino --- */
+  $('[data-pad]').forEach(b => b.onclick = () => {
+    if ((s.pad || '').length < 6) s.pad = (s.pad || '') + b.dataset.pad;
+    render(id);
+  });
+  const pc = uno('[data-padc]'); if (pc) pc.onclick = () => { s.pad = (s.pad || '').slice(0, -1); render(id); };
+  $('[data-padt]').forEach(b => b.onclick = () => {
+    s.pad = String(parseInt(s.pad || '0', 10) + (+b.dataset.padt));
+    render(id);
+  });
+  const po = uno('[data-padok]'); if (po) po.onclick = () => {
+    const R = resta(s), d = parseInt(s.pad || '0', 10), avanza = d - R;
+    prendi(s, 'tastierino' + (avanza > 0 ? ' ' + eur(d) + ', resto ' + eur(avanza) : ''), Math.min(d, R), 'parco',
+           avanza >= 0 ? vociDi(s).map(v => v.k) : []);
+    s.pad = ''; render(id);
+  };
+
+  /* --- C9 barre per riga --- */
+  $('[data-rig]').forEach(b => b.onclick = () => {
+    const v = vociDi(s).find(x => x.k === b.dataset.rig);
+    if (!v) return;
+    const manca = Math.max(0, v.pr - pagR9(s, v.k));
+    if (manca > 0) paga9(s, v.nm, [v], manca);
+    render(id);
+  });
+  const p9 = uno('[data-p9]'); if (p9) p9.onclick = () => {
+    paga9(s, 'tutto il conto', vociDi(s), resta9(s)); render(id);
+  };
+  const a9 = uno('[data-ann9]'); if (a9) a9.onclick = () => {
+    const m = s.incassi.pop(); if (m && m.prima) s.pagR = m.prima; render(id);
+  };
+  const r9 = uno('[data-rok9]'); if (r9) r9.onclick = () => {
+    const d = s.resto.dato;
+    paga9(s, 'contanti ' + eur(d), vociDi(s), Math.min(d, resta9(s)));
+    s.resto = null; render(id);
+  };
+
+  /* --- C10 fisarmonica --- */
+  $('[data-ap]').forEach(b => b.onclick = () => { s.aperta[b.dataset.ap] = !s.aperta[b.dataset.ap]; render(id); });
+
+  /* --- C12 per persona --- */
+  $('[data-p12]').forEach(b => b.onclick = () => {
+    const q = b.dataset.p12;
+    if (q === 'bar') paga12(s, 'il bar', () => { s.pag.bar = tBar(s); });
+    else if (q === 'tutto') paga12(s, 'tutto il conto', () => {
+      s.persone.forEach((p, i) => s.pagP[i] = tP12(s, p)); s.pag.bar = tBar(s);
+    });
+    else { const i = +q; paga12(s, s.persone[i].nm, () => { s.pagP[i] = tP12(s, s.persone[i]); }); }
+    render(id);
+  });
+  const a12 = uno('[data-ann12]'); if (a12) a12.onclick = () => {
+    const m = s.incassi.pop();
+    if (m && m.prima12) { s.pagP = m.prima12.p.slice(); s.pag.bar = m.prima12.b; }
+    render(id);
+  };
 }
 function su(s, k, d) {
   if (k === 'ingr') s.bambini = Math.max(0, s.bambini + d);
