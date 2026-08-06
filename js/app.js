@@ -1864,6 +1864,13 @@ function entryCard(entry) {
   const bimbiV = el('span', 'num', '0');
   bimbi.appendChild(bimbiV);
   sotto.appendChild(bimbi);
+  /* i Crazy accanto ai bambini, stessa pastiglia piccola: compare solo
+     se ce n'\u00e8 almeno uno, altrimenti sarebbe uno zero che sporca */
+  const crz = el('div', 'e-bimbi e-crazy hidden');
+  crz.innerHTML = '\ud83e\udd38';
+  const crzV = el('span', 'num', '0');
+  crz.appendChild(crzV);
+  sotto.appendChild(crz);
   chi.appendChild(sotto);
   riga.appendChild(chi);
 
@@ -2023,7 +2030,7 @@ function entryCard(entry) {
 
   cardRefs.set(entry.id, {
     card, count, range, sKids, sCrazy, sTime,
-    dueVal: soldiV, soldiK, soldi, barBox, wrist, bimbiV,
+    dueVal: soldiV, soldiK, soldi, barBox, wrist, bimbiV, crzV, crz,
     barPanel: payPanel, barBtn: payBtn, payPanel, payBtn, buildPay
   });
   syncCard(entry);
@@ -2679,6 +2686,7 @@ function syncCard(entry) {
 
   r.sKids.val.textContent = kids;
   if (r.bimbiV) r.bimbiV.textContent = kids;
+  if (r.crzV) { r.crzV.textContent = crazy; r.crz.classList.toggle('hidden', crazy <= 0); }
   r.sCrazy.val.textContent = crazy;
   r.sTime.val.textContent = entry.payLater ? '\u2014' : entry.durationMinutes + '\u2032';
   /* se l'ingresso e' aperto nel modulo i suoi numeri restano fermi:

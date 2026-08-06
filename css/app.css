@@ -2732,3 +2732,7 @@ html:not(.anima) .entry.esce { transition: none; }
    "Bar & Conto" e' quella che si deve trovare al volo: resta scritta.
    Impostazioni no, quella si tocca una volta ogni tanto. */
 #tabCassa .tab-txt { display: inline !important; }
+
+/* i Crazy accanto ai bambini: stessa pastiglia, un filo di viola per
+   distinguerli a colpo d'occhio */
+.e-crazy { background: rgba(176, 114, 255, 0.28); }
