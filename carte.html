@@ -545,6 +545,67 @@ body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #1212
 .rompe b { color: #FF9AA2; }
 .rompe i { color: #9A9AB0; }
 
+
+/* ==================================================================
+   LA PERSONA INTERA, in tutte e dodici.
+   Prima ogni impaginazione ritagliava lo sprite su testa e busto con
+   margini negativi, per farlo stare in un quadrato. Ma per riconoscere
+   qualcuno all'uscita servono anche i pantaloni e le scarpe.
+   Qui ogni riquadro dell'avatar prende le proporzioni della figura
+   (3 di larghezza per 4 di altezza) e lo svg lo riempie tutto.
+   ================================================================== */
+.telaio .av,
+.telaio .faccia,
+.telaio .foto,
+.telaio .ritratto,
+.telaio .sagoma {
+  aspect-ratio: 3 / 4 !important;
+  width: auto !important;
+  overflow: visible !important;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.10);
+  flex-shrink: 0;
+}
+.telaio .av > svg,
+.telaio .faccia > svg,
+.telaio .foto > svg,
+.telaio .ritratto > svg,
+.telaio .sagoma > svg {
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  display: block;
+}
+
+/* la figura intera ha bisogno di un po' di altezza per restare leggibile:
+   sotto i 72px non si distingue piu' un pantalone da una gonna */
+.telaio .av { height: 76px; }
+.R2 .av, .R11 .av { height: 88px; }
+.R3 .av, .R12 .foto { height: 104px; }
+.R7 .faccia { height: 150px; }
+.R6 .av { height: 72px; }
+
+/* R8 (il listino) aveva la figura a 24px: a quella misura non si
+   distingue niente. La riga cresce un po', ma senza la persona il
+   listino non serve a riconoscere nessuno. */
+.R8 .av { height: 56px !important; }
+
+/* R11: l'anello e' tondo, ma la persona dentro no. La figura sta in un
+   riquadro 3:4 al centro del cerchio, un filo piu' piccola per non
+   sbordare dagli angoli. */
+.R11 .orb .faccia {
+  aspect-ratio: 3 / 4 !important;
+  width: auto !important;
+  height: 72% !important;
+  overflow: visible !important;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.10);
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+}
+.R11 .orb .faccia > svg { width: 100% !important; height: 100% !important; margin: 0 !important; }
+
 </style>
 </head>
 <body>
@@ -556,6 +617,7 @@ body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #1212
   — per <i>ogni</i> gruppo, anche per i cinque che non stai toccando.</p>
   <p>Quello che serve davvero <b>a colpo d'occhio</b> è: sta scadendo? chi è? quanto deve? Il resto
   serve solo quando agisci su quel gruppo, cioè un gruppo alla volta.</p>
+  <p>In tutte, la persona si vede <b>per intero</b> — testa, vestiti, scarpe — perché all’uscita servono anche i pantaloni e le scarpe per riconoscerla.</p>
   <p>Sotto, gli stessi <b>sei gruppi</b> in quattro impaginazioni. La riga tratteggiata è dove
   finisce lo schermo del tuo tablet.</p>
 </div>
