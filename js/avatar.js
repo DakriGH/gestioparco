@@ -261,9 +261,11 @@
     const base = defaultFor(role || (av && av.role) || 'altro');
     if (!av || typeof av !== 'object') return base;
     const out = {
-      /* quali pezzi sono stati scelti a mano: senza questo il testo
-         racconterebbe il vestito di partenza come se fosse vero */
-      scelti: Object.assign({}, av.scelti),
+      /* Quali pezzi sono stati scelti a mano. Se manca del tutto sono
+         DATI VECCHI, salvati prima che l'app se lo segnasse: in quel
+         caso si mostra tutto, com'era, invece di svuotare la
+         descrizione di chi e' gia' registrato. */
+      scelti: av.scelti ? Object.assign({}, av.scelti) : undefined,
       role: av.role || base.role,
       skin: av.skin || base.skin,
       hair: Object.assign({}, base.hair, av.hair),
@@ -633,8 +635,9 @@
      vista addosso alla persona. */
   function traits(av, max, soloScelti) {
     av = normalize(av);
-    const scelti = av.scelti || {};
-    const vale = (parte) => !soloScelti || scelti[parte] === true;
+    const scelti = av.scelti;
+    // niente elenco = avatar vecchio: si dice tutto quello che si sa
+    const vale = (parte) => !soloScelti || !scelti || scelti[parte] === true;
     const out = [];
     const push = (list, key, color, extra, parte) => {
       if (!vale(parte)) return;

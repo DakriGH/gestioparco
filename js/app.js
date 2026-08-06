@@ -287,9 +287,13 @@ function costOf(entry) {
    cambia dopo (tempo esteso, bambino aggiunto) la differenza torna
    dovuta invece di restare nascosta sotto una spunta. */
 function dueOf(entry) {
+  /* Se l'ingresso e' gia' uscito il prezzo e' quello che era in quel
+     momento: cambiare il listino non deve far ricomparire un residuo su
+     un conto gia' saldato. */
+  const fermo = entry.costoFinale;
   const c = costOf(entry);
-  const park = Math.round((c.parkTotal + c.crazyCost) * 100) / 100;
-  const bar = Math.round(barTotal(entry) * 100) / 100;
+  const park = fermo ? num(fermo.parco, 0) : Math.round((c.parkTotal + c.crazyCost) * 100) / 100;
+  const bar = fermo ? num(fermo.bar, 0) : Math.round(barTotal(entry) * 100) / 100;
   const paidPark = Math.max(0, num(entry.paidPark, 0));
   const paidBar = Math.max(0, num(entry.paidBar, 0));
   const r2 = v => Math.round(v * 100) / 100;
@@ -732,7 +736,9 @@ function syncPeople(container, people, onChange) {
            scelto guardando il modello E2. (All'inizio lo aprivo e gli
            dava fastidio, ma allora l'editor era quello vecchio, lungo
            e da scorrere.) */
-        aggiungi({ id: uid(), role: r.key, name: '', avatar: AV.baseFor(r.key), note: '' }, true);
+        const nato = AV.baseFor(r.key);
+        nato.scelti = {};      // ancora niente scelto: la scheda non descrive nulla
+        aggiungi({ id: uid(), role: r.key, name: '', avatar: nato, note: '' }, true);
       };
       griglia.appendChild(b);
     });
@@ -1280,7 +1286,9 @@ function pickRole(onPick) {
     b.appendChild(el('div', null, r.label)).style.cssText = 'font-size:12px;font-weight:700;';
     b.onclick = () => {
       s.close();
-      onPick({ id: uid(), role: r.key, name: '', avatar: AV.defaultFor(r.key), note: '' });
+      const nato = AV.defaultFor(r.key);
+      nato.scelti = {};
+      onPick({ id: uid(), role: r.key, name: '', avatar: nato, note: '' });
     };
     grid.appendChild(b);
   });
@@ -1754,6 +1762,7 @@ function archiveCard(entry) {
   rest.title = 'Ripristina';
   rest.onclick = () => {
     entry.status = 'active';
+    delete entry.costoFinale;   // torna dentro: si riconta col listino di adesso
     saveEntries();
     buildActiveView();
     updateBadge();
@@ -2398,6 +2407,10 @@ function chiudiPannelli(tranne) {
 /* chiude l'ingresso; se restano soldi da prendere, chiede conferma */
 function chiudiIngresso(entry) {
   const fine = () => {
+    /* il prezzo si ferma qui: da adesso questo conto non cambia piu',
+       qualunque cosa succeda al listino */
+    const d = dueOf(entry);
+    entry.costoFinale = { parco: d.park, bar: d.bar };
     entry.status = 'closed';
     entry.closedAt = Date.now();
     saveEntries();
@@ -3123,8 +3136,31 @@ function aggiornaListinoFinto() {
   const d = defaultSettings();
   let cambiato = [];
 
+  /* Prima di toccare i prezzi, fermo il conto di chi e' gia' uscito col
+     valore di ADESSO: altrimenti un ingresso saldato si ritroverebbe un
+     residuo solo perche' e' cambiato il listino. */
+  const congela = () => {
+    let n = 0;
+    entries.forEach(e => {
+      if (e.status === 'closed' && !e.costoFinale) {
+        const x = dueOf(e);
+        e.costoFinale = { parco: x.park, bar: x.bar };
+        n++;
+      }
+    });
+    if (n) saveEntries();
+    return n;
+  };
+
   const firmaBar = (m) => (m || []).map(x => x.name + ':' + x.price).join('|');
   const BAR_FINTO = 'Acqua:1|Coca Cola:2.5|Caff\u00e8:1.2|Merendina:2|Panino:4';
+  const firmaTar0 = (t) => (t || []).map(x => x.m + ':' + x.p).join('|');
+  const TAR_FINTE0 = '10:2|15:3|30:5|45:7|60:9|75:10|90:12|105:13|120:15|150:18|180:21';
+  if (firmaBar(settings.barMenu) === BAR_FINTO ||
+      firmaTar0(settings.tariffs) === TAR_FINTE0 ||
+      num(settings.crazyJumpingPrice, 0) === 3) {
+    congela();   // prima che i prezzi cambino
+  }
   if (firmaBar(settings.barMenu) === BAR_FINTO) {
     settings.barMenu = JSON.parse(JSON.stringify(d.barMenu));
     cambiato.push('il bar');
