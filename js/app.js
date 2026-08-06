@@ -2673,10 +2673,6 @@ function buildSettingsView() {
     <div class="card blk c-viola">
       <h2><span class="em">🎨</span> Aspetto</h2>
       <div class="blk-in">
-      <button class="switch-row" id="setTheme" role="switch">
-        <span class="sw-txt"><b>Tema scuro</b><span>Riposante e con i colori dei bracciali più leggibili.</span></span>
-        <span class="switch"></span>
-      </button>
       <button class="switch-row" id="setAnima" role="switch" style="margin-top:10px;">
         <span class="sw-txt"><b>Animazioni</b><span>La scheda che si apre e quella che vola sopra le altre. Spento: tutto istantaneo, come chiede il risparmio animazioni del sistema.</span></span>
         <span class="switch"></span>
@@ -2779,20 +2775,6 @@ function buildSettingsView() {
   aggiornaCartaSicurezza();
 
   /* tema */
-  const th = $('#setTheme');
-  const paintTheme = () => {
-    const on = settings.theme !== 'light';
-    $('.switch', th).classList.toggle('on', on);
-    th.setAttribute('aria-checked', on ? 'true' : 'false');
-  };
-  paintTheme();
-  th.onclick = () => {
-    settings.theme = settings.theme === 'light' ? 'dark' : 'light';
-    applyTheme();
-    paintTheme();
-    saveSettings();
-  };
-
   const an = $('#setAnima');
   const paintAnima = () => {
     const on = settings.animazioni !== false;
@@ -3040,7 +3022,7 @@ function renderPresets() {
    GUSCIO
    ============================================================ */
 function applyTheme() {
-  document.documentElement.dataset.theme = settings.theme === 'light' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = 'dark';   // tema unico: il chiaro non serviva
   // tinte: quelle del modello (di serie) o quelle misurate
   document.getElementById('app').classList.toggle('tinte-leggibili', settings.tinteLeggibili === true);
   /* L'app decide da se' se animare: il risparmio animazioni del sistema
@@ -3049,7 +3031,7 @@ function applyTheme() {
   const meta = document.querySelector('meta[name="theme-color"]');
   // la barra di sistema del tablet deve intonarsi all'app, non restare
   // del blu di due versioni fa
-  if (meta) meta.setAttribute('content', settings.theme === 'light' ? '#FFFFFF' : '#17171E');
+  if (meta) meta.setAttribute('content', '#17171E');
 }
 function updateBadge() {
   const n = entries.filter(e => e.status === 'active').length;

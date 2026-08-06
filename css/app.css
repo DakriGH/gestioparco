@@ -110,66 +110,7 @@
   --speed: 150ms;
 }
 
-:root[data-theme="light"] {
-  color-scheme: light;
 
-  --bg:        #F1F0F4;
-  --bg-top:    #FFFFFF;
-  --surface:   #FFFFFF;
-  --surface-2: #F5F4F8;
-  --surface-3: #E7E6EE;
-  --line:      rgba(24, 20, 40, 0.09);
-  --line-2:    rgba(24, 20, 40, 0.20);
-
-  --txt:       #1B1826;
-  --txt-2:     #413C51;
-  --txt-3:     #3F3B4F;
-
-  --accent:      #5B33B0;
-  --accent-ink:  #FFFFFF;
-  --accent-soft: rgba(109, 66, 200, 0.13);
-  --hot:         #C9463A;
-  --hot-ink:     #FFFFFF;
-
-  --ok:     #065A40;
-  --warn:   #7A4E06;
-  --danger: #B31F2C;
-  --late:   #0A6470;
-  --ok-soft:     rgba(10, 107, 78, 0.12);
-  --warn-soft:   rgba(212, 148, 30, 0.18);
-  --danger-soft: rgba(179, 31, 44, 0.11);
-  --late-soft:   rgba(10, 100, 112, 0.12);
-
-  --card-ok:       #E3F5EE;  --card-ok-2:     #D0EEE1;
-  --card-warn:     #FBF0D8;  --card-warn-2:   #F5E4C0;
-  --card-danger:   #FCE9EB;  --card-danger-2: #F6D9DC;
-  --card-late:     #E1F3F5;  --card-late-2:   #CFEAEE;
-
-  --ok-orlo:     rgba(11, 122, 92, 0.42);   --ok-alone:     rgba(11, 122, 92, 0.13);
-  --warn-orlo:   rgba(150, 100, 10, 0.40);  --warn-alone:   rgba(150, 100, 10, 0.12);
-  --danger-orlo: rgba(179, 31, 44, 0.36);   --danger-alone: rgba(179, 31, 44, 0.12);
-  --late-orlo:   rgba(10, 100, 112, 0.40);  --late-alone:   rgba(10, 100, 112, 0.12);
-
-  --relief:    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  --vel:       linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0) 62%);
-  --vel-forte: linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0) 70%);
-  --shadow:    0 1px 2px rgba(24, 20, 40, 0.06), 0 8px 22px rgba(24, 20, 40, 0.09);
-  --shadow-lg: 0 3px 8px rgba(24, 20, 40, 0.12), 0 22px 52px rgba(24, 20, 40, 0.16);
-
-  --velo-barra:  rgba(255, 255, 255, 0.72);
-  --velo-barra2: rgba(255, 255, 255, 0.42);
-
-  --alone-accento: rgba(124, 92, 240, 0.10);
-  --grad-accento: linear-gradient(160deg, #7C5CF0 0%, #6442D6 100%);
-  --grad-caldo:   linear-gradient(160deg, #E0604F 0%, #C4402F 100%);
-  --grad-ok:      linear-gradient(160deg, #0E7A5F 0%, #0A6450 100%);
-  --ok-ink:       #FFFFFF;
-  --luce-accento: 0 4px 14px rgba(124, 92, 240, 0.24);
-  --luce-calda:   0 4px 14px rgba(196, 64, 47, 0.22);
-  --luce-ok:      0 4px 14px rgba(10, 100, 80, 0.24);
-
-  --sprite-edge: rgba(24, 20, 40, 0.30);
-}
 
 /* ---------- base ---------- */
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -1352,7 +1293,10 @@ main {
    altezza e il contenuto scorre dentro. */
 .e-aperta {
   display: grid;
-  grid-template-rows: 0fr;
+  /* minmax(0, ...) e non "0fr" e basta: con "0fr" la riga tiene comunque
+     la sua altezza minima di contenuto, e ogni scheda chiusa si portava
+     dietro 46px di vuoto. */
+  grid-template-rows: minmax(0, 0fr);
   background: rgb(16, 16, 22);
   border-radius: 0 0 16px 16px;
   cursor: default;
@@ -1365,7 +1309,7 @@ main {
   transition: opacity 260ms ease 110ms;
 }
 .entry.aperto .e-dentro { opacity: 1; }
-.entry.aperto .e-aperta { grid-template-rows: 1fr; }
+.entry.aperto .e-aperta { grid-template-rows: minmax(0, 1fr); }
 .entry.aperto .e-dentro { padding: 12px 13px 13px; }
 .entry.aperto .e-riga { border-radius: 16px 16px 0 0; cursor: default; }
 
@@ -2362,7 +2306,7 @@ main {
    ============================================================ */
 
 /* le tinte esatte del modello approvato */
-:root, :root[data-theme="light"] {
+:root {
   --blk-verde:  linear-gradient(150deg, #1E9E76 0%, #137A5A 100%);
   --blk-ambra:  linear-gradient(150deg, #D9922A 0%, #B26F12 100%);
   --blk-rosso:  linear-gradient(150deg, #E05A5A 0%, #B93636 100%);
