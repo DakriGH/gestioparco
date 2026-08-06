@@ -159,6 +159,7 @@ function defaultSettings() {
       { id: 'b4', name: 'Merendina', price: 2, em: '🍪', cat: 'Snack' },
       { id: 'b5', name: 'Panino', price: 4, em: '🥪', cat: 'Snack' }
     ],
+    animazioni: true,
     braceletSlots: [
       { start: '09:00', end: '12:00', color: '#22C55E', label: 'Verde' },
       { start: '12:00', end: '15:00', color: '#FBBF24', label: 'Giallo' },
@@ -2210,7 +2211,7 @@ function posa(card) {
     if (v.buco.parentNode) v.buco.remove();
     if (v.velo.parentNode) v.velo.remove();
   };
-  const tempo = matchMedia('(prefers-reduced-motion: reduce)').matches ? 160 : 330;
+  const tempo = anima() ? 500 : 0;
   setTimeout(fine, tempo);
 }
 
@@ -2230,10 +2231,14 @@ function posaSubito(card) {
 
 /* Modifica: la lista scivola a sinistra e arriva "Nuovo", cosi' si
    capisce dove si sta andando invece di trovarsi altrove di colpo. */
+function anima() {
+  return settings.animazioni !== false;
+}
+
 function vaiAModifica(entry) {
   if (volante) posa(volante.card);
   const vista = $('#view-active');
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) { editEntry(entry); return; }
+  if (!anima()) { editEntry(entry); return; }
   vista.classList.add('esce-sx');
   setTimeout(() => {
     vista.classList.remove('esce-sx');
@@ -2672,6 +2677,10 @@ function buildSettingsView() {
         <span class="sw-txt"><b>Tema scuro</b><span>Riposante e con i colori dei bracciali più leggibili.</span></span>
         <span class="switch"></span>
       </button>
+      <button class="switch-row" id="setAnima" role="switch" style="margin-top:10px;">
+        <span class="sw-txt"><b>Animazioni</b><span>La scheda che si apre e quella che vola sopra le altre. Spento: tutto istantaneo, come chiede il risparmio animazioni del sistema.</span></span>
+        <span class="switch"></span>
+      </button>
       <button class="switch-row" id="setTinte" role="switch" style="margin-top:10px;">
         <span class="sw-txt"><b>Tinte più leggibili</b><span>Gli stessi colori, un po' più scuri. Le scritte piccole passano da 2,6 a 6 di contrasto: al sole si legge molto meglio. Spento = tinte accese come nel disegno.</span></span>
         <span class="switch"></span>
@@ -2781,6 +2790,20 @@ function buildSettingsView() {
     settings.theme = settings.theme === 'light' ? 'dark' : 'light';
     applyTheme();
     paintTheme();
+    saveSettings();
+  };
+
+  const an = $('#setAnima');
+  const paintAnima = () => {
+    const on = settings.animazioni !== false;
+    $('.switch', an).classList.toggle('on', on);
+    an.setAttribute('aria-checked', on ? 'true' : 'false');
+  };
+  paintAnima();
+  an.onclick = () => {
+    settings.animazioni = settings.animazioni === false;
+    applyTheme();
+    paintAnima();
     saveSettings();
   };
 
@@ -3020,6 +3043,9 @@ function applyTheme() {
   document.documentElement.dataset.theme = settings.theme === 'light' ? 'light' : 'dark';
   // tinte: quelle del modello (di serie) o quelle misurate
   document.getElementById('app').classList.toggle('tinte-leggibili', settings.tinteLeggibili === true);
+  /* L'app decide da se' se animare: il risparmio animazioni del sistema
+     spegneva tutto e non si capiva piu' dove finivano le schede. */
+  document.documentElement.classList.toggle('anima', settings.animazioni !== false);
   const meta = document.querySelector('meta[name="theme-color"]');
   // la barra di sistema del tablet deve intonarsi all'app, non restare
   // del blu di due versioni fa

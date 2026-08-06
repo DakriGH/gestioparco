@@ -1969,8 +1969,11 @@ main {
   .e-count { font-size: 44px; }
 }
 
+/* Il risparmio animazioni del sistema vale solo se l'app non ha detto
+   il contrario: e' lei che sa quali movimenti servono a capire dove sono
+   finite le schede. L'interruttore sta in Impostazioni > Aspetto. */
 @media (prefers-reduced-motion: reduce) {
-  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  html:not(.anima) * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 
 
@@ -2563,10 +2566,8 @@ main {
 @keyframes esceSx { to { transform: translateX(-28px); opacity: 0; } }
 @keyframes entraDx { from { transform: translateX(34px); opacity: 0; } }
 
-@media (prefers-reduced-motion: reduce) {
-  .entry.vola, .velo-scheda { transition: none; }
-  .view.esce-sx, .view.entra-dx { animation: none; }
-}
+html:not(.anima) .view.esce-sx,
+html:not(.anima) .view.entra-dx { animation: none; }
 
 /* =============== CASSA RAPIDA =============== */
 #view-cassa { display: flex; flex-direction: column; gap: 12px; }
@@ -2642,20 +2643,17 @@ main {
 .entry.vola { will-change: left, top, width, max-height; }
 .velo-scheda { will-change: opacity; }
 
-@media (prefers-reduced-motion: reduce) {
-  .e-aperta { transition: none; }
-  .entry.appena::before { animation: none; opacity: 1; }
-}
+
 
 /* La regola generale azzera tutto quando il sistema chiede meno
    animazioni. Per la scheda che vola pero' il movimento SERVE a capire
    dove e' finita: la teniamo, corta. */
-@media (prefers-reduced-motion: reduce) {
-  .entry.vola { transition-duration: 380ms !important; }
-  .velo-scheda { transition-duration: 340ms !important; }
-  .e-aperta { transition-duration: 300ms !important; }
-  .e-dentro { transition-duration: 220ms !important; }
-}
+/* con le animazioni spente a mano, tutto istantaneo davvero */
+html:not(.anima) .entry.vola,
+html:not(.anima) .velo-scheda,
+html:not(.anima) .e-aperta,
+html:not(.anima) .e-dentro { transition-duration: 0s !important; }
+html:not(.anima) .entry.appena::before { animation: none; opacity: 1; }
 
 /* =============== SCHEDA IN MODIFICA =============== */
 .entry.in-modifica > .e-riga { position: relative; }
