@@ -2387,8 +2387,24 @@ main {
 /* la miniatura galleggia sul fondo del bottone, senza riquadro proprio */
 .ed-opt .ed-mini { background: none; border-radius: 8px; }
 /* il nome puo' andare a capo su due righe: "Zaino e borse" non si taglia */
-.ed-opt > span { white-space: normal; font-size: 11px; }
-.ed-opt { height: 88px; padding: 0; overflow: hidden; }
+/* Il NOME si legge prima del disegno: una camicia e una polo ritagliate
+   sul busto si somigliano, la parola no. Sta su una fascia scura in
+   fondo alla miniatura, cosi' si stacca senza coprire il capo. */
+.ed-opt > span {
+  margin-top: auto;
+  width: 100%;
+  padding: 4px 4px 5px;
+  background: rgba(0, 0, 0, 0.42);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ed-opt.on > span { background: rgba(0, 0, 0, 0.5); }
+.ed-opt { height: 96px; padding: 0; overflow: hidden; justify-content: flex-start; }
 .ed-opt.on { background: rgba(255, 209, 102, 0.18); }
 .ed-col { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25); }
 
