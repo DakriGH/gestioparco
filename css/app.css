@@ -116,6 +116,16 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; }
 
+/* Android ingrandisce i testi DA SOLO in base alla larghezza dei
+   blocchi, e li ricalcola a ogni cambio di layout: aprire un pannello o
+   far comparire la scheda volante bastava a far "ridimensionare tutto"
+   di un filo. Qui gli si dice di non toccare niente. */
+html {
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -2602,8 +2612,6 @@ html:not(.anima) .view.entra-dx { animation: none; }
 }
 
 /* il volo: piu' morbido, e il browser lo prepara prima di partire */
-.entry.vola { will-change: left, top, width, max-height; }
-.velo-scheda { will-change: opacity; }
 
 
 
