@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bar e conto — cinque modi</title>
+<link rel="stylesheet" href="./css/fonts.css">
+<style>
+/* ============================================================
+   IL NODO che rendeva confuso il pannello di prima: su ogni riga
+   c'erano DUE numeri sulla stessa cosa — «Coca Cola ×2» (quante ne
+   ha prese) e «0/2» (quante ne hai incassate). Due domande diverse
+   schiacciate in una riga sola. Qui cinque modi di separarle.
+   ============================================================ */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #12121A; color: #E9E9F2; padding: 0 0 80px; }
+.wrap { max-width: 920px; margin: 0 auto; padding: 22px 18px; }
+h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 8px; }
+.intro { color: #A8A8BD; font-size: 15px; line-height: 1.55; margin: 0 0 9px; }
+.intro b { color: #FFD166; font-weight: 600; }
+.strada { padding: 28px 0 4px; }
+.strada > header { display: flex; align-items: baseline; gap: 12px; }
+.strada > header .n { font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 700; background: #2A2A36; color: #FFD166; border-radius: 20px; padding: 4px 12px; }
+.strada > header h2 { font-family: 'Fredoka', sans-serif; font-size: 22px; margin: 0; }
+.perche { color: #9A9AB0; font-size: 14.5px; line-height: 1.55; margin: 9px 0 12px; }
+.perche b { color: #FFD166; font-weight: 600; }
+.perche .ko { color: #FF9AA2; font-weight: 600; }
+.telaio { border-radius: 20px; padding: 12px; background: #17171F; border: 1px solid rgba(255,255,255,0.09); }
+.elenco { color: #9A9AB0; font-size: 14.5px; line-height: 1.75; }
+.elenco b { color: #FFD166; font-weight: 600; }
+
+/* ---- mattoni comuni al pannello ---- */
+.pan { border-radius: 20px; overflow: hidden; background: linear-gradient(150deg,#1E9E76,#137A5A); color: #fff; }
+.testa { display: flex; align-items: center; gap: 10px; padding: 12px 15px; font-family: 'Fredoka', sans-serif; font-size: 16.5px; font-weight: 600; }
+.testa .via { margin-left: auto; width: 42px; height: 42px; border-radius: 12px; background: rgba(0,0,0,0.28); border: none; color: #fff; font-size: 15px; cursor: pointer; }
+.corpo { background: rgba(0,0,0,0.4); padding: 13px 14px 14px; }
+.tit { font-size: 11.5px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: rgba(255,255,255,0.62); margin: 0 0 8px; display: flex; align-items: center; gap: 9px; }
+.tit::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.13); }
+.blocco { background: rgba(255,255,255,0.06); border-radius: 16px; padding: 3px 12px; margin-bottom: 12px; }
+.rg { display: flex; align-items: center; gap: 10px; padding: 9px 0; }
+.rg + .rg { border-top: 1px solid rgba(255,255,255,0.09); }
+.rg .em { font-size: 18px; }
+.rg .nm { flex: 1; min-width: 0; font-size: 14.5px; font-weight: 600; }
+.rg .nm small { display: block; font-size: 11.5px; color: rgba(255,255,255,0.55); font-weight: 500; }
+.rg .pr { font-family: 'Fredoka', sans-serif; font-size: 15.5px; font-weight: 700; min-width: 62px; text-align: right; }
+.q { display: flex; align-items: center; gap: 4px; background: rgba(0,0,0,0.3); border-radius: 11px; padding: 2px; }
+/* 40px e' il minimo perche' un dito adulto centri il tasto al primo colpo:
+   sotto, alla cassa si sbaglia riga e si perde tempo. */
+.q button { width: 40px; height: 40px; border-radius: 11px; background: rgba(255,255,255,0.16); border: none; color: #fff; font-size: 15px; cursor: pointer; }
+.q .n { font-family: 'Fredoka', sans-serif; font-size: 14px; font-weight: 700; min-width: 26px; text-align: center; }
+.cassa { background: rgba(0,0,0,0.34); border-radius: 16px; padding: 12px 14px 13px; }
+.cassa .k { display: block; font-size: 11px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: rgba(255,255,255,0.75); }
+.cassa .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 34px; font-weight: 700; line-height: 1.1; }
+.cassa .v.zero { color: #7FE8C1; }
+.cassa .alto { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.bt { border: none; border-radius: 13px; padding: 12px 15px; font: inherit; font-size: 14.5px; font-weight: 700; cursor: pointer; background: rgba(255,255,255,0.16); color: #fff; line-height: 1.3; }
+.bt.forte { background: #fff; color: #123A2C; font-family: 'Fredoka', sans-serif; font-size: 16px; }
+.bt.piano { background: rgba(0,0,0,0.26); }
+.tastiRiga { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+.storia { margin-top: 10px; font-size: 12.5px; color: rgba(255,255,255,0.72); }
+.storia b { font-family: 'Fredoka', sans-serif; font-size: 14px; color: #fff; }
+.storia button { background: rgba(255,255,255,0.14); border: none; border-radius: 10px; min-height: 40px; padding: 0 16px; margin-left: 4px; color: #fff; font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+.scaffale { display: grid; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap: 9px; margin-bottom: 12px; }
+.prod { position: relative; background: rgba(255,255,255,0.09); border: none; border-radius: 15px; padding: 10px 6px 9px; color: #fff; font: inherit; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.prod .em { font-size: 24px; line-height: 1; }
+.prod .nm { font-size: 12.5px; font-weight: 700; }
+.prod .pr { font-family: 'Fredoka', sans-serif; font-size: 12.5px; color: rgba(255,255,255,0.75); }
+.prod .qta { position: absolute; top: -7px; right: -7px; min-width: 25px; height: 25px; border-radius: 13px; background: #fff; color: #123A2C; font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 6px; }
+.ling { display: flex; gap: 8px; padding: 8px 14px 0; }
+.ling button { flex: 1; background: rgba(0,0,0,0.24); border: none; color: rgba(255,255,255,0.8); font: inherit; font-family: 'Fredoka', sans-serif; font-size: 15.5px; font-weight: 600; padding: 11px; border-radius: 14px 14px 0 0; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.ling button.on { background: rgba(0,0,0,0.4); color: #fff; }
+.ling .bd { background: rgba(255,255,255,0.22); border-radius: 20px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 800; padding: 2px 8px; }
+.ling button.on .bd { background: #fff; color: #123A2C; }
+
+/* C2 — spunte */
+.rg.scelta { background: rgba(255,255,255,0.13); border-radius: 11px; margin: 0 -6px; padding-left: 6px; padding-right: 6px; }
+.spunta { width: 42px; height: 42px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.38); background: none; color: #fff; font-size: 17px; cursor: pointer; flex-shrink: 0; }
+.spunta.on { background: #fff; border-color: #fff; color: #123A2C; }
+.rg.saldata { opacity: 0.42; }
+.rg.saldata .spunta { background: rgba(127,232,193,0.28); border-color: transparent; color: #7FE8C1; }
+
+/* C3 — due colonne */
+.due { display: flex; gap: 12px; align-items: flex-start; }
+.due > * { flex: 1; min-width: 0; }
+.col-t { font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+.mov { display: flex; gap: 9px; font-size: 12.5px; padding: 6px 0; }
+.mov + .mov { border-top: 1px solid rgba(255,255,255,0.09); }
+.mov .o { font-family: 'Fredoka', sans-serif; font-weight: 700; color: rgba(255,255,255,0.62); }
+.mov .d { flex: 1; }
+.mov .i { font-family: 'Fredoka', sans-serif; font-weight: 700; }
+@media (max-width: 620px) { .due { flex-direction: column; } .due > * { width: 100%; } }
+
+/* C5 — a passi */
+.passi { display: flex; gap: 6px; margin-bottom: 12px; }
+.passo { flex: 1; text-align: center; font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.55); padding: 8px 4px; border-radius: 11px; background: rgba(0,0,0,0.24); }
+.passo.on { background: #fff; color: #123A2C; }
+.passo.fatto { background: rgba(127,232,193,0.22); color: #7FE8C1; }
+
+/* il resto */
+.tagli { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 7px; margin-top: 10px; }
+.tagli button { background: rgba(255,255,255,0.15); border: none; color: #fff; font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 700; padding: 12px 0; border-radius: 12px; cursor: pointer; }
+.tagli button.mon { background: rgba(255,255,255,0.08); font-size: 14px; }
+.resto-riga { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; }
+.resto-riga .da { margin-left: auto; text-align: right; color: #FFD166; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Bar e conto: cinque modi, uno solo vince</h1>
+  <p class="intro">Ho capito cosa confondeva, ed era colpa mia: su ogni riga c'erano <b>due numeri
+  sulla stessa cosa</b>. «Coca Cola ×2» = quante ne ha prese. «0/2» = quante ne hai incassate.
+  Sono due domande diverse — <i>cosa ha preso</i> e <i>cosa hai già preso tu</i> — schiacciate
+  nella stessa riga.</p>
+  <p class="intro">Qui sotto cinque modi di tenerle separate. Funzionano tutti davvero: aggiungi,
+  incassa, annulla, calcola il resto. Provali col dito e dimmi quale ti viene naturale.</p>
+
+  <div class="strada">
+    <header><span class="n">C1</span><h2>Solo importi — non spunti niente</h2></header>
+    <p class="perche">Il carrello dice <b>solo cosa ha preso</b>. Per incassare non scegli righe:
+    scegli <b>un importo</b>, con le scorciatoie già pronte — tutto, solo il parco, solo il bar.
+    Una riga = una cosa che ha preso, punto.
+    <span class="ko">Dove si rompe:</span> se ti chiedono «l'ingresso l'ho già pagato?» devi
+    leggere il registro, non c'è una spunta sulla riga.</p>
+    <div class="telaio"><div class="pan" id="C1"></div></div>
+  </div>
+
+  <div class="strada">
+    <header><span class="n">C2</span><h2>Spunti quello che ti sta pagando</h2></header>
+    <p class="perche">Come una lista della spesa: <b>segni</b> le righe che ti sta pagando adesso,
+    il tasto ti dice quanto fa, e quelle saldate restano spente. La spunta è un'<b>azione tua</b>,
+    non un secondo numero stampato sulla riga.
+    <span class="ko">Dove si rompe:</span> se paga «un bambino su due» la riga è indivisibile —
+    lì passi dal calcolo del resto. E se aggiungi una Coca a una riga già saldata la spunta
+    salta via (i soldi restano incassati): la riga da sola non basta più a dire come stai.</p>
+    <div class="telaio"><div class="pan" id="C2"></div></div>
+  </div>
+
+  <div class="strada">
+    <header><span class="n">C3</span><h2>Due colonne: il carrello e la cassa</h2></header>
+    <p class="perche">Le due domande stanno <b>in due posti fisicamente diversi</b>: a sinistra
+    cosa ha preso, a destra cosa hai incassato tu, col registro degli orari. Non si possono più
+    confondere perché non si toccano mai.
+    <span class="ko">Dove si rompe:</span> due colonne su un tablet in verticale sono strette —
+    sotto una certa larghezza si impilano e diventa lungo.</p>
+    <div class="telaio"><div class="pan" id="C3"></div></div>
+  </div>
+
+  <div class="strada">
+    <header><span class="n">C4</span><h2>Tre tasti grandi, niente da spuntare</h2></header>
+    <p class="perche">Nessuna riga da toccare e nessun importo da digitare: <b>paga il parco</b>,
+    <b>paga il bar</b>, <b>paga tutto</b>, con la cifra scritta sopra il tasto. Il carrello resta
+    un elenco pulito da leggere. È il più veloce nel caso normale, che è pagare per blocchi.
+    <span class="ko">Dove si rompe:</span> il caso strano («mi dà solo 10 €») finisce sul
+    calcolatore del resto, non su un tasto.</p>
+    <div class="telaio"><div class="pan" id="C4"></div></div>
+  </div>
+
+  <div class="strada">
+    <header><span class="n">C5</span><h2>A passi: prima cosa prende, poi quanto paga</h2></header>
+    <p class="perche">Una domanda alla volta: <b>1 · cosa prende</b>, <b>2 · quanto incassi</b>,
+    <b>3 · il resto</b>. Impossibile confondersi perché a ogni passo c'è una cosa sola da fare —
+    è l'impostazione giusta se alla cassa ci metti qualcuno di nuovo.
+    <span class="ko">Dove si rompe:</span> è il più lento se devi solo aggiungere una Coca Cola
+    al volo a chi è già dentro.</p>
+    <div class="telaio"><div class="pan" id="C5"></div></div>
+  </div>
+
+  <div class="strada">
+    <header><span class="n">≡</span><h2>Quello che vale per tutti e cinque</h2></header>
+    <div class="telaio elenco">
+      <b>Un tasto solo</b> nella scheda: «🛒 Bar e conto», col pallino di quanto resta da avere.<br>
+      <b>Niente “fai uscire” qui dentro</b>: è un'altra cosa e resta nella scheda.<br>
+      <b>Il calcolo del resto</b> ovunque: tocchi i tagli che ti mette in mano — 20 + 10 — e ti
+      dice quanto ridare.<br>
+      <b>Ogni incasso si annulla</b> e i soldi tornano dovuti sul serio, non spariscono in un
+      acconto generico.<br>
+      <b>Nessun dato ripetuto</b>: il totale sta in un posto solo, il residuo in un altro, e non
+      si rincorrono.
+    </div>
+  </div>
+</div>
+
+<script>
+const eur = c => (c / 100).toFixed(2).replace('.', ',') + ' €';
+const ora = () => { const d = new Date(); return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); };
+const LISTINO = [
+  { id:'acqua', em:'💧', nm:'Acqua', pz:100 }, { id:'coca', em:'🥤', nm:'Coca Cola', pz:250 },
+  { id:'caffe', em:'☕', nm:'Caffè', pz:120 }, { id:'mer', em:'🍪', nm:'Merendina', pz:200 },
+  { id:'pan', em:'🥪', nm:'Panino', pz:400 }, { id:'gel', em:'🍦', nm:'Gelato', pz:250 }
+];
+const prod = id => LISTINO.find(p => p.id === id);
+
+/* ---------- lo stato, uguale per tutti e cinque ----------
+   I soldi incassati sono ATTRIBUITI a una sezione (parco o bar): senza
+   questo, dopo un «paga solo il parco» il residuo del bar sballa. Ogni
+   movimento si porta dietro la sua attribuzione, cosi' annullarlo la
+   restituisce esatta. */
+function nuovo() {
+  return { bambini:2, crazy:1, minuti:60, tariffa:700, bar:{ coca:2, mer:1 },
+           incassi:[], pag:{ parco:0, bar:0 }, saldate:{}, sel:{},
+           passo:1, resto:null, vista:'conto' };
+}
+const tIngr  = s => Math.max(1, s.bambini) * s.tariffa;   /* 0 bambini paga comunque 1 ingresso */
+const tCrazy = s => s.crazy * 300;
+const tParco = s => tIngr(s) + tCrazy(s);
+const tBar   = s => Object.keys(s.bar).reduce((a,k) => a + s.bar[k] * prod(k).pz, 0);
+const tot    = s => tParco(s) + tBar(s);
+const rParco = s => Math.max(0, tParco(s) - s.pag.parco);
+const rBar   = s => Math.max(0, tBar(s) - s.pag.bar);
+const resta  = s => rParco(s) + rBar(s);
+const inc    = s => tot(s) - resta(s);
+const pezzi  = s => Object.keys(s.bar).reduce((a,k) => a + s.bar[k], 0);
+
+function prendi(s, ds, im, dove, righe) {
+  if (im <= 0) return;
+  const al = { parco:0, bar:0 };
+  let r = im;
+  const ordine = dove === 'bar' ? ['bar','parco'] : ['parco','bar'];
+  ordine.forEach(k => {
+    const disp = k === 'parco' ? rParco(s) : rBar(s);
+    const q = Math.min(r, disp);
+    al[k] += q; s.pag[k] += q; r -= q;
+  });
+  const seg = (righe || []).filter(k => !s.saldate[k]);
+  seg.forEach(k => s.saldate[k] = true);
+  s.incassi.push({ ora: ora(), ds: ds, im: al.parco + al.bar, al: al, righe: seg });
+}
+function annullaUltimo(s) {
+  const m = s.incassi.pop();
+  if (!m) return;
+  s.pag.parco -= m.al.parco;
+  s.pag.bar   -= m.al.bar;
+  m.righe.forEach(k => delete s.saldate[k]);
+}
+
+/* ---------- pezzi riusabili ---------- */
+function vociDi(s) {
+  const v = [{ k:'ingr', em:'🎟️', nm:'Ingresso ×' + Math.max(1, s.bambini),
+               sub: s.minuti + ' minuti · ' + eur(s.tariffa) + ' a bambino', pr: tIngr(s), sez:'parco' }];
+  if (s.crazy) v.push({ k:'crazy', em:'🤸', nm:'Crazy Jumping ×' + s.crazy,
+                        sub: eur(300) + " l'uno, in piu'", pr: tCrazy(s), sez:'parco' });
+  Object.keys(s.bar).forEach(id => {
+    const b = prod(id);
+    v.push({ k:'bar:'+id, em:b.em, nm:b.nm + ' ×' + s.bar[id],
+             sub: eur(b.pz) + " l'uno", pr: s.bar[id]*b.pz, sez:'bar' });
+  });
+  return v;
+}
+function righeCarrello(s, opz) {
+  opz = opz || {};
+  return vociDi(s).map(v => {
+    const sal = !!s.saldate[v.k], sel = !!s.sel[v.k];
+    return '<div class="rg' + (sal ? ' saldata' : (sel ? ' scelta' : '')) + '">' +
+      (opz.spunta ? '<button class="spunta' + (sal || sel ? ' on' : '') + '" data-sel="' + v.k + '">' + (sal || sel ? '✓' : '') + '</button>' : '') +
+      '<span class="em">' + v.em + '</span>' +
+      '<span class="nm">' + v.nm + '<small>' + v.sub + '</small></span>' +
+      (opz.qta ? '<span class="q"><button data-qm="' + v.k + '">−</button><span class="n">' + qtaDi(s, v.k) + '</span><button data-qp="' + v.k + '">+</button></span>' : '') +
+      '<span class="pr">' + eur(v.pr) + '</span></div>';
+  }).join('');
+}
+function qtaDi(s, k) {
+  if (k === 'ingr') return s.bambini;
+  if (k === 'crazy') return s.crazy;
+  return s.bar[k.split(':')[1]] || 0;
+}
+function scaffale(s) {
+  return '<div class="scaffale">' + LISTINO.map(b =>
+    '<button class="prod" data-add="' + b.id + '">' +
+      (s.bar[b.id] ? '<span class="qta">' + s.bar[b.id] + '</span>' : '') +
+      '<span class="em">' + b.em + '</span><span class="nm">' + b.nm + '</span>' +
+      '<span class="pr">' + eur(b.pz) + '</span></button>').join('') + '</div>';
+}
+function storia(s) {
+  if (!s.incassi.length) return '';
+  const u = s.incassi[s.incassi.length - 1];
+  return '<div class="storia">Gia’ incassato <b>' + eur(inc(s)) + '</b> · ultimo ' + u.ora + ' · ' +
+    u.ds + ' ' + eur(u.im) + ' <button data-ann>annulla</button></div>';
+}
+function tagliResto(s) {
+  const R = resta(s), d = s.resto.dato, avanza = d - R;
+  return '<div class="cassa" style="margin-top:11px">' +
+    '<div class="resto-riga">' +
+      '<div><span class="k">ti ha dato</span><span class="v">' + eur(d) + '</span></div>' +
+      (d > 0 ? '<div class="da"><span class="k">' + (avanza >= 0 ? 'resto da dare' : 'mancano ancora') + '</span>' +
+        '<span class="v">' + eur(Math.abs(avanza)) + '</span></div>' : '') +
+    '</div>' +
+    '<div class="tagli">' +
+      [[5000,'50 €'],[2000,'20 €'],[1000,'10 €'],[500,'5 €']].map(t => '<button data-tag="' + t[0] + '">' + t[1] + '</button>').join('') +
+      [[200,'2 €'],[100,'1 €'],[50,'50c'],[20,'20c']].map(t => '<button class="mon" data-tag="' + t[0] + '">' + t[1] + '</button>').join('') +
+    '</div>' +
+    '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">' +
+      '<button class="bt piano" data-rzero>↺ Azzera</button>' +
+      '<button class="bt piano" data-rchiudi>Chiudi</button>' +
+      (d > 0 ? '<button class="bt forte" style="flex:1" data-rok>Incassa ' + eur(Math.min(d, R)) +
+        (avanza > 0 ? ' · rendi ' + eur(avanza) : '') + '</button>' : '') +
+    '</div></div>';
+}
+function testa() {
+  return '<div class="testa"><span>🛒</span> Bar e conto · Nonna<button class="via">✕</button></div>';
+}
+function linguette(s) {
+  return '<div class="ling">' +
+    '<button data-v="inserisci"' + (s.vista === 'inserisci' ? ' class="on"' : '') + '>➕ Inserisci' +
+      (pezzi(s) ? '<span class="bd">' + pezzi(s) + '</span>' : '') + '</button>' +
+    '<button data-v="conto"' + (s.vista === 'conto' ? ' class="on"' : '') + '>🧾 Conto' +
+      '<span class="bd">' + (resta(s) > 0 ? eur(resta(s)) : '✓') + '</span></button></div>';
+}
+function inserisci(s) {
+  return '<div class="tit">Parco</div><div class="blocco">' +
+    '<div class="rg"><span class="em">🧒</span><span class="nm">Bambini<small>' + eur(s.tariffa) + " l'uno</small></span>" +
+      '<span class="q"><button data-qm="ingr">−</button><span class="n">' + s.bambini + '</span><button data-qp="ingr">+</button></span></div>' +
+    '<div class="rg"><span class="em">🤸</span><span class="nm">Crazy Jumping<small>' + eur(300) + " l'uno</small></span>" +
+      '<span class="q"><button data-qm="crazy">−</button><span class="n">' + s.crazy + '</span><button data-qp="crazy">+</button></span></div>' +
+    '<div class="rg"><span class="em">⏱️</span><span class="nm">Tempo<small>quanto sta dentro</small></span>' +
+      '<span class="q"><button data-t="-15">−15</button><span class="n">' + s.minuti + '′</span><button data-t="15">+15</button></span></div>' +
+  '</div><div class="tit">Bar</div>' + scaffale(s);
+}
+
+/* ---------------- C1 · solo importi ---------------- */
+function dC1(s) {
+  const R = resta(s);
+  if (s.vista === 'inserisci') return testa() + linguette(s) + '<div class="corpo">' + inserisci(s) + '</div>';
+  return testa() + linguette(s) + '<div class="corpo">' +
+    '<div class="tit">Cosa ha preso</div><div class="blocco">' + righeCarrello(s) + '</div>' +
+    '<div class="cassa"><div class="alto">' +
+      '<div><span class="k">' + (R > 0 ? 'da incassare' : 'tutto pagato') + '</span>' +
+        '<span class="v' + (R > 0 ? '' : ' zero') + '">' + (R > 0 ? eur(R) : '✓') + '</span></div>' +
+      '<div class="tastiRiga">' + (R > 0 ?
+        '<button class="bt forte" data-p="tutto">Tutto ' + eur(R) + '</button>' +
+        (rParco(s) > 0 ? '<button class="bt" data-p="parco">Solo parco</button>' : '') +
+        (rBar(s) > 0 ? '<button class="bt" data-p="bar">Solo bar</button>' : '') +
+        '<button class="bt" data-resto>🧮 Resto</button>' : '') +
+      '</div></div>' + storia(s) + '</div>' +
+    (s.resto ? tagliResto(s) : '') + '</div>';
+}
+/* ---------------- C2 · spunte ---------------- */
+function dC2(s) {
+  const R = resta(s);
+  const scelte = vociDi(s).filter(v => s.sel[v.k] && !s.saldate[v.k]);
+  const val = scelte.reduce((a, v) => a + v.pr, 0);
+  if (s.vista === 'inserisci') return testa() + linguette(s) + '<div class="corpo">' + inserisci(s) + '</div>';
+  return testa() + linguette(s) + '<div class="corpo">' +
+    '<div class="tit">Segna quello che ti sta pagando</div><div class="blocco">' + righeCarrello(s, { spunta:true }) + '</div>' +
+    '<div class="cassa"><div class="alto">' +
+      '<div><span class="k">' + (R > 0 ? 'da incassare' : 'tutto pagato') + '</span>' +
+        '<span class="v' + (R > 0 ? '' : ' zero') + '">' + (R > 0 ? eur(R) : '✓') + '</span></div>' +
+      '<div class="tastiRiga">' +
+        (val > 0 ? '<button class="bt forte" data-psel>Incassa i segnati · ' + eur(val) + '</button>' :
+          (R > 0 ? '<button class="bt forte" data-p="tutto">Incassa tutto ' + eur(R) + '</button>' : '')) +
+        (R > 0 ? '<button class="bt" data-resto>🧮 Resto</button>' : '') +
+      '</div></div>' + storia(s) + '</div>' +
+    (s.resto ? tagliResto(s) : '') + '</div>';
+}
+/* ---------------- C3 · due colonne ---------------- */
+function dC3(s) {
+  const R = resta(s);
+  return testa() + '<div class="corpo"><div class="due">' +
+    '<div><div class="col-t">🛒 Il carrello</div>' +
+      '<div class="blocco">' + righeCarrello(s, { qta:true }) + '</div>' +
+      '<div class="col-t">Aggiungi al bar</div>' + scaffale(s) + '</div>' +
+    '<div><div class="col-t">💶 La cassa</div><div class="cassa">' +
+      '<span class="k">' + (R > 0 ? 'da incassare' : 'tutto pagato') + '</span>' +
+      '<span class="v' + (R > 0 ? '' : ' zero') + '">' + (R > 0 ? eur(R) : '✓') + '</span>' +
+      (R > 0 ? '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">' +
+        '<button class="bt forte" style="flex:1" data-p="tutto">Incassa tutto</button>' +
+        '<button class="bt" data-resto>🧮</button></div>' : '') +
+      (s.incassi.length ? '<div style="margin-top:12px">' +
+        s.incassi.map(m => '<div class="mov"><span class="o">' + m.ora + '</span>' +
+          '<span class="d">' + m.ds + '</span><span class="i">' + eur(m.im) + '</span></div>').join('') +
+        '<div class="storia"><button data-ann>annulla l’ultimo</button></div></div>' : '') +
+      '</div>' + (s.resto ? tagliResto(s) : '') + '</div>' +
+  '</div></div>';
+}
+/* ---------------- C4 · tre tasti ---------------- */
+function dC4(s) {
+  const R = resta(s), rp = rParco(s), rb = rBar(s);
+  if (s.vista === 'inserisci') return testa() + linguette(s) + '<div class="corpo">' + inserisci(s) + '</div>';
+  return testa() + linguette(s) + '<div class="corpo">' +
+    '<div class="tit">Cosa ha preso</div><div class="blocco">' + righeCarrello(s) + '</div>' +
+    (R > 0 ? '<div class="tit">Incassa</div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">' +
+        (rp > 0 ? '<button class="bt" style="flex:1 1 132px" data-p="parco">🎟️ Parco<br>' + eur(rp) + '</button>' : '') +
+        (rb > 0 ? '<button class="bt" style="flex:1 1 132px" data-p="bar">🥤 Bar<br>' + eur(rb) + '</button>' : '') +
+        '<button class="bt forte" style="flex:1 1 150px" data-p="tutto">💶 Tutto<br>' + eur(R) + '</button>' +
+        '<button class="bt" style="flex:1 1 110px" data-resto>🧮 Resto<br>paga grosso</button>' +
+      '</div>' : '') +
+    '<div class="cassa"><span class="k">' + (R > 0 ? 'resta da incassare' : 'tutto pagato') + '</span>' +
+      '<span class="v' + (R > 0 ? '' : ' zero') + '">' + (R > 0 ? eur(R) : '✓') + '</span>' + storia(s) + '</div>' +
+    (s.resto ? tagliResto(s) : '') + '</div>';
+}
+/* ---------------- C5 · a passi ---------------- */
+function dC5(s) {
+  const R = resta(s), p = s.passo;
+  let dentro = '';
+  if (p === 1) dentro = inserisci(s) +
+    '<div style="display:flex"><button class="bt forte" style="flex:1" data-passo="2">Il conto fa ' + eur(tot(s)) + ' · avanti →</button></div>';
+  if (p === 2) dentro =
+    '<div class="tit">Cosa ha preso</div><div class="blocco">' + righeCarrello(s) + '</div>' +
+    '<div class="cassa"><span class="k">' + (R > 0 ? 'da incassare' : 'tutto pagato') + '</span>' +
+      '<span class="v' + (R > 0 ? '' : ' zero') + '">' + (R > 0 ? eur(R) : '✓') + '</span>' +
+      (R > 0 ? '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">' +
+        '<button class="bt forte" style="flex:1 1 140px" data-p="tutto">Incassa tutto</button>' +
+        (rParco(s) > 0 ? '<button class="bt" data-p="parco">Solo parco</button>' : '') +
+        (rBar(s) > 0 ? '<button class="bt" data-p="bar">Solo bar</button>' : '') + '</div>' : '') +
+      storia(s) + '</div>' +
+    '<div style="display:flex;gap:8px;margin-top:12px"><button class="bt piano" data-passo="1">← Indietro</button>' +
+      '<button class="bt forte" style="flex:1" data-passo="3">Paga con pezzi grossi →</button></div>';
+  if (p === 3) {
+    if (!s.resto) s.resto = { dato: 0 };
+    dentro = tagliResto(s) +
+      '<div style="display:flex;margin-top:10px"><button class="bt piano" data-passo="2">← Indietro</button></div>';
+  }
+  return testa() + '<div class="corpo"><div class="passi">' +
+    ['1 · Cosa prende', '2 · Quanto incassi', '3 · Il resto'].map((t, i) =>
+      '<div class="passo' + (p === i+1 ? ' on' : (p > i+1 ? ' fatto' : '')) + '">' + t + '</div>').join('') +
+    '</div>' + dentro + '</div>';
+}
+
+/* ---------------- motore comune ---------------- */
+const VISTE = { C1: dC1, C2: dC2, C3: dC3, C4: dC4, C5: dC5 };
+const STATI = {};
+Object.keys(VISTE).forEach(id => { STATI[id] = nuovo(); });
+
+function render(id) {
+  const s = STATI[id], box = document.getElementById(id);
+  box.innerHTML = VISTE[id](s);
+  const $ = sel => box.querySelectorAll(sel);
+  const uno = sel => box.querySelector(sel);
+
+  $('[data-v]').forEach(b => b.onclick = () => { s.vista = b.dataset.v; s.resto = null; render(id); });
+  $('[data-add]').forEach(b => b.onclick = () => { su(s, 'bar:' + b.dataset.add, 1); render(id); });
+  $('[data-qp]').forEach(b => b.onclick = () => { su(s, b.dataset.qp, 1); render(id); });
+  $('[data-qm]').forEach(b => b.onclick = () => { su(s, b.dataset.qm, -1); render(id); });
+  $('[data-t]').forEach(b => b.onclick = () => {
+    s.minuti = Math.max(15, s.minuti + (+b.dataset.t));
+    s.tariffa = Math.max(200, Math.round(s.minuti / 60 * 700 / 50) * 50);
+    render(id);
+  });
+  $('[data-sel]').forEach(b => b.onclick = () => {
+    const k = b.dataset.sel;
+    if (s.saldate[k]) return;             /* gia' pagata: si annulla dal registro */
+    s.sel[k] = !s.sel[k];
+    render(id);
+  });
+  $('[data-p]').forEach(b => b.onclick = () => {
+    const q = b.dataset.p;
+    if (q === 'tutto') prendi(s, 'tutto il conto', resta(s), 'parco', vociDi(s).map(v => v.k));
+    else if (q === 'parco') prendi(s, 'solo il parco', rParco(s), 'parco', vociDi(s).filter(v => v.sez === 'parco').map(v => v.k));
+    else prendi(s, 'solo il bar', rBar(s), 'bar', vociDi(s).filter(v => v.sez === 'bar').map(v => v.k));
+    s.sel = {}; render(id);
+  });
+  const ps = uno('[data-psel]');
+  if (ps) ps.onclick = () => {
+    const sc = vociDi(s).filter(v => s.sel[v.k] && !s.saldate[v.k]);
+    ['parco','bar'].forEach(sez => {
+      const q = sc.filter(v => v.sez === sez);
+      if (q.length) prendi(s, q.length === 1 ? q[0].nm : q.length + ' voci · ' + sez,
+                           q.reduce((a,v) => a + v.pr, 0), sez, q.map(v => v.k));
+    });
+    s.sel = {}; render(id);
+  };
+  const an = uno('[data-ann]'); if (an) an.onclick = () => { annullaUltimo(s); render(id); };
+  const rr = uno('[data-resto]'); if (rr) rr.onclick = () => { s.resto = { dato: 0 }; render(id); };
+  $('[data-tag]').forEach(b => b.onclick = () => { s.resto.dato += (+b.dataset.tag); render(id); });
+  const rz = uno('[data-rzero]'); if (rz) rz.onclick = () => { s.resto.dato = 0; render(id); };
+  const rc = uno('[data-rchiudi]'); if (rc) rc.onclick = () => { s.resto = null; if (s.passo === 3) s.passo = 2; render(id); };
+  const ro = uno('[data-rok]'); if (ro) ro.onclick = () => {
+    const R = resta(s), d = s.resto.dato, avanza = d - R;
+    prendi(s, 'contanti' + (avanza > 0 ? ' ' + eur(d) + ', resto ' + eur(avanza) : ''), Math.min(d, R), 'parco',
+           avanza >= 0 ? vociDi(s).map(v => v.k) : []);
+    s.resto = null; if (s.passo === 3) s.passo = 2; render(id);
+  };
+  $('[data-passo]').forEach(b => b.onclick = () => {
+    s.passo = +b.dataset.passo; if (s.passo !== 3) s.resto = null; render(id);
+  });
+}
+function su(s, k, d) {
+  if (k === 'ingr') s.bambini = Math.max(0, s.bambini + d);
+  else if (k === 'crazy') s.crazy = Math.max(0, s.crazy + d);
+  else {
+    const id = k.split(':')[1];
+    s.bar[id] = Math.max(0, (s.bar[id] || 0) + d);
+    if (!s.bar[id]) delete s.bar[id];
+  }
+  /* Se cambia la quantita' la riga non e' piu' «saldata»: i soldi gia'
+     presi restano incassati (stanno in s.pag), ma la spunta sparisce,
+     altrimenti una riga a cui hai appena aggiunto una Coca resterebbe
+     segnata come pagata con 2,50 € scoperti. */
+  delete s.saldate[k];
+  delete s.sel[k];
+}
+Object.keys(VISTE).forEach(render);
+</script>
+</body>
+</html>
