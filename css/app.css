@@ -1300,7 +1300,7 @@ main {
   background: rgb(16, 16, 22);
   border-radius: 0 0 16px 16px;
   cursor: default;
-  transition: grid-template-rows 360ms cubic-bezier(.16,.84,.28,1);
+  transition: grid-template-rows 360ms cubic-bezier(.4,.02,.2,1);
 }
 .e-dentro {
   overflow: hidden;
@@ -2495,10 +2495,10 @@ main {
   overflow-y: auto;
   overscroll-behavior: contain;
   box-shadow: 0 26px 64px rgba(0, 0, 0, 0.6);
-  transition: left 480ms cubic-bezier(.16,.84,.28,1),
-              top 480ms cubic-bezier(.16,.84,.28,1),
-              width 480ms cubic-bezier(.16,.84,.28,1),
-              max-height 480ms cubic-bezier(.16,.84,.28,1),
+  transition: left 480ms cubic-bezier(.4,.02,.2,1),
+              top 480ms cubic-bezier(.4,.02,.2,1),
+              width 480ms cubic-bezier(.4,.02,.2,1),
+              max-height 480ms cubic-bezier(.4,.02,.2,1),
               box-shadow 480ms ease;
 }
 .segnaposto { flex-shrink: 0; }
@@ -2638,3 +2638,22 @@ html:not(.anima) .entry.appena::before { animation: none; opacity: 1; }
 }
 .e-inmod .btn { margin-left: auto; }
 .e-cella.spento { opacity: 0.45; }
+
+/* La cassa rapida e' una cosa a parte: prende il fondo scuro del
+   sottomenu che si apre sotto le schede, cosi' si vede al volo che non
+   e' l'elenco di chi e' dentro. Struttura e ordine restano quelli di
+   "Nuovo": cambia solo il fondo. */
+#view-cassa .card.blk {
+  background: #191921;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+}
+#view-cassa .card.blk > h2,
+#view-cassa .card.blk > .sect-head > h2 { color: #E9E9F2; }
+#view-cassa .card.blk .blk-in { background: rgb(16, 16, 22); }
+#view-cassa .hint { color: rgba(255, 255, 255, 0.62); }
+#view-cassa .chip { background: rgba(255, 255, 255, 0.10); border-color: transparent; color: #E9E9F2; }
+#view-cassa .chip.on { background: #fff; color: #17171E; }
+#view-cassa .counter { background: rgba(255, 255, 255, 0.06); }
+#view-cassa .bar-row { background: rgba(255, 255, 255, 0.06); }
+#view-cassa .bar-row.has-qty { background: #fff; }
+#view-cassa .dur-custom input { background: rgba(0, 0, 0, 0.34); }

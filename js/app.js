@@ -2109,7 +2109,11 @@ function buildCassaView() {
     if (!(opz && opz.nonToccareInput) && document.activeElement !== inp) inp.value = cassa.minutes || '';
     incassa.disabled = t <= 0;
     incassa.textContent = t > 0 ? '\u2705 Incassa ' + eur(t) : '\u2705 Incassa';
-    diventa.disabled = cassa.children <= 0;
+    /* Non si spegne mai: un tasto spento che non dice perche' sembra
+       rotto. Con zero bambini l'ingresso parte comunque da uno. */
+    diventa.textContent = cassa.children > 0
+      ? '\u27a1\ufe0f Fanne un ingresso'
+      : '\u27a1\ufe0f Fanne un ingresso da 1';
     syncBarRows(barBox, cassa.bar);
   }
 
@@ -2171,6 +2175,9 @@ function alza(card, misura) {
   card.style.left = r.left + 'px';
   card.style.top = r.top + 'px';
   card.style.width = r.width + 'px';
+  /* parte dall'altezza che aveva: senza questo cresceva di colpo,
+     tutta in un fotogramma, e si vedeva uno scatto */
+  card.style.maxHeight = Math.round(r.height) + 'px';
 
   volante = { card: card, buco: buco, velo: velo, da: r };
   velo.onclick = () => posa(card);
@@ -2184,7 +2191,12 @@ function alza(card, misura) {
     card.style.left = Math.round((window.innerWidth - larg) / 2) + 'px';
     card.style.top = '10px';
     card.style.width = larg + 'px';
-    card.style.maxHeight = (window.innerHeight - 20) + 'px';
+    /* Punta all'altezza del CONTENUTO, non a quella dello schermo: se
+       punta al massimo, a meta' strada incontra il contenuto e si ferma
+       di colpo. Sopra lo schermo si ferma allo schermo e scorre dentro. */
+    const tetto = window.innerHeight - 20;
+    const suo = card.scrollHeight + 2;
+    card.style.maxHeight = Math.min(suo, tetto) + 'px';
   }));
 }
 
@@ -2192,20 +2204,22 @@ function posa(card) {
   if (!volante || volante.card !== card) return;
   const v = volante;
   volante = null;
-  /* chiudendo dal velo va chiuso anche il pannello, altrimenti il tasto
-     resta acceso e al tocco dopo fa il contrario di quello che sembra */
   const rif = cardRefs.get(card.dataset.id);
-  if (rif && rif.payPanel) {
-    rif.payPanel.classList.add('hidden');
-    rif.payBtn.classList.remove('on');
-  }
   const r = v.buco.getBoundingClientRect();
   v.velo.classList.remove('on');
-  card.style.maxHeight = '';
+  /* Scende FINO alla misura del buco: cosi' arriva gia' della taglia
+     giusta e nessuno si sposta quando torna in fila. */
   card.style.left = r.left + 'px';
   card.style.top = r.top + 'px';
   card.style.width = r.width + 'px';
+  card.style.maxHeight = Math.round(r.height) + 'px';
   const fine = () => {
+    /* il pannello si chiude SOLO adesso: chiudendolo alla partenza
+       spariva a mezz'aria e si vedeva un salto */
+    if (rif && rif.payPanel) {
+      rif.payPanel.classList.add('hidden');
+      rif.payBtn.classList.remove('on');
+    }
     card.classList.remove('vola');
     card.style.left = card.style.top = card.style.width = card.style.maxHeight = '';
     if (v.buco.parentNode) v.buco.remove();
