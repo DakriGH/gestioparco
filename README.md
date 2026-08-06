@@ -59,3 +59,5 @@ garantisce che il tablet veda la versione nuova.
 
 Con `index.html?nosw` il funzionamento offline si disattiva e si ripulisce: serve quando si
 sta lavorando al codice.
+
+<!-- prova build 1786009433 -->
