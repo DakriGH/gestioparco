@@ -144,12 +144,15 @@ function defaultSettings() {
     crazyExtraMinutes: 8,
     toleranceMinutes: 10,
     warnBeforeMinutes: 10,
-    crazyJumpingPrice: 3,
+    crazyJumpingPrice: 4,
     theme: 'dark',
     tariffaSuTotale: true,
+    /* Il listino del cartello, a scaglioni di 10 minuti. 50' e 60'
+       costano uguale, e cosi' 1h50' e 2h: e' scritto cosi' sul cartello. */
     tariffs: [
-      { m: 10, p: 2 }, { m: 15, p: 3 }, { m: 30, p: 5 }, { m: 45, p: 7 }, { m: 60, p: 9 },
-      { m: 75, p: 10 }, { m: 90, p: 12 }, { m: 105, p: 13 }, { m: 120, p: 15 }, { m: 150, p: 18 }, { m: 180, p: 21 }
+      { m: 10, p: 3 }, { m: 15, p: 4.5 }, { m: 20, p: 6 }, { m: 30, p: 7 },
+      { m: 40, p: 10 }, { m: 50, p: 12 }, { m: 60, p: 12 }, { m: 70, p: 15 },
+      { m: 80, p: 16.5 }, { m: 90, p: 19 }, { m: 100, p: 22 }, { m: 110, p: 24 }, { m: 120, p: 24 }
     ],
     quickDurations: [15, 30, 60, 90],
     barMenu: [
