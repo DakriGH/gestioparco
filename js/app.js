@@ -1861,7 +1861,7 @@ function entryCard(entry) {
 
   /* Modifica e' quello che si tocca meno: solo la matita, piccola e a
      sinistra, cosi' lo spazio va a Bar & Conto e all'Uscita */
-  mkAct('\u270f\ufe0f', 'piccolo', (ev) => { ev.stopPropagation(); editEntry(entry); }).title = 'Modifica';
+  mkAct('\u270f\ufe0f', 'piccolo', (ev) => { ev.stopPropagation(); vaiAModifica(entry); }).title = 'Modifica';
   const payBtn = mkAct('\ud83e\uddfe Bar & Conto', 'conto', (ev) => {
     ev.stopPropagation();
     const chiuso = payPanel.classList.contains('hidden');
@@ -1874,6 +1874,11 @@ function entryCard(entry) {
       const t = barSomma.querySelector('.bt-tot');
       const b = barTotal(entry);
       t.textContent = b > 0 ? eur(b) : '';
+      /* la scheda si stacca e vola: cosi' il conto ci sta tutto senza
+         scorrere mezza pagina, e il resto della lista si sfoca */
+      alza(card);
+    } else {
+      posa(card);
     }
   });
   mkAct('\ud83d\udeaa Uscita', 'forte', (ev) => { ev.stopPropagation(); chiudiIngresso(entry); });
@@ -1903,10 +1908,90 @@ function entryCard(entry) {
   return card;
 }
 
+/* ================= LA SCHEDA CHE VOLA =================
+   Con Bar & Conto la scheda si stacca dalla lista e si mette al centro
+   dello schermo, sopra tutto, con il resto sfocato dietro. Al suo posto
+   resta un buco della stessa altezza, cosi' la lista non sussulta.
+   Il volo e' un'animazione vera: parte dal punto esatto in cui stava. */
+let volante = null;
+
+function alza(card) {
+  if (volante) posa(volante.card);
+  const r = card.getBoundingClientRect();
+
+  const buco = el('div', 'segnaposto');
+  buco.style.height = r.height + 'px';
+  card.parentNode.insertBefore(buco, card);
+
+  const velo = el('div', 'velo-scheda');
+  document.body.appendChild(velo);
+
+  card.classList.add('vola');
+  card.style.left = r.left + 'px';
+  card.style.top = r.top + 'px';
+  card.style.width = r.width + 'px';
+
+  volante = { card: card, buco: buco, velo: velo, da: r };
+  velo.onclick = () => posa(card);
+
+  requestAnimationFrame(() => {
+    velo.classList.add('on');
+    const larg = Math.min(Math.max(r.width, 320), window.innerWidth - 20);
+    card.style.left = Math.round((window.innerWidth - larg) / 2) + 'px';
+    card.style.top = '10px';
+    card.style.width = larg + 'px';
+    card.style.maxHeight = (window.innerHeight - 20) + 'px';
+  });
+}
+
+function posa(card) {
+  if (!volante || volante.card !== card) return;
+  const v = volante;
+  volante = null;
+  /* chiudendo dal velo va chiuso anche il pannello, altrimenti il tasto
+     resta acceso e al tocco dopo fa il contrario di quello che sembra */
+  const rif = cardRefs.get(card.dataset.id);
+  if (rif && rif.payPanel) {
+    rif.payPanel.classList.add('hidden');
+    rif.payBtn.classList.remove('on');
+  }
+  const r = v.buco.getBoundingClientRect();
+  v.velo.classList.remove('on');
+  card.style.maxHeight = '';
+  card.style.left = r.left + 'px';
+  card.style.top = r.top + 'px';
+  card.style.width = r.width + 'px';
+  const fine = () => {
+    card.classList.remove('vola');
+    card.style.left = card.style.top = card.style.width = card.style.maxHeight = '';
+    if (v.buco.parentNode) v.buco.remove();
+    if (v.velo.parentNode) v.velo.remove();
+  };
+  const tempo = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 260;
+  setTimeout(fine, tempo);
+}
+
+/* Modifica: la lista scivola a sinistra e arriva "Nuovo", cosi' si
+   capisce dove si sta andando invece di trovarsi altrove di colpo. */
+function vaiAModifica(entry) {
+  if (volante) posa(volante.card);
+  const vista = $('#view-active');
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) { editEntry(entry); return; }
+  vista.classList.add('esce-sx');
+  setTimeout(() => {
+    vista.classList.remove('esce-sx');
+    editEntry(entry);
+    const nuova = $('#view-new');
+    nuova.classList.add('entra-dx');
+    setTimeout(() => nuova.classList.remove('entra-dx'), 300);
+  }, 200);
+}
+
 /* una scheda aperta per volta: due aperte non ci stanno sullo schermo */
 function chiudiSchede(tranne) {
   cardRefs.forEach((r, id) => {
     if (id === tranne || !r.card.isConnected) return;
+    if (volante && volante.card === r.card) posa(r.card);
     r.card.classList.remove('aperto');
   });
 }
@@ -1954,7 +2039,11 @@ function chiudiPannelli(tranne) {
   cardRefs.forEach((r, id) => {
     if (id === tranne || !r.card.isConnected) return;
     if (r.barPanel && !r.barPanel.classList.contains('hidden')) { r.barPanel.classList.add('hidden'); r.barBtn.classList.remove('on'); }
-    if (r.payPanel && !r.payPanel.classList.contains('hidden')) { r.payPanel.classList.add('hidden'); r.payBtn.classList.remove('on'); }
+    if (r.payPanel && !r.payPanel.classList.contains('hidden')) {
+      r.payPanel.classList.add('hidden');
+      r.payBtn.classList.remove('on');
+      if (volante && volante.card === r.card) posa(r.card);
+    }
   });
 }
 

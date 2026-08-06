@@ -2488,3 +2488,42 @@ main {
 .resto-pad button { min-height: 46px; font-size: 19px; }
 .resto-azioni { display: flex; gap: 8px; flex-wrap: wrap; }
 .resto-azioni .btn-ok { flex: 1 1 160px; }
+
+/* =============== LA SCHEDA CHE VOLA =============== */
+.velo-scheda {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(6, 6, 12, 0.5);
+  backdrop-filter: blur(7px) saturate(0.85);
+  -webkit-backdrop-filter: blur(7px) saturate(0.85);
+  opacity: 0;
+  transition: opacity 240ms ease;
+}
+.velo-scheda.on { opacity: 1; }
+
+.entry.vola {
+  position: fixed;
+  z-index: 41;
+  margin: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  box-shadow: 0 26px 64px rgba(0, 0, 0, 0.6);
+  transition: left 260ms cubic-bezier(.22,.9,.3,1),
+              top 260ms cubic-bezier(.22,.9,.3,1),
+              width 260ms cubic-bezier(.22,.9,.3,1),
+              max-height 260ms cubic-bezier(.22,.9,.3,1);
+}
+.segnaposto { flex-shrink: 0; }
+
+/* Modifica: si va verso "Nuovo", quindi la lista esce a sinistra e il
+   modulo entra da destra. Senza questo ci si ritrova altrove di colpo. */
+.view.esce-sx { animation: esceSx 200ms ease forwards; }
+.view.entra-dx { animation: entraDx 300ms cubic-bezier(.22,.9,.3,1); }
+@keyframes esceSx { to { transform: translateX(-28px); opacity: 0; } }
+@keyframes entraDx { from { transform: translateX(34px); opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .entry.vola, .velo-scheda { transition: none; }
+  .view.esce-sx, .view.entra-dx { animation: none; }
+}
