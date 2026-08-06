@@ -1327,15 +1327,21 @@ function buildAvatarEditor(box, person, onChange, opts) {
     if (figuraViva) {
       figuraViva.innerHTML = AV.build(av);
       trattiVivi.innerHTML = '';
-      // nel modello sono righe di testo puntate, non pastiglie
-      AV.traits(av, 4).forEach(t => {
-        trattiVivi.appendChild(el('div', 'ed-tr', '\u2022 ' + t.txt));
-      });
+      // nel modello sono righe di testo puntate, non pastiglie.
+      // Solo i pezzi scelti: qui e nella scheda si legge la stessa cosa.
+      const detti = AV.traits(av, 4, true);
+      if (!detti.length) {
+        trattiVivi.appendChild(el('div', 'ed-tr vuoto', 'tocca un pezzo per descriverlo'));
+      } else {
+        detti.forEach(t => trattiVivi.appendChild(el('div', 'ed-tr', '\u2022 ' + t.txt)));
+      }
     }
     if (prev) prev.innerHTML = AV.build(av);
     if (traits) {
       traits.innerHTML = '';
-      AV.traits(av, 5).forEach(t => traits.appendChild(traitChip(t)));
+      const scelti = AV.traits(av, 5, true);
+      if (!scelti.length) traits.appendChild(el('div', 'hint', 'Tocca un pezzo per descriverlo'));
+      else scelti.forEach(t => traits.appendChild(traitChip(t)));
     }
     sezioni.forEach(sz => {
       if (sz.node.dataset.off) {

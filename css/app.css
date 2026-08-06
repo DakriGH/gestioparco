@@ -2659,3 +2659,6 @@ html:not(.anima) .entry.appena::before { animation: none; opacity: 1; }
 #view-cassa .bar-row { background: rgba(255, 255, 255, 0.06); }
 #view-cassa .bar-row.has-qty { background: #fff; }
 #view-cassa .dur-custom input { background: rgba(0, 0, 0, 0.34); }
+
+/* quando non e' stato ancora scelto niente */
+.ed-tr.vuoto { opacity: 0.55; font-style: italic; }
