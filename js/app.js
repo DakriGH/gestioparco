@@ -254,15 +254,20 @@ function barTotal(e) {
 function costOf(entry) {
   const children = Math.max(1, clamp(entry.children, 0, 1e6));
   const crazy = clamp(entry.crazyJumping, 0, 1e6) * settings.crazyJumpingPrice;
+  /* I minuti REGALATI dal Crazy Jumping non si pagano: restano dentro
+     piu' a lungo, ma lo scaglione si calcola sul tempo del parco. Il
+     Crazy si paga a parte, col suo prezzo. */
+  const regalati = clamp(entry.crazyJumping, 0, 1e6) * settings.crazyExtraMinutes;
   let base;
   if (entry.payLater) {
-    base = priceFor(up5(Math.max(0, (Date.now() - entry.startTime) / 60000)));
+    // paga il tempo passato dentro, meno quello regalato dal Crazy
+    const stato = Math.max(0, (Date.now() - entry.startTime) / 60000 - regalati);
+    base = priceFor(up5(stato));
   } else {
-    const totMin = clamp(entry.durationMinutes, 0, 1e6) + clamp(entry.crazyJumping, 0, 1e6) * settings.crazyExtraMinutes;
+    const totMin = clamp(entry.durationMinutes, 0, 1e6);
     if (settings.tariffaSuTotale === false) {
       // a scaglioni: la durata iniziale al suo prezzo, il tempo aggiunto al suo
-      const iniz = clamp(num(entry.baseMinutes, entry.durationMinutes), 0, 1e6)
-        + clamp(entry.crazyJumping, 0, 1e6) * settings.crazyExtraMinutes;
+      const iniz = clamp(num(entry.baseMinutes, entry.durationMinutes), 0, 1e6);
       const agg = Math.max(0, totMin - iniz);
       base = priceFor(up5(iniz)) + (agg > 0 ? priceFor(up5(agg)) : 0);
     } else {
@@ -316,7 +321,7 @@ function draftEnd() {
   return draft.startTime + (draft.durationMinutes + draft.crazyJumping * settings.crazyExtraMinutes) * 60000;
 }
 function draftPrice() {
-  return priceFor(up5(draft.durationMinutes + draft.crazyJumping * settings.crazyExtraMinutes)) * Math.max(1, draft.children)
+  return priceFor(up5(draft.durationMinutes)) * Math.max(1, draft.children)
     + draft.crazyJumping * settings.crazyJumpingPrice;
 }
 function draftBracelet() {
@@ -1246,8 +1251,9 @@ function syncActionBar() {
   ab.classList.remove('hidden');
 
   const c = { children: Math.max(1, draft.children), crazy: draft.crazyJumping };
-  const minuti = draft.durationMinutes + draft.crazyJumping * settings.crazyExtraMinutes;
-  const parco = draft.payLater ? 0 : Math.round(priceFor(up5(minuti)) * c.children * 100) / 100;
+  /* si paga il tempo del parco: i minuti regalati dal Crazy allungano
+     la permanenza ma non lo scaglione */
+  const parco = draft.payLater ? 0 : Math.round(priceFor(up5(draft.durationMinutes)) * c.children * 100) / 100;
   const crazy = Math.round(c.crazy * settings.crazyJumpingPrice * 100) / 100;
   const bar = Math.round(draft.barItems.reduce((s, i) => s + i.price * i.qty, 0) * 100) / 100;
 
