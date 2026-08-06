@@ -1152,7 +1152,9 @@ main {
 .entry {
   position: relative;
   display: block;
-  background: var(--grad, var(--blk-grigio));
+  /* la scheda non ha sfondo: ce l'ha la riga. E' cosi' che in R1 il
+     sottomenu viene quasi nero invece che del colore della card. */
+  background: transparent;
   border: none;
   border-radius: 16px;
   /* nessuna ombra: nel modello la scheda e' netta. Il filo di luce che
@@ -1204,6 +1206,7 @@ main {
   display: flex;
   align-items: center;
   gap: 12px;
+  background: var(--grad, var(--blk-grigio));
   border-radius: 16px;
   padding: 10px 13px;
   cursor: pointer;
@@ -1308,7 +1311,7 @@ main {
 /* =============== QUELLO CHE SI APRE =============== */
 .e-aperta {
   display: none;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgb(16, 16, 22);
   padding: 12px 13px 13px;
   cursor: default;
 }
