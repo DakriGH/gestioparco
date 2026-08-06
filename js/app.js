@@ -223,9 +223,10 @@ function priceFor(mins) {
   const list = tariffs();
   if (!list.length) return 0;
   for (const t of list) if (mins <= t.m) return t.p;
-  const last = list[list.length - 1];
-  if (last.m <= 0) return last.p;
-  return Math.round(last.p * (mins / last.m) * 100) / 100;
+  /* Oltre l'ultimo scaglione il prezzo NON sale piu': dopo le 2 ore
+     sono 24 euro e basta. Prima proseguiva in proporzione e a 3 ore
+     avrebbe chiesto 36. */
+  return list[list.length - 1].p;
 }
 function braceletFor(ts) {
   const d = new Date(num(ts, Date.now()));
