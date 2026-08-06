@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>R1 — le varianti, e il Conto</title>
+<link rel="stylesheet" href="./css/fonts.css">
+<style>
+/* ============================================================
+   R1 con le correzioni chieste:
+   - niente tre puntini: si tocca la riga, si chiude toccando fuori
+   - nella riga ci sono orario di INIZIO e di FINE
+   - il numero a destra non e' piu' ambiguo: dice cos'e'
+   Qui si tocca davvero: prova ad aprire e chiudere.
+   ============================================================ */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #12121A; color: #E9E9F2; padding: 0 0 90px; }
+.intro { padding: 22px 18px 4px; max-width: 900px; margin: 0 auto; }
+.intro h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 8px; }
+.intro p { color: #A8A8BD; font-size: 15px; line-height: 1.55; margin: 0 0 9px; }
+.intro b { color: #FFD166; font-weight: 600; }
+.strada { max-width: 900px; margin: 0 auto; padding: 24px 18px 6px; }
+.strada > header { display: flex; align-items: baseline; gap: 12px; }
+.strada > header .n { font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 700; background: #2A2A36; color: #FFD166; border-radius: 20px; padding: 4px 12px; }
+.strada > header h2 { font-family: 'Fredoka', sans-serif; font-size: 22px; margin: 0; }
+.perche { color: #9A9AB0; font-size: 14.5px; line-height: 1.55; margin: 9px 0 13px; }
+.perche b { color: #FFD166; font-weight: 600; }
+.telaio { border-radius: 18px; padding: 12px; background: #17171F; border: 1px solid rgba(255,255,255,0.09); }
+.prova { font-size: 12.5px; font-weight: 700; color: #7FE8C1; background: #16382C; border-radius: 20px; padding: 5px 12px; display: inline-block; margin-bottom: 10px; }
+
+.ok    { background: linear-gradient(150deg,#1E9E76,#137A5A); }
+.warn  { background: linear-gradient(150deg,#D9922A,#B26F12); }
+.late  { background: linear-gradient(150deg,#E05A5A,#B93636); }
+.dopo  { background: linear-gradient(150deg,#2D9BB0,#1B7387); }
+
+/* --- la riga, comune a tutte le varianti --- */
+.riga {
+  display: flex; align-items: center; gap: 12px;
+  border-radius: 16px; padding: 10px 13px; color: #fff; cursor: pointer;
+  transition: filter 120ms;
+}
+.riga:active { filter: brightness(1.08); }
+.gruppo { margin-bottom: 8px; border-radius: 16px; overflow: hidden; }
+.gruppo.aperto .riga { border-radius: 16px 16px 0 0; }
+.av { height: 76px; aspect-ratio: 3/4; border-radius: 12px; background: rgba(255,255,255,0.12); overflow: visible; flex-shrink: 0; }
+.av svg { width: 100%; height: 100%; display: block; }
+.chi { flex: 1; min-width: 0; }
+.chi b { font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 600; display: block; line-height: 1.25; }
+.chi .tr { font-size: 12.5px; color: rgba(255,255,255,0.88); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.orari { display: inline-flex; align-items: baseline; gap: 5px; background: rgba(0,0,0,0.24); border-radius: 20px; padding: 3px 10px; margin-top: 4px; font-family: 'Fredoka', sans-serif; font-size: 13.5px; font-weight: 600; }
+.orari .fr { font-size: 11px; color: rgba(255,255,255,0.6); margin: 0 2px; }
+.brac { width: 21px; height: 21px; border-radius: 50%; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.55); flex-shrink: 0; }
+.conto { font-family: 'Fredoka', sans-serif; font-size: 29px; font-weight: 700; min-width: 100px; text-align: right; }
+
+/* --- il denaro, quattro modi di dirlo --- */
+.soldi { min-width: 132px; text-align: right; }
+.soldi .k { display: block; font-size: 10.5px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: rgba(255,255,255,0.7); }
+.soldi .v { font-family: 'Fredoka', sans-serif; font-size: 21px; font-weight: 700; }
+.soldi.pagato .v { color: rgba(255,255,255,0.65); }
+.pill-soldi { display: inline-flex; flex-direction: column; align-items: flex-end; background: #fff; color: #1A1626; border-radius: 13px; padding: 4px 11px 5px; }
+.pill-soldi .k { color: #6B6478; }
+.pill-soldi.fatto { background: rgba(0,0,0,0.28); color: #fff; }
+.pill-soldi.fatto .k { color: rgba(255,255,255,0.65); }
+.btn-incassa { background: #fff; color: #123A2C; border: none; border-radius: 13px; padding: 9px 14px; font: inherit; font-size: 15px; font-weight: 700; font-family: 'Fredoka', sans-serif; cursor: pointer; white-space: nowrap; }
+.btn-incassa.fatto { background: rgba(0,0,0,0.28); color: rgba(255,255,255,0.75); }
+
+/* --- quello che si apre --- */
+.aperta { background: rgba(0,0,0,0.3); padding: 12px 13px 13px; display: none; }
+.gruppo.aperto .aperta { display: block; }
+.fila { display: flex; gap: 9px; flex-wrap: wrap; align-items: center; }
+.cella { background: rgba(0,0,0,0.26); border-radius: 13px; padding: 6px 10px; display: flex; align-items: center; gap: 8px; }
+.cella .k { font-size: 11.5px; color: rgba(255,255,255,0.75); }
+.cella .v { font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 700; min-width: 22px; text-align: center; }
+.cella button { width: 34px; height: 34px; border-radius: 10px; background: rgba(255,255,255,0.18); border: none; color: #fff; font-size: 17px; cursor: pointer; }
+.azioni { display: flex; gap: 8px; margin-left: auto; }
+.azioni button { background: rgba(255,255,255,0.16); border: none; color: #fff; font: inherit; font-size: 14.5px; font-weight: 700; padding: 11px 15px; border-radius: 13px; cursor: pointer; }
+.azioni button.forte { background: #fff; color: #123A2C; }
+
+/* ============ IL CONTO ============ */
+.conto-box { border-radius: 18px; overflow: hidden; }
+.conto-testa { display: flex; align-items: center; gap: 10px; padding: 12px 15px; font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 600; color: #fff; }
+.conto-testa .via { margin-left: auto; width: 38px; height: 38px; border-radius: 12px; background: rgba(0,0,0,0.3); border: none; color: #fff; font-size: 16px; cursor: pointer; }
+.conto-corpo { background: rgba(0,0,0,0.3); padding: 13px 15px 15px; }
+.sez { font-size: 11.5px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: rgba(255,255,255,0.6); margin: 4px 0 7px; display: flex; align-items: center; gap: 9px; }
+.sez::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.14); }
+.voce { display: flex; align-items: center; gap: 11px; padding: 8px 10px; border-radius: 13px; background: rgba(255,255,255,0.06); margin-bottom: 6px; }
+.voce .em { font-size: 19px; }
+.voce .nm { flex: 1; min-width: 0; font-size: 14.5px; font-weight: 600; }
+.voce .nm small { display: block; font-size: 12px; color: rgba(255,255,255,0.6); font-weight: 500; }
+.voce .pr { font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 700; min-width: 68px; text-align: right; }
+.voce .sp { width: 40px; height: 40px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.35); background: none; color: #fff; font-size: 17px; cursor: pointer; flex-shrink: 0; }
+.voce.pagata { background: rgba(255,255,255,0.03); }
+.voce.pagata .nm, .voce.pagata .pr { color: rgba(255,255,255,0.5); text-decoration: line-through; }
+.voce.pagata .sp { background: #7FE8C1; border-color: #7FE8C1; color: #06241A; }
+.qta { display: flex; align-items: center; gap: 6px; }
+.qta button { width: 32px; height: 32px; border-radius: 10px; background: rgba(255,255,255,0.16); border: none; color: #fff; font-size: 16px; cursor: pointer; }
+.qta .n { font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 700; min-width: 18px; text-align: center; }
+.bar-griglia { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 8px; margin-bottom: 4px; }
+.bar-b { background: rgba(255,255,255,0.08); border: none; border-radius: 13px; padding: 9px 6px 8px; color: #fff; font: inherit; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.bar-b .em { font-size: 21px; }
+.bar-b .nm { font-size: 12.5px; font-weight: 700; }
+.bar-b .pr { font-size: 11.5px; color: rgba(255,255,255,0.72); }
+.bar-b.presa { background: rgba(255,255,255,0.24); box-shadow: inset 0 0 0 2px rgba(255,255,255,0.5); }
+.totali { display: flex; align-items: flex-end; gap: 14px; margin-top: 12px; padding-top: 11px; border-top: 1px solid rgba(255,255,255,0.16); flex-wrap: wrap; }
+.totali .t { font-size: 12.5px; color: rgba(255,255,255,0.72); }
+.totali .t b { display: block; font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 700; color: #fff; }
+.totali .grosso { margin-left: auto; text-align: right; }
+.totali .grosso .k { display: block; margin-bottom: 2px; font-size: 11.5px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: rgba(255,255,255,0.75); }
+.totali .grosso b { font-family: 'Fredoka', sans-serif; font-size: 32px; font-weight: 700; display: block; }
+.conto-azioni { display: flex; gap: 9px; margin-top: 12px; flex-wrap: wrap; }
+.conto-azioni button { flex: 1 1 150px; border: none; border-radius: 14px; padding: 14px 12px; font: inherit; font-size: 15.5px; font-weight: 700; cursor: pointer; background: rgba(255,255,255,0.16); color: #fff; }
+.conto-azioni button.forte { background: #fff; color: #123A2C; font-family: 'Fredoka', sans-serif; font-size: 17px; }
+.nota { font-size: 12.5px; color: #8A8AA0; margin-top: 10px; }
+
+.tabella { width: 100%; border-collapse: collapse; margin: 6px 0 2px; }
+.tabella td { padding: 7px 9px; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.tabella td:last-child { text-align: right; font-family: 'Fredoka', sans-serif; font-weight: 700; }
+.tabella tr:last-child td { border-bottom: none; }
+.tabella .caso { color: #FFD166; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <h1>R1 con le correzioni — e il Conto</h1>
+  <p>Tre cose cambiate: <b>via i tre puntini</b> (si tocca la riga dove capita, si chiude toccando
+  fuori), <b>orario di inizio e fine</b> dentro la riga, e soprattutto il numero a destra che
+  adesso <b>dice cos'è</b>.</p>
+  <p><b>Sul dubbio dei soldi hai ragione</b>, ed è il problema più serio: «21,00 €» da solo non si
+  capisce. È il totale? È quello che deve ancora dare? Ha già pagato? Alla cassa, con la fila,
+  quel dubbio costa. Qui sotto quattro modi di toglierlo — tocca le righe, funzionano.</p>
+</div>
+
+<div class="strada">
+  <header><span class="n">?</span><h2>Cosa vuol dire quel numero</h2></header>
+  <p class="perche">Nell'app i conti sono tre e non uno: il <b>totale</b> (parco + attrazioni +
+  bar), quanto hai <b>già incassato</b>, e quindi quanto <b>resta da incassare</b>. Nella riga ne
+  serve uno solo, ma va detto quale — e cambia a seconda del caso:</p>
+  <div class="telaio">
+    <table class="tabella">
+      <tr><td class="caso">Non ha pagato niente</td><td>«Da pagare» + il totale</td><td>21,00 €</td></tr>
+      <tr><td class="caso">Ha pagato solo il parco</td><td>«Restano» + quello che manca</td><td>7,00 €</td></tr>
+      <tr><td class="caso">Ha pagato tutto</td><td>«Pagato», spento</td><td>—</td></tr>
+      <tr><td class="caso">Paga all'uscita</td><td>«Paga dopo»</td><td>—</td></tr>
+    </table>
+    <p class="nota">Il totale nudo lo vedi comunque aprendo il Conto: nella riga sta l'unica cosa
+    che ti serve mentre lavori, cioè <b>se devi ancora prendere dei soldi</b>.</p>
+  </div>
+</div>
+
+<div class="strada">
+  <header><span class="n">R1-a</span><h2>Etichetta sopra il numero</h2></header>
+  <span class="prova">👆 tocca una riga per aprirla, tocca fuori per chiudere</span>
+  <p class="perche">La più diretta: sopra la cifra c'è scritto <b>cos'è</b>, in piccolo maiuscolo.
+  Occupa 12px in più e toglie ogni dubbio. Chi ha già pagato è spento e barrato, così l'occhio
+  scorre solo su chi deve ancora dare qualcosa.</p>
+  <div class="telaio" id="A"></div>
+</div>
+
+<div class="strada">
+  <header><span class="n">R1-b</span><h2>Pastiglia bianca = soldi da prendere</h2></header>
+  <span class="prova">👆 tocca una riga</span>
+  <p class="perche">Chi deve pagare ha una <b>pastiglia bianca</b> che salta all'occhio anche
+  senza leggere; chi ha pagato ha la pastiglia spenta. Il colore fa il lavoro, la scritta conferma.
+  Il rischio: il bianco pesa parecchio e su dieci righe diventa una scacchiera.</p>
+  <div class="telaio" id="B"></div>
+</div>
+
+<div class="strada">
+  <header><span class="n">R1-c</span><h2>Il numero è un tasto: «Incassa 21,00 €»</h2></header>
+  <span class="prova">👆 tocca il tasto bianco, oppure la riga</span>
+  <p class="perche">Invece di un numero da interpretare, <b>l'azione</b>. Non c'è niente da
+  capire: se c'è il tasto, devi prendere dei soldi; se non c'è, è a posto. Incassa tutto con un
+  tocco, senza aprire niente — e per il dettaglio apri il Conto.
+  Il prezzo: un tasto grosso su ogni riga toglie spazio ai tratti della persona.</p>
+  <div class="telaio" id="C"></div>
+</div>
+
+<div class="strada">
+  <header><span class="n">R1-d</span><h2>Due numeri: totale e cosa manca</h2></header>
+  <span class="prova">👆 tocca una riga</span>
+  <p class="perche">Mostra <b>tutti e due</b>: il totale in piccolo e quanto manca in grande.
+  Nessuna ambiguità possibile, ma è la più affollata delle quattro: su una riga da 78px ci sono
+  già ora, nome, tratti, bracciale e countdown.</p>
+  <div class="telaio" id="D"></div>
+</div>
+
+<div class="strada">
+  <header><span class="n">€</span><h2>Il Conto, con il bar dentro</h2></header>
+  <span class="prova">👆 spunta le voci, cambia le quantità, aggiungi dal bar</span>
+  <p class="perche">Un pannello solo al posto di due tasti. In alto <b>cosa deve</b>, diviso per
+  sezioni: il parco, le attrazioni, il bar. Ogni voce si spunta quando la incassi — così puoi
+  prendere prima i 14 € del parco e lasciare aperto il bar. Sotto, le voci del bar da aggiungere
+  con un tocco. In fondo i tre numeri chiari e i due tasti che servono davvero:
+  <b>incassa tutto</b> e <b>fai uscire</b>.</p>
+  <div class="telaio"><div class="conto-box ok" id="CONTO"></div></div>
+  <p class="perche" style="margin-top:12px">Perché uno solo invece di «Bar» e «Conto» separati:
+  aggiungere una Coca Cola e incassarla sono <b>la stessa operazione</b>, fatta a due secondi di
+  distanza. Tenerle in due posti diversi obbliga a chiudere un pannello e aprirne un altro
+  mentre la persona è lì che aspetta.</p>
+</div>
+
+<script src="./js/avatar.js"></script>
+<script>
+function av(o, ruolo) { return AV.build(AV.normalize(o, ruolo)); }
+const G = [
+  { nome:'Nonna', stato:'late', conto:'−12:40', da:'12:00', a:'13:00', tot:2100, pag:0,
+    brac:'#E23D4B', k:2, c:1, t:'45′', tr:'Maglietta gialla · Gonna nera',
+    sp: av({role:'nonna',skin:'#F6CFA8',hair:{style:'chignon',color:'#C9CDD3'},top:{style:'maglietta',color:'#FBBF24',color2:'#F4F6F8',pattern:'solid'},pants:{style:'gonna',color:'#1F2430',color2:'#F4F6F8',pattern:'solid'},shoes:{style:'sneakers',color:'#F4F6F8'},hat:{style:'none',color:'#E23D4B'},glasses:'none',facial:'none',bag:{style:'none',color:'#7C4A2D'}},'nonna') },
+  { nome:'Ragazzo', stato:'warn', conto:'04:12', da:'12:20', a:'13:05', tot:1400, pag:700,
+    brac:'#FBBF24', k:1, c:0, t:'45′', tr:'Maglietta verde · Pantaloncini blu',
+    sp: av({role:'ragazzo',skin:'#E8B98A',hair:{style:'ricci',color:'#1B1714'},top:{style:'maglietta',color:'#22C55E',color2:'#F4F6F8',pattern:'solid'},pants:{style:'pantaloncini',color:'#2547C4',color2:'#F4F6F8',pattern:'solid'},shoes:{style:'sneakers',color:'#F4F6F8'},hat:{style:'none',color:'#E23D4B'},glasses:'none',facial:'none',bag:{style:'none',color:'#7C4A2D'}},'ragazzo') },
+  { nome:'Mamma', stato:'ok', conto:'28:05', da:'12:35', a:'13:35', tot:1400, pag:1400,
+    brac:'#22C55E', k:2, c:0, t:'60′', tr:'Camicia rosa · Borsa marrone',
+    sp: av({role:'mamma',skin:'#FFE0C0',hair:{style:'lunghi',color:'#4A2E1E'},top:{style:'camicia',color:'#EC4899',color2:'#F4F6F8',pattern:'solid'},pants:{style:'pantaloni',color:'#2547C4',color2:'#F4F6F8',pattern:'solid'},shoes:{style:'sneakers',color:'#F4F6F8'},hat:{style:'none',color:'#E23D4B'},glasses:'none',facial:'none',bag:{style:'borsa',color:'#7C4A2D'}},'mamma') },
+  { nome:'Papà', stato:'ok', conto:'41:33', da:'12:48', a:'13:48', tot:1200, pag:0,
+    brac:'#0EA5E9', k:1, c:1, t:'60′', tr:'Polo blu · Cappellino rosso',
+    sp: av({role:'papa',skin:'#D19A68',hair:{style:'corti',color:'#1B1714'},top:{style:'polo',color:'#2547C4',color2:'#F4F6F8',pattern:'solid'},pants:{style:'pantaloni',color:'#1F2430',color2:'#F4F6F8',pattern:'solid'},shoes:{style:'sneakers',color:'#F4F6F8'},hat:{style:'cappellino',color:'#E23D4B'},glasses:'none',facial:'barba',bag:{style:'none',color:'#7C4A2D'}},'papa') },
+  { nome:'Ragazza', stato:'dopo', conto:'paga dopo', da:'13:02', a:'?', tot:0, pag:0,
+    brac:'#8B5CF6', k:1, c:2, t:'—', tr:'Maglietta rosa a pois · Zaino verde',
+    sp: av({role:'ragazza',skin:'#E8B98A',hair:{style:'codino',color:'#8B5A2B'},top:{style:'maglietta',color:'#EC4899',color2:'#F4F6F8',pattern:'dots'},pants:{style:'pantaloncini',color:'#2547C4',color2:'#F4F6F8',pattern:'solid'},shoes:{style:'sneakers',color:'#F4F6F8'},hat:{style:'none',color:'#E23D4B'},glasses:'sole',facial:'none',bag:{style:'zaino',color:'#22C55E'}},'ragazza') }
+];
+const eur = c => (c / 100).toFixed(2).replace('.', ',') + ' €';
+
+function soldiHTML(g, modo) {
+  const resta = g.tot - g.pag;
+  if (g.stato === 'dopo') {
+    if (modo === 'c') return '<span class="btn-incassa fatto">🕐 Paga dopo</span>';
+    return '<div class="soldi pagato"><span class="k">paga</span><span class="v">dopo</span></div>';
+  }
+  if (resta <= 0) {
+    if (modo === 'b') return '<span class="pill-soldi fatto"><span class="k">pagato</span><span class="v">✓</span></span>';
+    if (modo === 'c') return '<span class="btn-incassa fatto">✓ Pagato</span>';
+    if (modo === 'd') return '<div class="soldi pagato"><span class="k">tot ' + eur(g.tot) + '</span><span class="v">pagato ✓</span></div>';
+    return '<div class="soldi pagato"><span class="k">pagato</span><span class="v">✓</span></div>';
+  }
+  const k = g.pag > 0 ? 'restano' : 'da pagare';
+  if (modo === 'b') return '<span class="pill-soldi"><span class="k">' + k + '</span><span class="v">' + eur(resta) + '</span></span>';
+  if (modo === 'c') return '<button class="btn-incassa">Incassa ' + eur(resta) + '</button>';
+  if (modo === 'd') return '<div class="soldi"><span class="k">tot ' + eur(g.tot) + '</span><span class="v">' + k + ' ' + eur(resta) + '</span></div>';
+  return '<div class="soldi"><span class="k">' + k + '</span><span class="v">' + eur(resta) + '</span></div>';
+}
+
+function costruisci(idBox, modo) {
+  const box = document.getElementById(idBox);
+  G.forEach(g => {
+    const w = document.createElement('div');
+    w.className = 'gruppo';
+    w.innerHTML =
+      '<div class="riga ' + g.stato + '">' +
+        '<div class="av">' + g.sp + '</div>' +
+        '<div class="chi"><b>' + g.nome + '</b><div class="tr">' + g.tr + '</div>' +
+          '<span class="orari"><span class="fr">dalle</span>' + g.da + '<span class="fr">alle</span>' + g.a + '</span></div>' +
+        '<span class="brac" style="background:' + g.brac + '"></span>' +
+        '<div class="conto">' + g.conto + '</div>' +
+        soldiHTML(g, modo) +
+      '</div>' +
+      '<div class="aperta ' + g.stato + '">' +
+        '<div class="fila">' +
+          '<div class="cella"><button>−</button><span class="k">🧒</span><span class="v">' + g.k + '</span><button>+</button></div>' +
+          '<div class="cella"><button>−</button><span class="k">🤸</span><span class="v">' + g.c + '</span><button>+</button></div>' +
+          '<div class="cella"><button>−5</button><span class="v">' + g.t + '</span><button>+5</button></div>' +
+          '<div class="azioni"><button>🧾 Conto</button><button>✏️ Modifica</button><button class="forte">🚪 Uscita</button></div>' +
+        '</div>' +
+      '</div>';
+    w.querySelector('.riga').onclick = (ev) => {
+      ev.stopPropagation();
+      const gia = w.classList.contains('aperto');
+      box.querySelectorAll('.gruppo').forEach(x => x.classList.remove('aperto'));
+      if (!gia) w.classList.add('aperto');
+    };
+    w.querySelector('.aperta').onclick = ev => ev.stopPropagation();
+    box.appendChild(w);
+  });
+}
+['A', 'B', 'C', 'D'].forEach((id, i) => costruisci(id, 'abcd'[i]));
+
+/* toccando fuori si chiude tutto: e' la richiesta */
+document.addEventListener('click', () => {
+  document.querySelectorAll('.gruppo.aperto').forEach(x => x.classList.remove('aperto'));
+});
+
+/* ---------------- IL CONTO ---------------- */
+const BAR = [
+  { em:'💧', nm:'Acqua', pr:100 }, { em:'🥤', nm:'Coca Cola', pr:250 },
+  { em:'☕', nm:'Caffè', pr:120 }, { em:'🍪', nm:'Merendina', pr:200 },
+  { em:'🥪', nm:'Panino', pr:400 }, { em:'🍦', nm:'Gelato', pr:250 }
+];
+const stato = {
+  parco: { nm:'2 bambini × 1 ora', pr:1400, pagata:false },
+  crazy: { nm:'Crazy Jumping', qta:1, pr:300, pagata:false },
+  bar: [{ i:1, qta:2, pagata:false }, { i:3, qta:1, pagata:false }]
+};
+
+function disegnaConto() {
+  const box = document.getElementById('CONTO');
+  const barTot = stato.bar.reduce((s, x) => s + BAR[x.i].pr * x.qta, 0);
+  const tot = stato.parco.pr + stato.crazy.pr * stato.crazy.qta + barTot;
+  const pagato = (stato.parco.pagata ? stato.parco.pr : 0)
+    + (stato.crazy.pagata ? stato.crazy.pr * stato.crazy.qta : 0)
+    + stato.bar.reduce(function (s, x) { return s + (x.pagata ? BAR[x.i].pr * x.qta : 0); }, 0);
+  const resta = tot - pagato;
+
+  box.innerHTML =
+    '<div class="conto-testa"><span>🧾</span> Conto — Nonna <button class="via">✕</button></div>' +
+    '<div class="conto-corpo">' +
+      '<div class="sez">Parco</div>' +
+      '<div class="voce' + (stato.parco.pagata ? ' pagata' : '') + '" data-v="parco">' +
+        '<span class="em">🎟️</span><span class="nm">Ingresso<small>' + stato.parco.nm + '</small></span>' +
+        '<span class="pr">' + eur(stato.parco.pr) + '</span>' +
+        '<button class="sp">' + (stato.parco.pagata ? '✓' : '') + '</button></div>' +
+      '<div class="voce' + (stato.crazy.pagata ? ' pagata' : '') + '" data-v="crazy">' +
+        '<span class="em">🤸</span><span class="nm">Crazy Jumping<small>' + eur(300) + ' l\'uno</small></span>' +
+        '<span class="qta"><button data-q="crazy-">−</button><span class="n">' + stato.crazy.qta + '</span><button data-q="crazy+">+</button></span>' +
+        '<span class="pr">' + eur(stato.crazy.pr * stato.crazy.qta) + '</span>' +
+        '<button class="sp">' + (stato.crazy.pagata ? '✓' : '') + '</button></div>' +
+      '<div class="sez">Bar</div>' +
+      stato.bar.map(function (x, j) {
+        const b = BAR[x.i];
+        return '<div class="voce' + (x.pagata ? ' pagata' : '') + '" data-bar="' + j + '">' +
+          '<span class="em">' + b.em + '</span><span class="nm">' + b.nm + '<small>' + eur(b.pr) + ' l\'uno</small></span>' +
+          '<span class="qta"><button data-q="bar-' + j + '-">−</button><span class="n">' + x.qta + '</span><button data-q="bar-' + j + '+">+</button></span>' +
+          '<span class="pr">' + eur(b.pr * x.qta) + '</span>' +
+          '<button class="sp" data-sb="' + j + '">' + (x.pagata ? '✓' : '') + '</button></div>';
+      }).join('') +
+      '<div class="sez">Aggiungi dal bar</div>' +
+      '<div class="bar-griglia">' + BAR.map(function (b, i) {
+        const presa = stato.bar.some(x => x.i === i);
+        return '<button class="bar-b' + (presa ? ' presa' : '') + '" data-add="' + i + '">' +
+          '<span class="em">' + b.em + '</span><span class="nm">' + b.nm + '</span><span class="pr">' + eur(b.pr) + '</span></button>';
+      }).join('') + '</div>' +
+      '<div class="totali">' +
+        '<span class="t">Totale<b>' + eur(tot) + '</b></span>' +
+        '<span class="t">Già incassato<b>' + eur(pagato) + '</b></span>' +
+        '<span class="grosso"><span class="k">' + (resta > 0 ? 'da incassare' : 'tutto pagato') + '</span><b>' + (resta > 0 ? eur(resta) : '✓') + '</b></span>' +
+      '</div>' +
+      '<div class="conto-azioni">' +
+        (resta > 0 ? '<button class="forte" data-tutto>💶 Incassa tutto ' + eur(resta) + '</button>' : '') +
+        '<button data-scontrino>🧾 Scontrino</button>' +
+        '<button data-uscita>🚪 Fai uscire</button>' +
+      '</div>' +
+    '</div>';
+
+  box.querySelectorAll('.voce .sp').forEach(function (b) {
+    b.onclick = function () {
+      if (b.dataset.sb !== undefined) {
+        const j = +b.dataset.sb;
+        if (stato.bar[j]) stato.bar[j].pagata = !stato.bar[j].pagata;
+      } else {
+        const v = b.closest('.voce').dataset.v;
+        if (v) stato[v].pagata = !stato[v].pagata;
+      }
+      disegnaConto();
+    };
+  });
+  box.querySelectorAll('[data-q]').forEach(function (b) {
+    b.onclick = function () {
+      const q = b.dataset.q;
+      if (q === 'crazy+') stato.crazy.qta++;
+      else if (q === 'crazy-') stato.crazy.qta = Math.max(0, stato.crazy.qta - 1);
+      else {
+        const m = q.match(/^bar-(\d+)([+-])$/);
+        if (m) {
+          const j = +m[1];
+          stato.bar[j].qta += (m[2] === '+' ? 1 : -1);
+          if (stato.bar[j].qta <= 0) stato.bar.splice(j, 1);
+        }
+      }
+      disegnaConto();
+    };
+  });
+  box.querySelectorAll('[data-add]').forEach(function (b) {
+    b.onclick = function () {
+      const i = +b.dataset.add;
+      const g = stato.bar.find(x => x.i === i);
+      if (g) g.qta++; else stato.bar.push({ i: i, qta: 1 });
+      disegnaConto();
+    };
+  });
+  const t = box.querySelector('[data-tutto]');
+  if (t) t.onclick = function () {
+    stato.parco.pagata = true;
+    stato.crazy.pagata = true;
+    stato.bar.forEach(function (x) { x.pagata = true; });   // anche il bar
+    disegnaConto();
+  };
+}
+disegnaConto();
+document.getElementById('CONTO').addEventListener('click', e => e.stopPropagation());
+</script>
+</body>
+</html>
