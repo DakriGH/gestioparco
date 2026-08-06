@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bar &amp; Conto — quattro proposte</title>
+<link rel="stylesheet" href="./css/fonts.css">
+<style>
+/* ============================================================
+   Quattro modi di fare il pannello Bar & Conto, ognuno dentro una
+   cornice da tablet in verticale (820x1180): quello che non ci sta,
+   si vede subito. Il pallino in alto a destra di ogni cornice dice
+   se serve scorrere, ed e' MISURATO mentre disegna, non a occhio.
+   ============================================================ */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #0E0E14; color: #E9E9F2; padding: 0 0 70px; }
+.wrap { max-width: 1000px; margin: 0 auto; padding: 22px 18px; }
+h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 10px; }
+.intro { color: #A8A8BD; font-size: 15px; line-height: 1.55; margin: 0 0 8px; max-width: 70ch; }
+.intro b { color: #FFD166; font-weight: 600; }
+.strada { padding: 30px 0 4px; }
+.strada > header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.strada > header .n { font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 700; background: #23232F; color: #FFD166; border-radius: 20px; padding: 4px 12px; }
+.strada > header h2 { font-family: 'Fredoka', sans-serif; font-size: 22px; margin: 0; }
+.perche { color: #9A9AB0; font-size: 14.5px; line-height: 1.55; margin: 9px 0 12px; max-width: 70ch; }
+.perche b { color: #FFD166; font-weight: 600; }
+.perche .ko { color: #FF9AA2; font-weight: 600; }
+
+/* la cornice del tablet, in scala */
+.tablet {
+  position: relative;
+  width: 410px; height: 590px;          /* 820x1180 a meta' */
+  border-radius: 22px;
+  overflow: hidden;
+  background: #14141C;
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 20px 46px rgba(0,0,0,0.5);
+}
+.tablet > .dentro {
+  width: 820px; height: 1180px;
+  transform: scale(0.5); transform-origin: top left;
+}
+.misura {
+  position: absolute; top: 10px; right: 10px; z-index: 9;
+  font-size: 11px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
+  border-radius: 20px; padding: 4px 10px;
+}
+.misura.ok { background: rgba(25,192,138,0.2); color: #7FE8C1; }
+.misura.ko { background: rgba(255,107,107,0.22); color: #FF9AA2; }
+.vero { font-size: 12.5px; color: #6E6E85; margin-top: 8px; }
+
+/* ---------- il fondo finto: la lista dietro ---------- */
+.fondo { position: absolute; inset: 0; padding: 16px; display: flex; flex-direction: column; gap: 10px; filter: blur(8px) saturate(0.8) brightness(0.6); }
+.fcard { height: 96px; border-radius: 16px; background: linear-gradient(150deg,#1E9E76,#137A5A); }
+.fcard.b { background: linear-gradient(150deg,#D9922A,#B26F12); }
+.fcard.c { background: linear-gradient(150deg,#E05A5A,#B93636); }
+.fbar { height: 74px; border-radius: 0; background: #1C1C25; margin: -16px -16px 4px; }
+
+/* ---------- il pannello sopraelevato ---------- */
+.velo { position: absolute; inset: 0; background: rgba(6,6,12,0.5); }
+.pan {
+  position: absolute; inset: 12px;
+  border-radius: 22px; background: #191921;
+  border: 1px solid rgba(255,255,255,0.13);
+  box-shadow: 0 26px 60px rgba(0,0,0,0.6);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.testa { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: #22222D; flex-shrink: 0; }
+.testa .fig { width: 34px; flex-shrink: 0; }
+.testa .fig svg { display: block; width: 100%; height: auto; }
+.testa .brac { width: 6px; height: 42px; border-radius: 4px; }
+.testa .mid { flex: 1; min-width: 0; }
+.testa .nm { font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 600; }
+.testa .or { font-size: 12.5px; color: #9A9AB0; font-variant-numeric: tabular-nums; }
+.testa .via { width: 46px; height: 46px; border-radius: 14px; background: rgba(255,255,255,0.12); border: none; color: #fff; font-size: 18px; cursor: pointer; }
+
+/* colori: il colore dice CHE COSA e' */
+:root { --ingr:#3B8CFF; --crazy:#B072FF; --bar:#F5A63F; --cassa:#19C08A; --ink:#0C1017; }
+
+.tot {
+  display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap;
+  padding: 12px 16px; background: linear-gradient(140deg,#0C7A57,#075C41); flex-shrink: 0;
+}
+.tot .k { display: block; font-size: 11px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: #EAF7F1; }
+.tot .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 34px; font-weight: 700; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.tot .tasti { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+.bt { border: none; border-radius: 13px; padding: 12px 16px; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; background: rgba(255,255,255,0.16); color: #fff; min-height: 46px; }
+.bt.bianco { background: #fff; color: var(--ink); font-family: 'Fredoka', sans-serif; font-size: 16px; }
+.bt.scuro { background: rgba(0,0,0,0.3); }
+.bt.pieno { color: var(--ink); font-family: 'Fredoka', sans-serif; font-size: 16px; }
+.bt.ingr { background: var(--ingr); } .bt.crazy { background: var(--crazy); }
+.bt.bar { background: var(--bar); } .bt.cassa { background: var(--cassa); }
+
+/* --- la griglia dei prodotti: nomi INTERI, mai tagliati --- */
+.griglia { display: grid; gap: 9px; }
+.prod {
+  position: relative; border: none; border-radius: 15px; padding: 10px 8px 9px;
+  background: rgba(255,255,255,0.07); color: #fff; font: inherit; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  min-height: 84px; text-align: center;
+}
+.prod .em { font-size: 24px; line-height: 1; }
+.prod .nm { font-size: 13px; font-weight: 700; line-height: 1.15; }   /* niente nowrap: va a capo */
+.prod .pr { font-family: 'Fredoka', sans-serif; font-size: 13px; color: #A8A8BD; }
+.prod.preso { background: #fff; color: var(--ink); box-shadow: 0 3px 12px rgba(0,0,0,0.3); }
+.prod.preso .pr { color: #5A5368; }
+.prod .qt {
+  position: absolute; top: -8px; right: -8px; min-width: 28px; height: 28px; border-radius: 14px;
+  background: var(--bar); color: var(--ink); font-family: 'Fredoka', sans-serif; font-size: 14px;
+  font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 7px;
+}
+.cat-rail { display: flex; flex-direction: column; gap: 8px; }
+.cat-rail button {
+  border: none; border-radius: 14px; padding: 12px 10px; background: rgba(255,255,255,0.07);
+  color: #fff; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; text-align: left;
+  display: flex; align-items: center; gap: 8px; min-height: 54px;
+}
+.cat-rail button.on { background: var(--bar); color: var(--ink); }
+.cat-strip { display: flex; gap: 8px; flex-wrap: wrap; }
+.cat-strip button {
+  border: none; border-radius: 20px; padding: 9px 15px; background: rgba(255,255,255,0.08);
+  color: #fff; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; min-height: 42px;
+}
+.cat-strip button.on { background: var(--bar); color: var(--ink); }
+
+/* --- il conto --- */
+.conto { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.sez { border-radius: 15px; overflow: hidden; background: #1F1F2A; }
+.sez > .cap { display: flex; align-items: center; gap: 10px; padding: 9px 13px; color: var(--ink); font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 600; }
+.sez > .cap .im { margin-left: auto; font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.sez.parco > .cap { background: var(--ingr); }
+.sez.bar > .cap { background: var(--bar); }
+.sez > .den { padding: 4px 13px 11px; }
+.rg { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 14.5px; }
+.rg + .rg { border-top: 1px solid rgba(255,255,255,0.09); }
+.rg .nm { flex: 1; min-width: 0; font-weight: 600; }
+.rg .nm small { display: block; font-size: 11.5px; color: #9A9AB0; font-weight: 500; }
+.rg .pr { font-family: 'Fredoka', sans-serif; font-weight: 700; font-variant-numeric: tabular-nums; }
+.scorre { overflow-y: auto; min-height: 0; }
+
+.tagli { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.tagli button { min-height: 52px; border: none; border-radius: 13px; background: rgba(255,255,255,0.14); color: #fff; font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 700; cursor: pointer; }
+.tagli button.mon { background: rgba(255,255,255,0.08); font-size: 14px; }
+
+.elenco { color: #9A9AB0; font-size: 14.5px; line-height: 1.75; border-radius: 20px; padding: 14px 16px; background: #16161F; border: 1px solid rgba(255,255,255,0.08); }
+.elenco b { color: #FFD166; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Bar &amp; Conto: quattro proposte, tutte dentro lo schermo</h1>
+  <p class="intro">Ogni proposta sta dentro una cornice da tablet in verticale (820×1180, qui a metà
+  scala). Il pallino in alto a destra dice <b>se serve scorrere</b>, ed è misurato mentre la pagina
+  disegna, non a occhio.</p>
+  <p class="intro">Sono tutte toccabili: aggiungi consumazioni, guarda il conto, incassa. Quello che
+  scegli qui sostituirà <b>sia</b> il pannello dentro le schede <b>sia</b> il tasto in Nuovo, che
+  passa in alto accanto a Registra.</p>
+  <p class="intro">Regole che valgono per tutte: nomi dei prodotti <b>interi</b>, mai tagliati; bar e
+  pagamento <b>separati a vista</b>; sfondo sfocato e ✕ in alto a destra.</p>
+
+  <div class="strada">
+    <header><span class="n">B1</span><h2>Catalogo sopra, conto sotto — niente scorrimento</h2></header>
+    <p class="perche">Lo schermo è diviso in due fasce fisse: sopra i prodotti, sotto il conto che
+    <b>non si muove mai</b>. Le categorie sono pastiglie in cima, quindi vedi solo i prodotti di una
+    categoria per volta e ci stanno tutti larghi, col nome intero su due righe se serve.
+    <b>Il conto è sempre sott'occhio mentre aggiungi</b>: vedi il totale salire.
+    <span class="ko">Dove si rompe:</span> se il conto è lungo, quella fascia scorre da sola —
+    ma è l'unica parte che si muove.</p>
+    <div class="tablet" data-p="B1"></div>
+    <div class="vero">Fascia prodotti 58% · fascia conto 42%</div>
+  </div>
+
+  <div class="strada">
+    <header><span class="n">B2</span><h2>Due schede grandi: prima il Bar, poi il Conto</h2></header>
+    <p class="perche">Una cosa per volta, e ognuna ha <b>tutto lo schermo</b>: la scheda Bar mostra
+    l'intero listino senza scorrere, la scheda Conto mostra le voci e i tasti per incassare.
+    Le due linguette in alto portano scritto quanto c'è da avere, quindi non perdi mai il totale.
+    <b>È quella con più spazio per i nomi</b> e zero scorrimento in entrambe.
+    <span class="ko">Dove si rompe:</span> per vedere l'effetto di quello che aggiungi devi
+    cambiare scheda.</p>
+    <div class="tablet" data-p="B2"></div>
+    <div class="vero">Una scheda alla volta, entrambe intere</div>
+  </div>
+
+  <div class="strada">
+    <header><span class="n">B3</span><h2>Cassa da banco: categorie a lato, conto in fondo</h2></header>
+    <p class="perche">Come una cassa vera: <b>le categorie sono una colonna a sinistra</b>, i prodotti
+    riempiono il resto, e in fondo una barra fissa col totale e i tasti per incassare. Cambiare
+    categoria è un tocco solo e i prodotti non si spostano mai di posto — <b>impari dove sta ogni
+    cosa e vai a memoria</b>.
+    <span class="ko">Dove si rompe:</span> il dettaglio del conto non si vede tutto: in fondo c'è
+    il totale e un riassunto, per le voci una per una tocchi «Dettaglio».</p>
+    <div class="tablet" data-p="B3"></div>
+    <div class="vero">Colonna categorie 150px · barra cassa fissa in fondo</div>
+  </div>
+
+  <div class="strada">
+    <header><span class="n">B4</span><h2>Due colonne: catalogo a sinistra, scontrino a destra</h2></header>
+    <p class="perche">Come una cassa da supermercato: a sinistra scegli, a destra <b>lo scontrino si
+    scrive da solo</b>, riga per riga, con sopra il totale e sotto i tasti per incassare. Bar e
+    pagamento sono in <b>due colonne fisiche diverse</b>: non si possono confondere.
+    Su un tablet in verticale le due colonne sono strette ma ci stanno.
+    <span class="ko">Dove si rompe:</span> i prodotti sono in tessere più piccole, tre per riga
+    invece di quattro.</p>
+    <div class="tablet" data-p="B4"></div>
+    <div class="vero">Catalogo 58% · scontrino 42%, affiancati</div>
+  </div>
+
+  <div class="strada">
+    <header><span class="n">≡</span><h2>Quello che vale per tutte e quattro</h2></header>
+    <div class="elenco">
+      <b>Sta tutto dentro lo schermo</b>: niente scorrimento della pagina, al massimo scorre una
+      fascia sola e si vede che è lei.<br>
+      <b>I nomi sono interi</b>: «Coca Cola Zero» e «Nastro Azzurro» vanno a capo invece di
+      diventare «Coca Cola…».<br>
+      <b>Bar e pagamento sono separati a vista</b>, per colore o per posizione.<br>
+      <b>In cima chi stai servendo</b> — figura, nome, orario — e la ✕ per chiudere.<br>
+      <b>Il calcolo del resto</b> con i tagli grossi è dentro, non è un altro pannello.<br>
+      <b>Lo stesso pannello</b> si apre dalla scheda e dal tasto in alto accanto a Registra.
+    </div>
+  </div>
+</div>
+
+<script>
+const eur = c => (c / 100).toFixed(2).replace('.', ',') + ' €';
+const LISTINO = [
+  { id:'acqua', em:'💧', nm:'Acqua', pz:100, cat:'Bevande' },
+  { id:'caffe', em:'☕', nm:'Caffè', pz:120, cat:'Bevande' },
+  { id:'coca', em:'🥤', nm:'Coca Cola', pz:250, cat:'Bevande' },
+  { id:'cocaz', em:'🥤', nm:'Coca Cola Zero', pz:250, cat:'Bevande' },
+  { id:'fanta', em:'🍊', nm:'Fanta', pz:250, cat:'Bevande' },
+  { id:'sprite', em:'🍋', nm:'Sprite', pz:250, cat:'Bevande' },
+  { id:'schw', em:'🥤', nm:'Schweppes', pz:200, cat:'Bevande' },
+  { id:'gazz', em:'🍋', nm:'Gazzosa', pz:200, cat:'Bevande' },
+  { id:'esta', em:'🧃', nm:'Estathè', pz:250, cat:'Bevande' },
+  { id:'bras', em:'🥤', nm:'Brasilena', pz:200, cat:'Bevande' },
+  { id:'pata', em:'🍟', nm:'Patatine', pz:150, cat:'Snack' },
+  { id:'heine', em:'🍺', nm:'Heineken', pz:300, cat:'Birre' },
+  { id:'nastro', em:'🍺', nm:'Nastro Azzurro', pz:300, cat:'Birre' },
+  { id:'ichnu', em:'🍺', nm:'Ichnusa', pz:300, cat:'Birre' },
+  { id:'tenn', em:'🍺', nm:"Tennent's", pz:350, cat:'Birre' },
+  { id:'limon', em:'🍋', nm:'Limoncello', pz:300, cat:'Alcolici' },
+  { id:'amari', em:'🥃', nm:'Amari', pz:300, cat:'Alcolici' },
+  { id:'grappa', em:'🥃', nm:'Grappa', pz:400, cat:'Alcolici' },
+  { id:'spritz', em:'🍹', nm:'Spritz', pz:600, cat:'Alcolici' }
+];
+const CAT = ['Bevande', 'Birre', 'Snack', 'Alcolici'];
+const prod = id => LISTINO.find(p => p.id === id);
+
+function figura(col) {
+  return '<svg viewBox="0 0 30 40" aria-hidden="true">' +
+    '<circle cx="15" cy="7.5" r="6" fill="#F2C79C"/>' +
+    '<rect x="7.5" y="14.5" width="15" height="13.5" rx="4.5" fill="' + col + '"/>' +
+    '<rect x="8.6" y="27.5" width="5.6" height="9" rx="2.6" fill="#3A4152"/>' +
+    '<rect x="15.8" y="27.5" width="5.6" height="9" rx="2.6" fill="#3A4152"/>' +
+    '<rect x="7.6" y="35.6" width="7.4" height="3.4" rx="1.7" fill="#20242D"/>' +
+    '<rect x="15.2" y="35.6" width="7.4" height="3.4" rx="1.7" fill="#20242D"/></svg>';
+}
+
+function nuovo() {
+  return { bar: { coca:2, pata:1 }, bambini:2, crazy:1, minuti:60, tariffa:1200,
+           pag:{ parco:0, bar:0 }, cat:'Bevande', vista:'bar', resto:null, dettaglio:false };
+}
+const tIngr  = s => Math.max(1, s.bambini) * s.tariffa;
+const tCrazy = s => s.crazy * 400;
+const tParco = s => tIngr(s) + tCrazy(s);
+const tBar   = s => Object.keys(s.bar).reduce((a,k) => a + s.bar[k] * prod(k).pz, 0);
+const rParco = s => Math.max(0, tParco(s) - s.pag.parco);
+const rBar   = s => Math.max(0, tBar(s) - s.pag.bar);
+const resta  = s => rParco(s) + rBar(s);
+const pezzi  = s => Object.keys(s.bar).reduce((a,k) => a + s.bar[k], 0);
+
+function paga(s, dove) {
+  if (dove === 'parco') s.pag.parco = tParco(s);
+  else if (dove === 'bar') s.pag.bar = tBar(s);
+  else { s.pag.parco = tParco(s); s.pag.bar = tBar(s); }
+}
+
+/* ---------- pezzi comuni ---------- */
+function testa() {
+  return '<div class="testa"><div class="brac" style="background:#FF7A6B"></div>' +
+    '<div class="fig">' + figura('#E4574C') + '</div>' +
+    '<div class="mid"><div class="nm">Nonna Rosa</div>' +
+    '<div class="or">🕒 14:20 → 15:20 · 🧒 2</div></div>' +
+    '<button class="via" data-chiudi>✕</button></div>';
+}
+function totale(s, tasti) {
+  const R = resta(s);
+  return '<div class="tot"><div><span class="k">' + (R > 0 ? 'da incassare' : 'tutto pagato') + '</span>' +
+    '<span class="v">' + (R > 0 ? eur(R) : '✓') + '</span></div>' +
+    '<div class="tasti">' + (R > 0 ? (tasti !== undefined ? tasti :
+      '<button class="bt bianco" data-p="tutto">Incassa tutto</button>' +
+      '<button class="bt scuro" data-resto>🧮 Resto</button>') : '') + '</div></div>';
+}
+function tessere(s, colonne) {
+  const q = LISTINO.filter(p => p.cat === s.cat);
+  return '<div class="griglia" style="grid-template-columns:repeat(' + colonne + ',1fr)">' +
+    q.map(p => '<button class="prod' + (s.bar[p.id] ? ' preso' : '') + '" data-add="' + p.id + '">' +
+      (s.bar[p.id] ? '<span class="qt">' + s.bar[p.id] + '</span>' : '') +
+      '<span class="em">' + p.em + '</span><span class="nm">' + p.nm + '</span>' +
+      '<span class="pr">' + eur(p.pz) + '</span></button>').join('') + '</div>';
+}
+function striscia(s) {
+  return '<div class="cat-strip">' + CAT.map(c =>
+    '<button data-cat="' + c + '"' + (s.cat === c ? ' class="on"' : '') + '>' + c + '</button>').join('') + '</div>';
+}
+function colonna(s) {
+  const em = { Bevande:'🥤', Birre:'🍺', Snack:'🍟', Alcolici:'🥃' };
+  return '<div class="cat-rail">' + CAT.map(c =>
+    '<button data-cat="' + c + '"' + (s.cat === c ? ' class="on"' : '') + '>' +
+    '<span>' + em[c] + '</span>' + c + '</button>').join('') + '</div>';
+}
+function vociBar(s) {
+  return Object.keys(s.bar).map(id => { const b = prod(id);
+    return '<div class="rg"><span class="nm">' + b.nm + '<small>' + s.bar[id] + ' × ' + eur(b.pz) + '</small></span>' +
+      '<span class="pr">' + eur(s.bar[id] * b.pz) + '</span></div>'; }).join('')
+    || '<div class="rg"><span class="nm" style="color:#9A9AB0;font-weight:500">Niente al bar</span></div>';
+}
+function contoBlocchi(s) {
+  return '<div class="sez parco"><div class="cap"><span>🎟️</span> Parco<span class="im">' +
+      (rParco(s) > 0 ? eur(rParco(s)) : '✓') + '</span></div><div class="den">' +
+      '<div class="rg"><span class="nm">Ingresso ×' + s.bambini + '<small>' + s.minuti + ' minuti</small></span>' +
+      '<span class="pr">' + eur(tIngr(s)) + '</span></div>' +
+      (s.crazy ? '<div class="rg"><span class="nm">Crazy Jumping ×' + s.crazy + '<small>' + eur(400) + " l'uno</small></span>" +
+        '<span class="pr">' + eur(tCrazy(s)) + '</span></div>' : '') +
+      (rParco(s) > 0 ? '<button class="bt pieno ingr" style="width:100%;margin-top:9px" data-p="parco">Paga il parco · ' + eur(rParco(s)) + '</button>' : '') +
+    '</div></div>' +
+    '<div class="sez bar"><div class="cap"><span>🥤</span> Bar<span class="im">' +
+      (rBar(s) > 0 ? eur(rBar(s)) : '✓') + '</span></div><div class="den">' + vociBar(s) +
+      (rBar(s) > 0 ? '<button class="bt pieno bar" style="width:100%;margin-top:9px" data-p="bar">Paga il bar · ' + eur(rBar(s)) + '</button>' : '') +
+    '</div></div>';
+}
+function resto(s) {
+  const R = resta(s), d = s.resto.dato, av = d - R;
+  return '<div class="sez"><div class="den" style="padding:12px 13px 13px">' +
+    '<div style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:10px">' +
+      '<div><span style="display:block;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#9A9AB0">ti ha dato</span>' +
+      '<span style="font-family:Fredoka,sans-serif;font-size:30px;font-weight:700">' + eur(d) + '</span></div>' +
+      (d > 0 ? '<div style="margin-left:auto;text-align:right;color:#FFD166">' +
+        '<span style="display:block;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase">' +
+        (av >= 0 ? 'resto da dare' : 'mancano') + '</span>' +
+        '<span style="font-family:Fredoka,sans-serif;font-size:30px;font-weight:700">' + eur(Math.abs(av)) + '</span></div>' : '') +
+    '</div>' +
+    '<div class="tagli">' + [[5000,'50 €'],[2000,'20 €'],[1000,'10 €'],[500,'5 €']].map(t => '<button data-tag="' + t[0] + '">' + t[1] + '</button>').join('') +
+      [[200,'2 €'],[100,'1 €'],[50,'50c'],[20,'20c']].map(t => '<button class="mon" data-tag="' + t[0] + '">' + t[1] + '</button>').join('') + '</div>' +
+    '<div style="display:flex;gap:8px;margin-top:10px">' +
+      '<button class="bt scuro" data-rzero>↺</button><button class="bt scuro" data-rchiudi>Chiudi</button>' +
+      (d > 0 ? '<button class="bt pieno cassa" style="flex:1" data-rok>Incassa ' + eur(Math.min(d, R)) +
+        (av > 0 ? ' · rendi ' + eur(av) : '') + '</button>' : '') +
+    '</div></div></div>';
+}
+
+/* ---------------- B1: catalogo sopra, conto sotto ---------------- */
+function dB1(s) {
+  return testa() + totale(s) +
+    '<div style="flex:0 0 auto;padding:12px 16px 10px;display:flex;flex-direction:column;gap:10px">' +
+      striscia(s) + tessere(s, 4) + '</div>' +
+    '<div class="conto scorre" style="flex:1;padding:0 16px 14px">' +
+      (s.resto ? resto(s) : contoBlocchi(s)) + '</div>';
+}
+/* ---------------- B2: due schede grandi ---------------- */
+function dB2(s) {
+  const R = resta(s);
+  const ling = '<div style="display:flex;gap:9px;padding:12px 16px 0;flex-shrink:0">' +
+    '<button class="bt" style="flex:1;' + (s.vista === 'bar' ? 'background:var(--bar);color:var(--ink)' : '') + '" data-v="bar">🥤 Bar' +
+      (pezzi(s) ? ' · ' + pezzi(s) : '') + '</button>' +
+    '<button class="bt" style="flex:1;' + (s.vista === 'conto' ? 'background:var(--cassa);color:var(--ink)' : '') + '" data-v="conto">💶 Conto' +
+      (R > 0 ? ' · ' + eur(R) : ' ✓') + '</button></div>';
+  const dentro = s.vista === 'bar'
+    ? '<div style="flex:1;padding:12px 16px 14px;display:flex;flex-direction:column;gap:11px;min-height:0">' +
+        striscia(s) + tessere(s, 3) + '</div>'
+    : '<div class="conto" style="flex:1;padding:12px 16px 14px;min-height:0">' +
+        (s.resto ? resto(s) : contoBlocchi(s)) + '</div>';
+  return testa() + totale(s) + ling + dentro;
+}
+/* ---------------- B3: cassa da banco ---------------- */
+function dB3(s) {
+  return testa() +
+    '<div style="flex:1;display:flex;gap:11px;padding:12px 14px 0;min-height:0">' +
+      '<div style="flex:0 0 150px">' + colonna(s) + '</div>' +
+      '<div style="flex:1;min-width:0;overflow-y:auto">' +
+        (s.dettaglio ? (s.resto ? resto(s) : contoBlocchi(s)) : tessere(s, 3)) + '</div>' +
+    '</div>' +
+    totale(s, (s.dettaglio ? '<button class="bt scuro" data-det>← Prodotti</button>'
+                           : '<button class="bt scuro" data-det>Dettaglio</button>') +
+              '<button class="bt bianco" data-p="tutto">Incassa tutto</button>' +
+              '<button class="bt scuro" data-resto>🧮</button>');
+}
+/* ---------------- B4: due colonne ---------------- */
+function dB4(s) {
+  return testa() +
+    '<div style="flex:1;display:flex;gap:10px;padding:12px 14px;min-height:0">' +
+      '<div style="flex:1.35;min-width:0;display:flex;flex-direction:column;gap:10px;min-height:0">' +
+        striscia(s) + '<div style="overflow-y:auto;min-height:0">' + tessere(s, 3) + '</div></div>' +
+      '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:10px;min-height:0">' +
+        '<div class="conto scorre" style="flex:1">' + (s.resto ? resto(s) : contoBlocchi(s)) + '</div></div>' +
+    '</div>' + totale(s);
+}
+
+/* ---------------- il motore ---------------- */
+const VISTE = { B1: dB1, B2: dB2, B3: dB3, B4: dB4 };
+document.querySelectorAll('.tablet').forEach(tab => {
+  const p = tab.dataset.p;
+  const s = nuovo();
+  tab.innerHTML = '<div class="dentro"><div class="fondo"><div class="fbar"></div>' +
+    '<div class="fcard"></div><div class="fcard b"></div><div class="fcard c"></div><div class="fcard"></div>' +
+    '</div><div class="velo"></div><div class="pan"></div></div>' +
+    '<span class="misura"></span>';
+  const pan = tab.querySelector('.pan');
+  const badge = tab.querySelector('.misura');
+
+  function disegna() {
+    pan.innerHTML = VISTE[p](s);
+    const $ = q => pan.querySelectorAll(q), uno = q => pan.querySelector(q);
+    $('[data-add]').forEach(b => b.onclick = () => { s.bar[b.dataset.add] = (s.bar[b.dataset.add] || 0) + 1; disegna(); });
+    $('[data-cat]').forEach(b => b.onclick = () => { s.cat = b.dataset.cat; disegna(); });
+    $('[data-v]').forEach(b => b.onclick = () => { s.vista = b.dataset.v; s.resto = null; disegna(); });
+    $('[data-p]').forEach(b => b.onclick = () => { paga(s, b.dataset.p); disegna(); });
+    const de = uno('[data-det]'); if (de) de.onclick = () => { s.dettaglio = !s.dettaglio; disegna(); };
+    const rr = uno('[data-resto]'); if (rr) rr.onclick = () => { s.resto = { dato: 0 }; if (p === 'B3') s.dettaglio = true; disegna(); };
+    $('[data-tag]').forEach(b => b.onclick = () => { s.resto.dato += (+b.dataset.tag); disegna(); });
+    const rz = uno('[data-rzero]'); if (rz) rz.onclick = () => { s.resto.dato = 0; disegna(); };
+    const rc = uno('[data-rchiudi]'); if (rc) rc.onclick = () => { s.resto = null; disegna(); };
+    const ro = uno('[data-rok]'); if (ro) ro.onclick = () => { paga(s, 'tutto'); s.resto = null; disegna(); };
+    misura();
+  }
+  function misura() {
+    /* quanto sborda davvero: guardo ogni fascia del pannello */
+    let sborda = 0;
+    pan.querySelectorAll('*').forEach(e => {
+      const d = e.scrollHeight - e.clientHeight;
+      if (d > 2 && e.clientHeight > 40) sborda = Math.max(sborda, d);
+    });
+    const fuori = pan.scrollHeight - pan.clientHeight;
+    if (fuori > 2) { badge.className = 'misura ko'; badge.textContent = 'sborda di ' + fuori + 'px'; }
+    else if (sborda > 2) { badge.className = 'misura ok'; badge.textContent = 'scorre una fascia (' + sborda + 'px)'; }
+    else { badge.className = 'misura ok'; badge.textContent = 'ci sta tutto'; }
+  }
+  disegna();
+});
+</script>
+</body>
+</html>
