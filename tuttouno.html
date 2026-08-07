@@ -38,10 +38,9 @@
     background: var(--bg); color: var(--txt); overflow: hidden; }
   .corpo { flex: 1; min-height: 0; padding: 12px 14px 0; display: flex; flex-direction: column; gap: 10px; }
   button { font: inherit; color: inherit; cursor: pointer; }
-  .num { font-family: 'Fredoka', sans-serif; font-weight: 700; font-variant-numeric: tabular-nums; }
 
-  /* le categorie, ognuna col suo colore */
-  .cat { display: flex; gap: 7px; flex-wrap: wrap; }
+  /* linguette colorate */
+  .cat { display: flex; gap: 7px; flex-wrap: wrap; flex-shrink: 0; }
   .cat button { border: none; border-radius: 15px; padding: 9px 14px; min-height: 48px;
     background: var(--surface); color: var(--txt-3); font-size: 14.5px; font-weight: 700;
     display: flex; align-items: center; gap: 7px; transition: background .15s, color .15s, transform .08s; }
@@ -49,46 +48,120 @@
   .cat button svg { width: 20px; height: 20px; }
   .cat button.on { color: #14141B; }
   .cat button.on[data-v="Parco"]    { background: var(--accent); }
-  .cat button.on[data-v="Persone"]  { background: var(--late); }
   .cat button.on[data-v="Bevande"]  { background: #7FB6E8; }
   .cat button.on[data-v="Birre"]    { background: var(--warn); }
   .cat button.on[data-v="Snack"]    { background: #F0A868; }
   .cat button.on[data-v="Alcolici"] { background: var(--hot); }
 
-  /* la fascia dell'ingresso: colorata, sempre uguale */
-  .fascia { border-radius: 20px; padding: 11px 13px; display: flex; align-items: center;
-    gap: 10px; flex-wrap: wrap; background: linear-gradient(140deg, #3A2E6E, #2A2050); }
-  .fascia.piatta { background: var(--surface); }
+  /* fascia dell'ingresso */
+  .fascia { border-radius: 20px; padding: 10px 13px; display: flex; align-items: center;
+    gap: 10px; flex-wrap: wrap; flex-shrink: 0;
+    background: linear-gradient(140deg, #3A2E6E, #2A2050); }
   .fascia .k { font-size: 10.5px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
     color: rgba(255,255,255,.6); display: block; }
-  .fascia .ora { font-family: 'Fredoka', sans-serif; font-size: 30px; font-weight: 700; line-height: 1.05; }
-  .chip { border: none; border-radius: 12px; min-height: 42px; padding: 0 13px; background: rgba(255,255,255,.1);
-    color: var(--txt); font-size: 14px; font-weight: 700; transition: transform .08s, background .12s; }
+  .fascia .ora { font-family: 'Fredoka', sans-serif; font-size: 28px; font-weight: 700; line-height: 1.05; }
+  .chip { border: none; border-radius: 12px; min-height: 40px; padding: 0 12px; background: rgba(255,255,255,.1);
+    color: var(--txt); font-size: 13.5px; font-weight: 700; transition: transform .08s, background .12s; }
   .chip:active { transform: scale(.95); }
-  .chip.on { background: var(--txt); color: #14141B; }
-  .chip.pic { min-height: 36px; padding: 0 10px; font-size: 13px; }
+  .chip.on { background: #fff; color: #14141B; }
   .chip.dopo.on { background: var(--late); color: #06222A; }
   .brac { display: flex; gap: 5px; margin-left: auto; }
   .brac button { width: 32px; height: 32px; border-radius: 50%; border: 3px solid transparent; padding: 0; }
   .brac button.on { border-color: #fff; transform: scale(1.1); }
-  .sep { width: 1px; align-self: stretch; background: rgba(255,255,255,.16); margin: 0 3px; }
+  .sep { width: 1px; align-self: stretch; background: rgba(255,255,255,.16); margin: 0 2px; }
 
-  /* la griglia e le card, come nel Bar & Conto */
+  /* il blocco verde dei numeri, quello che c'era gia' */
+  .verde { border-radius: 20px; padding: 11px 14px; flex-shrink: 0;
+    background: linear-gradient(150deg, #1B8560 0%, #12664A 100%);
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .verde .voce { display: flex; align-items: center; gap: 10px; }
+  .verde .lab { font-size: 14.5px; font-weight: 700; display: flex; align-items: center; gap: 7px; }
+  .verde .lab .em { font-size: 22px; }
+  .conta { display: flex; align-items: center; background: rgba(0,0,0,.28); border-radius: 14px; overflow: hidden; }
+  .conta button { border: none; background: rgba(255,255,255,.12); width: 52px; min-height: 52px;
+    font-family: 'Fredoka', sans-serif; font-size: 26px; font-weight: 700; color: #fff; }
+  .conta button:active { background: rgba(255,255,255,.28); }
+  .conta button:disabled { opacity: .3; }
+  .conta .n { min-width: 54px; text-align: center; font-family: 'Fredoka', sans-serif;
+    font-size: 27px; font-weight: 700; }
+  .verde .quanto { margin-left: auto; text-align: right; }
+  .verde .quanto .k { font-size: 10.5px; font-weight: 800; letter-spacing: .09em;
+    text-transform: uppercase; color: rgba(255,255,255,.62); display: block; }
+  .verde .quanto .v { font-family: 'Fredoka', sans-serif; font-size: 24px; font-weight: 700; }
+
+  /* chi accompagna: sempre aperto, spazio gia' pronto */
+  .acc { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 9px; }
+  .acc .titolo { font-size: 10.5px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
+    color: var(--txt-3); }
+  .ruoli { display: flex; gap: 7px; flex-wrap: wrap; }
+  .ruoli button { border: none; border-radius: 14px; min-height: 46px; padding: 0 14px;
+    background: var(--surface); color: var(--txt-2); font-size: 14px; font-weight: 700;
+    display: flex; align-items: center; gap: 7px; }
+  .ruoli button:active { transform: scale(.96); }
+  .ruoli button .em { font-size: 19px; }
+  .ruoli button.gia { background: #16323A; color: var(--late); }
+
+  .acc .zona { flex: 1; min-height: 0; display: flex; gap: 10px; }
+  /* La COLONNA si sdoppia quando le facce non ci stanno piu' in fila:
+     alla sesta persona sbordava di 19px. Il limite di larghezza vale
+     solo per la colonna: sulla riga strozzava tutto e le facce
+     andavano a capo ogni due. */
+  .facce { display: flex; gap: 8px; overflow: hidden; }
+  .facce:not(.riga) { flex: 0 0 auto; max-width: 268px; flex-direction: column;
+    flex-wrap: wrap; align-content: flex-start; }
+  .facce:not(.riga) .faccia { width: 124px; }
+  .facce.riga { flex: 0 0 auto; flex-direction: row; flex-wrap: wrap; }
+  .faccia { border: none; border-radius: 16px; background: var(--surface); padding: 5px 4px 6px;
+    display: flex; flex-direction: column; align-items: center; gap: 1px;
+    box-shadow: 0 0 0 2px transparent inset; }
+  .faccia svg { width: 62px; height: 82px; }
+  .faccia .nm { font-size: 12px; font-weight: 700; }
+  .faccia.on { background: #16323A; box-shadow: 0 0 0 3px var(--late) inset; }
+  .facce.riga .faccia { width: 96px; }
+
+  .ed { flex: 1; min-width: 0; background: var(--surface); border-radius: 18px; padding: 11px 12px;
+    display: flex; gap: 11px; overflow: hidden; }
+  .ed.sotto { flex: 1; }
+  .ed .figura { flex: 0 0 122px; background: rgba(0,0,0,.25); border-radius: 14px;
+    display: grid; place-items: center; padding: 5px; }
+  .ed .figura svg { width: 110px; height: 145px; }
+  .ed .comandi { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+  .ed.due .comandi { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; align-content: start; }
+  .et { font-size: 10px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
+    color: var(--txt-3); margin-bottom: 4px; display: block; }
+  .capi { display: flex; gap: 5px; flex-wrap: wrap; }
+  .capo { border: none; border-radius: 11px; padding: 5px 8px; min-height: 38px; background: var(--surface-2);
+    color: var(--txt-2); font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+  .capo.on { background: var(--accent); color: var(--accent-ink); }
+  .colori { display: flex; gap: 4px; flex-wrap: wrap; }
+  .colori button { width: 28px; height: 28px; border-radius: 8px; border: 2px solid transparent; padding: 0; }
+  .colori button.on { border-color: var(--txt); transform: scale(1.1); }
+  .spento { opacity: .35; pointer-events: none; }
+  .tratti { display: flex; gap: 5px; flex-wrap: wrap; }
+  .tratti button { border: none; border-radius: 999px; padding: 6px 11px; min-height: 36px;
+    background: var(--surface-2); color: var(--txt-2); font-size: 12px; font-weight: 700; }
+  .tratti button.on { background: var(--late); color: #06222A; }
+  .libero { width: 100%; border: 1px solid var(--line); border-radius: 11px; background: rgba(0,0,0,.25);
+    color: var(--txt); font: inherit; font-size: 13.5px; padding: 8px 11px; min-height: 40px; }
+  .vuoto { flex: 1; display: grid; place-items: center; color: var(--txt-3); font-size: 14.5px;
+    text-align: center; padding: 20px; }
+
+  /* le card del bar */
   .griglia { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px,1fr));
     gap: 11px; align-content: start; min-height: 0; }
   .card { --fondo: var(--surface); --orlo: transparent; position: relative; background: var(--fondo);
     border-radius: 20px; overflow: hidden; display: flex; flex-direction: column;
-    box-shadow: 0 4px 14px rgba(0,0,0,.3); transition: background .2s; }
+    box-shadow: 0 4px 14px rgba(0,0,0,.3); }
   .card::after { content:''; position:absolute; inset:0; border-radius:inherit;
-    border:3px solid var(--orlo); pointer-events:none; z-index:4; transition: border-color .2s; }
-  .card.presa  { --fondo:#262038; --orlo: var(--accent); }
-  .card.saldo  { --fondo:#16302A; --orlo: var(--ok); }
+    border:3px solid var(--orlo); pointer-events:none; z-index:4; }
+  .card.presa { --fondo:#262038; --orlo: var(--accent); }
+  .card.saldo { --fondo:#16302A; --orlo: var(--ok); }
   .su { flex: 1; position: relative; overflow: hidden; border: none; background: none; color: inherit;
     padding: 11px; display: flex; align-items: flex-start; gap: 10px; width: 100%; text-align: left; }
   .su svg { width: 54px; height: 54px; flex: 0 0 auto; position: relative; z-index: 1; }
   .testi { position: relative; z-index: 1; flex: 1; min-width: 0; min-height: 54px;
     display: flex; flex-direction: column; justify-content: center; gap: 4px; }
-  .pr { font-family: 'Fredoka', sans-serif; font-size: 20px; font-weight: 700; color: var(--txt-2); line-height: 1.05; }
+  .pr { font-family: 'Fredoka', sans-serif; font-size: 20px; font-weight: 700; color: var(--txt-2); }
   .nm { font-size: 15.5px; font-weight: 700; line-height: 1.2; }
   .fant { position: absolute; right: 10px; top: 6px; z-index: 0; font-family: 'Fredoka', sans-serif;
     font-size: 68px; font-weight: 700; height: 58px; line-height: 58px; overflow: hidden;
@@ -100,7 +173,6 @@
   .zone button { border: none; background: rgba(255,255,255,.06); min-height: 46px; color: var(--txt);
     font-family: 'Fredoka', sans-serif; font-size: 26px; font-weight: 700; display: flex;
     align-items: center; justify-content: center; }
-  .zone button:active { background: rgba(255,255,255,.2); }
   .zone.v { background: rgba(106,220,175,.28); }
   .zone.v button { background: rgba(106,220,175,.13); color: var(--ok); font-size: 23px; }
   .zone.v button:disabled { opacity: .25; }
@@ -113,20 +185,9 @@
   .card.saldo .pastiglia { background: var(--ok); color: #08301F; }
   .zone.v .pastiglia { background: #123D2D; color: #A9EFD3; font-size: 16px; box-shadow: none; }
 
-  /* le persone */
-  .card.gente .su { flex-direction: column; align-items: center; padding: 8px 6px 4px; }
-  .card.gente svg { width: 74px; height: 98px; }
-  .card.gente .nm { font-size: 14px; text-align: center; }
-  .card.gente .ruolo { font-size: 11.5px; color: var(--txt-3); text-align: center; }
-  .card.piu { display: grid; place-items: center; color: var(--txt-3); min-height: 150px;
-    border: 2px dashed rgba(255,255,255,.18); background: none; box-shadow: none; }
-  .card.piu::after { border: none; }
-  .card.piu span { font-size: 34px; }
-  .card.gente.on { --fondo:#16323A; --orlo: var(--late); }
-
   /* barra del prezzo */
   .fondo { flex: 0 0 auto; margin: 10px 14px 12px; background: var(--surface); border-radius: 20px;
-    padding: 11px 13px 12px; box-shadow: 0 -8px 26px rgba(0,0,0,.45); display: flex;
+    padding: 10px 13px 11px; box-shadow: 0 -8px 26px rgba(0,0,0,.45); display: flex;
     align-items: center; gap: 11px; flex-wrap: wrap; }
   .fondo .parti { display: flex; gap: 7px; flex: 1 1 100%; }
   .fondo .parte { flex: 1; background: rgba(0,0,0,.24); border-radius: 13px; padding: 6px 9px;
@@ -135,45 +196,14 @@
   .fondo .parte .k { display: block; font-size: 10.5px; font-weight: 700; color: var(--txt-3); }
   .fondo .parte .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 700; }
   .fondo .prezzo .k { display: block; font-size: 11.5px; font-weight: 700; color: var(--txt-3); }
-  .fondo .prezzo .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 34px; font-weight: 700; line-height: 1; }
+  .fondo .prezzo .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 33px; font-weight: 700; line-height: 1; }
   .modi { display: flex; gap: 3px; background: rgba(0,0,0,.3); border-radius: 13px; padding: 3px; }
   .modi button { border: none; background: none; border-radius: 10px; padding: 8px 11px; min-height: 42px;
     color: var(--txt-3); font-size: 13px; font-weight: 700; }
   .modi button.on { background: var(--ok); color: #08301F; }
-  .reg { margin-left: auto; border: none; border-radius: 16px; min-height: 56px; padding: 0 20px;
+  .reg { margin-left: auto; border: none; border-radius: 16px; min-height: 54px; padding: 0 20px;
     background: var(--accent); color: var(--accent-ink); font-family: 'Fredoka', sans-serif;
     font-size: 17px; font-weight: 700; }
-
-  /* il velo dell'editor */
-  .velo { position: absolute; inset: 0; z-index: 30; display: flex; align-items: flex-end;
-    justify-content: center; padding: 12px; background: rgba(0,0,0,.55); backdrop-filter: blur(4px); }
-  .foglioed { width: 100%; background: var(--surface); border-radius: 22px; padding: 13px 15px 15px;
-    display: flex; flex-direction: column; gap: 11px; max-height: 100%; }
-  .foglioed .ft { display: flex; align-items: center; gap: 10px; }
-  .foglioed .ft h4 { margin: 0; font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 600; }
-  .foglioed .ft .via { margin-left: auto; width: 44px; height: 44px; border-radius: 14px; border: none;
-    background: var(--surface-2); color: var(--txt); font-size: 17px; }
-  .ed { display: flex; gap: 12px; }
-  .ed .figura { flex: 0 0 130px; background: rgba(0,0,0,.25); border-radius: 14px; display: grid;
-    place-items: center; padding: 6px; }
-  .ed .figura svg { width: 116px; height: 152px; }
-  .ed .comandi { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 9px; }
-  .et { font-size: 10.5px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
-    color: var(--txt-3); margin-bottom: 5px; display: block; }
-  .capi { display: flex; gap: 6px; flex-wrap: wrap; }
-  .capo { border: none; border-radius: 12px; padding: 6px 9px; min-height: 40px; background: var(--surface-2);
-    color: var(--txt-2); font-size: 12.5px; font-weight: 700; display: flex; align-items: center; gap: 5px; }
-  .capo.on { background: var(--accent); color: var(--accent-ink); }
-  .colori { display: flex; gap: 5px; flex-wrap: wrap; }
-  .colori button { width: 30px; height: 30px; border-radius: 9px; border: 2px solid transparent; padding: 0; }
-  .colori button.on { border-color: var(--txt); transform: scale(1.1); }
-  .spento { opacity: .35; pointer-events: none; }
-  .tratti { display: flex; gap: 6px; flex-wrap: wrap; }
-  .tratti button { border: none; border-radius: 999px; padding: 7px 12px; min-height: 38px;
-    background: var(--surface-2); color: var(--txt-2); font-size: 13px; font-weight: 700; }
-  .tratti button.on { background: var(--late); color: #06222A; }
-  .libero { width: 100%; border: 1px solid var(--line); border-radius: 12px; background: rgba(0,0,0,.25);
-    color: var(--txt); font: inherit; font-size: 14px; padding: 9px 12px; min-height: 42px; }
 
   .nota { background: #181A22; border: 1px solid var(--line); border-left: 3px solid var(--warn);
     border-radius: 0 14px 14px 0; padding: 14px 16px; margin-top: 34px; color: #B9BFC9;
@@ -182,22 +212,21 @@
 </style>
 
 <div class="foglio">
-  <p class="occhiello">Una schermata sola · proposte</p>
-  <h1>Il Bar &amp; Conto che fa tutto</h1>
-  <p class="intro">Niente più due posti dove registrare: <b>una schermata sola</b>, le categorie in
-  alto che fanno da navigazione — tocchi «Bevande» e hai le bevande — e il <b>Parco aperto di
-  default</b>, con dentro entrata, bracciale, quanto restano, bambini e Crazy.</p>
-  <p class="intro">La regola dura è una: <b>mai scorrere</b>. Il cartellino in alto a destra lo
-  verifica in ogni categoria; dove una cosa non ci sta, si apre sopra (come il Resto) invece di
-  allungare la pagina.</p>
+  <p class="occhiello">Una schermata sola · U1 rifinita</p>
+  <h1>Il Parco con la GUI di prima, e chi accompagna già aperto</h1>
+  <p class="intro">Via le card con l'icona di Bambini e Crazy: al loro posto <b>il blocco verde
+  coi contatori</b>, quello comodo che c'era già. Sotto, <b>chi accompagna sempre aperto</b>:
+  tocchi «Mamma» e la persona c'è, con l'armadio già lì pronto — nessun sotto-menu, nessuna
+  finestra che si apre sopra.</p>
+  <p class="intro">Tre modi di montare quello spazio. In tutti e tre la regola è la stessa:
+  <b>mai scorrere</b>, e il cartellino in alto a destra lo verifica in ogni categoria.</p>
 
   <div class="casi" id="casi"></div>
 
   <div class="nota">
-    <b>Quello che cambia fra le quattro.</b> Dove finiscono le persone e la fascia dell'ingresso:
-    dentro il Parco, in una categoria loro, sempre in vista, o in fondo come riepilogo.
-    Tocca le categorie in alto di ognuna e guarda il cartellino: è lì che si vede se una scelta
-    regge o no.
+    <b>La differenza fra le tre</b> è dove stanno le facce: in colonna a sinistra, in riga sopra,
+    o niente colonna e sono i tasti dei ruoli stessi a diventare le persone. Prova ad aggiungere
+    tre o quattro accompagnatori in ognuna: è lì che si vede quale regge.
   </div>
 </div>
 
@@ -213,7 +242,8 @@ const eur = n => n.toFixed(2).replace('.', ',') + ' €';
 const hhmm = t => new Date(t).toLocaleTimeString('it-IT', { hour:'2-digit', minute:'2-digit' });
 const durata = m => m >= 60 ? (Math.floor(m/60) + 'h' + (m%60 ? ' ' + (m%60) + "'" : '')) : m + "'";
 const BRACCIALI = ['#E23D4B','#F97316','#FBBF24','#22C55E','#0EA5E9','#8B5CF6','#EC4899','#94A3B8'];
-
+const RUOLI = [ ['mamma','Mamma','👩'], ['papa','Papà','👨'], ['nonna','Nonna','👵'],
+                ['nonno','Nonno','👴'], ['zia','Zia','🧑'], ['amico','Amico','🧑‍🤝‍🧑'] ];
 const MENU = {
   Bevande: [['acqua','Acqua',1],['acquafriz','Acqua friz.',1],['caffe','Caffè',1.2],
             ['coca','Coca Cola',2.5],['cocaz','Coca Zero',2.5],['fanta','Fanta',2.5],
@@ -227,16 +257,17 @@ const TRATTI = [
   { k:'hat:cappellino', n:'🧢 Cappellino' }, { k:'hat:panama', n:'👒 Cappello' },
   { k:'glasses:vista', n:'👓 Occhiali' },    { k:'glasses:sole', n:'🕶️ Da sole' },
   { k:'facial:barba', n:'🧔 Barba' },        { k:'bag:zaino', n:'🎒 Zaino' },
-  { k:'bag:borsa', n:'👜 Borsa' },           { k:'hair:lunghi', n:'💇‍♀️ Capelli lunghi' },
+  { k:'bag:borsa', n:'👜 Borsa' },           { k:'hair:lunghi', n:'💇‍♀️ Lunghi' },
   { k:'hair:ricci', n:'🧑‍🦱 Ricci' },          { k:'hair:codino', n:'🎀 Codino' }
 ];
+const CAT = ['Parco','Bevande','Birre','Snack','Alcolici'];
+const catIcona = { Parco:'bimbi', Bevande:'coca', Birre:'heine', Snack:'pata', Alcolici:'spritz' };
 
-function statoNuovo() {
-  return { inizio: Date.now(), bracciale: BRACCIALI[0], minuti: 60, pagaDopo: false,
-    bimbi: 2, crazy: 0, cat: 'Parco', bar: {}, pagate: {},
-    gente: [{ nome:'Mamma', ruolo:'mamma', av: AV.defaultFor('mamma'), note:'' }],
-    chi: -1, modo: 'niente' };
-}
+const statoNuovo = () => ({
+  inizio: Date.now(), bracciale: BRACCIALI[0], minuti: 60, pagaDopo: false,
+  bimbi: 2, crazy: 0, cat: 'Parco', bar: {}, pagate: {},
+  gente: [], chi: -1, modo: 'niente'
+});
 const totParco = S => S.pagaDopo ? 0 : Math.max(1, S.bimbi) * prezzoTempo(S.minuti);
 const totCrazy = S => S.crazy * CRAZY;
 const totBar = S => Object.keys(MENU).reduce((a,c) =>
@@ -244,32 +275,87 @@ const totBar = S => Object.keys(MENU).reduce((a,c) =>
 const totale = S => Math.round((totParco(S) + totCrazy(S) + totBar(S)) * 100) / 100;
 
 /* ═══ pezzi ═══ */
-const catIcona = { Parco:'bimbi', Persone:'crazy', Bevande:'coca', Birre:'heine', Snack:'pata', Alcolici:'spritz' };
-const barraCat = (S, quali) => '<div class="cat">' + quali.map(c =>
+const barraCat = S => '<div class="cat">' + CAT.map(c =>
   '<button data-a="cat" data-v="' + c + '"' + (S.cat === c ? ' class="on"' : '') + '>' +
   (ICONE[catIcona[c]] ? ICONE[catIcona[c]]() : '') + c + '</button>').join('') + '</div>';
 
-const fasciaIngresso = (S, piatta) =>
-  '<div class="fascia' + (piatta ? ' piatta' : '') + '">' +
+const fascia = S =>
+  '<div class="fascia">' +
     '<div><span class="k">Entrano alle</span><span class="ora">' + hhmm(S.inizio) + '</span></div>' +
-    '<button class="chip pic" data-a="ora" data-v="-5">−5</button>' +
-    '<button class="chip pic" data-a="ora" data-v="5">+5</button>' +
-    '<button class="chip pic" data-a="ora" data-v="now">adesso</button>' +
+    '<button class="chip" data-a="ora" data-v="-5">−5</button>' +
+    '<button class="chip" data-a="ora" data-v="5">+5</button>' +
+    '<button class="chip" data-a="ora" data-v="now">adesso</button>' +
     '<span class="sep"></span>' +
     '<div><span class="k">Restano</span>' +
       '<div style="display:flex;gap:5px;margin-top:3px;flex-wrap:wrap">' +
-        [10,15,30,60].map(m => '<button class="chip pic' + (!S.pagaDopo && S.minuti === m ? ' on' : '') +
+        [10,15,30,60].map(m => '<button class="chip' + (!S.pagaDopo && S.minuti === m ? ' on' : '') +
           '" data-a="min" data-v="' + m + '">' + durata(m) + '</button>').join('') +
-        '<button class="chip pic" data-a="min" data-v="-5">−5</button>' +
-        '<button class="chip pic" data-a="min" data-v="+5">+5</button>' +
-        '<button class="chip pic dopo' + (S.pagaDopo ? ' on' : '') + '" data-a="dopo">⏳ dopo</button>' +
+        '<button class="chip" data-a="min" data-v="-5">−5</button>' +
+        '<button class="chip" data-a="min" data-v="+5">+5</button>' +
+        '<button class="chip dopo' + (S.pagaDopo ? ' on' : '') + '" data-a="dopo">⏳ dopo</button>' +
       '</div></div>' +
     '<span class="brac">' + BRACCIALI.map(c =>
       '<button data-a="brac" data-v="' + c + '" style="background:' + c + '"' +
       (S.bracciale === c ? ' class="on"' : '') + '></button>').join('') + '</span>' +
   '</div>';
 
-function cardVoce(S, id, nome, prezzo, q, pag, ico) {
+/* il blocco verde: i contatori comodi che c'erano gia' */
+const numeri = S =>
+  '<div class="verde">' +
+    '<div class="voce"><span class="lab"><span class="em">🧒</span> Bambini</span>' +
+      '<span class="conta"><button data-a="bimbi" data-v="-1"' + (S.bimbi<=0?' disabled':'') + '>−</button>' +
+      '<span class="n">' + S.bimbi + '</span>' +
+      '<button data-a="bimbi" data-v="1">+</button></span></div>' +
+    '<div class="voce"><span class="lab"><span class="em">🤸</span> Crazy</span>' +
+      '<span class="conta"><button data-a="crazy" data-v="-1"' + (S.crazy<=0?' disabled':'') + '>−</button>' +
+      '<span class="n">' + S.crazy + '</span>' +
+      '<button data-a="crazy" data-v="1">+</button></span></div>' +
+    '<div class="quanto"><span class="k">' + (S.pagaDopo ? 'a fine giro' : durata(S.minuti) + ' a testa') + '</span>' +
+      '<span class="v">' + eur(totParco(S) + totCrazy(S)) + '</span></div>' +
+  '</div>';
+
+const tastiRuoli = S => '<div class="ruoli">' + RUOLI.map(r => {
+  const gia = S.gente.filter(p => p.ruolo === r[0]).length;
+  return '<button data-a="agg" data-v="' + r[0] + '"' + (gia ? ' class="gia"' : '') + '>' +
+    '<span class="em">' + r[2] + '</span> ' + r[1] + (gia > 1 ? ' ×' + gia : '') + '</button>';
+}).join('') + '</div>';
+
+const faccia = (p, i, sel) =>
+  '<button class="faccia' + (sel ? ' on' : '') + '" data-a="chi" data-v="' + i + '">' +
+  AV.build(p.av) + '<span class="nm">' + p.nome + '</span></button>';
+
+function armadio(S, due) {
+  const p = S.gente[S.chi];
+  if (!p) return '<div class="ed"><div class="vuoto">Tocca un ruoli qui sopra —<br>' +
+    'Mamma, Papà, Nonna… — e qui compare l\'armadio, già pronto.</div></div>';
+  const av = p.av, vestito = av.top.style === 'vestito';
+  const colori = (dove, val) => '<div class="colori">' + AV.COLORS.slice(0,10).map(c =>
+    '<button data-a="col" data-v="' + dove + '|' + c.c + '" style="background:' + c.c + '"' +
+    (val === c.c ? ' class="on"' : '') + '></button>').join('') + '</div>';
+  return '<div class="ed' + (due ? ' due' : '') + '">' +
+    '<div class="figura">' + AV.build(av) + '</div>' +
+    '<div class="comandi">' +
+      '<div><span class="et">Che cosa indossa</span><div class="capi">' +
+        AV.TOP.map(t => '<button class="capo' + (av.top.style === t.key ? ' on' : '') + '" ' +
+          'data-a="top" data-v="' + t.key + '">' + t.em + ' ' + t.label + '</button>').join('') + '</div></div>' +
+      '<div><span class="et">Colore</span>' + colori('top', av.top.color) + '</div>' +
+      '<div><span class="et">Fantasia</span><div class="capi">' +
+        AV.PATTERNS.map(f => '<button class="capo' + (av.top.pattern === f.key ? ' on' : '') + '" ' +
+          'data-a="pat" data-v="' + f.key + '">' + f.n + '</button>').join('') + '</div></div>' +
+      '<div class="' + (vestito ? 'spento' : '') + '"><span class="et">Sotto' +
+        (vestito ? ' — col vestito non serve' : '') + '</span><div class="capi">' +
+        AV.PANTS.map(t => '<button class="capo' + (av.pants.style === t.key ? ' on' : '') + '" ' +
+          'data-a="pants" data-v="' + t.key + '">' + t.em + ' ' + t.label + '</button>').join('') + '</div>' +
+        '<div style="height:5px"></div>' + colori('pants', av.pants.color) + '</div>' +
+      '<div><span class="et">Tratti particolari</span><div class="tratti">' +
+        TRATTI.map(t => { const [d, v] = t.k.split(':');
+          return '<button class="' + (av[d] && av[d].style === v ? 'on' : '') + '" data-a="tratto" data-v="' + t.k + '">' +
+            t.n + '</button>'; }).join('') + '</div></div>' +
+      '<div><input class="libero" placeholder="Altro che salta all\'occhio…" value="' + (p.note||'') + '" data-a="nota"></div>' +
+    '</div></div>';
+}
+
+const cardVoce = (S, id, nome, prezzo, q, pag, ico) => {
   const saldo = q > 0 && pag >= q;
   return '<div class="card' + (saldo ? ' saldo' : (q ? ' presa' : '')) + '">' +
     '<button class="su" data-a="add" data-v="' + id + '">' +
@@ -284,105 +370,53 @@ function cardVoce(S, id, nome, prezzo, q, pag, ico) {
         '<button data-a="pmeno" data-v="' + id + '"' + (pag<=0?' disabled':'') + '>−</button>' +
         '<button data-a="ppiu" data-v="' + id + '"' + (pag>=q?' disabled':'') + '>+</button></div>'
       : '') + '</div>';
-}
-const cardParco = S =>
-  cardVoce(S, 'bimbi', 'Bambini', prezzoTempo(S.minuti), S.bimbi, Math.min(S.pagate.bimbi||0, S.bimbi), 'bimbi') +
-  cardVoce(S, 'crazy', 'Crazy Jumping', CRAZY, S.crazy, Math.min(S.pagate.crazy||0, S.crazy), 'crazy');
-
-const cardMenu = S => (MENU[S.cat] || []).map(m =>
-  cardVoce(S, m[0], m[1], m[2], S.bar[m[0]]||0, Math.min(S.pagate[m[0]]||0, S.bar[m[0]]||0), m[0])).join('');
-
-const cardGente = S => S.gente.map((p, i) =>
-  '<div class="card gente' + (S.chi === i ? ' on' : '') + '">' +
-    '<button class="su" data-a="apri" data-v="' + i + '">' + AV.build(p.av) +
-    '<span class="testi"><span class="nm">' + p.nome + '</span>' +
-    '<span class="ruolo">tocca per vestirlo</span></span></button></div>').join('') +
-  '<button class="card piu" data-a="agg"><span>＋</span></button>';
+};
+const griglia = S => '<div class="griglia">' + (MENU[S.cat]||[]).map(m =>
+  cardVoce(S, m[0], m[1], m[2], S.bar[m[0]]||0, Math.min(S.pagate[m[0]]||0, S.bar[m[0]]||0), m[0])).join('') + '</div>';
 
 const barraPrezzo = S => {
-  const t = totale(S);
   const p = (nome, ico, im) => '<div class="parte">' + (ICONE[ico] ? ICONE[ico]() : '') +
     '<div><span class="k">' + nome + '</span><span class="v">' + eur(im) + '</span></div></div>';
   return '<div class="fondo">' +
     '<div class="parti">' + p('Parco','bimbi',totParco(S)) + p('Crazy','crazy',totCrazy(S)) +
       p('Bar','coca',totBar(S)) + '</div>' +
     '<div class="prezzo"><span class="k">' + (S.pagaDopo ? 'si conta all\'uscita' : 'da pagare') + '</span>' +
-      '<span class="v">' + eur(t) + '</span></div>' +
-    '<div class="modi">' +
-      ['niente','tutto','parte'].map(m => '<button class="' + (S.modo === m ? 'on' : '') + '" ' +
-        'data-a="modo" data-v="' + m + '">' + (m === 'niente' ? 'non incassa' : m) + '</button>').join('') +
-    '</div>' +
+      '<span class="v">' + eur(totale(S)) + '</span></div>' +
+    '<div class="modi">' + ['niente','tutto','parte'].map(m =>
+      '<button class="' + (S.modo === m ? 'on' : '') + '" data-a="modo" data-v="' + m + '">' +
+      (m === 'niente' ? 'non incassa' : m) + '</button>').join('') + '</div>' +
     '<button class="reg" data-a="reg">Registra' +
       (S.modo === 'tutto' ? ' e incassa' : S.modo === 'parte' ? ' in parte' : '') + '</button>' +
   '</div>';
 };
 
-/* l'editor si apre SOPRA: cosi' non allunga mai la pagina */
-function veloEditor(S) {
-  if (S.chi < 0 || !S.gente[S.chi]) return '';
-  const p = S.gente[S.chi], av = p.av, vestito = av.top.style === 'vestito';
-  const colori = (dove, val) => '<div class="colori">' + AV.COLORS.slice(0,10).map(c =>
-    '<button data-a="col" data-v="' + dove + '|' + c.c + '" style="background:' + c.c + '"' +
-    (val === c.c ? ' class="on"' : '') + '></button>').join('') + '</div>';
-  return '<div class="velo" data-a="fuori"><div class="foglioed">' +
-    '<div class="ft"><h4>👗 Come è vestita — ' + p.nome + '</h4>' +
-      '<button class="via" data-a="chiudi">✕</button></div>' +
-    '<div class="ed"><div class="figura">' + AV.build(av) + '</div><div class="comandi">' +
-      '<div><span class="et">Che cosa indossa</span><div class="capi">' +
-        AV.TOP.map(t => '<button class="capo' + (av.top.style === t.key ? ' on' : '') + '" ' +
-          'data-a="top" data-v="' + t.key + '">' + t.em + ' ' + t.label + '</button>').join('') + '</div></div>' +
-      '<div><span class="et">Colore</span>' + colori('top', av.top.color) + '</div>' +
-      '<div><span class="et">Fantasia</span><div class="capi">' +
-        AV.PATTERNS.map(f => '<button class="capo' + (av.top.pattern === f.key ? ' on' : '') + '" ' +
-          'data-a="pat" data-v="' + f.key + '">' + f.n + '</button>').join('') + '</div></div>' +
-      '<div class="' + (vestito ? 'spento' : '') + '"><span class="et">Sotto' +
-        (vestito ? ' — col vestito lungo non serve' : '') + '</span><div class="capi">' +
-        AV.PANTS.map(t => '<button class="capo' + (av.pants.style === t.key ? ' on' : '') + '" ' +
-          'data-a="pants" data-v="' + t.key + '">' + t.em + ' ' + t.label + '</button>').join('') + '</div>' +
-        '<div style="height:6px"></div>' + colori('pants', av.pants.color) + '</div>' +
-      '<div><span class="et">Tratti particolari</span><div class="tratti">' +
-        TRATTI.map(t => { const [d, v] = t.k.split(':');
-          return '<button class="' + (av[d] && av[d].style === v ? 'on' : '') + '" data-a="tratto" data-v="' + t.k + '">' +
-            t.n + '</button>'; }).join('') + '</div>' +
-        '<div style="height:7px"></div>' +
-        '<input class="libero" placeholder="Altro che salta all\'occhio…" value="' + (p.note||'') + '" data-a="nota">' +
-      '</div>' +
-    '</div></div></div></div>';
+/* ═══ le tre varianti ═══ */
+function parcoBase(S, dentroAcc) {
+  return '<div class="pan"><div class="corpo">' + barraCat(S) +
+    (S.cat === 'Parco' ? fascia(S) + numeri(S) + dentroAcc : griglia(S)) +
+    '</div>' + barraPrezzo(S) + '</div>';
 }
-
-/* ═══ le quattro proposte ═══ */
-const CATB = ['Parco','Bevande','Birre','Snack','Alcolici'];
-const CATP = ['Parco','Persone','Bevande','Birre','Snack','Alcolici'];
-
-function U1(S) {   /* le persone dentro il Parco */
-  const dentro = S.cat === 'Parco'
-    ? fasciaIngresso(S) + '<div class="griglia">' + cardParco(S) + cardGente(S) + '</div>'
-    : '<div class="griglia">' + cardMenu(S) + '</div>';
-  return '<div class="pan"><div class="corpo">' + barraCat(S, CATB) + dentro + '</div>' +
-    barraPrezzo(S) + veloEditor(S) + '</div>';
+function V1(S) {   /* facce in colonna a sinistra */
+  return parcoBase(S,
+    '<div class="acc"><span class="titolo">Chi accompagna</span>' + tastiRuoli(S) +
+      '<div class="zona">' +
+        (S.gente.length ? '<div class="facce">' + S.gente.map((p,i) => faccia(p, i, S.chi === i)).join('') + '</div>' : '') +
+        armadio(S) +
+      '</div></div>');
 }
-function U2(S) {   /* le persone sono una categoria loro */
-  let dentro;
-  if (S.cat === 'Parco') dentro = fasciaIngresso(S) + '<div class="griglia">' + cardParco(S) + '</div>';
-  else if (S.cat === 'Persone') dentro = '<div class="griglia">' + cardGente(S) + '</div>';
-  else dentro = '<div class="griglia">' + cardMenu(S) + '</div>';
-  return '<div class="pan"><div class="corpo">' + barraCat(S, CATP) + dentro + '</div>' +
-    barraPrezzo(S) + veloEditor(S) + '</div>';
+function V2(S) {   /* facce in riga sopra l'armadio */
+  return parcoBase(S,
+    '<div class="acc"><span class="titolo">Chi accompagna</span>' + tastiRuoli(S) +
+      (S.gente.length ? '<div class="facce riga">' + S.gente.map((p,i) => faccia(p, i, S.chi === i)).join('') + '</div>' : '') +
+      '<div class="zona">' + armadio(S) + '</div></div>');
 }
-function U3(S) {   /* la fascia dell'ingresso sempre in vista */
-  const dentro = S.cat === 'Parco'
-    ? '<div class="griglia">' + cardParco(S) + cardGente(S) + '</div>'
-    : '<div class="griglia">' + cardMenu(S) + '</div>';
-  return '<div class="pan"><div class="corpo">' + fasciaIngresso(S) + barraCat(S, CATB) + dentro + '</div>' +
-    barraPrezzo(S) + veloEditor(S) + '</div>';
-}
-function U4(S) {   /* fascia piatta, persone in categoria, tutto piu' sobrio */
-  let dentro;
-  if (S.cat === 'Parco') dentro = fasciaIngresso(S, true) + '<div class="griglia">' + cardParco(S) + '</div>';
-  else if (S.cat === 'Persone') dentro = '<div class="griglia">' + cardGente(S) + '</div>';
-  else dentro = '<div class="griglia">' + cardMenu(S) + '</div>';
-  return '<div class="pan"><div class="corpo">' + barraCat(S, CATP) + dentro + '</div>' +
-    barraPrezzo(S) + veloEditor(S) + '</div>';
+function V3(S) {   /* niente colonna: i tasti dei ruoli SONO le persone */
+  const tasti = '<div class="ruoli">' + RUOLI.map(r =>
+    '<button data-a="agg" data-v="' + r[0] + '"><span class="em">' + r[2] + '</span> + ' + r[1] + '</button>').join('') + '</div>';
+  return parcoBase(S,
+    '<div class="acc"><span class="titolo">Chi accompagna</span>' + tasti +
+      (S.gente.length ? '<div class="facce riga">' + S.gente.map((p,i) => faccia(p, i, S.chi === i)).join('') + '</div>' : '') +
+      '<div class="zona">' + armadio(S, true) + '</div></div>');
 }
 
 /* ═══ montaggio ═══ */
@@ -396,31 +430,29 @@ function azione(S, a, v) {
                        else if (v === '+5') S.minuti = Math.min(240, S.minuti + 5);
                        else S.minuti = +v; }
   if (a === 'dopo')  S.pagaDopo = !S.pagaDopo;
-  if (a === 'add')   { if (v === 'bimbi') S.bimbi++; else if (v === 'crazy') S.crazy++; else S.bar[v] = (S.bar[v]||0)+1; }
-  if (a === 'meno')  { if (v === 'bimbi') S.bimbi = Math.max(0,S.bimbi-1);
-                       else if (v === 'crazy') S.crazy = Math.max(0,S.crazy-1);
-                       else S.bar[v] = Math.max(0,(S.bar[v]||0)-1); }
-  if (a === 'ppiu')  S.pagate[v] = (S.pagate[v]||0) + 1;
-  if (a === 'pmeno') S.pagate[v] = Math.max(0, (S.pagate[v]||0) - 1);
-  if (a === 'apri')  S.chi = +v;
-  if (a === 'chiudi' || a === 'fuori') S.chi = -1;
-  if (a === 'agg')   { const r = ['Papà','Nonna','Nonno','Zia'][S.gente.length % 4];
-                       S.gente.push({ nome: r, ruolo: 'papa', av: AV.defaultFor('papa'), note: '' });
+  if (a === 'bimbi') S.bimbi = Math.max(0, S.bimbi + (+v));
+  if (a === 'crazy') S.crazy = Math.max(0, S.crazy + (+v));
+  if (a === 'agg')   { const r = RUOLI.find(x => x[0] === v);
+                       S.gente.push({ nome: r[1], ruolo: v, av: AV.defaultFor(v) || AV.defaultFor('papa'), note: '' });
                        S.chi = S.gente.length - 1; }
+  if (a === 'chi')   S.chi = (S.chi === +v ? -1 : +v);
   if (a === 'top' && p)   p.av.top.style = v;
   if (a === 'pat' && p)   p.av.top.pattern = v;
   if (a === 'pants' && p) p.av.pants.style = v;
   if (a === 'col' && p)   { const [d, c] = v.split('|'); p.av[d].color = c; }
   if (a === 'tratto' && p) { const [d, val] = v.split(':'); p.av[d] = p.av[d] || {};
                              p.av[d].style = (p.av[d].style === val ? 'none' : val); }
+  if (a === 'add')   S.bar[v] = (S.bar[v]||0) + 1;
+  if (a === 'meno')  S.bar[v] = Math.max(0, (S.bar[v]||0) - 1);
+  if (a === 'ppiu')  S.pagate[v] = (S.pagate[v]||0) + 1;
+  if (a === 'pmeno') S.pagate[v] = Math.max(0, (S.pagate[v]||0) - 1);
   if (a === 'modo')  S.modo = v;
 }
 
 const CASI = [
-  ['U1', 'Persone dentro il Parco', 'Il <b>Parco</b> ha tutto: la fascia dell\'ingresso e, nella stessa griglia, Bambini, Crazy e <b>le persone come card</b>. Cinque linguette in tutto. Toccare una persona apre l\'armadio SOPRA la schermata, così non si allunga mai niente.', U1],
-  ['U2', 'Persone in una linguetta loro', 'Le persone diventano una <b>categoria come le altre</b>: Parco · Persone · Bevande… Il Parco resta corto (fascia + due card) e le persone hanno tutta la schermata per loro, che con quattro accompagnatori serve.', U2],
-  ['U3', 'La fascia sempre in vista', 'Orario, bracciale e quanto restano stanno <b>sopra le linguette</b>, quindi si vedono anche mentre batti le birre. Costa un po\' di altezza a tutte le categorie, ma l\'ingresso non lo perdi mai di vista.', U3],
-  ['U4', 'Sobria', 'Come U2 ma senza la fascia colorata: <b>tutto grigio come le altre righe</b>. Meno colore, più uniforme; si guarda se il colore aiutava davvero o era solo decorazione.', U4]
+  ['V1', 'Facce in colonna', 'Le persone in una <b>colonna stretta a sinistra</b> e l\'armadio di fianco: si vede chi c\'è e chi stai vestendo senza che le facce rubino altezza. Con tanti accompagnatori la colonna si allunga in giù.', V1],
+  ['V2', 'Facce in riga', 'Le facce <b>in fila sotto i ruoli</b> e l\'armadio a tutta larghezza sotto. L\'armadio è più largo — i tasti stanno più comodi — ma ogni faccia in più mangia altezza a tutti.', V2],
+  ['V3', 'Armadio a due colonne', 'Come V2, ma l\'armadio ha <b>i comandi in due colonne</b>: capo e colore da una parte, fantasia e sotto dall\'altra. Tutto più corto, a costo di righe più strette.', V3]
 ];
 
 const box = document.getElementById('casi');
@@ -437,16 +469,19 @@ CASI.forEach(([lett, nome, idea, ren]) => {
     d.innerHTML = ren(S);
     const pan = d.querySelector('.pan'), corpo = d.querySelector('.corpo');
     const fuori = pan.scrollHeight - pan.clientHeight;
-    const scorre = corpo.scrollHeight - corpo.clientHeight;
+    let scorre = corpo.scrollHeight - corpo.clientHeight;
+    corpo.querySelectorAll('*').forEach(e => {
+      if (e.scrollHeight - e.clientHeight > 2 && e.clientHeight > 60) scorre = Math.max(scorre, e.scrollHeight - e.clientHeight);
+    });
     mis.textContent = fuori > 2 ? 'sborda ' + fuori + 'px'
-      : scorre > 2 ? S.cat + ': scorre ' + scorre + 'px' : S.cat + ': ci sta tutto';
+      : scorre > 2 ? S.cat + ': scorre ' + scorre + 'px'
+      : S.cat + ' · ' + S.gente.length + ' persone: ci sta tutto';
     mis.style.color = fuori > 2 ? '#FF9AA2' : scorre > 2 ? '#FFD166' : '#7FE8C1';
     adatta();
   };
   sez.addEventListener('click', e => {
     const b = e.target.closest('[data-a]');
     if (!b) return;
-    if (b.dataset.a === 'fuori' && e.target !== b) return;
     azione(S, b.dataset.a, b.dataset.v);
     dis();
   });
