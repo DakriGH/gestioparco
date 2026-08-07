@@ -48,8 +48,14 @@
     { key: 'solid', n: 'Tinta unita', suf: '' },
     { key: 'stripes-h', n: 'Righe', suf: ' a righe' },
     { key: 'stripes-v', n: 'Righe vert.', suf: ' a righe' },
+    { key: 'diag', n: 'Oblique', suf: ' a righe oblique' },
     { key: 'dots', n: 'Pois', suf: ' a pois' },
     { key: 'plaid', n: 'Quadretti', suf: ' a quadretti' },
+    { key: 'scacchi', n: 'Scacchi', suf: ' a scacchi' },
+    { key: 'fiori', n: 'Fiori', suf: ' a fiori' },
+    { key: 'cuori', n: 'Cuori', suf: ' a cuori' },
+    { key: 'zigzag', n: 'Zigzag', suf: ' a zigzag' },
+    { key: 'animalier', n: 'Animalier', suf: ' animalier' },
     { key: 'camo', n: 'Mimetico', suf: ' mimetic' },
     { key: 'stars', n: 'Stelle', suf: ' a stelle' },
     { key: 'logo', n: 'Stampa', suf: ' con stampa' }
@@ -91,10 +97,13 @@
 
   const TOP = [
     { key: 'maglietta', label: 'Maglietta', em: '👕', g: 1, noun: 'Maglietta' },
+    { key: 'manicalunga', label: 'Maniche lunghe', em: '🥼', g: 1, noun: 'Maglia a maniche lunghe' },
     { key: 'polo', label: 'Polo', em: '🎽', g: 1, noun: 'Polo' },
     { key: 'camicia', label: 'Camicia', em: '👔', g: 1, noun: 'Camicia' },
     { key: 'canotta', label: 'Canotta', em: '🎽', g: 1, noun: 'Canotta' },
     { key: 'felpa', label: 'Felpa', em: '🧥', g: 1, noun: 'Felpa' },
+    { key: 'giacca', label: 'Giacca', em: '🧳', g: 1, noun: 'Giacca' },
+    { key: 'gilet', label: 'Gilet', em: '🦺', g: 0, noun: 'Gilet' },
     { key: 'vestito', label: 'Vestito', em: '👗', g: 0, noun: 'Vestito', full: true }
   ];
 
@@ -344,6 +353,35 @@
       size = 14; s = `<rect width="14" height="14" fill="${color}"/><path d="M7 2.4 L8.3 5.8 L11.9 5.8 L9 8 L10.1 11.5 L7 9.3 L3.9 11.5 L5 8 L2.1 5.8 L5.7 5.8 Z" fill="${color2}"/>`;
     } else if (pattern === 'logo') {
       size = 20; s = `<rect width="20" height="20" fill="${color}"/><circle cx="10" cy="10" r="4.4" fill="none" stroke="${color2}" stroke-width="2"/>`;
+    } else if (pattern === 'diag') {
+      size = 10; s = `<rect width="10" height="10" fill="${color}"/><path d="M-3 3 L3 -3 M0 10 L10 0 M7 13 L13 7" stroke="${color2}" stroke-width="3.2"/>`;
+    } else if (pattern === 'scacchi') {
+      size = 12; s = `<rect width="12" height="12" fill="${color}"/><rect width="6" height="6" fill="${color2}"/><rect x="6" y="6" width="6" height="6" fill="${color2}"/>`;
+    } else if (pattern === 'fiori') {
+      /* cinque petali attorno a un cuore più scuro: si legge anche
+         piccolo, che è quello che serve su una maglietta di trenta pixel */
+      let f = '';
+      const fiore = (cx, cy) => {
+        let d = '';
+        for (let k = 0; k < 5; k++) {
+          const a2 = k * 72 * Math.PI / 180;
+          d += `<circle cx="${(cx + 2.1 * Math.cos(a2)).toFixed(1)}" cy="${(cy + 2.1 * Math.sin(a2)).toFixed(1)}" r="1.7" fill="${color2}"/>`;
+        }
+        return d + `<circle cx="${cx}" cy="${cy}" r="1.2" fill="${shade(color2, -42)}"/>`;
+      };
+      f = fiore(4, 4) + fiore(11, 11);
+      size = 15; s = `<rect width="15" height="15" fill="${color}"/>` + f;
+    } else if (pattern === 'cuori') {
+      size = 12; s = `<rect width="12" height="12" fill="${color}"/>` +
+        `<path d="M6 9.4 C2.2 6.8 2.6 3.6 4.6 3.2 C5.5 3 6 3.8 6 4.4 C6 3.8 6.5 3 7.4 3.2 C9.4 3.6 9.8 6.8 6 9.4 Z" fill="${color2}"/>`;
+    } else if (pattern === 'zigzag') {
+      size = 12; s = `<rect width="12" height="12" fill="${color}"/>` +
+        `<path d="M0 4 L3 1 L6 4 L9 1 L12 4 M0 10 L3 7 L6 10 L9 7 L12 10" stroke="${color2}" stroke-width="2" fill="none"/>`;
+    } else if (pattern === 'animalier') {
+      size = 15; s = `<rect width="15" height="15" fill="${color}"/>` +
+        `<ellipse cx="4" cy="4" rx="2.4" ry="1.8" fill="${shade(color, -46)}"/>` +
+        `<ellipse cx="11" cy="8" rx="2.2" ry="1.6" fill="${shade(color, -46)}"/>` +
+        `<ellipse cx="6" cy="12" rx="2.4" ry="1.7" fill="${shade(color, -46)}"/>`;
     }
     return {
       fill: `url(#${id})`,
@@ -473,7 +511,10 @@
       <path d="M70 72 Q75 74 75 82 L74 94 Q74 98 70 98 Q66 98 66 94 L66 78 Z" fill="${armFill}" ${line}/>
       <circle cx="29" cy="100" r="5" fill="${skin}"/>
       <circle cx="71" cy="100" r="5" fill="${skin}"/>`;
-    const armsSkin = sleeveless ? '' : `
+    /* con le maniche lunghe (e con la giacca) l'avambraccio NON si
+       scopre: è l'unica differenza che si vede, ma si vede */
+    const manicheLunghe = av.top.style === 'manicalunga' || av.top.style === 'giacca';
+    const armsSkin = (sleeveless || manicheLunghe) ? '' : `
       <path d="M25 88 Q25 96 29 96 Q33 96 33 92 L33 88 Z" fill="${skin}"/>
       <path d="M75 88 Q75 96 71 96 Q67 96 67 92 L67 88 Z" fill="${skin}"/>`;
 
@@ -494,6 +535,17 @@
                <line x1="50" y1="72" x2="50" y2="102" stroke="${shade(av.top.color, -46)}" stroke-width="1.4"/>
                <circle cx="50" cy="82" r="1.1" fill="${shade(av.top.color, -46)}"/>
                <circle cx="50" cy="92" r="1.1" fill="${shade(av.top.color, -46)}"/>`;
+    } else if (av.top.style === 'giacca') {
+      /* aperta davanti, coi risvolti: da lontano si distingue dalla
+         camicia perché si vede la maglia sotto */
+      torso = `<path d="M34 ${bodyTop} L42 64 Q50 70 58 64 L66 ${bodyTop} L70 78 L66 82 L66 103 L34 103 L34 82 L30 78 Z" fill="${topP.fill}" ${line}/>
+               <path d="M44 65 L50 76 L56 65 L58 66 L52 103 L48 103 L42 66 Z" fill="${shade(av.top.color, 36)}"/>
+               <path d="M42 65 L50 77 L44 80 Z M58 65 L50 77 L56 80 Z" fill="${shade(av.top.color, -34)}"/>`;
+    } else if (av.top.style === 'gilet') {
+      torso = `<path d="M40 66 Q50 72 60 66 L64 78 L64 103 L36 103 L36 78 Z" fill="${topP.fill}" ${line}/>
+               <path d="M46 67 L50 78 L54 67 L52 103 L48 103 Z" fill="${shade(av.top.color, 32)}"/>
+               <circle cx="50" cy="86" r="1.1" fill="${shade(av.top.color, -46)}"/>
+               <circle cx="50" cy="94" r="1.1" fill="${shade(av.top.color, -46)}"/>`;
     } else if (av.top.style === 'felpa') {
       torso = `<path d="M34 ${bodyTop} L42 64 Q50 69 58 64 L66 ${bodyTop} L70 78 L66 82 L66 104 L34 104 L34 82 L30 78 Z" fill="${topP.fill}" ${line}/>
                <path d="M40 63 Q50 58 60 63 Q50 74 40 63 Z" fill="${shade(av.top.color, -22)}" ${line}/>

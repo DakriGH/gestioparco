@@ -6,7 +6,7 @@
 <!-- il foglio di stile VERO dell'app: i blocchi qui dentro sono quelli
      di "+ Nuovo", identici, non una loro imitazione -->
 <link rel="stylesheet" href="./css/fonts.css">
-<link rel="stylesheet" href="./css/app.css">
+<link rel="stylesheet" href="./css/app.css?v=192">
 <style>
   /* ── la pagina di studio attorno al pannello ── */
   body { margin: 0; background: #0B0B10; color: #E9E9F2; padding: 26px 18px 80px;
@@ -50,6 +50,22 @@
      stringere le icone quel tanto che basta perche' le otto fantasie
      stiano in UNA riga sola. */
 
+  /* "Quanto restano" sta in una riga sola: i tagli, i minuti esatti e
+     per ultimo il "paga dopo" */
+  .riga-dur { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .riga-dur .chips { display: flex; gap: 7px; flex-wrap: wrap; }
+  .riga-dur .dur-custom { margin: 0; flex: 0 0 auto; flex-wrap: nowrap; gap: 7px; }
+  .riga-dur .dur-custom .lab { white-space: nowrap; font-size: 12px; }
+  .riga-dur .dur-custom .step-b { width: 36px; min-width: 36px; }
+  .riga-dur .dur-custom input { width: 66px; padding: 7px; }
+  /* i chip di serie sono larghi 84px l'uno: qui i quattro tagli, i
+     minuti esatti e il "paga dopo" devono stare in 768, quindi si
+     stringono */
+  .riga-dur .chip { padding: 0 9px; min-width: 0; font-size: 15px; }
+  /* senza questo il "paga dopo" si prende tutta la riga e manda a capo
+     tutto il resto */
+  .riga-dur .later { flex: 0 0 auto; margin-left: auto; font-size: 14.5px; padding: 0 12px; }
+
   /* le linguette in alto, ognuna col suo colore */
   .ling { display: flex; gap: 7px; flex-wrap: wrap; flex-shrink: 0; }
   .ling button { border: none; border-radius: 15px; padding: 9px 14px; min-height: 48px;
@@ -66,17 +82,33 @@
   .ling button.on[data-v="Alcolici"] { background: var(--hot); }
 
   /* CHI ACCOMPAGNA: dentro il blocco viola vero */
-  .ruoli { display: flex; gap: 7px; flex-wrap: wrap; }
-  .ruoli button { border: none; border-radius: 14px; min-height: 46px; padding: 0 13px;
-    background: rgba(0,0,0,.22); color: rgba(255,255,255,.86); font: inherit; font-size: 14px;
-    font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;
+  /* otto ruoli su una riga sola: icona sopra, nome sotto */
+  .ruoli { display: flex; gap: 6px; }
+  .ruoli button { flex: 1; min-width: 0; border: none; border-radius: 13px; padding: 5px 2px 5px;
+    background: rgba(0,0,0,.22); color: rgba(255,255,255,.86); font: inherit; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 1px;
     transition: transform .08s, background .15s; }
-  .ruoli button:active { transform: scale(.96); }
-  .ruoli button .em { font-size: 21px; }
+  .ruoli button:active { transform: scale(.95); }
+  .ruoli button .em { font-size: 22px; line-height: 1.15; }
+  .ruoli button .nm { font-size: 10.5px; font-weight: 700; line-height: 1.1; }
   .ruoli button.messo { background: rgba(255,255,255,.2); }
   .ruoli button.on { background: #fff; color: #221944; }
 
-  .armadio { display: flex; gap: 11px; margin-top: 8px; }
+  /* l'intestazione col tasto per togliere: se stai vestendo qualcuno
+     toglie lui, se no li toglie tutti */
+  .testa-viola { display: flex; align-items: center; }
+  .testa-viola h2 { flex: 1; }
+  .butta { margin-right: 12px; border: none; border-radius: 11px; padding: 6px 11px; min-height: 34px;
+    background: rgba(0,0,0,.28); color: rgba(255,255,255,.9); font: inherit; font-size: 12.5px;
+    font-weight: 700; cursor: pointer; }
+  .butta:active { transform: scale(.95); }
+
+  /* La figura affianca solo le prime due sezioni; colori, pantaloni e
+     tratti passano SOTTO a tutta larghezza: cosi' le pastiglie dei due
+     colori stanno su una riga sola invece che su due. */
+  .armadio { display: grid; grid-template-columns: 138px 1fr; gap: 8px 11px;
+    margin-top: 8px; align-items: start; }
+  .armadio .largo { grid-column: span 2; display: flex; flex-direction: column; gap: 6px; }
   .armadio .figura { flex: 0 0 138px; background: rgba(0,0,0,.24); border-radius: 16px;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     gap: 5px; padding: 8px; }
@@ -87,14 +119,18 @@
     color: rgba(255,255,255,.62); margin-bottom: 3px; display: block; }
   .icone { display: flex; gap: 5px; flex-wrap: wrap; }
   .ico { border: none; border-radius: 12px; background: rgba(0,0,0,.22); color: rgba(255,255,255,.86);
-    width: 66px; padding: 5px 2px 4px; font: inherit; cursor: pointer;
+    width: 60px; padding: 5px 2px 4px; font: inherit; cursor: pointer;
     display: flex; flex-direction: column; align-items: center; gap: 3px;
     transition: transform .08s, background .15s; }
   .ico:active { transform: scale(.95); }
   .ico .dis { font-size: 23px; line-height: 1.05; }
   .ico .sw { width: 30px; height: 21px; border-radius: 6px; box-shadow: 0 0 0 1px rgba(0,0,0,.4) inset; }
-  .ico .nome { font-size: 10px; font-weight: 700; line-height: 1.1; text-align: center; }
+  .ico .nome { font-size: 9.5px; font-weight: 700; line-height: 1.1; text-align: center; }
   .ico.on { background: #fff; color: #221944; }
+  .duecolori { display: flex; gap: 20px; }
+  .duecolori > div { flex: 1; min-width: 0; }
+  /* i pantaloni e i loro colori sulla stessa riga */
+  .sottoriga { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
   .tinte { display: flex; gap: 6px; flex-wrap: wrap; }
   .tinte button { width: 32px; height: 32px; border-radius: 9px; border: 3px solid transparent;
     padding: 0; cursor: pointer; }
@@ -193,8 +229,8 @@
   </div>
 </div>
 
-<script src="./js/icone.js"></script>
-<script src="./js/avatar.js"></script>
+<script src="./js/icone.js?v=192"></script>
+<script src="./js/avatar.js?v=192"></script>
 <script>
 const TARIFFE = [[10,3],[15,4.5],[20,6],[30,7],[40,10],[50,12],[60,12],
                  [70,15],[80,16.5],[90,19],[100,22],[110,24],[120,24]];
@@ -207,9 +243,10 @@ const fmtMin = m => m >= 60 ? (m % 60 ? Math.floor(m/60) + 'h' + (m%60) : Math.f
 
 /* le fasce del bracciale e le durate rapide sono quelle di serie */
 const FASCE = ['#22C55E', '#FBBF24', '#0EA5E9', '#E23D4B'];
-const RAPIDE = [15, 30, 60, 90];
-const RUOLI = [ ['mamma','Mamma','👩'], ['papa','Papà','👨'], ['nonna','Nonna','👵'],
-                ['nonno','Nonno','👴'], ['zia','Zia','🧑'], ['amico','Amico','🧑‍🤝‍🧑'] ];
+const RAPIDE = [10, 15, 30, 60];
+/* i ruoli veri dell'app: erano gia' otto e li avevo riscritti a mano
+   perdendone meta' per strada */
+const RUOLI = AV.ROLES.map(r => [r.key, r.label, r.em]);
 const MENU = {
   Bevande: [['acqua','Acqua',1],['acquafriz','Acqua friz.',1],['caffe','Caffè',1.2],
             ['coca','Coca Cola',2.5],['cocaz','Coca Zero',2.5],['fanta','Fanta',2.5],
@@ -267,15 +304,17 @@ const bloccoOrario = () =>
 const bloccoDurata = () =>
   '<div class="card blk c-ambra sec-dur">' +
     '<h2><span class="em">⏳</span> Quanto restano</h2>' +
-    '<div class="blk-in"><div class="chips">' +
-      RAPIDE.map(m => '<button class="chip' + (!S.pagaDopo && S.minuti === m ? ' on' : '') +
-        '" data-a="min" data-v="' + m + '">' + fmtMin(m) + '</button>').join('') +
+    /* tutto su UNA riga: i tagli, i minuti esatti e per ultimo il
+       "paga dopo", che e' l'eccezione e sta in fondo come tale */
+    '<div class="blk-in"><div class="riga-dur">' +
+      '<span class="chips">' + RAPIDE.map(m =>
+        '<button class="chip' + (!S.pagaDopo && S.minuti === m ? ' on' : '') +
+        '" data-a="min" data-v="' + m + '">' + fmtMin(m) + '</button>').join('') + '</span>' +
+      '<span class="dur-custom"><span class="lab">oppure minuti esatti</span>' +
+        '<button class="step-b sm" data-a="min" data-v="-5">−</button>' +
+        '<input type="number" min="1" step="5" inputmode="numeric" value="' + S.minuti + '" data-a="minuti">' +
+        '<button class="step-b sm plus" data-a="min" data-v="+5">+</button></span>' +
       '<button class="chip later' + (S.pagaDopo ? ' on' : '') + '" data-a="dopo">🕗 Paga dopo</button>' +
-    '</div>' +
-    '<div class="dur-custom"><span class="lab">oppure minuti esatti</span>' +
-      '<button class="step-b sm" data-a="min" data-v="-5">−</button>' +
-      '<input type="number" min="1" step="5" inputmode="numeric" value="' + S.minuti + '" data-a="minuti">' +
-      '<button class="step-b sm plus" data-a="min" data-v="+5">+</button>' +
     '</div></div></div>';
 
 const bloccoNumeri = () =>
@@ -293,11 +332,13 @@ const bloccoNumeri = () =>
     '</div></div></div>';
 
 /* ══════ chi accompagna, dentro il blocco viola vero ══════ */
+/* icona sopra e nome sotto: tutti e otto su UNA riga, cosi' si trovano
+   a colpo d'occhio senza rubare altezza */
 const tastiRuoli = () => '<div class="ruoli">' + RUOLI.map(r => {
   const dove = S.gente.findIndex(p => p.ruolo === r[0]);
   const cls = dove < 0 ? '' : (S.chi === dove ? 'on' : 'messo');
   return '<button data-a="ruolo" data-v="' + r[0] + '"' + (cls ? ' class="' + cls + '"' : '') + '>' +
-    '<span class="em">' + r[2] + '</span>' + r[1] + '</button>';
+    '<span class="em">' + r[2] + '</span><span class="nm">' + r[1] + '</span></button>';
 }).join('') + '</div>';
 
 /* la pezza fa vedere davvero la fantasia, coi due colori del capo */
@@ -334,20 +375,29 @@ function armadio() {
         AV.TOP.map(t => '<button class="ico' + (av.top.style === t.key ? ' on' : '') +
           '" data-a="top" data-v="' + t.key + '"><span class="dis">' + t.em + '</span>' +
           '<span class="nome">' + t.label + '</span></button>').join('') + '</div></div>' +
-      '<div><span class="et">Di che colore</span>' + tinte('top','color',c1) + '</div>' +
       '<div><span class="et">Fantasia</span><div class="icone">' +
         AV.PATTERNS.map(f => '<button class="ico' + (av.top.pattern === f.key ? ' on' : '') +
           '" data-a="pat" data-v="' + f.key + '">' + pezza(f.key, c1, c2) +
           '<span class="nome">' + f.n + '</span></button>').join('') + '</div></div>' +
-      '<div class="' + (av.top.pattern === 'solid' ? 'spento' : '') + '"><span class="et">' +
-        'Colore della fantasia' + (av.top.pattern === 'solid' ? ' — a tinta unita non serve' : '') +
-        '</span>' + tinte('top','color2',c2) + '</div>' +
+    '</div>' +
+    /* da qui in giù si va a TUTTA LARGHEZZA: la figura sta solo di
+       fianco a capi e fantasie, e cosí le pastiglie dei due colori
+       stanno su una riga sola invece che su due */
+    '<div class="largo">' +
+      '<div class="duecolori">' +
+        '<div><span class="et">Colore del capo</span>' + tinte('top','color',c1) + '</div>' +
+        '<div class="' + (av.top.pattern === 'solid' ? 'spento' : '') + '">' +
+          '<span class="et">Colore della fantasia' +
+          (av.top.pattern === 'solid' ? ' — non serve' : '') + '</span>' +
+          tinte('top','color2',c2) + '</div>' +
+      '</div>' +
       '<div class="' + (vestito ? 'spento' : '') + '"><span class="et">Sotto' +
-        (vestito ? ' — col vestito non serve' : '') + '</span><div class="icone">' +
+        (vestito ? ' — col vestito non serve' : '') + '</span>' +
+        '<div class="sottoriga"><div class="icone">' +
         AV.PANTS.map(t => '<button class="ico' + (av.pants.style === t.key ? ' on' : '') +
           '" data-a="pants" data-v="' + t.key + '"><span class="dis">' + t.em + '</span>' +
           '<span class="nome">' + t.label + '</span></button>').join('') + '</div>' +
-        '<div style="height:6px"></div>' + tinte('pants','color',av.pants.color) + '</div>' +
+        tinte('pants','color',av.pants.color) + '</div></div>' +
       /* la riga libera sta IN FILA coi tratti e si prende quello che
          avanza: su una riga sua costava altezza per niente */
       '<div><span class="et">Tratti particolari</span><div class="tratti">' +
@@ -355,13 +405,19 @@ function armadio() {
           return '<button class="' + (av[d] && av[d].style === v ? 'on' : '') +
             '" data-a="tratto" data-v="' + t.k + '">' + t.n + '</button>'; }).join('') +
         '<input class="libero" placeholder="Altro: «zaino giallo», «gamba ingessata»…" ' +
-          'value="' + (p.note||'') + '" data-a="nota"></div></div>' +
+          'value="' + (p.note||'') + '" data-a="nota"></div>' +
     '</div></div>';
 }
 
 const bloccoGente = () =>
   '<div class="card blk c-viola sec-people">' +
-    '<h2><span class="em">🧑‍🤝‍🧑</span> Chi accompagna</h2>' +
+    '<div class="testa-viola">' +
+      '<h2><span class="em">🧑‍🤝‍🧑</span> Chi accompagna</h2>' +
+      (S.gente.length
+        ? '<button class="butta" data-a="butta">🗑️ ' +
+          (S.chi >= 0 ? 'Togli ' + S.gente[S.chi].nome : 'Togli tutti') + '</button>'
+        : '') +
+    '</div>' +
     '<div class="blk-in">' + tastiRuoli() + armadio() + '</div></div>';
 
 /* ══════ il bar, con le card gia' approvate ══════ */
@@ -431,6 +487,10 @@ function azione(a, v) {
       S.gente.push({ nome: r[1], ruolo: v, av: AV.defaultFor(v) || AV.defaultFor('papa'), note: '' });
       S.chi = S.gente.length - 1;
     } else S.chi = (S.chi === dove ? -1 : dove);
+  }
+  if (a === 'butta') {
+    if (S.chi >= 0) { S.gente.splice(S.chi, 1); S.chi = -1; }
+    else { S.gente = []; S.chi = -1; }
   }
   if (a === 'top' && p)    p.av.top.style = v;
   if (a === 'pat' && p)    p.av.top.pattern = v;

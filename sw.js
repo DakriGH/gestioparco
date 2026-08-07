@@ -1,7 +1,7 @@
 /* Service worker: l'app deve partire anche senza rete.
    Strategia: rete-prima per l'HTML (così un aggiornamento si vede subito),
    cache-prima per CSS/JS/icone. Nessuna risorsa esterna da scaricare. */
-const CACHE = 'gestioparco-v47';
+const CACHE = 'gestioparco-v48';
 const ASSETS = [
   './',
   './index.html',
