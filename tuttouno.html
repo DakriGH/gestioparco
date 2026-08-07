@@ -1,228 +1,195 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="it" data-theme="dark">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Una schermata per tutto</title>
+<!-- il foglio di stile VERO dell'app: i blocchi qui dentro sono quelli
+     di "+ Nuovo", identici, non una loro imitazione -->
 <link rel="stylesheet" href="./css/fonts.css">
+<link rel="stylesheet" href="./css/app.css">
 <style>
-  :root { --bg:#17171E; --surface:#21212B; --surface-2:#292933; --surface-3:#34343F;
-          --txt:#E9E9F2; --txt-2:#C2C2D4; --txt-3:#A8A8BD; --line:rgba(255,255,255,.08);
-          --accent:#B69EFF; --accent-ink:#18122A; --ok:#6ADCAF; --warn:#E8B44C;
-          --late:#5FCBD6; --hot:#E8776C; }
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
-  body { margin: 0; background: #0B0B10; color: var(--txt); padding: 26px 18px 80px;
-    font-family: 'Inter', system-ui, sans-serif; }
+  /* ── la pagina di studio attorno al pannello ── */
+  body { margin: 0; background: #0B0B10; color: #E9E9F2; padding: 26px 18px 80px;
+    font-family: 'Inter', system-ui, sans-serif; overflow: auto; height: auto; }
   .foglio { max-width: 1240px; margin: 0 auto; }
-  .occhiello { color: var(--warn); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; margin: 0 0 8px; }
-  h1 { font-family: 'Fredoka', sans-serif; font-size: 28px; margin: 0 0 10px; }
+  .occhiello { color: #E8B44C; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; margin: 0 0 8px; }
+  h1.tit { font-family: 'Fredoka', sans-serif; font-size: 28px; margin: 0 0 10px; }
   .intro { color: #A8A8BD; font-size: 15px; line-height: 1.6; max-width: 74ch; margin: 0 0 6px; }
-  .intro b { color: var(--warn); font-weight: 600; }
-  .casi { display: grid; gap: 32px; margin-top: 26px;
-    grid-template-columns: repeat(auto-fill, minmax(430px, 1fr)); }
-  .caso { min-width: 0; }
-  .testa { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+  .intro b { color: #E8B44C; font-weight: 600; }
+  .testa { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 26px 0 6px; }
   .lett { font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 700; background: #23232F;
-    color: var(--warn); border-radius: 20px; padding: 4px 12px; }
+    color: #E8B44C; border-radius: 20px; padding: 4px 12px; }
   .testa h3 { font-family: 'Fredoka', sans-serif; font-size: 20px; margin: 0; }
   .mis { margin-left: auto; font-size: 11px; font-weight: 800; letter-spacing: .04em;
     text-transform: uppercase; border-radius: 20px; padding: 4px 10px; background: rgba(0,0,0,.55); }
-  .idea { color: #9A9AB0; font-size: 14px; line-height: 1.55; margin: 0 0 12px; }
-  .idea b { color: #C9CDD6; font-weight: 600; }
-  .telaio { position: relative; border-radius: 22px; overflow: hidden;
+  .telaio { position: relative; border-radius: 22px; overflow: hidden; max-width: 820px;
     border: 1px solid rgba(255,255,255,.1); box-shadow: 0 20px 44px rgba(0,0,0,.5); }
   .telaio > .dentro { width: 820px; height: 1180px; transform-origin: top left; }
+  .nota { background: #181A22; border: 1px solid rgba(255,255,255,.08); border-left: 3px solid #E8B44C;
+    border-radius: 0 14px 14px 0; padding: 14px 16px; margin-top: 30px; color: #B9BFC9;
+    font-size: 14.5px; line-height: 1.65; }
+  .nota b { color: #E9E9F2; }
 
-  /* ═══ scheletro ═══ */
+  /* ── il pannello ── */
   .pan { position: relative; width: 820px; height: 1180px; display: flex; flex-direction: column;
     background: var(--bg); color: var(--txt); overflow: hidden; }
-  .corpo { flex: 1; min-height: 0; padding: 12px 14px 0; display: flex; flex-direction: column; gap: 10px; }
-  button { font: inherit; color: inherit; cursor: pointer; }
+  .corpo { flex: 1; min-height: 0; padding: 10px 13px 0; display: flex; flex-direction: column; gap: 7px; }
+  /* i blocchi veri, solo un filo piu' compatti: qui devono starci tutti
+     insieme, mentre in "+ Nuovo" si scorreva */
+  /* I blocchi sono quelli veri: qui perdono solo il margine (lo mette il
+     gap del corpo) e un filo di respiro, perche' in "+ Nuovo" la pagina
+     scorreva e qui invece devono starci tutti insieme.
+     Il respiro si toglie dall'INTESTAZIONE e dal pannello interno: la
+     card in se' ha gia' padding zero, e mettercelo la faceva crescere
+     di diciassette pixel invece di accorciarla. */
+  .pan .card.blk { margin: 0; }
+  .pan .card.blk > h2 { font-size: 15px; padding: 6px 13px; }
+  .pan .blk-in { padding: 9px 13px 11px; }
+  /* Le due colonne le avevo provate e peggioravano: le icone andavano a
+     capo e l'armadio CRESCEVA invece di accorciarsi. La strada giusta e'
+     stringere le icone quel tanto che basta perche' le otto fantasie
+     stiano in UNA riga sola. */
 
-  /* linguette colorate */
-  .cat { display: flex; gap: 7px; flex-wrap: wrap; flex-shrink: 0; }
-  .cat button { border: none; border-radius: 15px; padding: 9px 14px; min-height: 48px;
-    background: var(--surface); color: var(--txt-3); font-size: 14.5px; font-weight: 700;
-    display: flex; align-items: center; gap: 7px; transition: background .15s, color .15s, transform .08s; }
-  .cat button:active { transform: scale(.96); }
-  .cat button svg { width: 20px; height: 20px; }
-  .cat button.on { color: #14141B; }
-  .cat button.on[data-v="Parco"]    { background: var(--accent); }
-  .cat button.on[data-v="Bevande"]  { background: #7FB6E8; }
-  .cat button.on[data-v="Birre"]    { background: var(--warn); }
-  .cat button.on[data-v="Snack"]    { background: #F0A868; }
-  .cat button.on[data-v="Alcolici"] { background: var(--hot); }
+  /* le linguette in alto, ognuna col suo colore */
+  .ling { display: flex; gap: 7px; flex-wrap: wrap; flex-shrink: 0; }
+  .ling button { border: none; border-radius: 15px; padding: 9px 14px; min-height: 48px;
+    background: var(--surface); color: var(--txt-3); font: inherit; font-size: 14.5px;
+    font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 7px;
+    transition: background .15s, color .15s, transform .08s; }
+  .ling button:active { transform: scale(.96); }
+  .ling button svg { width: 20px; height: 20px; }
+  .ling button.on { color: #14141B; }
+  .ling button.on[data-v="Parco"]    { background: var(--accent); }
+  .ling button.on[data-v="Bevande"]  { background: #7FB6E8; }
+  .ling button.on[data-v="Birre"]    { background: var(--warn); }
+  .ling button.on[data-v="Snack"]    { background: #F0A868; }
+  .ling button.on[data-v="Alcolici"] { background: var(--hot); }
 
-  /* fascia dell'ingresso */
-  .fascia { border-radius: 20px; padding: 10px 13px; display: flex; align-items: center;
-    gap: 10px; flex-wrap: wrap; flex-shrink: 0;
-    background: linear-gradient(140deg, #3A2E6E, #2A2050); }
-  .fascia .k { font-size: 10.5px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
-    color: rgba(255,255,255,.6); display: block; }
-  .fascia .ora { font-family: 'Fredoka', sans-serif; font-size: 28px; font-weight: 700; line-height: 1.05; }
-  .chip { border: none; border-radius: 12px; min-height: 40px; padding: 0 12px; background: rgba(255,255,255,.1);
-    color: var(--txt); font-size: 13.5px; font-weight: 700; transition: transform .08s, background .12s; }
-  .chip:active { transform: scale(.95); }
-  .chip.on { background: #fff; color: #14141B; }
-  .chip.dopo.on { background: var(--late); color: #06222A; }
-  .brac { display: flex; gap: 5px; margin-left: auto; }
-  .brac button { width: 32px; height: 32px; border-radius: 50%; border: 3px solid transparent; padding: 0; }
-  .brac button.on { border-color: #fff; transform: scale(1.1); }
-  .sep { width: 1px; align-self: stretch; background: rgba(255,255,255,.16); margin: 0 2px; }
-
-  /* il blocco verde dei numeri, quello che c'era gia' */
-  .verde { border-radius: 20px; padding: 11px 14px; flex-shrink: 0;
-    background: linear-gradient(150deg, #1B8560 0%, #12664A 100%);
-    display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-  .verde .voce { display: flex; align-items: center; gap: 10px; }
-  .verde .lab { font-size: 14.5px; font-weight: 700; display: flex; align-items: center; gap: 7px; }
-  .verde .lab .em { font-size: 22px; }
-  .conta { display: flex; align-items: center; background: rgba(0,0,0,.28); border-radius: 14px; overflow: hidden; }
-  .conta button { border: none; background: rgba(255,255,255,.12); width: 52px; min-height: 52px;
-    font-family: 'Fredoka', sans-serif; font-size: 26px; font-weight: 700; color: #fff; }
-  .conta button:active { background: rgba(255,255,255,.28); }
-  .conta button:disabled { opacity: .3; }
-  .conta .n { min-width: 54px; text-align: center; font-family: 'Fredoka', sans-serif;
-    font-size: 27px; font-weight: 700; }
-  .verde .quanto { margin-left: auto; text-align: right; }
-  .verde .quanto .k { font-size: 10.5px; font-weight: 800; letter-spacing: .09em;
-    text-transform: uppercase; color: rgba(255,255,255,.62); display: block; }
-  .verde .quanto .v { font-family: 'Fredoka', sans-serif; font-size: 24px; font-weight: 700; }
-
-  /* ═══ CHI ACCOMPAGNA ═══
-     I ruoli scelgono CHI. Poi la figura a sinistra e, a destra, le
-     icone grandi col nome sotto: capo, colore, fantasia, colore della
-     fantasia. Niente lista di avatar gia' fatti: rubava un terzo
-     dell'altezza per dire una cosa che i ruoli dicono gia'. */
-  .acc { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 9px; }
-  .acc .titolo { font-size: 10.5px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
-    color: var(--txt-3); }
-  .ruoli { display: flex; gap: 7px; flex-wrap: wrap; flex-shrink: 0; }
-  .ruoli button { border: none; border-radius: 15px; min-height: 54px; padding: 0 15px;
-    background: var(--surface); color: var(--txt-2); font-size: 14.5px; font-weight: 700;
-    display: flex; align-items: center; gap: 8px; transition: transform .08s, background .15s; }
+  /* CHI ACCOMPAGNA: dentro il blocco viola vero */
+  .ruoli { display: flex; gap: 7px; flex-wrap: wrap; }
+  .ruoli button { border: none; border-radius: 14px; min-height: 46px; padding: 0 13px;
+    background: rgba(0,0,0,.22); color: rgba(255,255,255,.86); font: inherit; font-size: 14px;
+    font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;
+    transition: transform .08s, background .15s; }
   .ruoli button:active { transform: scale(.96); }
-  .ruoli button .em { font-size: 24px; }
-  .ruoli button.messo { background: #1D2A34; color: var(--late); }
-  .ruoli button.on { background: var(--late); color: #06222A; }
+  .ruoli button .em { font-size: 21px; }
+  .ruoli button.messo { background: rgba(255,255,255,.2); }
+  .ruoli button.on { background: #fff; color: #221944; }
 
-  .armadio { flex: 1; min-height: 0; display: flex; gap: 11px; }
-  .armadio .figura { flex: 0 0 168px; background: var(--surface); border-radius: 18px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
-    padding: 8px; }
-  .armadio .figura svg { width: 150px; height: 198px; }
-  .armadio .figura .chi { font-size: 14px; font-weight: 700; }
-  .armadio .roba { flex: 1; min-width: 0; background: var(--surface); border-radius: 18px;
-    padding: 11px 13px; display: flex; flex-direction: column; gap: 10px; }
-  .et { font-size: 10.5px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
-    color: var(--txt-3); margin-bottom: 6px; display: block; }
-
-  /* le icone comode: disegno grande e sotto il nome */
-  .icone { display: flex; gap: 7px; flex-wrap: wrap; }
-  .ic { border: none; border-radius: 14px; background: var(--surface-2); color: var(--txt-2);
-    width: 78px; padding: 7px 4px 6px; display: flex; flex-direction: column; align-items: center;
-    gap: 3px; transition: transform .08s, background .15s; }
-  .ic:active { transform: scale(.95); }
-  .ic .dis { font-size: 27px; line-height: 1.1; }
-  .ic .sw { width: 34px; height: 26px; border-radius: 7px; box-shadow: 0 0 0 1px rgba(0,0,0,.35) inset; }
-  .ic .nome { font-size: 11px; font-weight: 700; line-height: 1.15; text-align: center; }
-  .ic.on { background: var(--accent); color: var(--accent-ink); }
-
-  .colori { display: flex; gap: 6px; flex-wrap: wrap; }
-  .colori button { width: 38px; height: 38px; border-radius: 11px; border: 3px solid transparent; padding: 0; }
-  .colori button.on { border-color: var(--txt); transform: scale(1.08); }
-  .spento { opacity: .35; pointer-events: none; }
-
+  .armadio { display: flex; gap: 11px; margin-top: 8px; }
+  .armadio .figura { flex: 0 0 138px; background: rgba(0,0,0,.24); border-radius: 16px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 5px; padding: 8px; }
+  .armadio .figura svg { width: 112px; height: 148px; }
+  .armadio .figura .chi { font-size: 13.5px; font-weight: 700; }
+  .armadio .roba { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+  .et { font-size: 10px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
+    color: rgba(255,255,255,.62); margin-bottom: 3px; display: block; }
+  .icone { display: flex; gap: 5px; flex-wrap: wrap; }
+  .ico { border: none; border-radius: 12px; background: rgba(0,0,0,.22); color: rgba(255,255,255,.86);
+    width: 66px; padding: 5px 2px 4px; font: inherit; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    transition: transform .08s, background .15s; }
+  .ico:active { transform: scale(.95); }
+  .ico .dis { font-size: 23px; line-height: 1.05; }
+  .ico .sw { width: 30px; height: 21px; border-radius: 6px; box-shadow: 0 0 0 1px rgba(0,0,0,.4) inset; }
+  .ico .nome { font-size: 10px; font-weight: 700; line-height: 1.1; text-align: center; }
+  .ico.on { background: #fff; color: #221944; }
+  .tinte { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tinte button { width: 32px; height: 32px; border-radius: 9px; border: 3px solid transparent;
+    padding: 0; cursor: pointer; }
+  .tinte button.on { border-color: #fff; transform: scale(1.08); }
+  .spento { opacity: .38; pointer-events: none; }
   .tratti { display: flex; gap: 6px; flex-wrap: wrap; }
-  .tratti button { border: none; border-radius: 999px; padding: 7px 12px; min-height: 40px;
-    background: var(--surface-2); color: var(--txt-2); font-size: 13px; font-weight: 700; }
-  .tratti button.on { background: var(--late); color: #06222A; }
-  .libero { width: 100%; border: 1px solid var(--line); border-radius: 12px; background: rgba(0,0,0,.25);
-    color: var(--txt); font: inherit; font-size: 14px; padding: 9px 12px; min-height: 42px; }
-  .vuoto { flex: 1; display: grid; place-items: center; color: var(--txt-3); font-size: 15px;
-    text-align: center; padding: 24px; line-height: 1.6; }
+  .tratti button { border: none; border-radius: 999px; padding: 6px 11px; min-height: 34px;
+    background: rgba(0,0,0,.22); color: rgba(255,255,255,.86); font: inherit; font-size: 12.5px;
+    font-weight: 700; cursor: pointer; }
+  .tratti button.on { background: #fff; color: #221944; }
+  .libero { flex: 1 1 190px; min-width: 150px; border: 1px solid rgba(255,255,255,.18); border-radius: 11px;
+    background: rgba(0,0,0,.25); color: #fff; font: inherit; font-size: 13px;
+    padding: 7px 11px; min-height: 34px; }
+  .libero::placeholder { color: rgba(255,255,255,.5); }
+  .invito { color: rgba(255,255,255,.65); font-size: 14.5px; line-height: 1.6; padding: 14px 4px; }
 
-  /* le card del bar */
-  .griglia { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px,1fr));
-    gap: 11px; align-content: start; min-height: 0; }
-  .card { --fondo: var(--surface); --orlo: transparent; position: relative; background: var(--fondo);
+  /* la griglia del bar: le card del Bar & Conto, gia' approvate */
+  .bgriglia { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px,1fr));
+    gap: 11px; align-content: start; }
+  .bcard { --fondo: var(--surface); --orlo: transparent; position: relative; background: var(--fondo);
     border-radius: 20px; overflow: hidden; display: flex; flex-direction: column;
     box-shadow: 0 4px 14px rgba(0,0,0,.3); }
-  .card::after { content:''; position:absolute; inset:0; border-radius:inherit;
+  .bcard::after { content:''; position:absolute; inset:0; border-radius:inherit;
     border:3px solid var(--orlo); pointer-events:none; z-index:4; }
-  .card.presa { --fondo:#262038; --orlo: var(--accent); }
-  .card.saldo { --fondo:#16302A; --orlo: var(--ok); }
-  .su { flex: 1; position: relative; overflow: hidden; border: none; background: none; color: inherit;
-    padding: 11px; display: flex; align-items: flex-start; gap: 10px; width: 100%; text-align: left; }
-  .su svg { width: 54px; height: 54px; flex: 0 0 auto; position: relative; z-index: 1; }
-  .testi { position: relative; z-index: 1; flex: 1; min-width: 0; min-height: 54px;
+  .bcard.presa { --fondo:#262038; --orlo: var(--accent); }
+  .bcard.saldo { --fondo:#16302A; --orlo: var(--ok); }
+  .bsu { flex: 1; position: relative; overflow: hidden; border: none; background: none; color: inherit;
+    padding: 11px; display: flex; align-items: flex-start; gap: 10px; width: 100%;
+    text-align: left; font: inherit; cursor: pointer; }
+  .bsu svg { width: 54px; height: 54px; flex: 0 0 auto; position: relative; z-index: 1; }
+  .btesti { position: relative; z-index: 1; flex: 1; min-width: 0; min-height: 54px;
     display: flex; flex-direction: column; justify-content: center; gap: 4px; }
-  .pr { font-family: 'Fredoka', sans-serif; font-size: 20px; font-weight: 700; color: var(--txt-2); }
-  .nm { font-size: 15.5px; font-weight: 700; line-height: 1.2; }
-  .fant { position: absolute; right: 10px; top: 6px; z-index: 0; font-family: 'Fredoka', sans-serif;
+  .bpr { font-family: 'Fredoka', sans-serif; font-size: 20px; font-weight: 700; color: var(--txt-2); }
+  .bnm { font-size: 15.5px; font-weight: 700; line-height: 1.2; }
+  .bfant { position: absolute; right: 10px; top: 6px; z-index: 0; font-family: 'Fredoka', sans-serif;
     font-size: 68px; font-weight: 700; height: 58px; line-height: 58px; overflow: hidden;
     color: rgba(255,255,255,.07); pointer-events: none; }
-  .card.presa .fant { color: rgba(182,158,255,.3); }
-  .card.saldo .fant { color: rgba(106,220,175,.3); }
-  .zone { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 2px;
+  .bcard.presa .bfant { color: rgba(182,158,255,.3); }
+  .bcard.saldo .bfant { color: rgba(106,220,175,.3); }
+  .bzone { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 2px;
     background: rgba(0,0,0,.45); }
-  .zone button { border: none; background: rgba(255,255,255,.06); min-height: 46px; color: var(--txt);
-    font-family: 'Fredoka', sans-serif; font-size: 26px; font-weight: 700; display: flex;
-    align-items: center; justify-content: center; }
-  .zone.v { background: rgba(106,220,175,.28); }
-  .zone.v button { background: rgba(106,220,175,.13); color: var(--ok); font-size: 23px; }
-  .zone.v button:disabled { opacity: .25; }
-  .pastiglia { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); z-index: 2;
+  .bzone button { border: none; background: rgba(255,255,255,.06); min-height: 46px; color: var(--txt);
+    font-family: 'Fredoka', sans-serif; font-size: 26px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; }
+  .bzone.v { background: rgba(106,220,175,.28); }
+  .bzone.v button { background: rgba(106,220,175,.13); color: var(--ok); font-size: 23px; }
+  .bzone.v button:disabled { opacity: .25; }
+  .bpast { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); z-index: 2;
     min-width: 50px; height: 34px; padding: 0 9px; border-radius: 11px; background: var(--surface-3);
     box-shadow: 0 0 0 3px var(--fondo), 0 3px 9px rgba(0,0,0,.5); display: flex; align-items: center;
     justify-content: center; pointer-events: none; font-family: 'Fredoka', sans-serif;
     font-size: 20px; font-weight: 700; }
-  .card.presa .pastiglia { background: var(--accent); color: var(--accent-ink); }
-  .card.saldo .pastiglia { background: var(--ok); color: #08301F; }
-  .zone.v .pastiglia { background: #123D2D; color: #A9EFD3; font-size: 16px; box-shadow: none; }
+  .bcard.presa .bpast { background: var(--accent); color: var(--accent-ink); }
+  .bcard.saldo .bpast { background: var(--ok); color: #08301F; }
+  .bzone.v .bpast { background: #123D2D; color: #A9EFD3; font-size: 16px; box-shadow: none; }
 
-  /* barra del prezzo */
-  .fondo { flex: 0 0 auto; margin: 10px 14px 12px; background: var(--surface); border-radius: 20px;
+  /* la barra del prezzo */
+  .soldi { flex: 0 0 auto; margin: 10px 14px 12px; background: var(--surface); border-radius: 20px;
     padding: 10px 13px 11px; box-shadow: 0 -8px 26px rgba(0,0,0,.45); display: flex;
     align-items: center; gap: 11px; flex-wrap: wrap; }
-  .fondo .parti { display: flex; gap: 7px; flex: 1 1 100%; }
-  .fondo .parte { flex: 1; background: rgba(0,0,0,.24); border-radius: 13px; padding: 6px 9px;
+  .soldi .parti { display: flex; gap: 7px; flex: 1 1 100%; }
+  .soldi .parte { flex: 1; background: rgba(0,0,0,.24); border-radius: 13px; padding: 6px 9px;
     display: flex; align-items: center; gap: 8px; }
-  .fondo .parte svg { width: 20px; height: 20px; flex: 0 0 auto; }
-  .fondo .parte .k { display: block; font-size: 10.5px; font-weight: 700; color: var(--txt-3); }
-  .fondo .parte .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 700; }
-  .fondo .prezzo .k { display: block; font-size: 11.5px; font-weight: 700; color: var(--txt-3); }
-  .fondo .prezzo .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 33px; font-weight: 700; line-height: 1; }
+  .soldi .parte svg { width: 20px; height: 20px; flex: 0 0 auto; }
+  .soldi .parte .k { display: block; font-size: 10.5px; font-weight: 700; color: var(--txt-3); }
+  .soldi .parte .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 700; }
+  .soldi .prezzo .k { display: block; font-size: 11.5px; font-weight: 700; color: var(--txt-3); }
+  .soldi .prezzo .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 33px;
+    font-weight: 700; line-height: 1; }
   .modi { display: flex; gap: 3px; background: rgba(0,0,0,.3); border-radius: 13px; padding: 3px; }
   .modi button { border: none; background: none; border-radius: 10px; padding: 8px 11px; min-height: 42px;
-    color: var(--txt-3); font-size: 13px; font-weight: 700; }
+    color: var(--txt-3); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
   .modi button.on { background: var(--ok); color: #08301F; }
   .reg { margin-left: auto; border: none; border-radius: 16px; min-height: 54px; padding: 0 20px;
     background: var(--accent); color: var(--accent-ink); font-family: 'Fredoka', sans-serif;
-    font-size: 17px; font-weight: 700; }
-
-  .nota { background: #181A22; border: 1px solid var(--line); border-left: 3px solid var(--warn);
-    border-radius: 0 14px 14px 0; padding: 14px 16px; margin-top: 34px; color: #B9BFC9;
-    font-size: 14.5px; line-height: 1.65; }
-  .nota b { color: var(--txt); }
+    font-size: 17px; font-weight: 700; cursor: pointer; }
 </style>
 
 <div class="foglio">
-  <p class="occhiello">Una schermata sola · U1 rifinita</p>
-  <h1>Il Parco con la GUI di prima, e chi accompagna già aperto</h1>
-  <p class="intro">Via le card con l'icona di Bambini e Crazy: al loro posto <b>il blocco verde
-  coi contatori</b>, quello comodo che c'era già. Sotto, <b>chi accompagna sempre aperto</b>:
-  tocchi «Mamma» e la persona c'è, con l'armadio già lì pronto — nessun sotto-menu, nessuna
-  finestra che si apre sopra.</p>
-  <p class="intro">Tre modi di montare quello spazio. In tutti e tre la regola è la stessa:
-  <b>mai scorrere</b>, e il cartellino in alto a destra lo verifica in ogni categoria.</p>
+  <p class="occhiello">Una schermata sola</p>
+  <h1 class="tit">Il Parco coi blocchi veri di «+ Nuovo»</h1>
+  <p class="intro">Dentro la linguetta <b>Parco</b> ci sono i blocchi dell'app <b>identici</b> —
+  Orario di inizio col bracciale, Quanto restano, Bambini e attrazioni, Chi accompagna — perché
+  questa pagina carica <b>lo stesso foglio di stile dell'app</b>: non sono una copia, sono quelli.</p>
+  <p class="intro">L'unica cosa rifatta è dentro «Chi accompagna»: i ruoli scelgono chi, la figura
+  sta a sinistra e a destra le icone col nome sotto — capo, colore, fantasia, colore della
+  fantasia. Niente lista di avatar già pronti.</p>
 
-  <div class="casi" id="casi"></div>
+  <div class="testa"><span class="lett">U1</span><h3>Il Parco fa tutto</h3>
+    <span class="mis" id="mis"></span></div>
+  <div class="telaio"><div class="dentro" id="dentro"></div></div>
 
   <div class="nota">
-    <b>La differenza fra le tre</b> è dove stanno le facce: in colonna a sinistra, in riga sopra,
-    o niente colonna e sono i tasti dei ruoli stessi a diventare le persone. Prova ad aggiungere
-    tre o quattro accompagnatori in ognuna: è lì che si vede quale regge.
+    <b>La regola resta quella:</b> mai scorrere. Il cartellino qui sopra lo verifica a ogni tocco —
+    aggiungi accompagnatori, apri le altre linguette, e guarda se resta verde.
   </div>
 </div>
 
@@ -236,8 +203,11 @@ const prezzoTempo = m => { for (const t of TARIFFE) if (m <= t[0]) return t[1];
 const CRAZY = 4;
 const eur = n => n.toFixed(2).replace('.', ',') + ' €';
 const hhmm = t => new Date(t).toLocaleTimeString('it-IT', { hour:'2-digit', minute:'2-digit' });
-const durata = m => m >= 60 ? (Math.floor(m/60) + 'h' + (m%60 ? ' ' + (m%60) + "'" : '')) : m + "'";
-const BRACCIALI = ['#E23D4B','#F97316','#FBBF24','#22C55E','#0EA5E9','#8B5CF6','#EC4899','#94A3B8'];
+const fmtMin = m => m >= 60 ? (m % 60 ? Math.floor(m/60) + 'h' + (m%60) : Math.floor(m/60) + 'h') : m + 'm';
+
+/* le fasce del bracciale e le durate rapide sono quelle di serie */
+const FASCE = ['#22C55E', '#FBBF24', '#0EA5E9', '#E23D4B'];
+const RAPIDE = [15, 30, 60, 90];
 const RUOLI = [ ['mamma','Mamma','👩'], ['papa','Papà','👨'], ['nonna','Nonna','👵'],
                 ['nonno','Nonno','👴'], ['zia','Zia','🧑'], ['amico','Amico','🧑‍🤝‍🧑'] ];
 const MENU = {
@@ -259,147 +229,169 @@ const TRATTI = [
 const CAT = ['Parco','Bevande','Birre','Snack','Alcolici'];
 const catIcona = { Parco:'bimbi', Bevande:'coca', Birre:'heine', Snack:'pata', Alcolici:'spritz' };
 
-const statoNuovo = () => ({
-  inizio: Date.now(), bracciale: BRACCIALI[0], minuti: 60, pagaDopo: false,
-  bimbi: 2, crazy: 0, cat: 'Parco', bar: {}, pagate: {},
-  gente: [], chi: -1, modo: 'niente'
-});
-const totParco = S => S.pagaDopo ? 0 : Math.max(1, S.bimbi) * prezzoTempo(S.minuti);
-const totCrazy = S => S.crazy * CRAZY;
-const totBar = S => Object.keys(MENU).reduce((a,c) =>
-  a + MENU[c].reduce((b,m) => b + (S.bar[m[0]]||0) * m[2], 0), 0);
-const totale = S => Math.round((totParco(S) + totCrazy(S) + totBar(S)) * 100) / 100;
+const S = { inizio: Date.now(), bracciale: null, braccialeCustom: false,
+  minuti: 60, pagaDopo: false, bimbi: 1, crazy: 0, cat: 'Parco',
+  bar: {}, pagate: {}, gente: [], chi: -1, modo: 'niente' };
 
-/* ═══ pezzi ═══ */
-const barraCat = S => '<div class="cat">' + CAT.map(c =>
+const totParco = () => S.pagaDopo ? 0 : Math.max(1, S.bimbi) * prezzoTempo(S.minuti);
+const totCrazy = () => S.crazy * CRAZY;
+const totBar = () => Object.keys(MENU).reduce((a,c) =>
+  a + MENU[c].reduce((b,m) => b + (S.bar[m[0]]||0) * m[2], 0), 0);
+const totale = () => Math.round((totParco() + totCrazy() + totBar()) * 100) / 100;
+
+/* ══════ i blocchi VERI di "+ Nuovo" ══════ */
+const linguette = () => '<div class="ling">' + CAT.map(c =>
   '<button data-a="cat" data-v="' + c + '"' + (S.cat === c ? ' class="on"' : '') + '>' +
   (ICONE[catIcona[c]] ? ICONE[catIcona[c]]() : '') + c + '</button>').join('') + '</div>';
 
-const fascia = S =>
-  '<div class="fascia">' +
-    '<div><span class="k">Entrano alle</span><span class="ora">' + hhmm(S.inizio) + '</span></div>' +
-    '<button class="chip" data-a="ora" data-v="-5">−5</button>' +
-    '<button class="chip" data-a="ora" data-v="5">+5</button>' +
-    '<button class="chip" data-a="ora" data-v="now">adesso</button>' +
-    '<span class="sep"></span>' +
-    '<div><span class="k">Restano</span>' +
-      '<div style="display:flex;gap:5px;margin-top:3px;flex-wrap:wrap">' +
-        [10,15,30,60].map(m => '<button class="chip' + (!S.pagaDopo && S.minuti === m ? ' on' : '') +
-          '" data-a="min" data-v="' + m + '">' + durata(m) + '</button>').join('') +
-        '<button class="chip" data-a="min" data-v="-5">−5</button>' +
-        '<button class="chip" data-a="min" data-v="+5">+5</button>' +
-        '<button class="chip dopo' + (S.pagaDopo ? ' on' : '') + '" data-a="dopo">⏳ dopo</button>' +
-      '</div></div>' +
-    '<span class="brac">' + BRACCIALI.map(c =>
-      '<button data-a="brac" data-v="' + c + '" style="background:' + c + '"' +
-      (S.bracciale === c ? ' class="on"' : '') + '></button>').join('') + '</span>' +
-  '</div>';
+const bloccoOrario = () =>
+  '<div class="card blk c-blu">' +
+    '<h2><span class="em">🕒</span> Orario di inizio</h2>' +
+    '<div class="blk-in"><div class="time-row">' +
+      '<button class="round-btn" data-a="ora" data-v="-5">−</button>' +
+      '<div class="time-display num">' + hhmm(S.inizio) + '</div>' +
+      '<button class="round-btn" data-a="ora" data-v="5">+</button>' +
+      '<button class="now-btn" data-a="ora" data-v="now"><span class="em">📍</span> Adesso</button>' +
+      '<div class="wrist-inline-row">' +
+        '<span class="wl-k"><span class="em">🎗️</span> Bracciale</span>' +
+        '<div class="wrist-row">' +
+          '<button class="wrist-dot senza' + (S.braccialeCustom && !S.bracciale ? ' on' : '') +
+            '" data-a="brac" data-v="senza">Senza</button>' +
+          '<button class="wrist-dot auto' + (!S.braccialeCustom ? ' on' : '') +
+            '" data-a="brac" data-v="auto">Auto</button>' +
+          FASCE.map(c => '<button class="wrist-dot' + (S.bracciale === c ? ' on' : '') +
+            '" data-a="brac" data-v="' + c + '" style="background:' + c + '"></button>').join('') +
+        '</div></div>' +
+    '</div></div></div>';
 
-/* il blocco verde: i contatori comodi che c'erano gia' */
-const numeri = S =>
-  '<div class="verde">' +
-    '<div class="voce"><span class="lab"><span class="em">🧒</span> Bambini</span>' +
-      '<span class="conta"><button data-a="bimbi" data-v="-1"' + (S.bimbi<=0?' disabled':'') + '>−</button>' +
-      '<span class="n">' + S.bimbi + '</span>' +
-      '<button data-a="bimbi" data-v="1">+</button></span></div>' +
-    '<div class="voce"><span class="lab"><span class="em">🤸</span> Crazy</span>' +
-      '<span class="conta"><button data-a="crazy" data-v="-1"' + (S.crazy<=0?' disabled':'') + '>−</button>' +
-      '<span class="n">' + S.crazy + '</span>' +
-      '<button data-a="crazy" data-v="1">+</button></span></div>' +
-    '<div class="quanto"><span class="k">' + (S.pagaDopo ? 'a fine giro' : durata(S.minuti) + ' a testa') + '</span>' +
-      '<span class="v">' + eur(totParco(S) + totCrazy(S)) + '</span></div>' +
-  '</div>';
+const bloccoDurata = () =>
+  '<div class="card blk c-ambra sec-dur">' +
+    '<h2><span class="em">⏳</span> Quanto restano</h2>' +
+    '<div class="blk-in"><div class="chips">' +
+      RAPIDE.map(m => '<button class="chip' + (!S.pagaDopo && S.minuti === m ? ' on' : '') +
+        '" data-a="min" data-v="' + m + '">' + fmtMin(m) + '</button>').join('') +
+      '<button class="chip later' + (S.pagaDopo ? ' on' : '') + '" data-a="dopo">🕗 Paga dopo</button>' +
+    '</div>' +
+    '<div class="dur-custom"><span class="lab">oppure minuti esatti</span>' +
+      '<button class="step-b sm" data-a="min" data-v="-5">−</button>' +
+      '<input type="number" min="1" step="5" inputmode="numeric" value="' + S.minuti + '" data-a="minuti">' +
+      '<button class="step-b sm plus" data-a="min" data-v="+5">+</button>' +
+    '</div></div></div>';
 
-/* i ruoli: scelgono chi stai vestendo, e dicono chi c'e' gia' */
-const tastiRuoli = S => '<div class="ruoli">' + RUOLI.map(r => {
+const bloccoNumeri = () =>
+  '<div class="card blk c-verde sec-num">' +
+    '<h2><span class="em">🧒</span> Bambini e attrazioni</h2>' +
+    '<div class="blk-in"><div class="counters">' +
+      '<div class="counter"><div class="c-lab"><span class="em">🧒</span> Bambini</div>' +
+        '<button class="step-b" data-a="bimbi" data-v="-1"' + (S.bimbi<=0?' disabled':'') + '>−</button>' +
+        '<div class="c-val num">' + S.bimbi + '</div>' +
+        '<button class="step-b plus" data-a="bimbi" data-v="1">+</button></div>' +
+      '<div class="counter"><div class="c-lab"><span class="em">🤸</span> Crazy Jumping</div>' +
+        '<button class="step-b" data-a="crazy" data-v="-1"' + (S.crazy<=0?' disabled':'') + '>−</button>' +
+        '<div class="c-val num">' + S.crazy + '</div>' +
+        '<button class="step-b plus" data-a="crazy" data-v="1">+</button></div>' +
+    '</div></div></div>';
+
+/* ══════ chi accompagna, dentro il blocco viola vero ══════ */
+const tastiRuoli = () => '<div class="ruoli">' + RUOLI.map(r => {
   const dove = S.gente.findIndex(p => p.ruolo === r[0]);
-  const cls = dove < 0 ? '' : (S.chi === dove ? ' on' : ' messo');
-  return '<button data-a="ruolo" data-v="' + r[0] + '"' + (cls ? ' class="' + cls.trim() + '"' : '') + '>' +
+  const cls = dove < 0 ? '' : (S.chi === dove ? 'on' : 'messo');
+  return '<button data-a="ruolo" data-v="' + r[0] + '"' + (cls ? ' class="' + cls + '"' : '') + '>' +
     '<span class="em">' + r[2] + '</span>' + r[1] + '</button>';
 }).join('') + '</div>';
 
-/* la pezza che fa vedere la fantasia: gli stessi due colori del capo */
+/* la pezza fa vedere davvero la fantasia, coi due colori del capo */
 function pezza(pat, c1, c2) {
-  const st = { 'solid': 'background:' + c1,
+  const st = {
+    'solid': 'background:' + c1,
     'stripes-h': 'background:repeating-linear-gradient(180deg,' + c1 + ' 0 5px,' + c2 + ' 5px 10px)',
     'stripes-v': 'background:repeating-linear-gradient(90deg,' + c1 + ' 0 5px,' + c2 + ' 5px 10px)',
-    'dots': 'background:' + c1 + ';background-image:radial-gradient(' + c2 + ' 2.2px, transparent 2.4px);background-size:9px 9px',
+    'dots': 'background:' + c1 + ';background-image:radial-gradient(' + c2 + ' 2.2px,transparent 2.4px);background-size:9px 9px',
     'plaid': 'background:' + c1 + ';background-image:repeating-linear-gradient(90deg,' + c2 + ' 0 3px,transparent 3px 10px),repeating-linear-gradient(180deg,' + c2 + ' 0 3px,transparent 3px 10px)',
-    'camo': 'background:' + c1 + ';background-image:radial-gradient(' + c2 + ' 42%, transparent 43%),radial-gradient(' + c2 + ' 38%, transparent 39%);background-size:14px 12px,10px 9px;background-position:0 0,7px 5px',
+    'camo': 'background:' + c1 + ';background-image:radial-gradient(' + c2 + ' 42%,transparent 43%),radial-gradient(' + c2 + ' 38%,transparent 39%);background-size:14px 12px,10px 9px;background-position:0 0,7px 5px',
     'stars': 'background:' + c1 + ';color:' + c2,
-    'logo': 'background:' + c1 };
-  const dentro = pat === 'stars' ? '★' : (pat === 'logo' ? '<span style="display:block;width:14px;height:9px;margin:8px auto;border-radius:2px;background:' + c2 + '"></span>' : '');
-  return '<span class="sw" style="' + (st[pat] || st.solid) + ';font-size:15px;line-height:26px;text-align:center">' + dentro + '</span>';
+    'logo': 'background:' + c1
+  };
+  const dentro = pat === 'stars' ? '★'
+    : (pat === 'logo' ? '<span style="display:block;width:13px;height:8px;margin:8px auto;border-radius:2px;background:' + c2 + '"></span>' : '');
+  return '<span class="sw" style="' + (st[pat] || st.solid) +
+    ';font-size:14px;line-height:24px;text-align:center">' + dentro + '</span>';
 }
 
-/* l'armadio: figura a sinistra, icone col nome sotto a destra */
-function armadio(S) {
+function armadio() {
   const p = S.gente[S.chi];
-  if (!p) return '<div class="armadio"><div class="roba vuoto">' +
-    'Tocca chi &egrave; venuto — Mamma, Pap&agrave;, Nonna…<br>e qui compare come vestirlo.</div></div>';
+  if (!p) return '<div class="invito">Tocca chi è venuto — Mamma, Papà, Nonna… — e qui sotto ' +
+    'compare come vestirlo, senza aprire nient\'altro.</div>';
   const av = p.av, vestito = av.top.style === 'vestito';
   const c1 = av.top.color, c2 = av.top.color2 || '#F4F6F8';
-  const colori = (dove, campo, val) => '<div class="colori">' + AV.COLORS.slice(0,10).map(c =>
+  const tinte = (dove, campo, val) => '<div class="tinte">' + AV.COLORS.slice(0,10).map(c =>
     '<button data-a="col" data-v="' + dove + '|' + campo + '|' + c.c + '" style="background:' + c.c + '"' +
     (val === c.c ? ' class="on"' : '') + '></button>').join('') + '</div>';
   return '<div class="armadio">' +
     '<div class="figura">' + AV.build(av) + '<span class="chi">' + p.nome + '</span></div>' +
     '<div class="roba">' +
       '<div><span class="et">Che cosa indossa</span><div class="icone">' +
-        AV.TOP.map(t => '<button class="ic' + (av.top.style === t.key ? ' on' : '') + '" ' +
-          'data-a="top" data-v="' + t.key + '"><span class="dis">' + t.em + '</span>' +
+        AV.TOP.map(t => '<button class="ico' + (av.top.style === t.key ? ' on' : '') +
+          '" data-a="top" data-v="' + t.key + '"><span class="dis">' + t.em + '</span>' +
           '<span class="nome">' + t.label + '</span></button>').join('') + '</div></div>' +
-      '<div><span class="et">Di che colore</span>' + colori('top', 'color', c1) + '</div>' +
+      '<div><span class="et">Di che colore</span>' + tinte('top','color',c1) + '</div>' +
       '<div><span class="et">Fantasia</span><div class="icone">' +
-        AV.PATTERNS.map(f => '<button class="ic' + (av.top.pattern === f.key ? ' on' : '') + '" ' +
-          'data-a="pat" data-v="' + f.key + '">' + pezza(f.key, c1, c2) +
+        AV.PATTERNS.map(f => '<button class="ico' + (av.top.pattern === f.key ? ' on' : '') +
+          '" data-a="pat" data-v="' + f.key + '">' + pezza(f.key, c1, c2) +
           '<span class="nome">' + f.n + '</span></button>').join('') + '</div></div>' +
-      '<div class="' + (av.top.pattern === 'solid' ? 'spento' : '') + '">' +
-        '<span class="et">Colore della fantasia' + (av.top.pattern === 'solid' ? ' — a tinta unita non serve' : '') +
-        '</span>' + colori('top', 'color2', c2) + '</div>' +
+      '<div class="' + (av.top.pattern === 'solid' ? 'spento' : '') + '"><span class="et">' +
+        'Colore della fantasia' + (av.top.pattern === 'solid' ? ' — a tinta unita non serve' : '') +
+        '</span>' + tinte('top','color2',c2) + '</div>' +
       '<div class="' + (vestito ? 'spento' : '') + '"><span class="et">Sotto' +
         (vestito ? ' — col vestito non serve' : '') + '</span><div class="icone">' +
-        AV.PANTS.map(t => '<button class="ic' + (av.pants.style === t.key ? ' on' : '') + '" ' +
-          'data-a="pants" data-v="' + t.key + '"><span class="dis">' + t.em + '</span>' +
+        AV.PANTS.map(t => '<button class="ico' + (av.pants.style === t.key ? ' on' : '') +
+          '" data-a="pants" data-v="' + t.key + '"><span class="dis">' + t.em + '</span>' +
           '<span class="nome">' + t.label + '</span></button>').join('') + '</div>' +
-        '<div style="height:6px"></div>' + colori('pants', 'color', av.pants.color) + '</div>' +
+        '<div style="height:6px"></div>' + tinte('pants','color',av.pants.color) + '</div>' +
+      /* la riga libera sta IN FILA coi tratti e si prende quello che
+         avanza: su una riga sua costava altezza per niente */
       '<div><span class="et">Tratti particolari</span><div class="tratti">' +
         TRATTI.map(t => { const [d, v] = t.k.split(':');
-          return '<button class="' + (av[d] && av[d].style === v ? 'on' : '') + '" data-a="tratto" data-v="' + t.k + '">' +
-            t.n + '</button>'; }).join('') + '</div>' +
-        '<div style="height:7px"></div>' +
-        '<input class="libero" placeholder="Altro che salta all\'occhio: «zaino giallo», «gamba ingessata»…" ' +
-          'value="' + (p.note||'') + '" data-a="nota"></div>' +
+          return '<button class="' + (av[d] && av[d].style === v ? 'on' : '') +
+            '" data-a="tratto" data-v="' + t.k + '">' + t.n + '</button>'; }).join('') +
+        '<input class="libero" placeholder="Altro: «zaino giallo», «gamba ingessata»…" ' +
+          'value="' + (p.note||'') + '" data-a="nota"></div></div>' +
     '</div></div>';
 }
 
-const cardVoce = (S, id, nome, prezzo, q, pag, ico) => {
+const bloccoGente = () =>
+  '<div class="card blk c-viola sec-people">' +
+    '<h2><span class="em">🧑‍🤝‍🧑</span> Chi accompagna</h2>' +
+    '<div class="blk-in">' + tastiRuoli() + armadio() + '</div></div>';
+
+/* ══════ il bar, con le card gia' approvate ══════ */
+const bcard = (id, nome, prezzo, q, pag) => {
   const saldo = q > 0 && pag >= q;
-  return '<div class="card' + (saldo ? ' saldo' : (q ? ' presa' : '')) + '">' +
-    '<button class="su" data-a="add" data-v="' + id + '">' +
-      (q > 0 ? '<span class="fant">' + q + '</span>' : '') + (ICONE[ico] ? ICONE[ico]() : '') +
-      '<span class="testi"><span class="pr">' + eur(prezzo) + '</span>' +
-      '<span class="nm">' + nome + '</span></span></button>' +
+  return '<div class="bcard' + (saldo ? ' saldo' : (q ? ' presa' : '')) + '">' +
+    '<button class="bsu" data-a="add" data-v="' + id + '">' +
+      (q > 0 ? '<span class="bfant">' + q + '</span>' : '') + (ICONE[id] ? ICONE[id]() : '') +
+      '<span class="btesti"><span class="bpr">' + eur(prezzo) + '</span>' +
+      '<span class="bnm">' + nome + '</span></span></button>' +
     (q > 0
-      ? '<div class="zone"><span class="pastiglia">' + q + '</span>' +
+      ? '<div class="bzone"><span class="bpast">' + q + '</span>' +
         '<button data-a="meno" data-v="' + id + '">−</button>' +
         '<button data-a="add" data-v="' + id + '">+</button></div>' +
-        '<div class="zone v"><span class="pastiglia">' + pag + '/' + q + '</span>' +
+        '<div class="bzone v"><span class="bpast">' + pag + '/' + q + '</span>' +
         '<button data-a="pmeno" data-v="' + id + '"' + (pag<=0?' disabled':'') + '>−</button>' +
         '<button data-a="ppiu" data-v="' + id + '"' + (pag>=q?' disabled':'') + '>+</button></div>'
       : '') + '</div>';
 };
-const griglia = S => '<div class="griglia">' + (MENU[S.cat]||[]).map(m =>
-  cardVoce(S, m[0], m[1], m[2], S.bar[m[0]]||0, Math.min(S.pagate[m[0]]||0, S.bar[m[0]]||0), m[0])).join('') + '</div>';
+const grigliaBar = () => '<div class="bgriglia">' + (MENU[S.cat]||[]).map(m =>
+  bcard(m[0], m[1], m[2], S.bar[m[0]]||0, Math.min(S.pagate[m[0]]||0, S.bar[m[0]]||0))).join('') + '</div>';
 
-const barraPrezzo = S => {
+const barraPrezzo = () => {
   const p = (nome, ico, im) => '<div class="parte">' + (ICONE[ico] ? ICONE[ico]() : '') +
     '<div><span class="k">' + nome + '</span><span class="v">' + eur(im) + '</span></div></div>';
-  return '<div class="fondo">' +
-    '<div class="parti">' + p('Parco','bimbi',totParco(S)) + p('Crazy','crazy',totCrazy(S)) +
-      p('Bar','coca',totBar(S)) + '</div>' +
+  return '<div class="soldi">' +
+    '<div class="parti">' + p('Parco','bimbi',totParco()) + p('Crazy','crazy',totCrazy()) +
+      p('Bar','coca',totBar()) + '</div>' +
     '<div class="prezzo"><span class="k">' + (S.pagaDopo ? 'si conta all\'uscita' : 'da pagare') + '</span>' +
-      '<span class="v">' + eur(totale(S)) + '</span></div>' +
+      '<span class="v">' + eur(totale()) + '</span></div>' +
     '<div class="modi">' + ['niente','tutto','parte'].map(m =>
       '<button class="' + (S.modo === m ? 'on' : '') + '" data-a="modo" data-v="' + m + '">' +
       (m === 'niente' ? 'non incassa' : m) + '</button>').join('') + '</div>' +
@@ -408,33 +400,31 @@ const barraPrezzo = S => {
   '</div>';
 };
 
-/* ═══ la schermata ═══ */
-function schermata(S) {
-  return '<div class="pan"><div class="corpo">' + barraCat(S) +
+const schermata = () =>
+  '<div class="pan"><div class="corpo">' + linguette() +
     (S.cat === 'Parco'
-      ? fascia(S) + numeri(S) +
-        '<div class="acc"><span class="titolo">Chi accompagna</span>' +
-        tastiRuoli(S) + armadio(S) + '</div>'
-      : griglia(S)) +
-    '</div>' + barraPrezzo(S) + '</div>';
-}
+      ? bloccoOrario() + bloccoDurata() + bloccoNumeri() + bloccoGente()
+      : grigliaBar()) +
+  '</div>' + barraPrezzo() + '</div>';
 
-/* ═══ montaggio ═══ */
-function azione(S, a, v) {
+/* ══════ i comandi ══════ */
+function azione(a, v) {
   const p = S.gente[S.chi];
   if (a === 'cat')   S.cat = v;
   if (a === 'ora')   S.inizio = v === 'now' ? Date.now() : S.inizio + (+v) * 60000;
-  if (a === 'brac')  S.bracciale = v;
+  if (a === 'brac')  { if (v === 'senza') { S.bracciale = null; S.braccialeCustom = true; }
+                       else if (v === 'auto') { S.bracciale = null; S.braccialeCustom = false; }
+                       else { S.bracciale = v; S.braccialeCustom = true; } }
   if (a === 'min')   { S.pagaDopo = false;
                        if (v === '-5') S.minuti = Math.max(5, S.minuti - 5);
-                       else if (v === '+5') S.minuti = Math.min(240, S.minuti + 5);
+                       else if (v === '+5') S.minuti = Math.min(600, S.minuti + 5);
                        else S.minuti = +v; }
   if (a === 'dopo')  S.pagaDopo = !S.pagaDopo;
   if (a === 'bimbi') S.bimbi = Math.max(0, S.bimbi + (+v));
   if (a === 'crazy') S.crazy = Math.max(0, S.crazy + (+v));
   if (a === 'ruolo') {
-    /* se quel ruolo non c'e' ancora lo aggiunge, se c'e' lo apre, e se
-       lo stavi gia' vestendo lo chiude: un tasto solo per tre cose */
+    /* un tasto, tre cose: se non c'e' lo aggiunge, se c'e' lo apre, se
+       lo stavi gia' vestendo lo chiude */
     const dove = S.gente.findIndex(x => x.ruolo === v);
     if (dove < 0) {
       const r = RUOLI.find(x => x[0] === v);
@@ -442,10 +432,10 @@ function azione(S, a, v) {
       S.chi = S.gente.length - 1;
     } else S.chi = (S.chi === dove ? -1 : dove);
   }
-  if (a === 'top' && p)   p.av.top.style = v;
-  if (a === 'pat' && p)   p.av.top.pattern = v;
-  if (a === 'pants' && p) p.av.pants.style = v;
-  if (a === 'col' && p)   { const [d, campo, c] = v.split('|'); p.av[d][campo] = c; }
+  if (a === 'top' && p)    p.av.top.style = v;
+  if (a === 'pat' && p)    p.av.top.pattern = v;
+  if (a === 'pants' && p)  p.av.pants.style = v;
+  if (a === 'col' && p)    { const [d, campo, c] = v.split('|'); p.av[d][campo] = c; }
   if (a === 'tratto' && p) { const [d, val] = v.split(':'); p.av[d] = p.av[d] || {};
                              p.av[d].style = (p.av[d].style === val ? 'none' : val); }
   if (a === 'add')   S.bar[v] = (S.bar[v]||0) + 1;
@@ -455,55 +445,43 @@ function azione(S, a, v) {
   if (a === 'modo')  S.modo = v;
 }
 
-const CASI = [
-  ['U1', 'Il Parco fa tutto', 'Le linguette in alto fanno da navigazione, il <b>Parco</b> tiene la fascia dell\'ingresso, il blocco verde coi contatori e <b>chi accompagna sempre aperto</b>: i ruoli scelgono chi, la figura sta a sinistra e a destra le icone col nome sotto — capo, colore, fantasia e colore della fantasia.', schermata]
-];
-
-const box = document.getElementById('casi');
-CASI.forEach(([lett, nome, idea, ren]) => {
-  const S = statoNuovo();
-  const sez = document.createElement('div');
-  sez.className = 'caso';
-  sez.innerHTML = '<div class="testa"><span class="lett">' + lett + '</span><h3>' + nome + '</h3>' +
-    '<span class="mis"></span></div><p class="idea">' + idea + '</p>' +
-    '<div class="telaio"><div class="dentro"></div></div>';
-  box.appendChild(sez);
-  const d = sez.querySelector('.dentro'), mis = sez.querySelector('.mis');
-  const dis = () => {
-    d.innerHTML = ren(S);
-    const pan = d.querySelector('.pan'), corpo = d.querySelector('.corpo');
-    const fuori = pan.scrollHeight - pan.clientHeight;
-    let scorre = corpo.scrollHeight - corpo.clientHeight;
-    corpo.querySelectorAll('*').forEach(e => {
-      if (e.scrollHeight - e.clientHeight > 2 && e.clientHeight > 60) scorre = Math.max(scorre, e.scrollHeight - e.clientHeight);
-    });
-    mis.textContent = fuori > 2 ? 'sborda ' + fuori + 'px'
-      : scorre > 2 ? S.cat + ': scorre ' + scorre + 'px'
-      : S.cat + ' · ' + S.gente.length + ' persone: ci sta tutto';
-    mis.style.color = fuori > 2 ? '#FF9AA2' : scorre > 2 ? '#FFD166' : '#7FE8C1';
-    adatta();
-  };
-  sez.addEventListener('click', e => {
-    const b = e.target.closest('[data-a]');
-    if (!b) return;
-    azione(S, b.dataset.a, b.dataset.v);
-    dis();
+const dentro = document.getElementById('dentro'), mis = document.getElementById('mis');
+function disegna() {
+  dentro.innerHTML = schermata();
+  const pan = dentro.querySelector('.pan'), corpo = dentro.querySelector('.corpo');
+  const fuori = pan.scrollHeight - pan.clientHeight;
+  let scorre = corpo.scrollHeight - corpo.clientHeight;
+  corpo.querySelectorAll('*').forEach(e => {
+    if (e.scrollHeight - e.clientHeight > 2 && e.clientHeight > 60)
+      scorre = Math.max(scorre, e.scrollHeight - e.clientHeight);
   });
-  sez.addEventListener('input', e => {
-    const i = e.target.closest('input[data-a="nota"]');
-    if (i && S.gente[S.chi]) S.gente[S.chi].note = i.value;
-  });
-  dis();
+  mis.textContent = fuori > 2 ? 'sborda ' + fuori + 'px'
+    : scorre > 2 ? S.cat + ': scorre ' + scorre + 'px'
+    : S.cat + ' · ' + S.gente.length + ' persone: ci sta tutto';
+  mis.style.color = fuori > 2 ? '#FF9AA2' : scorre > 2 ? '#FFD166' : '#7FE8C1';
+  adatta();
+}
+dentro.addEventListener('click', e => {
+  const b = e.target.closest('[data-a]');
+  if (!b || b.tagName === 'INPUT') return;
+  azione(b.dataset.a, b.dataset.v);
+  disegna();
 });
-
+dentro.addEventListener('input', e => {
+  const i = e.target.closest('[data-a]');
+  if (!i) return;
+  if (i.dataset.a === 'nota' && S.gente[S.chi]) S.gente[S.chi].note = i.value;
+  if (i.dataset.a === 'minuti') {
+    S.minuti = Math.max(1, parseInt(i.value, 10) || 1); S.pagaDopo = false;
+    const v = dentro.querySelector('.soldi .prezzo .v'); if (v) v.textContent = eur(totale());
+  }
+});
 function adatta() {
-  document.querySelectorAll('.telaio').forEach(t => {
-    const d = t.querySelector('.dentro');
-    const s = t.clientWidth / 820;
-    d.style.transform = 'scale(' + s + ')';
-    t.style.height = (1180 * s) + 'px';
-  });
+  const t = document.querySelector('.telaio');
+  const s = t.clientWidth / 820;
+  dentro.style.transform = 'scale(' + s + ')';
+  t.style.height = (1180 * s) + 'px';
 }
 addEventListener('resize', adatta);
-adatta();
+disegna();
 </script>
