@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="it">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bar &amp; Conto — otto impianti</title>
+<link rel="stylesheet" href="./css/fonts.css">
+<style>
+  :root { --sfondo:#14141B; --carta:#1E1E28; --carta2:#262633;
+          --txt:#E9E9F2; --txt2:#9A9AB0; --sel:#3B8CFF; --soldi:#19C08A; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  body { margin: 0; background: #0B0B10; color: var(--txt); padding: 26px 18px 80px;
+    font-family: 'Inter', system-ui, sans-serif; }
+  .foglio { max-width: 1180px; margin: 0 auto; }
+  .occhiello { color: #FFD166; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; margin: 0 0 8px; }
+  h1 { font-family: 'Fredoka', sans-serif; font-size: 28px; margin: 0 0 10px; }
+  .intro { color: #A8A8BD; font-size: 15px; line-height: 1.6; max-width: 72ch; margin: 0 0 6px; }
+  .intro b { color: #FFD166; font-weight: 600; }
+
+  .casi { display: grid; gap: 34px; margin-top: 34px;
+    grid-template-columns: repeat(auto-fill, minmax(430px, 1fr)); }
+  .caso { min-width: 0; }
+  .testa { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+  .lett { font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 700; background: #23232F;
+    color: #FFD166; border-radius: 20px; padding: 4px 12px; }
+  .testa h2 { font-family: 'Fredoka', sans-serif; font-size: 20px; margin: 0; }
+  .mis { margin-left: auto; font-size: 11px; font-weight: 800; letter-spacing: .04em;
+    text-transform: uppercase; border-radius: 20px; padding: 4px 10px; background: rgba(0,0,0,.55); }
+  .idea { color: #9A9AB0; font-size: 14px; line-height: 1.55; margin: 0 0 12px; }
+  .idea b { color: #C9CDD6; font-weight: 600; }
+
+  .telaio { border-radius: 22px; overflow: hidden; border: 1px solid rgba(255,255,255,.1);
+    box-shadow: 0 20px 44px rgba(0,0,0,.5); }
+  .telaio > .dentro { width: 820px; height: 1180px; transform-origin: top left; }
+
+  /* ═══ scheletro del pannello, uguale per tutti ═══ */
+  .pan { width: 820px; height: 1180px; display: flex; flex-direction: column;
+    background: var(--sfondo); color: var(--txt); overflow: hidden; }
+  .cap { display: flex; align-items: center; gap: 14px; padding: 22px 26px 12px; flex-shrink: 0; }
+  .cap h3 { margin: 0; font-family: 'Fredoka', sans-serif; font-size: 25px; font-weight: 600; }
+  .cap .via { margin-left: auto; width: 50px; height: 50px; border-radius: 17px; background: var(--carta);
+    border: none; color: var(--txt); font-size: 19px; }
+  .corpo { flex: 1; min-height: 0; padding: 0 26px; display: flex; flex-direction: column; gap: 14px; }
+  .cat { display: flex; gap: 9px; flex-wrap: wrap; flex-shrink: 0; }
+  .cat button { border: none; border-radius: 17px; padding: 11px 16px; background: var(--carta);
+    color: var(--txt2); font: inherit; font-size: 14.5px; font-weight: 700; min-height: 46px;
+    display: flex; align-items: center; gap: 7px; }
+  .cat button.on { background: var(--txt); color: #14141B; }
+  .cat button svg { width: 19px; height: 19px; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .num { font-family: 'Fredoka', sans-serif; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  .fondo { margin: 12px 26px 22px; background: var(--carta); border-radius: 24px; padding: 15px 18px 16px;
+    display: flex; flex-direction: column; gap: 12px; flex-shrink: 0; box-shadow: 0 8px 26px rgba(0,0,0,.45); }
+  .parti { display: flex; gap: 9px; }
+  .parti .v1 { flex: 1; background: rgba(0,0,0,.28); border-radius: 15px; padding: 8px 11px;
+    display: flex; align-items: center; gap: 8px; }
+  .parti .v1 svg { width: 21px; height: 21px; flex-shrink: 0; }
+  .parti .v1 .k { display: block; font-size: 11px; font-weight: 700; color: var(--txt2); }
+  .parti .v1 .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 700; }
+  .parti .v1 button { margin-left: auto; border: none; border-radius: 10px; padding: 6px 10px;
+    background: rgba(255,255,255,.1); font-size: 12px; font-weight: 700; min-height: 34px; }
+  .conto { display: flex; align-items: flex-end; gap: 14px; }
+  .conto .k { display: block; font-size: 12.5px; font-weight: 700; color: var(--txt2); }
+  .conto .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 42px; font-weight: 700; line-height: 1; }
+  .conto .tasti { margin-left: auto; display: flex; gap: 9px; }
+  .bt { border: none; border-radius: 17px; padding: 14px 20px; background: var(--carta2); color: var(--txt);
+    font-size: 15px; font-weight: 700; min-height: 56px; }
+  .bt.pieno { background: var(--soldi); color: #062A20; font-family: 'Fredoka', sans-serif; font-size: 17px; }
+
+  /* ═══ pezzi che le proposte si scambiano ═══ */
+  .griglia { display: grid; gap: 12px; overflow-y: auto; min-height: 0; align-content: start;
+    grid-auto-rows: max-content; }
+  .g3 { grid-template-columns: repeat(3,1fr); }
+  .g4 { grid-template-columns: repeat(4,1fr); }
+  .g5 { grid-template-columns: repeat(5,1fr); }
+
+  /* piastrella nuda: icona, prezzo, nome, e un bollo se e' sul conto */
+  .pia { position: relative; background: var(--carta); border-radius: 18px; border: none;
+    padding: 11px 8px 9px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+    color: inherit; text-align: center; }
+  .pia svg { width: 52px; height: 52px; }
+  .pia .pr { font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 700; color: #C9CDD6; }
+  .pia .nm { font-size: 12.5px; font-weight: 700; line-height: 1.15; color: var(--txt2); }
+  .pia.on { background: #14243A; box-shadow: 0 0 0 3px var(--sel) inset; }
+  .pia.on .nm { color: var(--txt); }
+  .pia.ok { background: #10241D; box-shadow: 0 0 0 3px var(--soldi) inset; }
+  .pia.sel { box-shadow: 0 0 0 4px #FFD166 inset; }
+  .pia .bollo { position: absolute; top: 6px; right: 6px; min-width: 28px; height: 28px; padding: 0 6px;
+    border-radius: 10px; background: var(--sel); color: #06162E; font-family: 'Fredoka', sans-serif;
+    font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .pia.ok .bollo { background: var(--soldi); color: #06251A; }
+
+  /* riga piena */
+  .rw { display: flex; align-items: center; gap: 12px; background: var(--carta); border-radius: 16px;
+    padding: 8px 12px 8px 8px; }
+  .rw svg { width: 46px; height: 46px; flex-shrink: 0; }
+  .rw .t { flex: 1; min-width: 0; }
+  .rw .t .nm { font-size: 16px; font-weight: 700; line-height: 1.2; }
+  .rw .t .pr { font-family: 'Fredoka', sans-serif; font-size: 14px; font-weight: 700; color: var(--txt2); }
+  .rw.on { background: #14243A; box-shadow: 0 0 0 2px var(--sel) inset; }
+  .rw.ok { background: #10241D; box-shadow: 0 0 0 2px var(--soldi) inset; }
+  .st { display: flex; align-items: center; background: rgba(0,0,0,.32); border-radius: 13px; overflow: hidden; }
+  .st button { border: none; background: none; width: 42px; min-height: 46px;
+    font-family: 'Fredoka', sans-serif; font-size: 22px; font-weight: 700; color: var(--txt); }
+  .st .n { min-width: 32px; text-align: center; font-family: 'Fredoka', sans-serif; font-size: 21px; font-weight: 700; }
+  .st.v { background: rgba(25,192,138,.16); }
+  .st.v button, .st.v .n { color: var(--soldi); }
+  .st button:disabled { opacity: .25; }
+  .rw .tot { min-width: 66px; text-align: right; font-family: 'Fredoka', sans-serif;
+    font-size: 17px; font-weight: 700; }
+
+  /* barra di comando del selezionato */
+  /* margin-top:auto la incolla in fondo al corpo, attaccata al totale:
+     è lì che sta il pollice, non a metà schermo */
+  .barra { background: var(--carta); border-radius: 20px; padding: 12px 14px; flex-shrink: 0;
+    margin-top: auto; display: flex; align-items: center; gap: 14px; box-shadow: 0 6px 20px rgba(0,0,0,.4); }
+  .barra svg { width: 56px; height: 56px; flex-shrink: 0; }
+  .barra .chi { flex: 1; min-width: 0; }
+  .barra .chi b { display: block; font-size: 18px; }
+  .barra .chi span { font-family: 'Fredoka', sans-serif; font-size: 15px; color: var(--txt2); }
+  .barra .gr { display: flex; align-items: center; background: rgba(0,0,0,.35); border-radius: 15px; overflow: hidden; }
+  .barra .gr.v { background: rgba(25,192,138,.16); }
+  .barra .gr button { border: none; background: none; width: 56px; min-height: 58px;
+    font-family: 'Fredoka', sans-serif; font-size: 26px; font-weight: 700; color: var(--txt); }
+  .barra .gr.v button { color: var(--soldi); }
+  .barra .gr .n { min-width: 54px; text-align: center; font-family: 'Fredoka', sans-serif; font-size: 25px; font-weight: 700; }
+  .barra .gr.v .n { color: var(--soldi); font-size: 20px; }
+  .barra .gr button:disabled { opacity: .25; }
+  .barra .et { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--txt2); text-align: center; display: block; margin-bottom: 3px; }
+
+  /* rail verticale delle categorie */
+  .conRail { display: flex; gap: 14px; flex: 1; min-height: 0; }
+  .rail { flex: 0 0 118px; display: flex; flex-direction: column; gap: 8px; }
+  .rail button { border: none; border-radius: 16px; background: var(--carta); color: var(--txt2);
+    padding: 11px 6px; font-size: 12.5px; font-weight: 700; display: flex; flex-direction: column;
+    align-items: center; gap: 5px; min-height: 74px; }
+  .rail button svg { width: 26px; height: 26px; }
+  .rail button.on { background: var(--txt); color: #14141B; }
+
+  /* il carrello (elenco di quello che e' sul conto) */
+  .carr { background: rgba(0,0,0,.22); border-radius: 18px; padding: 10px; display: flex;
+    flex-direction: column; gap: 8px; overflow-y: auto; min-height: 0; }
+  .carr .vuoto { color: var(--txt2); font-size: 14px; text-align: center; padding: 20px; }
+  .carr .tit { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--txt2); padding: 2px 4px; }
+
+  .nota { background: #181A22; border: 1px solid rgba(255,255,255,.08); border-left: 3px solid #FFD166;
+    border-radius: 0 14px 14px 0; padding: 14px 16px; margin-top: 36px; color: #B9BFC9;
+    font-size: 14.5px; line-height: 1.65; }
+  .nota b { color: var(--txt); }
+</style>
+
+<div class="foglio">
+  <p class="occhiello">Bar &amp; Conto · gli impianti</p>
+  <h1>Otto modi di montare il pannello</h1>
+  <p class="intro">Qui non cambia solo la card: cambia <b>come sono disposte le parti</b>. Dove sta il
+  catalogo, dove sta il conto, dove stanno i comandi, e se i comandi devono stare su ogni prodotto
+  oppure in un posto solo.</p>
+  <p class="intro">Sono pannelli interi a grandezza vera (820×1180, il tablet in verticale) e si
+  toccano. Il cartellino dice se <b>ci sta tutto senza ascensore</b> con le dodici bevande.</p>
+
+  <div class="casi" id="casi"></div>
+
+  <div class="nota">
+    <b>La domanda che decide.</b> I comandi su ogni prodotto (come adesso) fanno la card alta, e più
+    prodotti hai più stretto stai. I comandi in un posto solo — la barra del selezionato, o il
+    carrello — lasciano il catalogo leggero e ti fanno crescere il menu senza pensieri, ma ti
+    costano <b>un tocco in più</b> per selezionare. Sono due filosofie: dimmi quale ti sembra la
+    tua e la porto fino in fondo.
+  </div>
+</div>
+
+<script>
+/* ---------- le icone, disegnate sui prodotti veri ----------
+   Ogni forma e' fatta di pezzi che si colorano: corpo, fascia
+   dell'etichetta, onda, tappo, stella. Cosi' una Coca e' rossa con
+   l'onda bianca, la Zero e' nera con l'onda rossa, e l'acqua
+   frizzante e' la stessa bottiglia col TAPPO ROSSO. */
+function svg(d) {
+  return '<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">' + d + '</svg>';
+}
+const STELLA = (cx, cy, r, c) => {
+  let p = '';
+  for (let k = 0; k < 5; k++) {
+    const a1 = -Math.PI/2 + k * 2*Math.PI/5, a2 = a1 + Math.PI/5;
+    p += (k ? 'L' : 'M') + (cx + r*Math.cos(a1)).toFixed(1) + ' ' + (cy + r*Math.sin(a1)).toFixed(1) +
+         'L' + (cx + r*0.42*Math.cos(a2)).toFixed(1) + ' ' + (cy + r*0.42*Math.sin(a2)).toFixed(1);
+  }
+  return '<path d="' + p + 'Z" fill="' + c + '"/>';
+};
+
+/* LATTINA: corpo, fascia, onda, e volendo un frutto sull'etichetta */
+function lattina(o) {
+  return svg(
+    '<rect x="11" y="5.5" width="18" height="29" rx="4.5" fill="' + o.corpo + '"/>' +
+    '<rect x="11" y="5.5" width="5" height="29" rx="4.5" fill="#fff" opacity=".13"/>' +
+    (o.fascia ? '<rect x="11" y="14" width="18" height="11" fill="' + o.fascia + '"/>' : '') +
+    (o.onda ? '<path d="M11 21.5c3.5-4 6-1 9 .5s5 .5 9-2.5v4.5c-4 2.6-6.4 4-9 2.6s-5.4-4-9-.6Z" fill="' + o.onda + '"/>' : '') +
+    (o.frutto ? '<circle cx="20" cy="19.6" r="4.4" fill="' + o.frutto + '"/>' +
+                '<circle cx="20" cy="19.6" r="4.4" stroke="#fff" stroke-width=".9" opacity=".7"/>' +
+                (o.foglia ? '<path d="M20 15.4c1.6-1.7 3.6-1.5 3.6-1.5s.2 2-1.5 3.6c-.9.8-2.1-1.2-2.1-2.1Z" fill="#3AA655"/>' : '') : '') +
+    (o.scritta ? '<rect x="14.5" y="17.5" width="11" height="3.4" rx="1.7" fill="' + o.scritta + '"/>' : '') +
+    '<rect x="12.6" y="3.4" width="14.8" height="3" rx="1.5" fill="#D5D9E0"/>' +
+    '<rect x="12.6" y="33" width="14.8" height="2.6" rx="1.3" fill="#B9BFC9"/>'
+  );
+}
+/* BOTTIGLIA costruita dal CENTRO: ogni misura e' 20 +/- qualcosa,
+   cosi' la simmetria non dipende dall'occhio ma dal conto.
+   o.larga  -> forma tozza (Ichnusa)
+   o.piccola-> bottiglietta di vetro (Brasilena) */
+function bottiglia(o) {
+  const larga = !!o.larga, mini = !!o.piccola;
+  const bw = larga ? 22 : (mini ? 16 : 15);      /* larghezza del corpo */
+  const nw = larga ? 6.4 : (mini ? 6 : 6);       /* larghezza del collo */
+  const yTappo = larga ? 8.2 : (mini ? 8.6 : 3.4);
+  const hTappo = 4.2;
+  const ySpalla = larga ? 16.4 : (mini ? 16.8 : 11.6);   /* fine collo */
+  const yCorpo = larga ? 21.6 : (mini ? 22 : 18.6);      /* inizio corpo dritto */
+  const yFondo = 35.6, r = 2.8;
+  const bx = 20 - bw / 2, bx2 = 20 + bw / 2;
+  const nx = 20 - nw / 2, nx2 = 20 + nw / 2;
+  const d =
+    'M' + nx + ' ' + (yTappo + hTappo) +
+    'L' + nx + ' ' + ySpalla +
+    'C' + nx + ' ' + (ySpalla + 2) + ' ' + bx + ' ' + (yCorpo - 2.4) + ' ' + bx + ' ' + yCorpo +
+    'L' + bx + ' ' + (yFondo - r) +
+    'a' + r + ' ' + r + ' 0 0 0 ' + r + ' ' + r +
+    'h' + (bw - 2 * r) +
+    'a' + r + ' ' + r + ' 0 0 0 ' + r + ' ' + (-r) +
+    'L' + bx2 + ' ' + yCorpo +
+    'C' + bx2 + ' ' + (yCorpo - 2.4) + ' ' + nx2 + ' ' + (ySpalla + 2) + ' ' + nx2 + ' ' + ySpalla +
+    'L' + nx2 + ' ' + (yTappo + hTappo) + 'Z';
+  const yEt = yCorpo + 2.2, hEt = Math.min(9.4, yFondo - yEt - 2.4);
+  return svg(
+    '<path d="' + d + '" fill="' + (o.vetro || '#BFE6F2') + '"/>' +
+    '<rect x="' + (bx + 1.4) + '" y="' + (yCorpo + 0.6) + '" width="2.6" height="' + (yFondo - yCorpo - 3) + '" rx="1.3" fill="#fff" opacity=".22"/>' +
+    (o.etichetta ? '<rect x="' + bx + '" y="' + yEt + '" width="' + bw + '" height="' + hEt + '" rx="1.6" fill="' + o.etichetta + '"/>' : '') +
+    (o.stella ? STELLA(20, yEt + hEt / 2, Math.min(3.4, hEt / 2.6), o.stella) : '') +
+    (o.riga ? '<rect x="' + (bx + 1.6) + '" y="' + (yEt + hEt / 2 - 1.3) + '" width="' + (bw - 3.2) + '" height="2.6" rx="1.3" fill="' + o.riga + '"/>' : '') +
+    '<rect x="' + (nx - 0.5) + '" y="' + yTappo + '" width="' + (nw + 1) + '" height="' + hTappo + '" rx="1.3" fill="' + (o.tappo || '#2F6FBF') + '"/>' +
+    '<rect x="' + (nx - 0.5) + '" y="' + (yTappo + hTappo - 0.6) + '" width="' + (nw + 1) + '" height="1.6" fill="#000" opacity=".18"/>'
+  );
+}
+/* BUSTA di patatine: sacchetto con la saldatura sopra e sotto */
+function busta(o) {
+  return svg(
+    '<path d="M12 9h16l2 3.4v20.2L28 36H12l-2-3.4V12.4L12 9Z" fill="' + o.corpo + '"/>' +
+    '<path d="M10 12.4h20v2.2H10zM10 30.4h20v2.2H10z" fill="#000" opacity=".16"/>' +
+    '<path d="M12 9h16v1.2H12zM12 34.8h16V36H12z" fill="#fff" opacity=".35"/>' +
+    '<ellipse cx="20" cy="22.6" rx="6.6" ry="5.2" fill="#FBF7EC"/>' +
+    '<path d="M15.6 23.6c.8-2.6 2.4-4 4.4-4s3.6 1.4 4.4 4c-1.6 1.4-3 2-4.4 2s-2.8-.6-4.4-2Z" fill="' + (o.chip || '#E8A33D') + '"/>' +
+    '<path d="M16.8 22.4c1-1.2 2-1.8 3.2-1.8s2.2.6 3.2 1.8" stroke="#C97C22" stroke-width=".9" fill="none" opacity=".8"/>'
+  );
+}
+/* SPRITZ con l'aperitivo attorno: olive, tarallini, patatine */
+function spritz() {
+  return svg(
+    /* ciotoline dietro */
+    '<ellipse cx="8.6" cy="31.4" rx="6.4" ry="4.2" fill="#2B2F3A"/>' +
+    '<circle cx="6.4" cy="30" r="2.1" fill="#7BA83C"/><circle cx="10.4" cy="30.6" r="2.1" fill="#5F8C2E"/>' +
+    '<circle cx="8.4" cy="32.8" r="2.1" fill="#7BA83C"/>' +
+    '<ellipse cx="31.6" cy="31.8" rx="6.4" ry="4.2" fill="#2B2F3A"/>' +
+    '<circle cx="29.6" cy="30.6" r="2.4" stroke="#D8A85A" stroke-width="1.5" fill="none"/>' +
+    '<circle cx="33.4" cy="31.4" r="2.4" stroke="#C79647" stroke-width="1.5" fill="none"/>' +
+    '<path d="M28.4 34.4c1.2-1.4 2.6-2 4-2s2.8.6 4 2c-1.6 1-3 1.4-4 1.4s-2.4-.4-4-1.4Z" fill="#E8A33D"/>' +
+    /* il calice */
+    '<path d="M11.4 6.6h17.2L22.6 17.8a2 2 0 0 0-.24 1V28h-2.6v-9.2a2 2 0 0 0-.24-1L11.4 6.6Z" fill="#FF7A29"/>' +
+    '<path d="M13.8 8.6h12.4L23.2 14h-6.4L13.8 8.6Z" fill="#fff" opacity=".3"/>' +
+    '<rect x="16.6" y="28" width="6.8" height="2.4" rx="1.2" fill="#D5D9E0"/>' +
+    '<rect x="12.4" y="30.6" width="15.2" height="2.8" rx="1.4" fill="#D5D9E0"/>' +
+    '<circle cx="27.6" cy="9.4" r="4.4" fill="#FFA53D"/>' +
+    '<circle cx="27.6" cy="9.4" r="4.4" stroke="#fff" stroke-width="1" opacity=".85"/>' +
+    '<path d="M27.6 5v8.8M23.2 9.4h8.8" stroke="#fff" stroke-width=".9" opacity=".8"/>'
+  );
+}
+/* TAZZINA da caffe' */
+function tazzina() {
+  return svg(
+    '<path d="M8.6 14h18.8v9.4a9.4 9.4 0 0 1-18.8 0V14Z" fill="#F2F3F7"/>' +
+    '<path d="M10.6 16h14.8v7.4a7.4 7.4 0 0 1-14.8 0V16Z" fill="#5B3A22"/>' +
+    '<path d="M27.4 16.6h3.4a3.6 3.6 0 0 1 0 7.2h-3.4" stroke="#F2F3F7" stroke-width="2.8" stroke-linecap="round"/>' +
+    '<rect x="5.6" y="32.6" width="24.8" height="3.2" rx="1.6" fill="#D5D9E0"/>' +
+    '<path d="M15 9.6c0-1.6 1.6-1.6 1.6-3.2M19.2 9.6c0-1.6 1.6-1.6 1.6-3.2" stroke="#B9BFC9" stroke-width="1.4" stroke-linecap="round" opacity=".8"/>'
+  );
+}
+/* BICCHIERINO da liquore */
+function bicchierino(o) {
+  return svg(
+    '<path d="M12.6 12.6h14.8l-1.7 13.2a3.2 3.2 0 0 1-3.2 2.8h-4.8a3.2 3.2 0 0 1-3.2-2.8L12.6 12.6Z" fill="' + o.liquore + '"/>' +
+    '<path d="M13.2 12.6h13.6l-.6 4.4H13.8l-.6-4.4Z" fill="#fff" opacity=".3"/>' +
+    '<rect x="18.4" y="28" width="3.2" height="5.4" fill="#D5D9E0"/>' +
+    '<rect x="13" y="32.8" width="14" height="3.2" rx="1.6" fill="#D5D9E0"/>'
+  );
+}
+/* BAMBINI: bambino col palloncino - si capisce anche da solo */
+function bimbo(c) {
+  return svg(
+    '<path d="M29.6 4.6c0 3-2.4 5.4-5.4 5.4S18.8 7.6 18.8 4.6 21.2-.8 24.2-.8s5.4 2.4 5.4 5.4Z" fill="' + c + '"/>' +
+    '<circle cx="28" cy="8.6" r="5.6" fill="#E24B5A"/>' +
+    '<path d="M28 14.2c-.6 1.4-.2 2.4.6 3.2" stroke="#E9E9F2" stroke-width="1.2" fill="none" stroke-linecap="round"/>' +
+    '<path d="M28 14.2 16.6 22" stroke="#C9CDD6" stroke-width="1.1" stroke-linecap="round"/>' +
+    '<circle cx="14.4" cy="14.6" r="5.6" fill="#F2C79C"/>' +
+    '<path d="M9 14.2c0-3.6 2.4-6 5.4-6s5.4 2.4 5.4 6c-1.6-1.2-3.4-1.8-5.4-1.8S10.6 13 9 14.2Z" fill="' + c + '"/>' +
+    '<path d="M8.4 36v-8.4c0-3.6 2.6-6.4 6-6.4s6 2.8 6 6.4V36H8.4Z" fill="' + c + '"/>' +
+    '<rect x="10.6" y="30" width="3.2" height="6" rx="1.6" fill="#3A4152"/>' +
+    '<rect x="15.4" y="30" width="3.2" height="6" rx="1.6" fill="#3A4152"/>' +
+    '<circle cx="12.6" cy="14.8" r="1" fill="#0F1116"/><circle cx="16.4" cy="14.8" r="1" fill="#0F1116"/>'
+  );
+}
+/* CRAZY JUMPING: trampolino con qualcuno per aria */
+function saltatore(c) {
+  return svg(
+    /* il tappeto */
+    '<ellipse cx="20" cy="29.4" rx="14.4" ry="4.6" fill="#2B2F3A"/>' +
+    '<ellipse cx="20" cy="28.4" rx="14.4" ry="4.6" fill="' + c + '" opacity=".55"/>' +
+    '<ellipse cx="20" cy="28.4" rx="10.6" ry="3.2" fill="#14141B"/>' +
+    /* gambe del trampolino */
+    '<path d="M7.6 30.4 4.4 36M32.4 30.4 35.6 36" stroke="#8C93A6" stroke-width="2.2" stroke-linecap="round"/>' +
+    /* chi salta */
+    '<circle cx="20" cy="6.2" r="3.6" fill="' + c + '"/>' +
+    '<path d="M20 10.4c2.6 0 4.6 1.7 4.6 4v2.6l3.6 4.4-2.2 1.8-3-3.6v4.6h-6v-4.6l-3 3.6-2.2-1.8 3.6-4.4v-2.6c0-2.3 2-4 4.6-4Z" fill="' + c + '"/>' +
+    /* le righe del rimbalzo */
+    '<path d="M11.6 12.6c-1.2-1.2-1.8-2.6-1.8-4M28.4 12.6c1.2-1.2 1.8-2.6 1.8-4" stroke="' + c + '" stroke-width="1.8" stroke-linecap="round" opacity=".55"/>'
+  );
+}
+const ICONE = {
+  /* --- parco --- */
+  bimbi:  () => bimbo('#3B8CFF'),
+  crazy:  () => saltatore('#B072FF'),
+  /* --- bevande --- */
+  /* identiche: cambia SOLO il tappo, come al banco */
+  acqua:     () => bottiglia({ vetro:'#BFE6F2', tappo:'#2F6FBF', etichetta:'#2F6FBF', riga:'#EAF6FB' }),
+  acquafriz: () => bottiglia({ vetro:'#BFE6F2', tappo:'#D93B3B', etichetta:'#2F6FBF', riga:'#EAF6FB' }),
+  caffe:     () => tazzina(),
+  coca:      () => lattina({ corpo:'#D2172F', onda:'#ffffff' }),
+  cocaz:     () => lattina({ corpo:'#17181C', onda:'#D2172F' }),
+  fanta:     () => lattina({ corpo:'#FF7A1E', onda:'#ffffff' }),
+  sprite:    () => lattina({ corpo:'#1FA85C', onda:'#EAF6D8' }),
+  schw:      () => bottiglia({ vetro:'#D8C77A', tappo:'#C9A227', etichetta:'#C9A227', riga:'#FBF7EC' }),
+  gazz:      () => bottiglia({ vetro:'#E4EEF2', tappo:'#8FB8C9', etichetta:'#8FB8C9', riga:'#ffffff' }),
+  estalim:   () => lattina({ corpo:'#E8B923', fascia:'#FBF7EC', frutto:'#FFE24A', foglia:true }),
+  estapes:   () => lattina({ corpo:'#E8834F', fascia:'#FBF7EC', frutto:'#FFB58A', foglia:true }),
+  bras:      () => bottiglia({ piccola:true, vetro:'#6B4226', tappo:'#C9A227', etichetta:'#C9A227', riga:'#5B3A22' }),
+  /* --- snack --- */
+  pata:      () => busta({ corpo:'#F2C230', chip:'#E8873D' }),
+  /* --- birre --- */
+  heine:     () => bottiglia({ vetro:'#1B7A3E', tappo:'#D2172F', etichetta:'#0F6431', stella:'#D2172F' }),
+  nastro:    () => bottiglia({ vetro:'#C9A46A', tappo:'#1F4E9C', etichetta:'#1F4E9C', riga:'#FBF7EC' }),
+  /* l'Ichnusa ha la bottiglia larga e bassa: e' la sua forma */
+  ichnu:     () => bottiglia({ larga:true, vetro:'#8C5A28', tappo:'#D2172F', etichetta:'#D2172F', stella:'#FBF7EC' }),
+  tenn:      () => bottiglia({ vetro:'#9C6B2F', tappo:'#D2172F', etichetta:'#D2172F', riga:'#FBF7EC' }),
+  /* --- alcolici --- */
+  limon:     () => bicchierino({ liquore:'#F5E04A' }),
+  amari:     () => bicchierino({ liquore:'#5B3A22' }),
+  grappa:    () => bicchierino({ liquore:'#EDE7DA' }),
+  spritz:    () => spritz()
+};
+const icona = p => (ICONE[p.id] || ICONE.acqua)();
+
+const LISTINO = [
+  { id:'bimbi',     nm:'Bambini',         pz:1200, cat:'Parco',    fisso:true },
+  { id:'crazy',     nm:'Crazy Jumping',   pz:400,  cat:'Parco',    fisso:true },
+  { id:'acqua',     nm:'Acqua',           pz:100,  cat:'Bevande' },
+  { id:'acquafriz', nm:'Acqua frizzante', pz:100,  cat:'Bevande' },
+  { id:'caffe',     nm:'Caffè',           pz:120,  cat:'Bevande' },
+  { id:'coca',      nm:'Coca Cola',       pz:250,  cat:'Bevande' },
+  { id:'cocaz',     nm:'Coca Cola Zero',  pz:250,  cat:'Bevande' },
+  { id:'fanta',     nm:'Fanta',           pz:250,  cat:'Bevande' },
+  { id:'sprite',    nm:'Sprite',          pz:250,  cat:'Bevande' },
+  { id:'schw',      nm:'Schweppes',       pz:200,  cat:'Bevande' },
+  { id:'gazz',      nm:'Gazzosa',         pz:200,  cat:'Bevande' },
+  { id:'estalim',   nm:'Estathè limone',  pz:250,  cat:'Bevande' },
+  { id:'estapes',   nm:'Estathè pesca',   pz:250,  cat:'Bevande' },
+  { id:'bras',      nm:'Brasilena',       pz:200,  cat:'Bevande' },
+  { id:'pata',      nm:'Patatine',        pz:150,  cat:'Snack' },
+  { id:'heine',     nm:'Heineken',        pz:300,  cat:'Birre' },
+  { id:'nastro',    nm:'Nastro Azzurro',  pz:300,  cat:'Birre' },
+  { id:'ichnu',     nm:'Ichnusa',         pz:300,  cat:'Birre' },
+  { id:'tenn',      nm:"Tennent's",       pz:350,  cat:'Birre' },
+  { id:'limon',     nm:'Limoncello',      pz:300,  cat:'Alcolici' },
+  { id:'amari',     nm:'Amari',           pz:300,  cat:'Alcolici' },
+  { id:'grappa',    nm:'Grappa',          pz:400,  cat:'Alcolici' },
+  { id:'spritz',    nm:'Spritz',          pz:600,  cat:'Alcolici' }
+];
+const CAT = ['Parco', 'Bevande', 'Birre', 'Snack', 'Alcolici'];
+const CATIC = { Parco:'bimbi', Bevande:'coca', Birre:'heine', Snack:'pata', Alcolici:'spritz' };
+const iconaCat = c => ICONE[CATIC[c]]();
+const prod = id => LISTINO.find(p => p.id === id);
+const eur = c => (c / 100).toFixed(2).replace('.', ',') + ' €';
+
+const INIZIO = { coca:{q:2,p:1}, pata:{q:3,p:3}, bimbi:{q:2,p:0}, crazy:{q:1,p:0} };
+
+function statoNuovo(cat) {
+  const S = { q:{}, p:{}, cat: cat || 'Bevande', sel: 'coca' };
+  LISTINO.forEach(x => { const i = INIZIO[x.id]; S.q[x.id] = i ? i.q : 0; S.p[x.id] = i ? i.p : 0; });
+  return S;
+}
+const diCat = S => LISTINO.filter(x => x.cat === S.cat);
+const sulConto = S => LISTINO.filter(x => S.q[x.id] > 0);
+const tot = S => LISTINO.reduce((a,x) => a + S.q[x.id] * x.pz, 0);
+const pag = S => LISTINO.reduce((a,x) => a + Math.min(S.p[x.id], S.q[x.id]) * x.pz, 0);
+const totCat = (S, c) => LISTINO.filter(x => c === 'Bar' ? x.cat !== 'Parco' : x.id === c)
+  .reduce((a,x) => a + S.q[x.id]*x.pz, 0);
+
+/* ——— pezzi condivisi ——— */
+const cap = () => '<div class="cap"><h3>Bar &amp; Conto</h3><button class="via">✕</button></div>';
+
+const tabs = S => '<div class="cat">' + CAT.map(c =>
+  '<button data-a="cat" data-v="' + c + '"' + (S.cat === c ? ' class="on"' : '') + '>' +
+  iconaCat(c) + c + '</button>').join('') + '</div>';
+
+const fondo = S => {
+  const r = Math.max(0, tot(S) - pag(S));
+  const v1 = (nm, ic, im) => '<div class="v1">' + ICONE[ic]() +
+    '<div><span class="k">' + nm + '</span><span class="v">' + eur(im) + '</span></div>' +
+    (im > 0 ? '<button data-a="pagasez" data-v="' + nm + '">paga</button>' : '') + '</div>';
+  return '<div class="fondo"><div class="parti">' +
+    v1('Totale Parco', 'bimbi', totCat(S,'bimbi')) +
+    v1('Totale Crazy', 'crazy', totCat(S,'crazy')) +
+    v1('Totale Bar', 'coca', totCat(S,'Bar')) + '</div>' +
+    '<div class="conto"><div><span class="k">' + (r > 0 ? (pag(S) > 0 ? 'restano' : 'da incassare') : 'tutto pagato') + '</span>' +
+    '<span class="v">' + (r > 0 ? eur(r) : '✓ ' + eur(tot(S))) + '</span></div>' +
+    '<div class="tasti">' + (r > 0 ? '<button class="bt">🧮 Resto</button>' +
+      '<button class="bt pieno" data-a="tutto">Paga tutto</button>' : '') + '</div></div></div>';
+};
+
+const piastrella = (S, x, conBollo) => {
+  const q = S.q[x.id], p = Math.min(S.p[x.id], q);
+  const cls = q === 0 ? '' : (p >= q ? ' ok' : ' on');
+  return '<button class="pia' + cls + (S.sel === x.id ? ' sel' : '') + '" data-a="' + (conBollo || 'add') + '" data-v="' + x.id + '">' +
+    (q > 0 ? '<span class="bollo">' + (p >= q ? '✓' : q) + '</span>' : '') + icona(x) +
+    '<span class="pr">' + eur(x.pz) + '</span><span class="nm">' + x.nm + '</span></button>';
+};
+
+const stepper = (S, id, verde) => {
+  const q = S.q[id], p = Math.min(S.p[id], q);
+  return verde
+    ? '<div class="st v"><button data-a="pmeno" data-v="' + id + '"' + (p<=0?' disabled':'') + '>−</button>' +
+      '<span class="n">' + p + '/' + q + '</span>' +
+      '<button data-a="ppiu" data-v="' + id + '"' + (p>=q?' disabled':'') + '>+</button></div>'
+    : '<div class="st"><button data-a="meno" data-v="' + id + '">−</button>' +
+      '<span class="n">' + q + '</span>' +
+      '<button data-a="add" data-v="' + id + '">+</button></div>';
+};
+
+const riga = (S, x, conVerde) => {
+  const q = S.q[x.id], p = Math.min(S.p[x.id], q);
+  return '<div class="rw' + (q === 0 ? '' : p >= q ? ' ok' : ' on') + '">' + icona(x) +
+    '<span class="t"><span class="nm">' + x.nm + '</span>' +
+    '<span class="pr">' + eur(x.pz) + '</span></span>' +
+    stepper(S, x.id, false) + (conVerde && q > 0 ? stepper(S, x.id, true) : '') +
+    '<span class="tot">' + (q ? eur(q * x.pz) : '') + '</span></div>';
+};
+
+/* ═══════════ L1 · il selezionato comanda ═══════════ */
+function L1(S) {
+  const x = prod(S.sel), q = S.q[S.sel], p = Math.min(S.p[S.sel], q);
+  return '<div class="pan">' + cap() + '<div class="corpo">' + tabs(S) +
+    '<div class="griglia g4">' + diCat(S).map(y => piastrella(S, y, 'sel')).join('') + '</div>' +
+    '<div class="barra">' + icona(x) +
+      '<span class="chi"><b>' + x.nm + '</b><span>' + eur(x.pz) + '</span></span>' +
+      '<div><span class="et">prese</span>' +
+        '<div class="gr"><button data-a="meno" data-v="' + x.id + '">−</button>' +
+        '<span class="n">' + q + '</span>' +
+        '<button data-a="add" data-v="' + x.id + '">+</button></div></div>' +
+      '<div><span class="et">pagate</span>' +
+        '<div class="gr v"><button data-a="pmeno" data-v="' + x.id + '"' + (p<=0?' disabled':'') + '>−</button>' +
+        '<span class="n">' + p + '/' + q + '</span>' +
+        '<button data-a="ppiu" data-v="' + x.id + '"' + (p>=q?' disabled':'') + '>+</button></div></div>' +
+    '</div></div>' + fondo(S) + '</div>';
+}
+
+/* ═══════════ L2 · catalogo sopra, conto sotto ═══════════ */
+function L2(S) {
+  const dentro = sulConto(S);
+  return '<div class="pan">' + cap() + '<div class="corpo">' + tabs(S) +
+    '<div class="griglia g5" style="flex:0 0 auto;max-height:330px">' +
+      diCat(S).map(y => piastrella(S, y)).join('') + '</div>' +
+    '<div class="carr"><div class="tit">Sul conto · ' + dentro.length + ' voci</div>' +
+      (dentro.length ? dentro.map(y => riga(S, y, true)).join('')
+                     : '<div class="vuoto">tocca una cosa qui sopra</div>') +
+    '</div></div>' + fondo(S) + '</div>';
+}
+
+/* ═══════════ L3 · lista piena ═══════════ */
+function L3(S) {
+  return '<div class="pan">' + cap() + '<div class="corpo">' + tabs(S) +
+    '<div class="griglia" style="grid-template-columns:1fr;gap:8px">' +
+      diCat(S).map(y => riga(S, y, true)).join('') + '</div>' +
+    '</div>' + fondo(S) + '</div>';
+}
+
+/* ═══════════ L4 · due colonne di righe ═══════════ */
+function L4(S) {
+  return '<div class="pan">' + cap() + '<div class="corpo">' + tabs(S) +
+    /* riga stretta senza il totale: in due colonne quello non ci sta, e
+       qui sopra si batte e basta — i conti si leggono sotto */
+    '<div class="griglia" style="grid-template-columns:repeat(2,1fr);gap:9px">' +
+      diCat(S).map(y => {
+        const q = S.q[y.id], p = Math.min(S.p[y.id], q);
+        return '<div class="rw' + (q === 0 ? '' : p >= q ? ' ok' : ' on') + '">' + icona(y) +
+          '<span class="t"><span class="nm">' + y.nm + '</span>' +
+          '<span class="pr">' + eur(y.pz) + '</span></span>' + stepper(S, y.id, false) + '</div>';
+      }).join('') + '</div>' +
+    '<div class="carr" style="flex:0 0 auto;max-height:250px">' +
+      '<div class="tit">Pagate</div>' +
+      (sulConto(S).length ? sulConto(S).map(y =>
+        '<div class="rw">' + icona(y) + '<span class="t"><span class="nm">' + y.nm + '</span>' +
+        '<span class="pr">' + S.q[y.id] + ' × ' + eur(y.pz) + '</span></span>' +
+        stepper(S, y.id, true) + '</div>').join('')
+        : '<div class="vuoto">niente sul conto</div>') +
+    '</div></div>' + fondo(S) + '</div>';
+}
+
+/* ═══════════ L5 · rail delle categorie a sinistra ═══════════ */
+function L5(S) {
+  return '<div class="pan">' + cap() +
+    '<div class="corpo"><div class="conRail">' +
+      '<div class="rail">' + CAT.map(c =>
+        '<button data-a="cat" data-v="' + c + '"' + (S.cat === c ? ' class="on"' : '') + '>' +
+        iconaCat(c) + c + '</button>').join('') + '</div>' +
+      '<div class="griglia g3" style="flex:1">' +
+        diCat(S).map(y => piastrella(S, y, 'sel')).join('') + '</div>' +
+    '</div>' +
+    '<div class="barra">' + (() => { const x = prod(S.sel), q = S.q[S.sel], p = Math.min(S.p[S.sel],q);
+      return icona(x) + '<span class="chi"><b>' + x.nm + '</b><span>' + eur(x.pz) + '</span></span>' +
+        '<div><span class="et">prese</span><div class="gr">' +
+          '<button data-a="meno" data-v="' + x.id + '">−</button><span class="n">' + q + '</span>' +
+          '<button data-a="add" data-v="' + x.id + '">+</button></div></div>' +
+        '<div><span class="et">pagate</span><div class="gr v">' +
+          '<button data-a="pmeno" data-v="' + x.id + '"' + (p<=0?' disabled':'') + '>−</button>' +
+          '<span class="n">' + p + '/' + q + '</span>' +
+          '<button data-a="ppiu" data-v="' + x.id + '"' + (p>=q?' disabled':'') + '>+</button></div></div>';
+    })() + '</div></div>' + fondo(S) + '</div>';
+}
+
+/* ═══════════ L6 · tutto in una schermata, niente categorie ═══════════ */
+function L6(S) {
+  return '<div class="pan">' + cap() + '<div class="corpo">' +
+    '<div class="griglia g5">' + LISTINO.map(y => piastrella(S, y, 'sel')).join('') + '</div>' +
+    '<div class="barra">' + (() => { const x = prod(S.sel), q = S.q[S.sel], p = Math.min(S.p[S.sel],q);
+      return icona(x) + '<span class="chi"><b>' + x.nm + '</b><span>' + eur(x.pz) + '</span></span>' +
+        '<div><span class="et">prese</span><div class="gr">' +
+          '<button data-a="meno" data-v="' + x.id + '">−</button><span class="n">' + q + '</span>' +
+          '<button data-a="add" data-v="' + x.id + '">+</button></div></div>' +
+        '<div><span class="et">pagate</span><div class="gr v">' +
+          '<button data-a="pmeno" data-v="' + x.id + '"' + (p<=0?' disabled':'') + '>−</button>' +
+          '<span class="n">' + p + '/' + q + '</span>' +
+          '<button data-a="ppiu" data-v="' + x.id + '"' + (p>=q?' disabled':'') + '>+</button></div></div>';
+    })() + '</div></div>' + fondo(S) + '</div>';
+}
+
+/* ═══════════ L7 · il conto è la pagina, il catalogo è una striscia ═══════════ */
+function L7(S) {
+  const dentro = sulConto(S);
+  return '<div class="pan">' + cap() + '<div class="corpo">' +
+    '<div class="carr" style="flex:1">' +
+      '<div class="tit">Il conto · ' + dentro.length + ' voci</div>' +
+      (dentro.length ? dentro.map(y => riga(S, y, true)).join('')
+                     : '<div class="vuoto">ancora niente</div>') + '</div>' +
+    tabs(S) +
+    '<div class="griglia g5" style="flex:0 0 auto;max-height:210px">' +
+      diCat(S).map(y => piastrella(S, y)).join('') + '</div>' +
+    '</div>' + fondo(S) + '</div>';
+}
+
+/* ═══════════ L8 · due file: catalogo a strisce per categoria ═══════════ */
+function L8(S) {
+  const striscia = c => {
+    const roba = LISTINO.filter(x => x.cat === c);
+    const dentro = roba.filter(x => S.q[x.id] > 0).length;
+    return '<div style="flex-shrink:0">' +
+      '<div class="tit" style="display:flex;gap:8px;align-items:center;padding:6px 4px">' + c +
+      (dentro ? ' <span style="color:var(--sel)">· ' + dentro + ' sul conto</span>' : '') + '</div>' +
+      '<div class="griglia g5" style="overflow:visible">' +
+        roba.map(y => piastrella(S, y, 'sel')).join('') + '</div></div>';
+  };
+  return '<div class="pan">' + cap() +
+    '<div class="corpo"><div style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px">' +
+      CAT.map(striscia).join('') + '</div>' +
+    '<div class="barra">' + (() => { const x = prod(S.sel), q = S.q[S.sel], p = Math.min(S.p[S.sel],q);
+      return icona(x) + '<span class="chi"><b>' + x.nm + '</b><span>' + eur(x.pz) + '</span></span>' +
+        '<div><span class="et">prese</span><div class="gr">' +
+          '<button data-a="meno" data-v="' + x.id + '">−</button><span class="n">' + q + '</span>' +
+          '<button data-a="add" data-v="' + x.id + '">+</button></div></div>' +
+        '<div><span class="et">pagate</span><div class="gr v">' +
+          '<button data-a="pmeno" data-v="' + x.id + '"' + (p<=0?' disabled':'') + '>−</button>' +
+          '<span class="n">' + p + '/' + q + '</span>' +
+          '<button data-a="ppiu" data-v="' + x.id + '"' + (p>=q?' disabled':'') + '>+</button></div></div>';
+    })() + '</div></div>' + fondo(S) + '</div>';
+}
+
+/* ——— montaggio ——— */
+const CASI = [
+  ['L1', 'Il selezionato comanda', 'I comandi <b>non stanno più su ogni prodotto</b>: la griglia è fatta di piastrelle nude e i tasti — grandi il doppio — stanno in una barra sola sopra il totale, che lavora su quello che hai toccato. Costa un tocco in più, ma il catalogo diventa leggerissimo.', L1],
+  ['L2', 'Catalogo sopra, conto sotto', 'Sopra <b>il listino da battere</b>, sotto <b>solo quello che è sul conto</b>, con i suoi due contatori. Le cose che non hai preso non occupano spazio con comandi che non servono.', L2],
+  ['L3', 'Lista piena', 'Niente griglia: <b>una riga per prodotto</b>, larga tutta la schermata, con dentro tutto in fila — icona, nome, prezzo, prese, pagate, totale della riga. Si legge come uno scontrino.', L3],
+  ['L4', 'Righe sopra, pagate sotto', 'Due colonne di righe strette per <b>battere in fretta</b>, e in fondo una zona separata dove si segna cosa è stato pagato. Le due cose non si mescolano mai.', L4],
+  ['L5', 'Categorie di fianco', 'Le categorie diventano una <b>colonna a sinistra</b> invece di una fila in alto: rubano larghezza, che ne abbiamo, e restituiscono altezza, che è quella che manca sempre.', L5],
+  ['L6', 'Tutto in una schermata', '<b>Niente categorie</b>: tutti e ventitré i prodotti insieme, cinque per riga. Non devi più ricordarti dove sta la Brasilena, la vedi e la tocchi.', L6],
+  ['L7', 'Il conto è la pagina', 'Si ribalta: <b>il conto occupa quasi tutto</b> e il catalogo è una striscia in fondo. Guardi quello che stai facendo, non quello che potresti fare.', L7],
+  ['L8', 'Tutto a strisce', 'Una striscia per categoria, <b>una sotto l\'altra</b>, e si scorre come una pagina sola. Nessun tasto che cambia vista: c\'è tutto, sempre, nell\'ordine di sempre.', L8]
+];
+
+const box = document.getElementById('casi');
+CASI.forEach(([lett, nome, idea, ren]) => {
+  const S = statoNuovo();
+  const sez = document.createElement('div');
+  sez.className = 'caso';
+  sez.innerHTML = '<div class="testa"><span class="lett">' + lett + '</span><h2>' + nome + '</h2>' +
+    '<span class="mis"></span></div><p class="idea">' + idea + '</p>' +
+    '<div class="telaio"><div class="dentro"></div></div>';
+  box.appendChild(sez);
+  const d = sez.querySelector('.dentro'), mis = sez.querySelector('.mis');
+
+  const dis = () => {
+    d.innerHTML = ren(S);
+    let scorre = 0, sborda = 0;
+    d.querySelectorAll('.pan *').forEach(e => {
+      if (e.scrollHeight - e.clientHeight > 2 && e.clientHeight > 60) scorre++;
+      if (e.scrollWidth - e.clientWidth > 2 && e.clientWidth > 40) sborda++;
+    });
+    const p = d.querySelector('.pan');
+    const fuori = p.scrollHeight - p.clientHeight;
+    mis.textContent = fuori > 2 ? 'sborda ' + fuori + 'px'
+      : sborda ? sborda + ' cose larghe'
+      : scorre ? scorre + ' zona scorre' : 'ci sta tutto';
+    mis.style.color = (fuori > 2 || sborda) ? '#FF9AA2' : scorre ? '#FFD166' : '#7FE8C1';
+  };
+  sez.addEventListener('click', e => {
+    const b = e.target.closest('[data-a]');
+    if (!b) return;
+    const a = b.dataset.a, v = b.dataset.v;
+    if (a === 'add')   S.q[v] = (S.q[v]||0) + 1;
+    if (a === 'meno') { S.q[v] = Math.max(0,(S.q[v]||0)-1); S.p[v] = Math.min(S.p[v], S.q[v]); }
+    if (a === 'ppiu')  S.p[v] = Math.min(S.q[v], (S.p[v]||0)+1);
+    if (a === 'pmeno') S.p[v] = Math.max(0,(S.p[v]||0)-1);
+    if (a === 'cat')   S.cat = v;
+    if (a === 'sel') { if (S.sel === v) S.q[v] = (S.q[v]||0)+1; else S.sel = v; }
+    if (a === 'tutto') LISTINO.forEach(x => S.p[x.id] = S.q[x.id]);
+    if (a === 'pagasez') LISTINO.forEach(x => {
+      const suo = v === 'Totale Bar' ? x.cat !== 'Parco'
+                : v === 'Totale Parco' ? x.id === 'bimbi' : x.id === 'crazy';
+      if (suo) S.p[x.id] = S.q[x.id];
+    });
+    dis();
+  });
+  dis();
+});
+
+function adatta() {
+  document.querySelectorAll('.telaio').forEach(t => {
+    const d = t.querySelector('.dentro');
+    const s = t.clientWidth / 820;
+    d.style.transform = 'scale(' + s + ')';
+    t.style.height = (1180 * s) + 'px';
+  });
+}
+addEventListener('resize', adatta);
+adatta();
+</script>
