@@ -400,15 +400,31 @@
     } else if (pattern === 'plaid') {
       size = 12; s = `<rect width="12" height="12" fill="${color}"/><rect y="4" width="12" height="3" fill="${color2}" opacity="0.8"/><rect x="4" width="3" height="12" fill="${color2}" opacity="0.8"/>`;
     } else if (pattern === 'camo') {
-      size = 16; s = `<rect width="16" height="16" fill="${color}"/><ellipse cx="4" cy="5" rx="4.5" ry="3.2" fill="${shade(color, -34)}"/><ellipse cx="12" cy="11" rx="4.5" ry="3.2" fill="${shade(color, 30)}"/>`;
+      /* Macchie irregolari e di tre toni su una tessera grande: quello
+         di prima erano due ellissi ripetute ogni dieci pixel e a
+         guardarlo si vedeva la griglia, non la mimetica. */
+      size = 30;
+      const scuro = shade(color, -34), chiaro = shade(color, 30);
+      s = `<rect width="30" height="30" fill="${color}"/>
+        <path d="M2 5 Q7 1 12 4 Q16 8 11 11 Q5 13 2 9 Z" fill="${color2}"/>
+        <path d="M18 2 Q25 0 28 5 Q29 10 24 11 Q19 10 17 6 Z" fill="${scuro}"/>
+        <path d="M6 16 Q12 14 15 19 Q16 24 10 25 Q4 24 4 20 Z" fill="${chiaro}"/>
+        <path d="M20 15 Q27 15 29 20 Q30 26 24 27 Q18 26 18 21 Z" fill="${color2}"/>
+        <path d="M0 24 Q4 22 6 26 Q6 30 2 30 L0 30 Z" fill="${scuro}"/>
+        <path d="M12 27 Q17 26 18 30 L11 30 Z" fill="${scuro}"/>
+        <path d="M25 11 Q29 12 29 15 L24 14 Z" fill="${chiaro}"/>`;
     } else if (pattern === 'stars') {
       size = 14; s = `<rect width="14" height="14" fill="${color}"/><path d="M7 2.4 L8.3 5.8 L11.9 5.8 L9 8 L10.1 11.5 L7 9.3 L3.9 11.5 L5 8 L2.1 5.8 L5.7 5.8 Z" fill="${color2}"/>`;
     } else if (pattern === 'logo') {
-      /* una SCRITTA, non un cerchio: sulla maglietta di solito c'e' scritto
-         qualcosa, e da lontano si legge come due righe di testo */
-      size = 24; s = `<rect width="24" height="24" fill="${color}"/>` +
-        `<rect x="3.5" y="8" width="17" height="2.8" rx="1.4" fill="${color2}"/>` +
-        `<rect x="6.5" y="13.5" width="11" height="2.4" rx="1.2" fill="${color2}"/>`;
+      /* Una SCRITTA vera, non due barre: parole di lunghezza diversa,
+         con le lettere appena accennate. Due rettangoli tondi si
+         leggevano come righe, che e' la fantasia della porta accanto. */
+      size = 26;
+      const parola = (x, y, w, h) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${h / 2}" fill="${color2}"/>`;
+      s = `<rect width="26" height="26" fill="${color}"/>` +
+        parola(3, 6.5, 6, 3) + parola(10.5, 6.5, 4, 3) + parola(16, 6.5, 7, 3) +
+        parola(5, 12, 9, 3) + parola(15.5, 12, 5.5, 3) +
+        parola(7.5, 17.5, 4, 2.4) + parola(13, 17.5, 8, 2.4);
     } else if (pattern === 'diag') {
       size = 10; s = `<rect width="10" height="10" fill="${color}"/><path d="M-3 3 L3 -3 M0 10 L10 0 M7 13 L13 7" stroke="${color2}" stroke-width="3.2"/>`;
     } else if (pattern === 'scacchi') {
