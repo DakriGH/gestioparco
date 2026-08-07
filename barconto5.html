@@ -1,0 +1,943 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bar &amp; Conto — dodici impostazioni</title>
+<style>
+  :root{
+    --sf:#0F1116; --pan:#14141B; --riga:#1B1D26; --riga2:#22242F;
+    --te:#E9E9F2; --mu:#8C93A6; --li:#2B2F3A;
+    --bl:#3B8CFF; --vi:#B072FF; --gi:#FFD35C; --ve:#4ADE80; --ro:#FF6B6B;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  body{margin:0;background:var(--sf);color:var(--te);
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    padding:28px 20px 80px}
+  .foglio{max-width:1240px;margin:0 auto}
+  h1{font-size:30px;line-height:1.15;margin:0 0 10px;letter-spacing:-.02em}
+  .occhiello{color:var(--gi);font-size:12px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 8px}
+  .intro{color:#B9BFC9;max-width:70ch;margin:0 0 6px}
+  .intro b{color:var(--te)}
+  em{color:var(--gi);font-style:normal;font-weight:600}
+
+  .griglia{display:grid;gap:30px;margin-top:34px;
+    grid-template-columns:repeat(auto-fill,minmax(352px,1fr))}
+  .caso{min-width:0}
+  .testa{display:flex;gap:11px;align-items:flex-start;margin-bottom:11px}
+  .lett{flex:0 0 30px;height:30px;border-radius:9px;background:var(--gi);color:#0F1116;
+    display:grid;place-items:center;font-weight:800;font-size:14px}
+  .testa h2{font-size:17px;margin:2px 0 2px;letter-spacing:-.01em}
+  .idea{color:var(--mu);font-size:13.5px;line-height:1.45;margin:0}
+  .idea b{color:#C9CDD6;font-weight:600}
+
+  /* il tablet */
+  .tel{background:var(--pan);border:1px solid var(--li);border-radius:20px;
+    height:664px;overflow:hidden;display:flex;flex-direction:column;
+    box-shadow:0 18px 40px rgba(0,0,0,.45)}
+  .pan{display:flex;flex-direction:column;height:100%;min-height:0}
+  .corpo{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:12px 12px 14px}
+  .corpo::-webkit-scrollbar{width:5px}
+  .corpo::-webkit-scrollbar-thumb{background:#333846;border-radius:3px}
+
+  /* mini banner */
+  .cap{display:flex;align-items:center;gap:10px;padding:11px 12px;
+    border-bottom:1px solid var(--li);background:#171923;flex:0 0 auto}
+  .cap .av{width:32px;height:32px;border-radius:9px;background:#242836;flex:0 0 auto;
+    display:grid;place-items:center;font-size:16px}
+  .cap b{font-size:14.5px;display:block;line-height:1.2}
+  .cap span{color:var(--mu);font-size:11.5px;display:flex;align-items:center;gap:5px}
+  .cap .dot{width:9px;height:9px;border-radius:50%;background:var(--ro);display:inline-block}
+  .cap .x{margin-left:auto;width:30px;height:30px;border-radius:9px;border:0;background:#242836;
+    color:var(--mu);font-size:15px;cursor:pointer}
+
+  button{font:inherit;color:inherit;cursor:pointer}
+  .btn{border:1px solid var(--li);background:var(--riga);color:var(--te);
+    border-radius:11px;padding:10px 12px;font-size:14px;font-weight:600;
+    transition:transform .08s,background .15s}
+  .btn:active{transform:scale(.96)}
+  .btn.on{background:var(--bl);border-color:var(--bl);color:#fff}
+  .btn.ok{background:var(--ve);border-color:var(--ve);color:#0C2A17;font-weight:800}
+  .btn.mu{color:var(--mu)}
+  .btn.gr{background:transparent}
+  .btn.w{width:100%}
+  .btn.big{padding:14px;font-size:16px}
+
+  .fila{display:flex;gap:7px;flex-wrap:wrap}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .tabs .btn{padding:8px 11px;font-size:13px}
+
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+  .cel{background:var(--riga);border:1px solid var(--li);border-radius:13px;
+    padding:9px 5px 7px;display:flex;flex-direction:column;align-items:center;gap:3px;
+    position:relative;overflow:hidden;text-align:center}
+  .cel svg{width:34px;height:34px;flex:0 0 auto}
+  .cel .nm{font-size:10.5px;line-height:1.2;color:#C9CDD6;min-height:25px;display:flex;align-items:center}
+  .cel .pz{font-size:11px;font-weight:700;color:var(--mu)}
+  .cel.q{border-color:var(--bl);background:#18243A}
+  .cel .bad{position:absolute;top:4px;right:4px;min-width:21px;height:21px;border-radius:7px;
+    background:var(--bl);color:#fff;font-size:12px;font-weight:800;display:grid;place-items:center;padding:0 4px}
+
+  /* righe conto */
+  .rg{display:flex;align-items:center;gap:9px;padding:9px 4px;border-bottom:1px solid #21232D}
+  .rg svg{width:26px;height:26px;flex:0 0 auto}
+  .rg .t{flex:1;min-width:0;font-size:13.5px}
+  .rg .t small{display:block;color:var(--mu);font-size:11px}
+  .rg .im{font-variant-numeric:tabular-nums;font-weight:700;font-size:13.5px;flex:0 0 auto}
+  .rg .qq{display:flex;gap:4px;flex:0 0 auto}
+  .rg .qq button{width:26px;height:26px;border-radius:8px;border:1px solid var(--li);
+    background:var(--riga2);font-size:14px;line-height:1;padding:0}
+  .rg.pg .im{color:var(--ve)}
+  .rg.pg .t{color:var(--ve)}
+
+  .tot{display:flex;align-items:baseline;justify-content:space-between;padding:11px 4px 4px}
+  .tot .k{color:var(--mu);font-size:12.5px;text-transform:uppercase;letter-spacing:.08em}
+  .tot .v{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums}
+  .tot .v.ok{color:var(--ve)}
+
+  .pie{flex:0 0 auto;border-top:1px solid var(--li);background:#171923;padding:10px 12px;
+    display:flex;flex-direction:column;gap:8px}
+
+  .sott{color:var(--mu);font-size:11px;text-transform:uppercase;letter-spacing:.1em;margin:12px 0 6px}
+  .sott:first-child{margin-top:0}
+
+  .step{display:flex;align-items:center;gap:9px;background:var(--riga);border:1px solid var(--li);
+    border-radius:13px;padding:8px 9px}
+  .step .nm{flex:1;font-size:13.5px}
+  .step button{width:34px;height:34px;border-radius:10px;border:1px solid var(--li);
+    background:var(--riga2);font-size:17px;line-height:1;padding:0}
+  .step .n{min-width:26px;text-align:center;font-weight:800;font-variant-numeric:tabular-nums}
+
+  .vuoto{color:var(--mu);font-size:13px;text-align:center;padding:22px 10px}
+
+  .num{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+  .num button{padding:14px 0;font-size:19px;font-weight:700;border-radius:12px;
+    border:1px solid var(--li);background:var(--riga)}
+  .disp{background:#0C0E13;border:1px solid var(--li);border-radius:13px;padding:11px 13px;
+    text-align:right;font-size:29px;font-weight:800;font-variant-numeric:tabular-nums;margin-bottom:9px}
+  .disp small{display:block;font-size:11px;font-weight:600;color:var(--mu);text-align:left;
+    letter-spacing:.08em;text-transform:uppercase}
+
+  .chip{display:inline-flex;align-items:center;gap:6px;background:var(--riga2);
+    border:1px solid var(--li);border-radius:999px;padding:5px 6px 5px 10px;font-size:12.5px}
+  .chip b{font-weight:700}
+  .chip button{border:0;background:#343947;color:var(--mu);width:19px;height:19px;
+    border-radius:50%;font-size:12px;line-height:1;padding:0}
+
+  .rail{display:flex;gap:6px;padding:10px 12px;border-bottom:1px solid var(--li);background:#171923}
+  .rail div{flex:1;text-align:center;font-size:11.5px;color:var(--mu);padding:6px 2px;
+    border-radius:9px;background:var(--riga)}
+  .rail div.on{background:var(--bl);color:#fff;font-weight:700}
+  .rail div.fatto{color:var(--ve)}
+
+  .grande{font-size:46px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em;
+    line-height:1;text-align:center;padding:16px 0 4px}
+  .grande.ok{color:var(--ve)}
+  .sotto-grande{text-align:center;color:var(--mu);font-size:12px;letter-spacing:.1em;
+    text-transform:uppercase;margin-bottom:14px}
+
+  .pers{background:var(--riga);border:1px solid var(--li);border-radius:14px;padding:10px;margin-bottom:8px}
+  .pers.on{border-color:var(--bl)}
+  .pers .ph{display:flex;align-items:center;gap:8px}
+  .pers .ph b{flex:1;font-size:14px}
+  .pers .ph .im{font-weight:800;font-variant-numeric:tabular-nums}
+
+  .ev{display:flex;align-items:center;gap:9px;padding:8px 4px;border-left:2px solid var(--li);
+    padding-left:11px;margin-left:4px}
+  .ev.pg{border-left-color:var(--ve)}
+  .ev .t{flex:1;font-size:13px}
+  .ev .im{font-variant-numeric:tabular-nums;font-weight:700;font-size:13px}
+  .ev.pg .im{color:var(--ve)}
+  .ev time{color:var(--mu);font-size:11px}
+
+  .fis{border:1px solid var(--li);border-radius:14px;margin-bottom:8px;overflow:hidden;background:var(--riga)}
+  .fis>.ft{display:flex;align-items:center;gap:9px;padding:12px;width:100%;border:0;background:none;text-align:left}
+  .fis>.ft b{flex:1;font-size:14.5px}
+  .fis>.ft .im{color:var(--mu);font-variant-numeric:tabular-nums;font-weight:700}
+  .fis>.ft .fr{color:var(--mu);font-size:12px}
+  .fis .fc{padding:0 12px 12px}
+  .fis.on{border-color:var(--bl)}
+
+  .lav{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px}
+  .lav div{background:var(--riga);border:1px solid var(--li);border-radius:14px;padding:11px;text-align:center}
+  .lav .k{color:var(--mu);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase}
+  .lav .v{font-size:25px;font-weight:800;font-variant-numeric:tabular-nums;margin-top:3px}
+  .lav .v.ve{color:var(--ve)}
+  .lav .v.gi{color:var(--gi)}
+
+  .nota{background:#181A22;border:1px solid var(--li);border-left:3px solid var(--gi);
+    border-radius:0 12px 12px 0;padding:12px 14px;margin:34px 0 0;color:#B9BFC9;font-size:14px}
+  .nota b{color:var(--te)}
+  .nota ul{margin:8px 0 0;padding-left:18px}
+  .nota li{margin:4px 0}
+</style>
+
+<div class="foglio">
+  <p class="occhiello">Bar &amp; Conto · studio</p>
+  <h1>Dodici impostazioni, non dodici colori</h1>
+  <p class="intro">Ogni riquadro qui sotto è lo <b>stesso conto</b> — due bambini per un'ora, un Crazy
+  Jumping, qualcosa al bar — trattato con un'idea diversa su due punti: <em>come si aggiungono le cose</em>
+  e <em>come si incassa quando pagano a pezzi</em>. Cambia l'impianto, non la vernice.</p>
+  <p class="intro">Sono tutti <b>veri e toccabili</b>: aggiungi, togli, incassa. Il modo giusto di
+  sceglierli è usarli col pollice, non guardarli.</p>
+
+  <div class="griglia" id="griglia"></div>
+
+  <div class="nota">
+    <b>Come li ho pensati.</b> Si dividono per la domanda «dove sta il conto?»
+    <ul>
+      <li><b>Il conto è la pagina</b> — A, F, L: comandi il totale, gli oggetti sono di contorno.</li>
+      <li><b>Il conto è una metà</b> — B, E, I: sopra si batte, sotto si legge.</li>
+      <li><b>Il conto è una tappa</b> — D, K: una cosa per volta, niente distrazioni.</li>
+      <li><b>Il conto è un registro</b> — H, C: conta la sequenza di quello che è successo.</li>
+      <li><b>Il conto è diviso</b> — G, J: per persona o per che cosa comanda il prezzo.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+/* ---------- le icone, disegnate sui prodotti veri ----------
+   Ogni forma e' fatta di pezzi che si colorano: corpo, fascia
+   dell'etichetta, onda, tappo, stella. Cosi' una Coca e' rossa con
+   l'onda bianca, la Zero e' nera con l'onda rossa, e l'acqua
+   frizzante e' la stessa bottiglia col TAPPO ROSSO. */
+function svg(d) {
+  return '<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">' + d + '</svg>';
+}
+const STELLA = (cx, cy, r, c) => {
+  let p = '';
+  for (let k = 0; k < 5; k++) {
+    const a1 = -Math.PI/2 + k * 2*Math.PI/5, a2 = a1 + Math.PI/5;
+    p += (k ? 'L' : 'M') + (cx + r*Math.cos(a1)).toFixed(1) + ' ' + (cy + r*Math.sin(a1)).toFixed(1) +
+         'L' + (cx + r*0.42*Math.cos(a2)).toFixed(1) + ' ' + (cy + r*0.42*Math.sin(a2)).toFixed(1);
+  }
+  return '<path d="' + p + 'Z" fill="' + c + '"/>';
+};
+
+/* LATTINA: corpo, fascia, onda, e volendo un frutto sull'etichetta */
+function lattina(o) {
+  return svg(
+    '<rect x="11" y="5.5" width="18" height="29" rx="4.5" fill="' + o.corpo + '"/>' +
+    '<rect x="11" y="5.5" width="5" height="29" rx="4.5" fill="#fff" opacity=".13"/>' +
+    (o.fascia ? '<rect x="11" y="14" width="18" height="11" fill="' + o.fascia + '"/>' : '') +
+    (o.onda ? '<path d="M11 21.5c3.5-4 6-1 9 .5s5 .5 9-2.5v4.5c-4 2.6-6.4 4-9 2.6s-5.4-4-9-.6Z" fill="' + o.onda + '"/>' : '') +
+    (o.frutto ? '<circle cx="20" cy="19.6" r="4.4" fill="' + o.frutto + '"/>' +
+                '<circle cx="20" cy="19.6" r="4.4" stroke="#fff" stroke-width=".9" opacity=".7"/>' +
+                (o.foglia ? '<path d="M20 15.4c1.6-1.7 3.6-1.5 3.6-1.5s.2 2-1.5 3.6c-.9.8-2.1-1.2-2.1-2.1Z" fill="#3AA655"/>' : '') : '') +
+    (o.scritta ? '<rect x="14.5" y="17.5" width="11" height="3.4" rx="1.7" fill="' + o.scritta + '"/>' : '') +
+    '<rect x="12.6" y="3.4" width="14.8" height="3" rx="1.5" fill="#D5D9E0"/>' +
+    '<rect x="12.6" y="33" width="14.8" height="2.6" rx="1.3" fill="#B9BFC9"/>'
+  );
+}
+/* BOTTIGLIA costruita dal CENTRO: ogni misura e' 20 +/- qualcosa,
+   cosi' la simmetria non dipende dall'occhio ma dal conto.
+   o.larga  -> forma tozza (Ichnusa)
+   o.piccola-> bottiglietta di vetro (Brasilena) */
+function bottiglia(o) {
+  const larga = !!o.larga, mini = !!o.piccola;
+  const bw = larga ? 22 : (mini ? 16 : 15);      /* larghezza del corpo */
+  const nw = larga ? 6.4 : (mini ? 6 : 6);       /* larghezza del collo */
+  const yTappo = larga ? 8.2 : (mini ? 8.6 : 3.4);
+  const hTappo = 4.2;
+  const ySpalla = larga ? 16.4 : (mini ? 16.8 : 11.6);   /* fine collo */
+  const yCorpo = larga ? 21.6 : (mini ? 22 : 18.6);      /* inizio corpo dritto */
+  const yFondo = 35.6, r = 2.8;
+  const bx = 20 - bw / 2, bx2 = 20 + bw / 2;
+  const nx = 20 - nw / 2, nx2 = 20 + nw / 2;
+  const d =
+    'M' + nx + ' ' + (yTappo + hTappo) +
+    'L' + nx + ' ' + ySpalla +
+    'C' + nx + ' ' + (ySpalla + 2) + ' ' + bx + ' ' + (yCorpo - 2.4) + ' ' + bx + ' ' + yCorpo +
+    'L' + bx + ' ' + (yFondo - r) +
+    'a' + r + ' ' + r + ' 0 0 0 ' + r + ' ' + r +
+    'h' + (bw - 2 * r) +
+    'a' + r + ' ' + r + ' 0 0 0 ' + r + ' ' + (-r) +
+    'L' + bx2 + ' ' + yCorpo +
+    'C' + bx2 + ' ' + (yCorpo - 2.4) + ' ' + nx2 + ' ' + (ySpalla + 2) + ' ' + nx2 + ' ' + ySpalla +
+    'L' + nx2 + ' ' + (yTappo + hTappo) + 'Z';
+  const yEt = yCorpo + 2.2, hEt = Math.min(9.4, yFondo - yEt - 2.4);
+  return svg(
+    '<path d="' + d + '" fill="' + (o.vetro || '#BFE6F2') + '"/>' +
+    '<rect x="' + (bx + 1.4) + '" y="' + (yCorpo + 0.6) + '" width="2.6" height="' + (yFondo - yCorpo - 3) + '" rx="1.3" fill="#fff" opacity=".22"/>' +
+    (o.etichetta ? '<rect x="' + bx + '" y="' + yEt + '" width="' + bw + '" height="' + hEt + '" rx="1.6" fill="' + o.etichetta + '"/>' : '') +
+    (o.stella ? STELLA(20, yEt + hEt / 2, Math.min(3.4, hEt / 2.6), o.stella) : '') +
+    (o.riga ? '<rect x="' + (bx + 1.6) + '" y="' + (yEt + hEt / 2 - 1.3) + '" width="' + (bw - 3.2) + '" height="2.6" rx="1.3" fill="' + o.riga + '"/>' : '') +
+    '<rect x="' + (nx - 0.5) + '" y="' + yTappo + '" width="' + (nw + 1) + '" height="' + hTappo + '" rx="1.3" fill="' + (o.tappo || '#2F6FBF') + '"/>' +
+    '<rect x="' + (nx - 0.5) + '" y="' + (yTappo + hTappo - 0.6) + '" width="' + (nw + 1) + '" height="1.6" fill="#000" opacity=".18"/>'
+  );
+}
+/* BUSTA di patatine: sacchetto con la saldatura sopra e sotto */
+function busta(o) {
+  return svg(
+    '<path d="M12 9h16l2 3.4v20.2L28 36H12l-2-3.4V12.4L12 9Z" fill="' + o.corpo + '"/>' +
+    '<path d="M10 12.4h20v2.2H10zM10 30.4h20v2.2H10z" fill="#000" opacity=".16"/>' +
+    '<path d="M12 9h16v1.2H12zM12 34.8h16V36H12z" fill="#fff" opacity=".35"/>' +
+    '<ellipse cx="20" cy="22.6" rx="6.6" ry="5.2" fill="#FBF7EC"/>' +
+    '<path d="M15.6 23.6c.8-2.6 2.4-4 4.4-4s3.6 1.4 4.4 4c-1.6 1.4-3 2-4.4 2s-2.8-.6-4.4-2Z" fill="' + (o.chip || '#E8A33D') + '"/>' +
+    '<path d="M16.8 22.4c1-1.2 2-1.8 3.2-1.8s2.2.6 3.2 1.8" stroke="#C97C22" stroke-width=".9" fill="none" opacity=".8"/>'
+  );
+}
+/* SPRITZ con l'aperitivo attorno: olive, tarallini, patatine */
+function spritz() {
+  return svg(
+    /* ciotoline dietro */
+    '<ellipse cx="8.6" cy="31.4" rx="6.4" ry="4.2" fill="#2B2F3A"/>' +
+    '<circle cx="6.4" cy="30" r="2.1" fill="#7BA83C"/><circle cx="10.4" cy="30.6" r="2.1" fill="#5F8C2E"/>' +
+    '<circle cx="8.4" cy="32.8" r="2.1" fill="#7BA83C"/>' +
+    '<ellipse cx="31.6" cy="31.8" rx="6.4" ry="4.2" fill="#2B2F3A"/>' +
+    '<circle cx="29.6" cy="30.6" r="2.4" stroke="#D8A85A" stroke-width="1.5" fill="none"/>' +
+    '<circle cx="33.4" cy="31.4" r="2.4" stroke="#C79647" stroke-width="1.5" fill="none"/>' +
+    '<path d="M28.4 34.4c1.2-1.4 2.6-2 4-2s2.8.6 4 2c-1.6 1-3 1.4-4 1.4s-2.4-.4-4-1.4Z" fill="#E8A33D"/>' +
+    /* il calice */
+    '<path d="M11.4 6.6h17.2L22.6 17.8a2 2 0 0 0-.24 1V28h-2.6v-9.2a2 2 0 0 0-.24-1L11.4 6.6Z" fill="#FF7A29"/>' +
+    '<path d="M13.8 8.6h12.4L23.2 14h-6.4L13.8 8.6Z" fill="#fff" opacity=".3"/>' +
+    '<rect x="16.6" y="28" width="6.8" height="2.4" rx="1.2" fill="#D5D9E0"/>' +
+    '<rect x="12.4" y="30.6" width="15.2" height="2.8" rx="1.4" fill="#D5D9E0"/>' +
+    '<circle cx="27.6" cy="9.4" r="4.4" fill="#FFA53D"/>' +
+    '<circle cx="27.6" cy="9.4" r="4.4" stroke="#fff" stroke-width="1" opacity=".85"/>' +
+    '<path d="M27.6 5v8.8M23.2 9.4h8.8" stroke="#fff" stroke-width=".9" opacity=".8"/>'
+  );
+}
+/* TAZZINA da caffe' */
+function tazzina() {
+  return svg(
+    '<path d="M8.6 14h18.8v9.4a9.4 9.4 0 0 1-18.8 0V14Z" fill="#F2F3F7"/>' +
+    '<path d="M10.6 16h14.8v7.4a7.4 7.4 0 0 1-14.8 0V16Z" fill="#5B3A22"/>' +
+    '<path d="M27.4 16.6h3.4a3.6 3.6 0 0 1 0 7.2h-3.4" stroke="#F2F3F7" stroke-width="2.8" stroke-linecap="round"/>' +
+    '<rect x="5.6" y="32.6" width="24.8" height="3.2" rx="1.6" fill="#D5D9E0"/>' +
+    '<path d="M15 9.6c0-1.6 1.6-1.6 1.6-3.2M19.2 9.6c0-1.6 1.6-1.6 1.6-3.2" stroke="#B9BFC9" stroke-width="1.4" stroke-linecap="round" opacity=".8"/>'
+  );
+}
+/* BICCHIERINO da liquore */
+function bicchierino(o) {
+  return svg(
+    '<path d="M12.6 12.6h14.8l-1.7 13.2a3.2 3.2 0 0 1-3.2 2.8h-4.8a3.2 3.2 0 0 1-3.2-2.8L12.6 12.6Z" fill="' + o.liquore + '"/>' +
+    '<path d="M13.2 12.6h13.6l-.6 4.4H13.8l-.6-4.4Z" fill="#fff" opacity=".3"/>' +
+    '<rect x="18.4" y="28" width="3.2" height="5.4" fill="#D5D9E0"/>' +
+    '<rect x="13" y="32.8" width="14" height="3.2" rx="1.6" fill="#D5D9E0"/>'
+  );
+}
+/* BAMBINI: bambino col palloncino - si capisce anche da solo */
+function bimbo(c) {
+  return svg(
+    '<path d="M29.6 4.6c0 3-2.4 5.4-5.4 5.4S18.8 7.6 18.8 4.6 21.2-.8 24.2-.8s5.4 2.4 5.4 5.4Z" fill="' + c + '"/>' +
+    '<circle cx="28" cy="8.6" r="5.6" fill="#E24B5A"/>' +
+    '<path d="M28 14.2c-.6 1.4-.2 2.4.6 3.2" stroke="#E9E9F2" stroke-width="1.2" fill="none" stroke-linecap="round"/>' +
+    '<path d="M28 14.2 16.6 22" stroke="#C9CDD6" stroke-width="1.1" stroke-linecap="round"/>' +
+    '<circle cx="14.4" cy="14.6" r="5.6" fill="#F2C79C"/>' +
+    '<path d="M9 14.2c0-3.6 2.4-6 5.4-6s5.4 2.4 5.4 6c-1.6-1.2-3.4-1.8-5.4-1.8S10.6 13 9 14.2Z" fill="' + c + '"/>' +
+    '<path d="M8.4 36v-8.4c0-3.6 2.6-6.4 6-6.4s6 2.8 6 6.4V36H8.4Z" fill="' + c + '"/>' +
+    '<rect x="10.6" y="30" width="3.2" height="6" rx="1.6" fill="#3A4152"/>' +
+    '<rect x="15.4" y="30" width="3.2" height="6" rx="1.6" fill="#3A4152"/>' +
+    '<circle cx="12.6" cy="14.8" r="1" fill="#0F1116"/><circle cx="16.4" cy="14.8" r="1" fill="#0F1116"/>'
+  );
+}
+/* CRAZY JUMPING: trampolino con qualcuno per aria */
+function saltatore(c) {
+  return svg(
+    /* il tappeto */
+    '<ellipse cx="20" cy="29.4" rx="14.4" ry="4.6" fill="#2B2F3A"/>' +
+    '<ellipse cx="20" cy="28.4" rx="14.4" ry="4.6" fill="' + c + '" opacity=".55"/>' +
+    '<ellipse cx="20" cy="28.4" rx="10.6" ry="3.2" fill="#14141B"/>' +
+    /* gambe del trampolino */
+    '<path d="M7.6 30.4 4.4 36M32.4 30.4 35.6 36" stroke="#8C93A6" stroke-width="2.2" stroke-linecap="round"/>' +
+    /* chi salta */
+    '<circle cx="20" cy="6.2" r="3.6" fill="' + c + '"/>' +
+    '<path d="M20 10.4c2.6 0 4.6 1.7 4.6 4v2.6l3.6 4.4-2.2 1.8-3-3.6v4.6h-6v-4.6l-3 3.6-2.2-1.8 3.6-4.4v-2.6c0-2.3 2-4 4.6-4Z" fill="' + c + '"/>' +
+    /* le righe del rimbalzo */
+    '<path d="M11.6 12.6c-1.2-1.2-1.8-2.6-1.8-4M28.4 12.6c1.2-1.2 1.8-2.6 1.8-4" stroke="' + c + '" stroke-width="1.8" stroke-linecap="round" opacity=".55"/>'
+  );
+}
+const ICONE = {
+  /* --- parco --- */
+  bimbi:  () => bimbo('#3B8CFF'),
+  crazy:  () => saltatore('#B072FF'),
+  /* --- bevande --- */
+  /* identiche: cambia SOLO il tappo, come al banco */
+  acqua:     () => bottiglia({ vetro:'#BFE6F2', tappo:'#2F6FBF', etichetta:'#2F6FBF', riga:'#EAF6FB' }),
+  acquafriz: () => bottiglia({ vetro:'#BFE6F2', tappo:'#D93B3B', etichetta:'#2F6FBF', riga:'#EAF6FB' }),
+  caffe:     () => tazzina(),
+  coca:      () => lattina({ corpo:'#D2172F', onda:'#ffffff' }),
+  cocaz:     () => lattina({ corpo:'#17181C', onda:'#D2172F' }),
+  fanta:     () => lattina({ corpo:'#FF7A1E', onda:'#ffffff' }),
+  sprite:    () => lattina({ corpo:'#1FA85C', onda:'#EAF6D8' }),
+  schw:      () => bottiglia({ vetro:'#D8C77A', tappo:'#C9A227', etichetta:'#C9A227', riga:'#FBF7EC' }),
+  gazz:      () => bottiglia({ vetro:'#E4EEF2', tappo:'#8FB8C9', etichetta:'#8FB8C9', riga:'#ffffff' }),
+  estalim:   () => lattina({ corpo:'#E8B923', fascia:'#FBF7EC', frutto:'#FFE24A', foglia:true }),
+  estapes:   () => lattina({ corpo:'#E8834F', fascia:'#FBF7EC', frutto:'#FFB58A', foglia:true }),
+  bras:      () => bottiglia({ piccola:true, vetro:'#6B4226', tappo:'#C9A227', etichetta:'#C9A227', riga:'#5B3A22' }),
+  /* --- snack --- */
+  pata:      () => busta({ corpo:'#F2C230', chip:'#E8873D' }),
+  /* --- birre --- */
+  heine:     () => bottiglia({ vetro:'#1B7A3E', tappo:'#D2172F', etichetta:'#0F6431', stella:'#D2172F' }),
+  nastro:    () => bottiglia({ vetro:'#C9A46A', tappo:'#1F4E9C', etichetta:'#1F4E9C', riga:'#FBF7EC' }),
+  /* l'Ichnusa ha la bottiglia larga e bassa: e' la sua forma */
+  ichnu:     () => bottiglia({ larga:true, vetro:'#8C5A28', tappo:'#D2172F', etichetta:'#D2172F', stella:'#FBF7EC' }),
+  tenn:      () => bottiglia({ vetro:'#9C6B2F', tappo:'#D2172F', etichetta:'#D2172F', riga:'#FBF7EC' }),
+  /* --- alcolici --- */
+  limon:     () => bicchierino({ liquore:'#F5E04A' }),
+  amari:     () => bicchierino({ liquore:'#5B3A22' }),
+  grappa:    () => bicchierino({ liquore:'#EDE7DA' }),
+  spritz:    () => spritz()
+};
+const icona = p => (ICONE[p.id] || ICONE.acqua)();
+
+const LISTINO = [
+  { id:'bimbi',     nm:'Bambini',         pz:1200, cat:'Parco',    fisso:true },
+  { id:'crazy',     nm:'Crazy Jumping',   pz:400,  cat:'Parco',    fisso:true },
+  { id:'acqua',     nm:'Acqua',           pz:100,  cat:'Bevande' },
+  { id:'acquafriz', nm:'Acqua frizzante', pz:100,  cat:'Bevande' },
+  { id:'caffe',     nm:'Caffè',           pz:120,  cat:'Bevande' },
+  { id:'coca',      nm:'Coca Cola',       pz:250,  cat:'Bevande' },
+  { id:'cocaz',     nm:'Coca Cola Zero',  pz:250,  cat:'Bevande' },
+  { id:'fanta',     nm:'Fanta',           pz:250,  cat:'Bevande' },
+  { id:'sprite',    nm:'Sprite',          pz:250,  cat:'Bevande' },
+  { id:'schw',      nm:'Schweppes',       pz:200,  cat:'Bevande' },
+  { id:'gazz',      nm:'Gazzosa',         pz:200,  cat:'Bevande' },
+  { id:'estalim',   nm:'Estathè limone',  pz:250,  cat:'Bevande' },
+  { id:'estapes',   nm:'Estathè pesca',   pz:250,  cat:'Bevande' },
+  { id:'bras',      nm:'Brasilena',       pz:200,  cat:'Bevande' },
+  { id:'pata',      nm:'Patatine',        pz:150,  cat:'Snack' },
+  { id:'heine',     nm:'Heineken',        pz:300,  cat:'Birre' },
+  { id:'nastro',    nm:'Nastro Azzurro',  pz:300,  cat:'Birre' },
+  { id:'ichnu',     nm:'Ichnusa',         pz:300,  cat:'Birre' },
+  { id:'tenn',      nm:"Tennent's",       pz:350,  cat:'Birre' },
+  { id:'limon',     nm:'Limoncello',      pz:300,  cat:'Alcolici' },
+  { id:'amari',     nm:'Amari',           pz:300,  cat:'Alcolici' },
+  { id:'grappa',    nm:'Grappa',          pz:400,  cat:'Alcolici' },
+  { id:'spritz',    nm:'Spritz',          pz:600,  cat:'Alcolici' }
+];
+const CAT = ['Parco', 'Bevande', 'Birre', 'Snack', 'Alcolici'];
+const CATIC = { Parco:'bimbi', Bevande:'coca', Birre:'heine', Snack:'pata', Alcolici:'spritz' };
+const iconaCat = c => ICONE[CATIC[c]]();
+const prod = id => LISTINO.find(p => p.id === id);
+const eur = c => (c / 100).toFixed(2).replace('.', ',') + ' €';
+
+/* ---------- il motore, uguale per tutti ---------- */
+const TARIFFE = [[10,300],[15,450],[20,600],[30,700],[40,1000],[50,1200],[60,1200],
+                 [70,1500],[80,1650],[90,1900],[100,2200],[110,2400],[120,2400]];
+const prezzoTempo = m => { for (const t of TARIFFE) if (m <= t[0]) return t[1];
+                           return TARIFFE[TARIFFE.length-1][1]; };
+const TAGLI = [10,15,20,30,40,50,60,90,120];
+const etTempo = m => m >= 60 ? (m%60 ? Math.floor(m/60)+'h '+(m%60) : Math.floor(m/60)+'h') : m + "'";
+
+function nuovo() {
+  return { minuti:60, bimbi:2, crazy:1, bar:{ coca:2, pata:1 }, incassi:[],
+           cat:'Bevande', passo:0, apri:'Parco', dig:'', chi:{}, pers:['Mamma','Papà'], attiva:0,
+           mostra:false };
+}
+function righe(S) {
+  const out = [];
+  const nb = Math.max(1, S.bimbi);
+  out.push({ id:'bimbi', nm:'Ingresso ' + etTempo(S.minuti), q:nb, un:prezzoTempo(S.minuti), tipo:'parco' });
+  if (S.crazy > 0) out.push({ id:'crazy', nm:'Crazy Jumping', q:S.crazy, un:400, tipo:'crazy' });
+  for (const id in S.bar) if (S.bar[id] > 0) {
+    const p = prod(id); out.push({ id, nm:p.nm, q:S.bar[id], un:p.pz, tipo:'bar' });
+  }
+  return out;
+}
+const somma  = a => a.reduce((x,r) => x + r.q*r.un, 0);
+const totale = S => somma(righe(S));
+const preso  = S => S.incassi.reduce((x,i) => x + i.im, 0);
+const resta  = S => Math.max(0, totale(S) - preso(S));
+const perTipo = (S,t) => somma(righe(S).filter(r => r.tipo === t));
+const iconaId = id => (ICONE[id] || ICONE.acqua)();
+
+/* le azioni: tutte le versioni parlano questa lingua */
+function azione(S, a, v) {
+  const n = +v;
+  if (a === 'bar+')   S.bar[v] = (S.bar[v]||0) + 1;
+  if (a === 'bar-') { S.bar[v] = Math.max(0,(S.bar[v]||0) - 1); if (!S.bar[v]) delete S.bar[v]; }
+  if (a === 'barX')   delete S.bar[v];
+  if (a === 'min')    S.minuti = n;
+  if (a === 'min+')   S.minuti = Math.min(180, S.minuti + 5);
+  if (a === 'min-')   S.minuti = Math.max(5, S.minuti - 5);
+  if (a === 'bimbi')  S.bimbi = Math.max(0, S.bimbi + n);
+  if (a === 'crazy')  S.crazy = Math.max(0, S.crazy + n);
+  if (a === 'cat')    S.cat = v;
+  if (a === 'passo')  S.passo = n;
+  if (a === 'apri')   S.apri = (S.apri === v ? '' : v);
+  if (a === 'mostra') S.mostra = !S.mostra;
+  if (a === 'attiva') S.attiva = n;
+  if (a === 'chi')  { const r = righe(S), k = v; const q = (S.chi[k] == null ? -1 : S.chi[k]);
+                      S.chi[k] = q + 1 >= S.pers.length ? -1 : q + 1; }
+  if (a === 'dig')  { if (v === 'C') S.dig = ''; else if (v === '<') S.dig = S.dig.slice(0,-1);
+                      else S.dig = (S.dig + v).slice(0,6); }
+  if (a === 'paga') { const im = Math.min(n, resta(S)); if (im > 0) S.incassi.push({ im, et:'contanti' }); }
+  if (a === 'pagaE'){ const im = Math.min(n, resta(S));
+                      if (im > 0) S.incassi.push({ im, et:S.dig ? 'digitato' : 'contanti' }); S.dig = ''; }
+  if (a === 'tutto')  { const im = resta(S); if (im > 0) S.incassi.push({ im, et:'tutto' }); }
+  if (a === 'annulla') S.incassi.pop();
+  if (a === 'pagaP') { const q = quotaDi(S, n); const im = Math.min(q, resta(S));
+                       if (im > 0) S.incassi.push({ im, et:S.pers[n] }); }
+}
+function quotaDi(S, i) {
+  const r = righe(S); let t = 0;
+  r.forEach((x, k) => { if (S.chi[k] === i) t += x.q * x.un; });
+  return t;
+}
+
+/* ---------- pezzi condivisi ---------- */
+const cap = () =>
+  '<div class="cap"><div class="av">🧒</div><div><b>Luca &amp; Sara</b>' +
+  '<span><i class="dot"></i>braccialetto rosso · entrati 15:20</span></div>' +
+  '<button class="x">✕</button></div>';
+
+const cella = (p, q) =>
+  '<button class="cel' + (q ? ' q' : '') + '" data-a="bar+" data-v="' + p.id + '">' +
+  (q ? '<span class="bad">' + q + '</span>' : '') + icona(p) +
+  '<span class="nm">' + p.nm + '</span><span class="pz">' + eur(p.pz) + '</span></button>';
+
+const tabs = (S) => '<div class="tabs">' + CAT.map(c =>
+  '<button class="btn' + (S.cat === c ? ' on' : '') + '" data-a="cat" data-v="' + c + '">' + c + '</button>'
+).join('') + '</div>';
+
+const grigliaCat = (S) => '<div class="grid">' +
+  LISTINO.filter(p => p.cat === S.cat && !p.fisso).map(p => cella(p, S.bar[p.id] || 0)).join('') + '</div>';
+
+const bloccoParco = (S, compatto) =>
+  '<div class="fila" style="margin-bottom:8px">' + TAGLI.map(m =>
+    '<button class="btn' + (S.minuti === m ? ' on' : '') + '" data-a="min" data-v="' + m + '"' +
+    ' style="padding:8px 10px;font-size:13px">' + etTempo(m) + '</button>').join('') +
+  '<button class="btn mu" data-a="min-" style="padding:8px 10px">−5</button>' +
+  '<button class="btn mu" data-a="min+" style="padding:8px 10px">+5</button></div>' +
+  (compatto ? '' : '<div style="color:var(--mu);font-size:12px;margin-bottom:9px">' +
+    etTempo(S.minuti) + ' · <b style="color:var(--gi)">' + eur(prezzoTempo(S.minuti)) + '</b> a bambino</div>') +
+  '<div class="step" style="margin-bottom:7px">' + iconaId('bimbi') +
+    '<span class="nm">Bambini</span><button data-a="bimbi" data-v="-1">−</button>' +
+    '<span class="n">' + S.bimbi + '</span><button data-a="bimbi" data-v="1">+</button></div>' +
+  '<div class="step">' + iconaId('crazy') +
+    '<span class="nm">Crazy Jumping</span><button data-a="crazy" data-v="-1">−</button>' +
+    '<span class="n">' + S.crazy + '</span><button data-a="crazy" data-v="1">+</button></div>';
+
+const rigaConto = (r, i) =>
+  '<div class="rg">' + iconaId(r.id) +
+  '<span class="t">' + r.nm + '<small>' + r.q + ' × ' + eur(r.un) + '</small></span>' +
+  (r.tipo === 'bar'
+    ? '<span class="qq"><button data-a="bar-" data-v="' + r.id + '">−</button>' +
+      '<button data-a="bar+" data-v="' + r.id + '">+</button></span>'
+    : r.tipo === 'crazy'
+      ? '<span class="qq"><button data-a="crazy" data-v="-1">−</button>' +
+        '<button data-a="crazy" data-v="1">+</button></span>'
+      : '<span class="qq"><button data-a="bimbi" data-v="-1">−</button>' +
+        '<button data-a="bimbi" data-v="1">+</button></span>') +
+  '<span class="im">' + eur(r.q * r.un) + '</span></div>';
+
+const righeIncassi = (S) => S.incassi.map((i, k) =>
+  '<div class="rg pg">' + '<span style="width:26px;text-align:center">✓</span>' +
+  '<span class="t">Incassato<small>' + i.et + '</small></span>' +
+  (k === S.incassi.length - 1
+    ? '<span class="qq"><button data-a="annulla">↺</button></span>' : '') +
+  '<span class="im">− ' + eur(i.im) + '</span></div>').join('');
+
+const rigaTotale = (S) => {
+  const r = resta(S), p = preso(S);
+  return '<div class="tot"><span class="k">' + (r <= 0 ? 'pagato' : p > 0 ? 'restano' : 'totale') + '</span>' +
+    '<span class="v' + (r <= 0 ? ' ok' : '') + '">' + (r <= 0 ? '✓ ' + eur(totale(S)) : eur(r)) + '</span></div>';
+};
+
+const soldiRapidi = (S, tagli) => '<div class="fila">' + (tagli || [500,1000,2000,5000]).map(c =>
+  '<button class="btn" data-a="paga" data-v="' + c + '" style="flex:1;padding:9px 4px">' +
+  (c/100) + ' €</button>').join('') +
+  '<button class="btn" data-a="paga" data-v="' + Math.round(resta(S)/2) + '" style="flex:1;padding:9px 4px">metà</button></div>';
+
+/* =======================================================================
+   A · SCONTRINO — il conto è un rotolo: ogni cosa che succede è una riga,
+   anche i soldi che ti danno. Si toglie dove si legge.
+   ======================================================================= */
+function A(S) {
+  const r = righe(S);
+  return '<div class="pan">' + cap() +
+    '<div class="corpo">' +
+      tabs(S) +
+      (S.cat === 'Parco' ? bloccoParco(S, true) : grigliaCat(S)) +
+      '<p class="sott">Il rotolo</p>' +
+      r.map(rigaConto).join('') + righeIncassi(S) + rigaTotale(S) +
+    '</div>' +
+    '<div class="pie">' + soldiRapidi(S) +
+      '<button class="btn ok big w" data-a="tutto">' +
+      (resta(S) <= 0 ? 'Conto chiuso ✓' : 'Incassa tutto · ' + eur(resta(S))) + '</button>' +
+    '</div></div>';
+}
+
+/* =======================================================================
+   B · DUE METÀ — sopra si batte, sotto si legge. Il confine non si muove
+   mai, quindi il pollice impara dove stanno le cose.
+   ======================================================================= */
+function B(S) {
+  const r = righe(S);
+  return '<div class="pan">' + cap() +
+    '<div style="flex:0 0 292px;min-height:0;overflow-y:auto;padding:11px;border-bottom:2px solid var(--li)">' +
+      tabs(S) + (S.cat === 'Parco' ? bloccoParco(S, true) : grigliaCat(S)) +
+    '</div>' +
+    '<div class="corpo" style="padding-top:9px">' +
+      r.map(rigaConto).join('') + righeIncassi(S) +
+    '</div>' +
+    '<div class="pie">' + rigaTotale(S) + soldiRapidi(S) +
+      '<button class="btn ok big w" data-a="tutto">' +
+      (resta(S) <= 0 ? 'Conto chiuso ✓' : 'Incassa ' + eur(resta(S))) + '</button>' +
+    '</div></div>';
+}
+
+/* =======================================================================
+   C · TASTIERINO — chi sta in cassa sa i prezzi a memoria: digita la cifra
+   che gli danno e la butta dentro. Il resto lo calcola lui.
+   ======================================================================= */
+function C(S) {
+  const d = +(S.dig || 0), res = resta(S);
+  const cambio = d > res ? d - res : 0;
+  return '<div class="pan">' + cap() +
+    '<div class="corpo">' +
+      '<div class="disp"><small>ti danno</small>' + eur(d) + '</div>' +
+      '<div class="num">' +
+        [1,2,3,4,5,6,7,8,9].map(n => '<button data-a="dig" data-v="' + n + '">' + n + '</button>').join('') +
+        '<button data-a="dig" data-v="C" class="btn mu">C</button>' +
+        '<button data-a="dig" data-v="0">0</button>' +
+        '<button data-a="dig" data-v="<" class="btn mu">⌫</button>' +
+      '</div>' +
+      (cambio ? '<div style="margin-top:10px;background:#1B2A1F;border:1px solid #2E5A3C;' +
+        'border-radius:12px;padding:10px 12px;display:flex;justify-content:space-between">' +
+        '<span style="color:var(--ve);font-size:13px">resto da dare</span>' +
+        '<b style="color:var(--ve);font-size:18px">' + eur(cambio) + '</b></div>' : '') +
+      '<button class="btn w" data-a="mostra" style="margin-top:10px">' +
+        (S.mostra ? 'Nascondi le voci' : 'Voci del conto · ' + righe(S).length) + '</button>' +
+      (S.mostra ? '<div style="margin-top:9px">' + tabs(S) +
+        (S.cat === 'Parco' ? bloccoParco(S, true) : grigliaCat(S)) +
+        righe(S).map(rigaConto).join('') + '</div>' : '') +
+      righeIncassi(S) +
+    '</div>' +
+    '<div class="pie">' + rigaTotale(S) +
+      '<div class="fila"><button class="btn" style="flex:1" data-a="pagaE" data-v="' + Math.min(d,res) + '">' +
+      'Incassa ' + eur(Math.min(d, res)) + '</button>' +
+      '<button class="btn ok" style="flex:1" data-a="tutto">Chiudi ' + eur(res) + '</button></div>' +
+    '</div></div>';
+}
+
+/* =======================================================================
+   D · TRE PASSI — parco, bar, paga. Una cosa per volta, tasti grandi,
+   niente da cercare: alla terza schermata il conto è già fatto.
+   ======================================================================= */
+function D(S) {
+  const p = S.passo, r = righe(S);
+  const rail = '<div class="rail">' + ['Parco','Bar','Paga'].map((t,i) =>
+    '<div class="' + (i === p ? 'on' : i < p ? 'fatto' : '') + '" data-a="passo" data-v="' + i + '">' +
+    (i < p ? '✓ ' : '') + t + '</div>').join('') + '</div>';
+  let corpo = '';
+  if (p === 0) corpo = bloccoParco(S) +
+    '<div class="tot"><span class="k">parco</span><span class="v">' +
+    eur(perTipo(S,'parco') + perTipo(S,'crazy')) + '</span></div>';
+  if (p === 1) corpo = tabs(S) + grigliaCat(S) +
+    (r.filter(x => x.tipo === 'bar').length
+      ? '<p class="sott">Al bar</p>' + r.filter(x => x.tipo === 'bar').map(rigaConto).join('')
+      : '<p class="vuoto">Niente al bar, per ora</p>');
+  if (p === 2) corpo = r.map(rigaConto).join('') + righeIncassi(S) +
+    '<p class="sott">Quanto ti danno</p>' + soldiRapidi(S);
+  return '<div class="pan">' + cap() + rail +
+    '<div class="corpo">' + corpo + '</div>' +
+    '<div class="pie">' + rigaTotale(S) +
+      (p < 2
+        ? '<button class="btn on big w" data-a="passo" data-v="' + (p+1) + '">Avanti · ' +
+          ['Bar','Paga'][p] + '</button>'
+        : '<button class="btn ok big w" data-a="tutto">' +
+          (resta(S) <= 0 ? 'Conto chiuso ✓' : 'Incassa ' + eur(resta(S))) + '</button>') +
+    '</div></div>';
+}
+
+/* =======================================================================
+   E · GRIGLIA UNICA — nessuna categoria, nessun passo: tutto quello che
+   vendi in una sola schermata. Tocchi per aggiungere, tocchi il numero
+   per togliere. Zero navigazione.
+   ======================================================================= */
+function E(S) {
+  const cell = LISTINO.filter(p => !p.fisso).map(p => {
+    const q = S.bar[p.id] || 0;
+    return '<button class="cel' + (q ? ' q' : '') + '" data-a="bar+" data-v="' + p.id + '">' +
+      (q ? '<span class="bad" data-a="bar-" data-v="' + p.id + '">' + q + '</span>' : '') +
+      icona(p) + '<span class="nm">' + p.nm + '</span></button>';
+  }).join('');
+  const parco =
+    '<button class="cel q" data-a="bimbi" data-v="1">' +
+      '<span class="bad" data-a="bimbi" data-v="-1">' + S.bimbi + '</span>' +
+      iconaId('bimbi') + '<span class="nm">Ingresso</span></button>' +
+    '<button class="cel' + (S.crazy ? ' q' : '') + '" data-a="crazy" data-v="1">' +
+      (S.crazy ? '<span class="bad" data-a="crazy" data-v="-1">' + S.crazy + '</span>' : '') +
+      iconaId('crazy') + '<span class="nm">Crazy</span></button>';
+  return '<div class="pan">' + cap() +
+    '<div class="corpo">' +
+      '<div class="fila" style="margin-bottom:9px">' + TAGLI.map(m =>
+        '<button class="btn' + (S.minuti === m ? ' on' : '') + '" data-a="min" data-v="' + m + '"' +
+        ' style="padding:7px 9px;font-size:12.5px">' + etTempo(m) + '</button>').join('') + '</div>' +
+      '<div class="grid">' + parco + cell + '</div>' +
+    '</div>' +
+    '<div class="pie">' + rigaTotale(S) +
+      '<div class="fila"><button class="btn" style="flex:1" data-a="paga" data-v="1000">10 €</button>' +
+      '<button class="btn" style="flex:1" data-a="paga" data-v="2000">20 €</button>' +
+      '<button class="btn ok" style="flex:2" data-a="tutto">Incassa ' + eur(resta(S)) + '</button></div>' +
+    '</div></div>';
+}
+
+/* =======================================================================
+   F · TOTALE GIGANTE — la cifra è il protagonista, si legge a due metri.
+   Sotto ci sono solo pasticche: quello che c'è dentro si toglie con un
+   tocco, senza entrare in nessuna lista.
+   ======================================================================= */
+function F(S) {
+  const r = righe(S), res = resta(S);
+  const pasticche = r.map(x =>
+    '<span class="chip">' +
+    iconaId(x.id).replace('<svg', '<svg style="width:20px;height:20px;margin:-2px 0"') +
+    (x.q > 1 ? '<b>' + x.q + '×</b> ' : '') + x.nm +
+    ' <b>' + eur(x.q*x.un) + '</b>' +
+    '<button data-a="' + (x.tipo === 'bar' ? 'bar-' : x.tipo === 'crazy' ? 'crazy' : 'bimbi') + '"' +
+    ' data-v="' + (x.tipo === 'bar' ? x.id : '-1') + '">−</button></span>').join(' ');
+  return '<div class="pan">' + cap() +
+    '<div class="corpo">' +
+      '<div class="grande' + (res <= 0 ? ' ok' : '') + '">' + (res <= 0 ? '✓' : eur(res)) + '</div>' +
+      '<div class="sotto-grande">' + (res <= 0 ? 'pagato tutto' :
+        preso(S) > 0 ? 'restano · di ' + eur(totale(S)) : 'da incassare') + '</div>' +
+      '<div class="fila" style="gap:6px;margin-bottom:14px">' + pasticche + '</div>' +
+      '<button class="btn w" data-a="mostra">' + (S.mostra ? 'Chiudi' : '+ Aggiungi al conto') + '</button>' +
+      (S.mostra ? '<div style="margin-top:10px">' + tabs(S) +
+        (S.cat === 'Parco' ? bloccoParco(S, true) : grigliaCat(S)) + '</div>' : '') +
+      (S.incassi.length ? '<p class="sott">Già preso</p>' + righeIncassi(S) : '') +
+    '</div>' +
+    '<div class="pie">' + soldiRapidi(S) +
+      '<button class="btn ok big w" data-a="tutto">' +
+      (res <= 0 ? 'Conto chiuso ✓' : 'Incassa tutto') + '</button>' +
+    '</div></div>';
+}
+
+/* =======================================================================
+   G · PER PERSONA — pagare a pezzi non è un caso raro: qui il conto nasce
+   già diviso. Tocchi la riga per dire di chi è, e ognuno paga la sua.
+   ======================================================================= */
+function G(S) {
+  const r = righe(S);
+  const col = ['#3B8CFF','#B072FF','#FFD35C'];
+  const lin = r.map((x, k) => {
+    const c = S.chi[k];
+    return '<div class="rg">' + iconaId(x.id) +
+      '<span class="t">' + x.nm + '<small>' + x.q + ' × ' + eur(x.un) + '</small></span>' +
+      '<button class="btn" data-a="chi" data-v="' + k + '" style="padding:5px 9px;font-size:12px;' +
+      (c >= 0 ? 'background:' + col[c] + ';border-color:' + col[c] + ';color:#0F1116;font-weight:800' : '') +
+      '">' + (c >= 0 ? S.pers[c] : 'di chi?') + '</button>' +
+      '<span class="im">' + eur(x.q*x.un) + '</span></div>';
+  }).join('');
+  const persone = S.pers.map((p, i) => {
+    const q = quotaDi(S, i);
+    return '<div class="pers"><div class="ph">' +
+      '<span style="width:11px;height:11px;border-radius:50%;background:' + col[i] + '"></span>' +
+      '<b>' + p + '</b><span class="im">' + eur(q) + '</span>' +
+      '<button class="btn' + (q > 0 ? ' ok' : ' mu') + '" data-a="pagaP" data-v="' + i + '"' +
+      ' style="padding:6px 11px;font-size:13px">paga</button></div></div>';
+  }).join('');
+  const senza = r.reduce((a,x,k) => a + (S.chi[k] >= 0 ? 0 : x.q*x.un), 0);
+  return '<div class="pan">' + cap() +
+    '<div class="corpo">' + lin +
+      '<p class="sott">Chi paga cosa</p>' + persone +
+      (senza > 0 ? '<div class="pers"><div class="ph"><span style="width:11px;height:11px;' +
+        'border-radius:50%;background:#3A4152"></span><b style="color:var(--mu)">non assegnato</b>' +
+        '<span class="im">' + eur(senza) + '</span></div></div>' : '') +
+      (S.incassi.length ? '<p class="sott">Già preso</p>' + righeIncassi(S) : '') +
+      '<button class="btn w" data-a="mostra" style="margin-top:10px">' +
+        (S.mostra ? '▴ Chiudi' : '▾ Aggiungi al conto') + '</button>' +
+      (S.mostra ? '<div style="margin-top:9px">' + tabs(S) +
+        (S.cat === 'Parco' ? bloccoParco(S, true) : grigliaCat(S)) + '</div>' : '') +
+    '</div>' +
+    '<div class="pie">' + rigaTotale(S) +
+      '<button class="btn ok big w" data-a="tutto">' +
+      (resta(S) <= 0 ? 'Conto chiuso ✓' : 'Paga il resto · ' + eur(resta(S))) + '</button>' +
+    '</div></div>';
+}
+
+/* =======================================================================
+   H · CRONOLOGIA — tutto è un fatto in ordine di tempo: hai aggiunto, hai
+   tolto, ti hanno dato venti euro. L'annulla è naturale perché è solo
+   l'ultimo fatto della lista.
+   ======================================================================= */
+function H(S) {
+  const r = righe(S);
+  const ev = r.map(x =>
+    '<div class="ev">' + iconaId(x.id) + '<span class="t">' + x.nm +
+    (x.q > 1 ? ' <b>×' + x.q + '</b>' : '') + '</span>' +
+    '<span class="im">' + eur(x.q*x.un) + '</span>' +
+    '<button class="btn mu" data-a="' + (x.tipo === 'bar' ? 'bar-' : x.tipo === 'crazy' ? 'crazy' : 'bimbi') +
+    '" data-v="' + (x.tipo === 'bar' ? x.id : '-1') + '" style="padding:3px 8px;font-size:12px">−</button></div>'
+  ).join('');
+  const pg = S.incassi.map((i, k) =>
+    '<div class="ev pg"><span style="width:26px;text-align:center">💶</span>' +
+    '<span class="t">ti hanno dato</span><span class="im">− ' + eur(i.im) + '</span>' +
+    (k === S.incassi.length-1 ? '<button class="btn mu" data-a="annulla" style="padding:3px 8px;font-size:12px">↺</button>' : '') +
+    '</div>').join('');
+  return '<div class="pan">' + cap() +
+    '<div class="corpo">' +
+      '<p class="sott">Cosa è successo</p>' + ev + pg +
+      '<p class="sott">Aggiungi</p>' + tabs(S) +
+      (S.cat === 'Parco' ? bloccoParco(S, true) : grigliaCat(S)) +
+    '</div>' +
+    '<div class="pie">' + rigaTotale(S) + soldiRapidi(S) +
+      '<button class="btn ok big w" data-a="tutto">' +
+      (resta(S) <= 0 ? 'Conto chiuso ✓' : 'Incassa ' + eur(resta(S))) + '</button>' +
+    '</div></div>';
+}
+
+/* =======================================================================
+   I · PREFERITI — l'ottanta per cento di quello che esce dal banco sta in
+   sei tasti giganti. Tutto il resto vive in un cassetto che apri di rado.
+   ======================================================================= */
+function I(S) {
+  const top = ['coca','acqua','pata','heine','caffe','estapes'];
+  const gigante = (id, extra) => {
+    const p = prod(id), q = S.bar[id] || 0;
+    return '<button class="cel' + (q ? ' q' : '') + '" data-a="bar+" data-v="' + id +
+      '" style="padding:14px 6px 11px">' +
+      (q ? '<span class="bad" data-a="bar-" data-v="' + id + '" style="width:26px;height:26px;font-size:14px">' + q + '</span>' : '') +
+      '<span style="display:block">' + icona(p).replace('<svg', '<svg style="width:50px;height:50px"') + '</span>' +
+      '<span class="nm" style="font-size:12.5px">' + p.nm + '</span></button>';
+  };
+  return '<div class="pan">' + cap() +
+    '<div class="corpo">' +
+      '<div class="grid" style="grid-template-columns:repeat(3,1fr);gap:8px">' +
+        top.map(gigante).join('') + '</div>' +
+      '<p class="sott">Parco</p>' + bloccoParco(S, true) +
+      '<button class="btn w" data-a="mostra" style="margin-top:10px">' +
+        (S.mostra ? '▴ Chiudi il cassetto' : '▾ Tutto il resto del listino') + '</button>' +
+      (S.mostra ? '<div style="margin-top:9px">' + tabs(S) + grigliaCat(S) + '</div>' : '') +
+      '<p class="sott">Conto</p>' + righe(S).map(rigaConto).join('') + righeIncassi(S) +
+    '</div>' +
+    '<div class="pie">' + rigaTotale(S) + soldiRapidi(S) +
+      '<button class="btn ok big w" data-a="tutto">' +
+      (resta(S) <= 0 ? 'Conto chiuso ✓' : 'Incassa ' + eur(resta(S))) + '</button>' +
+    '</div></div>';
+}
+
+/* =======================================================================
+   J · IL TEMPO COMANDA — nel parco il prezzo lo fa l'orologio, non la
+   lista: qui il tempo è grande al centro e il bar è un'appendice che si
+   apre solo se serve.
+   ======================================================================= */
+function J(S) {
+  const pz = prezzoTempo(S.minuti), bar = perTipo(S,'bar');
+  return '<div class="pan">' + cap() +
+    '<div class="corpo">' +
+      '<div class="grande">' + etTempo(S.minuti) + '</div>' +
+      '<div class="sotto-grande">' + eur(pz) + ' a bambino</div>' +
+      '<div class="fila" style="justify-content:center;margin-bottom:12px">' +
+        '<button class="btn big" data-a="min-" style="flex:1">− 5</button>' +
+        '<button class="btn big" data-a="min+" style="flex:1">+ 5</button></div>' +
+      '<div class="fila" style="margin-bottom:14px">' + TAGLI.map(m =>
+        '<button class="btn' + (S.minuti === m ? ' on' : '') + '" data-a="min" data-v="' + m +
+        '" style="flex:1;padding:9px 2px;font-size:13px">' + etTempo(m) + '</button>').join('') + '</div>' +
+      '<div class="step" style="margin-bottom:7px">' + iconaId('bimbi') +
+        '<span class="nm">Bambini <b>' + eur(Math.max(1,S.bimbi)*pz) + '</b></span>' +
+        '<button data-a="bimbi" data-v="-1">−</button><span class="n">' + S.bimbi + '</span>' +
+        '<button data-a="bimbi" data-v="1">+</button></div>' +
+      '<div class="step">' + iconaId('crazy') +
+        '<span class="nm">Crazy <b>' + eur(S.crazy*400) + '</b></span>' +
+        '<button data-a="crazy" data-v="-1">−</button><span class="n">' + S.crazy + '</span>' +
+        '<button data-a="crazy" data-v="1">+</button></div>' +
+      '<button class="btn w" data-a="mostra" style="margin-top:12px;display:flex;justify-content:space-between">' +
+        '<span>' + (S.mostra ? '▴' : '▾') + ' Bar</span><b>' + eur(bar) + '</b></button>' +
+      (S.mostra ? '<div style="margin-top:9px">' + tabs(S) + grigliaCat(S) +
+        righe(S).filter(x => x.tipo === 'bar').map(rigaConto).join('') + '</div>' : '') +
+      righeIncassi(S) +
+    '</div>' +
+    '<div class="pie">' + rigaTotale(S) + soldiRapidi(S) +
+      '<button class="btn ok big w" data-a="tutto">' +
+      (resta(S) <= 0 ? 'Conto chiuso ✓' : 'Incassa ' + eur(resta(S))) + '</button>' +
+    '</div></div>';
+}
+
+/* =======================================================================
+   K · FISARMONICA — tre cassetti, uno aperto per volta. Quelli chiusi
+   restano lì col loro totale, così sai sempre a che punto sei senza
+   perdere di vista niente.
+   ======================================================================= */
+function K(S) {
+  const sez = (nome, im, dentro, extra) =>
+    '<div class="fis' + (S.apri === nome ? ' on' : '') + '">' +
+    '<button class="ft" data-a="apri" data-v="' + nome + '"><b>' + nome + '</b>' +
+    (extra ? '<span class="fr">' + extra + '</span>' : '') +
+    '<span class="im">' + im + '</span><span class="fr">' + (S.apri === nome ? '▴' : '▾') + '</span></button>' +
+    (S.apri === nome ? '<div class="fc">' + dentro + '</div>' : '') + '</div>';
+  return '<div class="pan">' + cap() +
+    '<div class="corpo">' +
+      sez('Parco', eur(perTipo(S,'parco') + perTipo(S,'crazy')), bloccoParco(S),
+          etTempo(S.minuti) + ' · ' + S.bimbi + ' bimbi') +
+      sez('Bar', eur(perTipo(S,'bar')),
+          tabs(S) + grigliaCat(S) + righe(S).filter(x => x.tipo === 'bar').map(rigaConto).join(''),
+          righe(S).filter(x => x.tipo === 'bar').length + ' voci') +
+      sez('Pagamento', eur(preso(S)),
+          soldiRapidi(S) + '<div style="height:8px"></div>' +
+          '<button class="btn ok w" data-a="tutto">Incassa tutto · ' + eur(resta(S)) + '</button>' +
+          righeIncassi(S),
+          preso(S) > 0 ? 'in parte' : 'niente') +
+    '</div>' +
+    '<div class="pie">' + rigaTotale(S) + '</div></div>';
+}
+
+/* =======================================================================
+   L · CONTO APERTO — nessun modo da scegliere: due numeri grandi, quanto
+   hanno dato e quanto manca. Come la lavagnetta del bar di paese: segni
+   i soldi che arrivano e basta.
+   ======================================================================= */
+function L(S) {
+  const res = resta(S);
+  return '<div class="pan">' + cap() +
+    '<div class="corpo">' +
+      '<div class="lav">' +
+        '<div><div class="k">hanno dato</div><div class="v ve">' + eur(preso(S)) + '</div></div>' +
+        '<div><div class="k">manca</div><div class="v ' + (res <= 0 ? 've' : 'gi') + '">' +
+          (res <= 0 ? '✓' : eur(res)) + '</div></div>' +
+      '</div>' +
+      '<div class="fila" style="margin-bottom:6px">' +
+        [500,1000,1500,2000,5000].map(c =>
+          '<button class="btn" data-a="paga" data-v="' + c + '" style="flex:1;padding:11px 2px">' +
+          (c/100) + '</button>').join('') + '</div>' +
+      '<div class="fila" style="margin-bottom:14px">' +
+        '<button class="btn" style="flex:1" data-a="paga" data-v="' + Math.round(res/2) + '">metà</button>' +
+        '<button class="btn ok" style="flex:2" data-a="tutto">tutto · ' + eur(res) + '</button>' +
+        '<button class="btn mu" style="flex:1" data-a="annulla">↺</button></div>' +
+      '<p class="sott">Cosa hanno preso</p>' +
+      righe(S).map(rigaConto).join('') +
+      '<p class="sott">Aggiungi</p>' + tabs(S) +
+      (S.cat === 'Parco' ? bloccoParco(S, true) : grigliaCat(S)) +
+    '</div>' +
+    '<div class="pie"><div class="tot"><span class="k">conto</span>' +
+      '<span class="v">' + eur(totale(S)) + '</span></div></div>';
+}
+
+/* ---------- montaggio ---------- */
+const CASI = [
+  ['A','Scontrino','Il conto è un <b>rotolo</b>: ogni cosa che succede è una riga, anche i soldi che ti danno. Si toglie dove si legge.', A],
+  ['B','Due metà','Sopra si batte, sotto si legge. Il <b>confine non si muove mai</b>, così il pollice impara dove stanno le cose.', B],
+  ['C','Tastierino','Chi sta in cassa i prezzi li sa: <b>digita la cifra</b> che gli danno e il resto lo calcola l\'app.', C],
+  ['D','Tre passi','Parco, bar, paga. <b>Una cosa per volta</b>, tasti grandi, niente da cercare.', D],
+  ['E','Griglia unica','Niente categorie e niente passi: <b>tutto in una schermata</b>. Tocchi per aggiungere, tocchi il numero per togliere.', E],
+  ['F','Totale gigante','La cifra <b>si legge a due metri</b>. Sotto solo pasticche: quello che c\'è dentro si toglie con un tocco.', F],
+  ['G','Per persona','Il conto <b>nasce già diviso</b>: dici di chi è ogni riga e ognuno paga la sua.', G],
+  ['H','Cronologia','Tutto è un fatto in ordine di tempo. <b>L\'annulla è naturale</b> perché è solo l\'ultimo fatto.', H],
+  ['I','Preferiti','L\'ottanta per cento del banco in <b>sei tasti giganti</b>; il resto in un cassetto che apri di rado.', I],
+  ['J','Il tempo comanda','Nel parco il prezzo lo fa l\'orologio: <b>il tempo è grande al centro</b>, il bar è un\'appendice.', J],
+  ['K','Fisarmonica','Tre cassetti, <b>uno aperto per volta</b>; quelli chiusi mostrano il loro totale.', K],
+  ['L','Conto aperto','Nessun modo da scegliere: <b>quanto hanno dato, quanto manca</b>. La lavagnetta del bar di paese.', L]
+];
+const gr = document.getElementById('griglia');
+CASI.forEach(([lett, nome, idea, ren]) => {
+  const box = document.createElement('div');
+  box.className = 'caso';
+  box.innerHTML = '<div class="testa"><div class="lett">' + lett + '</div><div>' +
+    '<h2>' + nome + '</h2><p class="idea">' + idea + '</p></div></div>' +
+    '<div class="tel"></div>';
+  gr.appendChild(box);
+  const tel = box.querySelector('.tel');
+  const S = nuovo();
+  const dis = () => { tel.innerHTML = ren(S); };
+  tel.addEventListener('click', e => {
+    const b = e.target.closest('[data-a]');
+    if (!b) return;
+    e.stopPropagation();
+    azione(S, b.dataset.a, b.dataset.v);
+    dis();
+  });
+  dis();
+});
+</script>
