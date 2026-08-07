@@ -67,9 +67,14 @@ h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 10px; }
    scritta gigante DIETRO la card, come una filigrana. */
 .tess { position: relative; background: var(--carta); border-radius: 22px;
   box-shadow: 0 4px 14px rgba(0,0,0,.3); overflow: hidden; display: flex; flex-direction: column; }
-.tess .su { position: relative; overflow: hidden; border: none; background: none; font: inherit;
-  color: inherit; cursor: pointer; padding: 13px; display: flex; align-items: center; gap: 12px;
-  width: 100%; text-align: left; }
+/* flex:1 sulla testa: quando su una riga c'e' una card piu' alta (una
+   selezionata o una saldata), le altre si allungano per pareggiarla e
+   lo spazio in piu' se lo prende la TESTA. Cosi' le fasce dei tasti
+   restano incollate al fondo della card e non resta mai una striscia
+   morta sotto, dove premevi e non succedeva niente. */
+.tess .su { flex: 1; position: relative; overflow: hidden; border: none; background: none;
+  font: inherit; color: inherit; cursor: pointer; padding: 13px; display: flex;
+  align-items: center; gap: 12px; width: 100%; text-align: left; }
 .tess .su svg { width: 64px; height: 64px; flex: 0 0 auto; position: relative; z-index: 1; }
 .tess .testi { position: relative; z-index: 1; flex: 1; min-width: 0; min-height: 64px;
   display: flex; flex-direction: column; justify-content: center; gap: 6px; }
@@ -118,7 +123,9 @@ h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 10px; }
   font-family: 'Fredoka', sans-serif; font-size: 23px; font-weight: 700; color: var(--txt); }
 .tess.preso .chip { background: var(--sel); color: #06162E; }
 .tess.saldata .chip { background: var(--soldi); color: #06251A; }
-.tess .zone.v .chip { background: #10402F; color: #7FE8C1; font-size: 18px; }
+/* la pasticca verde senza anello ne' ombra: sul verde il contorno
+   scuro sembrava una crepa */
+.tess .zone.v .chip { background: #10402F; color: #7FE8C1; font-size: 18px; box-shadow: none; }
 .tess.saldata .zone.v .chip { background: var(--soldi); color: #06251A; }
 .tess.saldata { background: #10241D; box-shadow: 0 0 0 3px var(--soldi) inset, 0 6px 18px rgba(25,192,138,.24); }
 .tess.saldata .pr { color: #7FE8C1; }

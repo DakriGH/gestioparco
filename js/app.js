@@ -2044,7 +2044,39 @@ function entryCard(entry) {
    senza aprire un ingresso. Ci sono comunque bambini, Crazy e le
    fasce di tempo, cosi' da qui parte anche un ingresso vero.
    ============================================================ */
-const cassa = { bar: [], children: 0, crazy: 0, minutes: 0 };
+const cassa = { bar: [], children: 0, crazy: 0, minutes: 0, pagate: {}, cat: null };
+
+/* ---------- quanto costa una voce, adesso ---------- */
+const bcMinuti = () => cassa.minutes || settings.defaultMinutes || 60;
+const bcPrezzoBimbo = () => priceFor(up5(bcMinuti()));
+function bcVoce(id) {
+  if (id === 'bimbi') return { id: 'bimbi', name: 'Bambini', price: bcPrezzoBimbo(), em: '\ud83e\uddd2' };
+  if (id === 'crazy') return { id: 'crazy', name: 'Crazy Jumping', price: num(settings.crazyJumpingPrice, 0), em: '\ud83e\udd38' };
+  return (settings.barMenu || []).find(x => x.id === id) || null;
+}
+function bcQ(id) {
+  if (id === 'bimbi') return clamp(cassa.children, 0, 9999);
+  if (id === 'crazy') return clamp(cassa.crazy, 0, 9999);
+  const bi = cassa.bar.find(x => x.id === id);
+  return bi ? clamp(bi.qty, 0, 9999) : 0;
+}
+function bcSetQ(id, n) {
+  n = clamp(n, 0, 9999);
+  if (id === 'bimbi') { cassa.children = n; }
+  else if (id === 'crazy') { cassa.crazy = n; }
+  else {
+    const v = bcVoce(id); if (!v) return;
+    let bi = cassa.bar.find(x => x.id === id);
+    if (!bi) { bi = { id: id, name: v.name, price: v.price, qty: 0 }; cassa.bar.push(bi); }
+    bi.qty = n; bi.price = v.price; bi.name = v.name;
+    if (n <= 0) cassa.bar = cassa.bar.filter(x => x.qty > 0);
+  }
+  /* se toglie roba dal conto, non puo' restare "pagata" piu' di quanta
+     ce n'e' rimasta */
+  if (cassa.pagate[id]) cassa.pagate[id] = Math.min(cassa.pagate[id], n);
+}
+const bcPag = id => clamp(num(cassa.pagate[id], 0), 0, bcQ(id));
+const bcTotVoce = id => { const v = bcVoce(id); return v ? bcQ(id) * num(v.price, 0) : 0; };
 
 function cassaBarTot() {
   return cassa.bar.reduce((a, i) => a + num(i.price, 0) * num(i.qty, 0), 0);
@@ -2053,157 +2085,141 @@ function cassaBarTot() {
    vuol dire "e' passato solo a bere", non "un ingresso da uno". */
 function cassaParcoTot() {
   if (cassa.children <= 0) return 0;
-  const finto = {
-    children: cassa.children, crazyJumping: cassa.crazy,
-    durationMinutes: cassa.minutes || settings.defaultMinutes || 60,
-    payLater: false, barItems: []
-  };
-  const c = costOf(finto);
-  return Math.round((c.parkTotal + c.crazyCost) * 100) / 100;
+  return Math.round(bcTotVoce('bimbi') * 100) / 100;
 }
-function cassaTot() { return Math.round((cassaBarTot() + cassaParcoTot()) * 100) / 100; }
+function cassaCrazyTot() { return Math.round(bcTotVoce('crazy') * 100) / 100; }
+function cassaTot() {
+  return Math.round((cassaBarTot() + cassaParcoTot() + cassaCrazyTot()) * 100) / 100;
+}
+function cassaPagato() {
+  let t = (cassa.children > 0 ? bcPag('bimbi') * bcPrezzoBimbo() : 0) +
+          bcPag('crazy') * num(settings.crazyJumpingPrice, 0);
+  cassa.bar.forEach(bi => { t += bcPag(bi.id) * num(bi.price, 0); });
+  return Math.round(Math.min(t, cassaTot()) * 100) / 100;
+}
+const cassaResta = () => Math.max(0, Math.round((cassaTot() - cassaPagato()) * 100) / 100);
 
+/* le categorie: il Parco davanti, poi quelle vere del menu */
+function bcCategorie() {
+  const out = ['Parco'];
+  (settings.barMenu || []).forEach(it => {
+    const c = (it.cat || 'Altro').trim() || 'Altro';
+    if (out.indexOf(c) < 0) out.push(c);
+  });
+  return out;
+}
+function bcVociDi(cat) {
+  if (cat === 'Parco') return [bcVoce('bimbi'), bcVoce('crazy')];
+  return (settings.barMenu || []).filter(it => ((it.cat || 'Altro').trim() || 'Altro') === cat);
+}
+
+/* ---------- i pezzi disegnati ---------- */
+function bcTempoBlocco() {
+  const TAGLI = [10, 15, 20, 30, 40, 50, 60, 90, 120];
+  const dur = m => m >= 60 ? (Math.floor(m / 60) + 'h' + (m % 60 ? ' ' + (m % 60) + "'" : '')) : m + "'";
+  const m = bcMinuti();
+  return '<div class="bc-tempo">' +
+    '<div class="bc-tempo-k">Quanto restano ' +
+      '<b>' + dur(m) + '</b> \u00b7 <b class="q">' + eur(bcPrezzoBimbo()) + '</b> a bambino</div>' +
+    '<div class="bc-chips">' + TAGLI.map(t =>
+      '<button data-min="' + t + '"' + (m === t ? ' class="on"' : '') + '>' + dur(t) + '</button>').join('') +
+      '<button data-min="meno">\u22125</button><button data-min="piu">+5</button></div>' +
+    '<div class="bc-chips bc-allunga"><span class="et">Allunga</span>' +
+      '<button data-est="15">+15\'</button><button data-est="30">+30\'</button>' +
+      '<button data-est="60">+1h</button>' +
+      '<button data-solobar class="solo">\ud83e\udd64 Solo bar</button></div>' +
+  '</div>';
+}
+
+function bcCard(v) {
+  if (!v) return '';
+  const q = bcQ(v.id), pg = bcPag(v.id);
+  const saldata = q > 0 && pg >= q;
+  return '<div class="bc-card' + (saldata ? ' saldata' : (q ? ' presa' : '')) + '">' +
+    '<button class="bc-su" data-add="' + v.id + '">' +
+      (q > 0 ? '<span class="bc-fant">' + q + '</span>' : '') +
+      iconaBar(v.name, v.em) +
+      '<span class="bc-testi"><span class="bc-pr">' + eur(v.price) + '</span>' +
+      '<span class="bc-nm">' + esc(v.name) + '</span></span></button>' +
+    (q > 0
+      ? '<div class="bc-zone"><span class="bc-chip">' + q + '</span>' +
+        '<button data-meno="' + v.id + '">\u2212</button>' +
+        '<button data-add="' + v.id + '">+</button></div>' +
+        '<div class="bc-zone v"><span class="bc-chip">' + pg + '/' + q + '</span>' +
+        '<button data-pmeno="' + v.id + '"' + (pg <= 0 ? ' disabled' : '') + '>\u2212</button>' +
+        '<button data-ppiu="' + v.id + '"' + (pg >= q ? ' disabled' : '') + '>+</button></div>'
+      : '') +
+  '</div>';
+}
+
+function bcFondo() {
+  const tot = cassaTot(), pag = cassaPagato(), resta = cassaResta();
+  const parte = (nome, id, im) => {
+    const p = id === 'bar' ? bcPagatoBar() : (bcQ(id) > 0 ? bcPag(id) * num(bcVoce(id).price, 0) : 0);
+    const fatto = im > 0 && p >= im - 0.005;
+    return '<div class="bc-parte' + (fatto ? ' fatta' : '') + '">' +
+      '<span class="k">' + nome + '</span><span class="v num">' + eur(im) + '</span>' +
+      /* il tasto PRIMA della scritta "pagato X": quella prende tutta la
+         riga, e se stesse in mezzo spingerebbe il tasto su una terza
+         riga facendo diventare il blocco alto il doppio */
+      (im > 0
+        ? (fatto
+          ? '<button class="paga ok" data-desez="' + id + '">\u2713</button>'
+          : '<button class="paga" data-sez="' + id + '">paga</button>')
+        : '') +
+      (p > 0 && !fatto ? '<span class="q">pagato ' + eur(p) + '</span>' : '') + '</div>';
+  };
+  return '<div class="bc-fondo">' +
+    '<div class="bc-parti">' +
+      parte('Totale Parco', 'bimbi', cassaParcoTot()) +
+      parte('Totale Crazy', 'crazy', cassaCrazyTot()) +
+      parte('Totale Bar', 'bar', cassaBarTot()) +
+    '</div>' +
+    '<div class="bc-conto"><div>' +
+      '<span class="k">' + (tot <= 0 ? 'niente sul conto' : resta > 0 ? (pag > 0 ? 'restano' : 'da incassare') : 'tutto pagato') + '</span>' +
+      '<span class="v num">' + (tot <= 0 ? eur(0) : resta > 0 ? eur(resta) : '\u2713 ' + eur(tot)) + '</span>' +
+      (pag > 0 && resta > 0 ? '<span class="gia">gi\u00e0 presi ' + eur(pag) + '</span>' : '') +
+    '</div><div class="bc-tasti">' +
+      (pag > 0 && resta > 0 ? '<button class="btn" data-azzera>\u21ba Azzera</button>' : '') +
+      (resta > 0 ? '<button class="btn" data-resto>\ud83e\uddee Resto</button>' +
+        '<button class="btn btn-ok" data-tutto>Paga tutto</button>' : '') +
+      (tot > 0 && resta <= 0 ? '<button class="btn btn-ok" data-chiudi>\u2705 Incassa e chiudi</button>' : '') +
+    '</div></div></div>';
+}
+function bcPagatoBar() {
+  return Math.round(cassa.bar.reduce((a, bi) => a + bcPag(bi.id) * num(bi.price, 0), 0) * 100) / 100;
+}
+function bcSegna(quali, pieno) {
+  const ids = quali === 'bar' ? cassa.bar.map(x => x.id) : [quali];
+  ids.forEach(id => { cassa.pagate[id] = pieno ? bcQ(id) : 0; });
+}
+
+/* ============================================================
+   BAR & CONTO — la terza linguetta.
+   Per chi passa solo a consumare, o per segnare una cosa al volo senza
+   aprire un ingresso. Ogni voce ha DUE contatori: quante ne ha prese e
+   quante ne ha gia' pagate, cosi' pagare a pezzi non e' un caso
+   speciale ma la cosa normale.
+   ============================================================ */
 function buildCassaView() {
   const root = $('#view-cassa');
-  root.innerHTML = '';
+  const cats = bcCategorie();
+  if (!cassa.cat || cats.indexOf(cassa.cat) < 0) cassa.cat = cats.indexOf('Bevande') >= 0 ? 'Bevande' : cats[0];
 
-  const testa = el('div', 'cassa-testa');
-  const tot = el('div', 'cassa-tot');
-  tot.appendChild(el('span', 'k', 'da incassare'));
-  const totV = el('span', 'v num', eur(0));
-  tot.appendChild(totV);
-  testa.appendChild(tot);
-  const tasti = el('div', 'cassa-tasti');
-  const incassa = el('button', 'btn btn-ok', '\u2705 Incassa');
-  const restoBtn = el('button', 'btn btn-resto', '\ud83e\uddee Resto');
-  tasti.appendChild(incassa);
-  tasti.appendChild(restoBtn);
-  testa.appendChild(tasti);
-  root.appendChild(testa);
-  const restoQui = el('div');
-  root.appendChild(restoQui);
-
-  /* Gli stessi blocchi di "Nuovo", nello stesso ordine e con gli stessi
-     pezzi: quanto restano (ambra), bambini e attrazioni (verde), bar
-     (ciano). Prima questa vista aveva una faccia tutta sua. */
-
-  const cTempo = el('div', 'card blk c-ambra');
-  cTempo.innerHTML = '<h2><span class="em">\u23f3</span> Quanto restano</h2>';
-  const inTempo = el('div', 'blk-in');
-  const tempi = el('div', 'chips');
-  const OPZ = [[10, '10m'], [15, '15m'], [30, '30m'], [60, '1h']];
-  const chipTempo = [];
-  OPZ.forEach(o => {
-    const b = el('button', 'chip');
-    b.textContent = o[1];
-    b.onclick = () => { cassa.minutes = o[0]; rinfresca(); };
-    chipTempo.push([b, o[0]]);
-    tempi.appendChild(b);
-  });
-  const soloBar = el('button', 'chip', '\ud83e\udd64 Solo bar');
-  soloBar.onclick = () => { cassa.minutes = 0; cassa.children = 0; cassa.crazy = 0; rinfresca(); };
-  chipTempo.push([soloBar, 0]);
-  tempi.appendChild(soloBar);
-  inTempo.appendChild(tempi);
-
-  const custom = el('div', 'dur-custom');
-  custom.appendChild(el('span', 'lab', 'oppure minuti esatti'));
-  const meno = el('button', 'step-b sm', '\u2212');
-  const inp = el('input');
-  inp.type = 'number'; inp.min = '5'; inp.step = '5'; inp.inputMode = 'numeric';
-  inp.value = cassa.minutes || 60;
-  const piu = el('button', 'step-b sm plus', '+');
-  meno.onclick = () => { cassa.minutes = Math.max(5, (cassa.minutes || 60) - 5); rinfresca(); };
-  piu.onclick = () => { cassa.minutes = Math.min(600, (cassa.minutes || 0) + 5); rinfresca(); };
-  inp.oninput = () => { cassa.minutes = clamp(parseInt(inp.value, 10) || 0, 0, 600); rinfresca({ nonToccareInput: true }); };
-  custom.appendChild(meno); custom.appendChild(inp); custom.appendChild(piu);
-  inTempo.appendChild(custom);
-  cTempo.appendChild(inTempo);
-
-  const cNum = el('div', 'card blk c-verde');
-  cNum.innerHTML = '<h2><span class="em">\ud83e\uddd2</span> Bambini e attrazioni</h2>';
-  const inNum = el('div', 'blk-in');
-  const conta = el('div', 'counters');
-  const contatore = (em, testo, chiave) => {
-    const box = el('div', 'counter');
-    const lab = el('div', 'c-lab');
-    lab.innerHTML = '<span class="em">' + em + '</span> ' + testo;
-    const m = el('button', 'step-b', '\u2212');
-    const v = el('div', 'c-val num', '0');
-    const p = el('button', 'step-b plus', '+');
-    m.onclick = () => { cassa[chiave] = Math.max(0, cassa[chiave] - 1); rinfresca(); };
-    p.onclick = () => { cassa[chiave] = cassa[chiave] + 1; rinfresca(); };
-    box.appendChild(lab); box.appendChild(m); box.appendChild(v); box.appendChild(p);
-    conta.appendChild(box);
-    return { v: v, m: m };
+  const dis = () => {
+    root.innerHTML =
+      '<div class="bc-cat">' + cats.map(c =>
+        '<button data-cat="' + esc(c) + '"' + (cassa.cat === c ? ' class="on"' : '') + '>' + esc(c) + '</button>').join('') + '</div>' +
+      (cassa.cat === 'Parco' ? bcTempoBlocco() : '') +
+      '<div class="bc-griglia">' + bcVociDi(cassa.cat).map(bcCard).join('') + '</div>' +
+      '<div class="bc-resto"></div>' +
+      bcFondo() +
+      '<div class="cassa-fondo">' +
+        '<button class="btn" data-svuota>\ud83e\uddf9 Svuota</button>' +
+        '<button class="btn btn-primary" data-ingresso>\u27a1\ufe0f Fanne un ingresso' +
+          (cassa.children > 0 ? '' : ' da 1') + '</button>' +
+      '</div>';
   };
-  const cBimbi = contatore('\ud83e\uddd2', 'Bambini', 'children');
-  const cCrazy = contatore('\ud83e\udd38', 'Crazy Jumping', 'crazy');
-  inNum.appendChild(conta);
-  inNum.appendChild(el('div', 'hint', 'Zero bambini vuol dire che \u00e8 passato solo a consumare: il parco non si conta.'));
-  cNum.appendChild(inNum);
-
-  const cBar = el('div', 'card blk c-ciano');
-  const testaBar = el('div', 'sect-head');
-  testaBar.innerHTML = '<h2><span class="em">\ud83e\udd64</span> Bar</h2>';
-  cBar.appendChild(testaBar);
-  const inBar = el('div', 'blk-in');
-  const barBox = el('div');
-  buildBarRows(barBox, () => cassa.bar, () => { rinfresca(); });
-  inBar.appendChild(barBox);
-  cBar.appendChild(inBar);
-
-  root.appendChild(cTempo);
-  root.appendChild(cNum);
-  root.appendChild(cBar);
-
-  /* --- in fondo: svuota, oppure fallo diventare un ingresso vero --- */
-  const fondo = el('div', 'cassa-fondo');
-  const svuota = el('button', 'btn', '\ud83e\uddf9 Svuota');
-  svuota.onclick = () => {
-    cassa.bar = []; cassa.children = 0; cassa.crazy = 0; cassa.minutes = 0;
-    buildCassaView();
-  };
-  const diventa = el('button', 'btn btn-primary', '\u27a1\ufe0f Fanne un ingresso');
-  diventa.onclick = () => {
-    /* Qui si fa un ingresso NUOVO: se restava acceso "sto modificando
-       quell'altro", premere Registra lo avrebbe sovrascritto. */
-    editingId = null;
-    draft.children = Math.max(1, cassa.children);
-    draft.crazyJumping = cassa.crazy;
-    draft.durationMinutes = cassa.minutes || settings.defaultMinutes || 60;
-    draft.barItems = JSON.parse(JSON.stringify(cassa.bar));
-    draft.startTime = roundTo5(new Date()).getTime();
-    draft.payLater = false;
-    draft.people = [];
-    draft.braceletColor = null;
-    draft.braceletCustom = false;
-    draft.touched = true;
-    cassa.bar = []; cassa.children = 0; cassa.crazy = 0; cassa.minutes = 0;
-    switchTab('new');
-  };
-  fondo.appendChild(svuota);
-  fondo.appendChild(diventa);
-  root.appendChild(fondo);
-
-  function rinfresca(opz) {
-    const t = cassaTot();
-    totV.textContent = eur(t);
-    cBimbi.v.textContent = cassa.children;
-    cCrazy.v.textContent = cassa.crazy;
-    cBimbi.m.disabled = cassa.children <= 0;
-    cCrazy.m.disabled = cassa.crazy <= 0;
-    chipTempo.forEach(([b, m]) => b.classList.toggle('on', m === cassa.minutes));
-    if (!(opz && opz.nonToccareInput) && document.activeElement !== inp) inp.value = cassa.minutes || '';
-    incassa.disabled = t <= 0;
-    incassa.textContent = t > 0 ? '\u2705 Incassa ' + eur(t) : '\u2705 Incassa';
-    /* Non si spegne mai: un tasto spento che non dice perche' sembra
-       rotto. Con zero bambini l'ingresso parte comunque da uno. */
-    diventa.textContent = cassa.children > 0
-      ? '\u27a1\ufe0f Fanne un ingresso'
-      : '\u27a1\ufe0f Fanne un ingresso da 1';
-    syncBarRows(barBox, cassa.bar);
-  }
 
   const registra = (preso) => {
     /* finisce in archivio come conto gia' saldato: cosi' entra nei
@@ -2215,30 +2231,77 @@ function buildCassaView() {
       people: [], barItems: JSON.parse(JSON.stringify(cassa.bar)),
       braceletColor: null, braceletCustom: true,
       status: 'closed', closedAt: Date.now(), cassaRapida: true,
-      paidLines: {}, paidPark: cassaParcoTot(), paidBar: cassaBarTot(),
+      paidLines: {}, paidPark: cassaParcoTot() + cassaCrazyTot(), paidBar: cassaBarTot(),
       barPaid: 0, parkPaid: false
     });
     saveEntries();
-    cassa.bar = []; cassa.children = 0; cassa.crazy = 0; cassa.minutes = 0;
-    buildCassaView();
+    svuota();
     updateBadge();
     toast('Incassati ' + eur(preso));
   };
-
-  incassa.onclick = () => { const t = cassaTot(); if (t > 0) registra(t); };
-  restoBtn.onclick = () => {
-    const gia = restoQui.querySelector('.resto-box');
-    if (gia) { gia.remove(); restoBtn.classList.remove('on'); return; }
-    const t = cassaTot();
-    if (t <= 0) return;
-    restoBtn.classList.add('on');
-    restoQui.appendChild(pannelloResto(null, t, (preso) => {
-      restoBtn.classList.remove('on');
-      registra(preso);
-    }));
+  const svuota = () => {
+    cassa.bar = []; cassa.children = 0; cassa.crazy = 0; cassa.minutes = 0; cassa.pagate = {};
+    dis();
   };
 
-  rinfresca();
+  root.onclick = (ev) => {
+    const b = ev.target.closest('button');
+    if (!b || !root.contains(b)) return;
+    const d = b.dataset;
+    if (d.cat !== undefined)  { cassa.cat = d.cat; dis(); return; }
+    if (d.add !== undefined)  { bcSetQ(d.add, bcQ(d.add) + 1); dis(); return; }
+    if (d.meno !== undefined) { bcSetQ(d.meno, bcQ(d.meno) - 1); dis(); return; }
+    if (d.ppiu !== undefined) { cassa.pagate[d.ppiu] = Math.min(bcQ(d.ppiu), bcPag(d.ppiu) + 1); dis(); return; }
+    if (d.pmeno !== undefined){ cassa.pagate[d.pmeno] = Math.max(0, bcPag(d.pmeno) - 1); dis(); return; }
+    if (d.sez !== undefined)  { bcSegna(d.sez, true); dis(); return; }
+    if (d.desez !== undefined){ bcSegna(d.desez, false); dis(); return; }
+    if (d.min !== undefined)  {
+      if (d.min === 'meno') cassa.minutes = Math.max(5, bcMinuti() - 5);
+      else if (d.min === 'piu') cassa.minutes = Math.min(600, bcMinuti() + 5);
+      else cassa.minutes = parseInt(d.min, 10);
+      dis(); return;
+    }
+    if (d.est !== undefined)  { cassa.minutes = Math.min(600, bcMinuti() + parseInt(d.est, 10)); dis(); return; }
+    if (d.solobar !== undefined) { cassa.minutes = 0; cassa.children = 0; cassa.crazy = 0; dis(); return; }
+    if (d.azzera !== undefined) { cassa.pagate = {}; dis(); return; }
+    if (d.tutto !== undefined) {
+      bcSegna('bimbi', true); bcSegna('crazy', true); bcSegna('bar', true); dis(); return;
+    }
+    if (d.chiudi !== undefined) { const t = cassaTot(); if (t > 0) registra(t); return; }
+    if (d.svuota !== undefined) { svuota(); return; }
+    if (d.resto !== undefined) {
+      const qui = root.querySelector('.bc-resto');
+      if (qui.firstChild) { qui.innerHTML = ''; return; }
+      const t = cassaResta();
+      if (t <= 0) return;
+      qui.appendChild(pannelloResto(null, t, () => {
+        bcSegna('bimbi', true); bcSegna('crazy', true); bcSegna('bar', true);
+        registra(cassaTot());
+      }));
+      qui.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      return;
+    }
+    if (d.ingresso !== undefined) {
+      /* Qui si fa un ingresso NUOVO: se restava acceso "sto modificando
+         quell'altro", premere Registra lo avrebbe sovrascritto. */
+      editingId = null;
+      draft.children = Math.max(1, cassa.children);
+      draft.crazyJumping = cassa.crazy;
+      draft.durationMinutes = cassa.minutes || settings.defaultMinutes || 60;
+      draft.barItems = JSON.parse(JSON.stringify(cassa.bar));
+      draft.startTime = roundTo5(new Date()).getTime();
+      draft.payLater = false;
+      draft.people = [];
+      draft.braceletColor = null;
+      draft.braceletCustom = false;
+      draft.touched = true;
+      cassa.bar = []; cassa.children = 0; cassa.crazy = 0; cassa.minutes = 0; cassa.pagate = {};
+      switchTab('new');
+      return;
+    }
+  };
+
+  dis();
 }
 
 /* ================= LA SCHEDA CHE VOLA =================

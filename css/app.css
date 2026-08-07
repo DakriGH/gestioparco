@@ -2543,41 +2543,129 @@ html:not(.anima) .view.entra-dx { animation: none; }
 
 /* =============== CASSA RAPIDA =============== */
 #view-cassa { display: flex; flex-direction: column; gap: 12px; }
-.cassa-testa {
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  display: flex;
-  align-items: flex-end;
-  gap: 12px;
-  flex-wrap: wrap;
-  padding: 12px 14px 13px;
-  border-radius: 18px;
-  background: linear-gradient(140deg, #0C7A57, #075C41);
-  color: #fff;
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.32);
+/* ══════════════════════════════════════════════════════════
+   BAR & CONTO — la terza linguetta
+   Card a griglia: icona grande, prezzo e nome, e sotto due file di
+   comandi. Mezza card e' il meno e mezza il piu': bersagli larghi un
+   dito, niente tastini da centrare. La quantita' NON sta in mezzo ai
+   segni, e' scritta gigante dietro la card come una filigrana.
+   ══════════════════════════════════════════════════════════ */
+.bc-cat { position: sticky; top: 0; z-index: 6; display: flex; gap: 8px; flex-wrap: wrap;
+  padding: 8px 0 10px; background: var(--bg); }
+.bc-cat button { border: none; border-radius: 15px; padding: 10px 15px; min-height: 46px;
+  background: var(--surface); color: var(--txt-3); font: inherit; font-size: 14.5px;
+  font-weight: 700; cursor: pointer; }
+.bc-cat button.on { background: var(--txt); color: var(--bg); }
+
+.bc-tempo { background: var(--surface); border-radius: 18px; padding: 12px 14px; margin-bottom: 12px; }
+.bc-tempo-k { font-size: 13px; font-weight: 700; color: var(--txt-3); margin-bottom: 9px; }
+.bc-tempo-k b { font-family: 'Fredoka', sans-serif; font-size: 17px; color: var(--txt); }
+.bc-tempo-k b.q { color: var(--warn); }
+.bc-chips { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
+.bc-chips button { border: none; border-radius: 13px; min-height: 44px; padding: 0 14px;
+  background: var(--surface-2); color: var(--txt); font: inherit; font-size: 14.5px;
+  font-weight: 700; cursor: pointer; }
+.bc-chips button.on { background: var(--accent); color: var(--accent-ink); }
+.bc-allunga { margin-top: 8px; }
+.bc-allunga .et { font-size: 12px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--txt-3); }
+.bc-allunga button { min-height: 40px; padding: 0 12px; font-size: 13.5px;
+  background: var(--accent-soft); color: var(--accent); }
+.bc-allunga button.solo { margin-left: auto; background: var(--surface-2); color: var(--txt-3); }
+
+.bc-griglia { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
+  gap: 12px; align-items: stretch; }
+
+.bc-card { --bcfondo: var(--surface); position: relative; background: var(--bcfondo);
+  border-radius: 20px; box-shadow: 0 4px 14px rgba(0,0,0,.3); overflow: hidden;
+  display: flex; flex-direction: column; }
+.bc-card.presa   { --bcfondo: #262038; box-shadow: 0 0 0 3px var(--accent) inset, 0 6px 18px rgba(182,158,255,.22); }
+.bc-card.saldata { --bcfondo: var(--card-ok); box-shadow: 0 0 0 3px var(--ok) inset, 0 6px 18px rgba(106,220,175,.2); }
+
+/* la testa prende lo spazio in piu' quando su una riga c'e' una card
+   piu' alta: cosi' i tasti restano incollati al fondo e non resta mai
+   una striscia morta sotto, dove premi e non succede niente */
+.bc-su { flex: 1; position: relative; overflow: hidden; border: none; background: none;
+  font: inherit; color: inherit; cursor: pointer; padding: 12px; display: flex;
+  align-items: center; gap: 11px; width: 100%; text-align: left; }
+.bc-su svg { width: 58px; height: 58px; flex: 0 0 auto; position: relative; z-index: 1; }
+.bc-em { font-size: 40px; line-height: 1; width: 58px; text-align: center; flex: 0 0 auto;
+  position: relative; z-index: 1; }
+.bc-testi { position: relative; z-index: 1; flex: 1; min-width: 0; min-height: 58px;
+  display: flex; flex-direction: column; justify-content: center; gap: 5px; }
+.bc-pr { font-family: 'Fredoka', sans-serif; font-size: 21px; font-weight: 700;
+  color: var(--txt-2); line-height: 1.05; }
+.bc-nm { font-size: 16.5px; font-weight: 700; line-height: 1.2; color: var(--txt); }
+.bc-card.presa .bc-pr { color: #D9CBFF; }
+.bc-card.saldata .bc-pr { color: #A9EFD3; }
+
+/* il numero fantasma: sotto a tutto, centrato sulla testa e allineato
+   al margine del testo. Altezza e riga bloccate perche' la cifra ci
+   stia dentro intera senza farsi tagliare. */
+.bc-fant { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); z-index: 0;
+  font-family: 'Fredoka', sans-serif; font-size: 76px; font-weight: 700;
+  height: 66px; line-height: 66px; overflow: hidden; pointer-events: none; user-select: none;
+  color: rgba(255,255,255,.07); }
+.bc-card.presa .bc-fant   { color: rgba(182,158,255,.3); }
+.bc-card.saldata .bc-fant { color: rgba(106,220,175,.3); }
+
+/* i comandi: mezza card il meno, mezza il piu', due file */
+.bc-zone { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 2px;
+  background: rgba(0,0,0,.45); }
+.bc-zone button { border: none; background: rgba(255,255,255,.06); min-height: 48px;
+  color: var(--txt); font-family: 'Fredoka', sans-serif; font-size: 28px; font-weight: 700;
+  line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background .12s; }
+.bc-zone button:active { background: rgba(255,255,255,.2); }
+.bc-zone.v { background: rgba(106,220,175,.28); }
+.bc-zone.v button { background: rgba(106,220,175,.13); color: var(--ok); font-size: 25px; }
+.bc-zone.v button:active { background: rgba(106,220,175,.3); }
+.bc-zone.v button:disabled { opacity: .25; cursor: default; }
+/* la pasticca galleggia sulla cucitura in mezzo: l'anello e' del colore
+   della card, cosi' sembra ritagliata dentro la fascia */
+.bc-chip { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); z-index: 2;
+  min-width: 54px; height: 36px; padding: 0 10px; border-radius: 11px; background: var(--surface-3);
+  box-shadow: 0 0 0 3px var(--bcfondo), 0 3px 9px rgba(0,0,0,.5);
+  display: flex; align-items: center; justify-content: center; pointer-events: none;
+  font-family: 'Fredoka', sans-serif; font-size: 22px; font-weight: 700; color: var(--txt); }
+.bc-card.presa .bc-chip { background: var(--accent); color: var(--accent-ink); }
+.bc-card.saldata .bc-chip { background: var(--ok); color: #08301F; }
+.bc-zone.v .bc-chip { background: #123D2D; color: #A9EFD3; font-size: 17px; box-shadow: none; }
+.bc-card.saldata .bc-zone.v .bc-chip { background: var(--ok); color: #08301F; }
+
+/* il fondo: le tre parti attaccate sopra la cifra da incassare */
+.bc-fondo { position: sticky; bottom: 0; z-index: 5; margin-top: 12px;
+  background: var(--surface); border-radius: 20px; padding: 12px 14px 13px;
+  box-shadow: 0 -6px 22px rgba(0,0,0,.45); display: flex; flex-direction: column; gap: 11px; }
+.bc-parti { display: flex; gap: 8px; flex-wrap: wrap; }
+/* una riga sola per parte: con l'etichetta sopra il valore il fondo
+   diventava alto quasi quattrocento pixel su schermo stretto e si
+   mangiava mezza schermata */
+.bc-parte { flex: 1 1 160px; background: rgba(0,0,0,.24); border-radius: 14px; padding: 7px 10px;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bc-parte .k { font-size: 11.5px; font-weight: 700; color: var(--txt-3); }
+.bc-parte .v { margin-left: auto; font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 700; }
+.bc-parte .q { flex: 1 1 100%; }
+.bc-parte .q { font-size: 11px; font-weight: 700; color: var(--ok); }
+/* sul telefono (o col tablet in mano stretto) il numerone e i tasti
+   stanno larghi uguale ma senza far crescere il fondo */
+@media (max-width: 560px) {
+  .bc-conto .v { font-size: 30px; }
+  .bc-tasti { margin-left: 0; width: 100%; }
+  .bc-tasti .btn { flex: 1 1 110px; }
 }
-.cassa-tot .k {
-  display: block;
-  font-size: 10.5px;
-  font-weight: 800;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: #EAF7F1;
-}
-.cassa-tot .v {
-  display: block;
-  font-family: 'Fredoka', sans-serif;
-  font-size: 34px;
-  font-weight: 700;
-  line-height: 1.05;
-  font-variant-numeric: tabular-nums;
-}
-.cassa-tasti { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
-.cassa-tasti .btn:disabled { opacity: 0.45; }
-.cassa-fila { display: flex; gap: 9px; flex-wrap: wrap; margin-bottom: 11px; }
-.cassa-fondo { display: flex; gap: 9px; flex-wrap: wrap; }
-.cassa-fondo .btn { flex: 1 1 160px; }
+.bc-parte.fatta { opacity: .6; }
+.bc-parte .paga { margin-left: auto; border: none; border-radius: 10px; padding: 6px 11px;
+  min-height: 34px; background: rgba(255,255,255,.1); color: var(--txt); font: inherit;
+  font-size: 12.5px; font-weight: 700; cursor: pointer; }
+.bc-parte .paga.ok { background: rgba(106,220,175,.18); color: var(--ok); }
+.bc-conto { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.bc-conto .k { display: block; font-size: 12px; font-weight: 700; color: var(--txt-3); }
+.bc-conto .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 36px; font-weight: 700;
+  line-height: 1; }
+.bc-conto .gia { display: block; font-size: 12.5px; font-weight: 700; color: var(--ok); margin-top: 2px; }
+.bc-tasti { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+.bc-resto { margin-top: 12px; }
 #view-cassa .resto-box { margin: 0; }
 
 /* l'ultimo inserito: si trova a colpo d'occhio per mezzo minuto */
