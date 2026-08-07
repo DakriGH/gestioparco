@@ -58,7 +58,10 @@ h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 10px; }
 .cat button svg { width: 20px; height: 20px; }
 
 .griglia { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; overflow-y: auto;
-  min-height: 0; align-content: start; padding-bottom: 4px; }
+  min-height: 0; align-content: start; padding-bottom: 4px;
+  /* max-content, se no le righe si stringono e la tessera (che ha
+     overflow:hidden) si mangia la fascia verde delle pagate */
+  grid-auto-rows: max-content; }
 .tess { background: var(--carta); border-radius: 22px; box-shadow: 0 4px 14px rgba(0,0,0,.3);
   overflow: hidden; display: flex; flex-direction: column; }
 .tess .su { border: none; background: none; font: inherit; color: inherit; cursor: pointer;
@@ -112,37 +115,27 @@ h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 10px; }
   color: var(--txt); font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
 .tempo-chip button.on { background: var(--parco); color: #06162E; }
 
-/* i quattro modi di incassare */
-.modi { display: flex; gap: 8px; flex-shrink: 0; }
-.modi button { flex: 1; border: none; border-radius: 14px; min-height: 46px; background: var(--carta);
-  color: var(--txt2); font: inherit; font-size: 14.5px; font-weight: 700; cursor: pointer; }
-.modi button.on { background: var(--txt); color: #14141B; }
-.pagamento { background: var(--carta); border-radius: 20px; padding: 14px 16px; box-shadow: 0 2px 8px rgba(0,0,0,.28); flex-shrink: 0; }
-.pk { font-size: 13px; font-weight: 700; color: var(--txt2); margin-bottom: 10px; }
-.acconti { display: flex; gap: 9px; flex-wrap: wrap; }
-.acconti button { flex: 1 1 100px; border: none; border-radius: 14px; min-height: 54px; background: var(--carta2);
-  color: var(--txt); font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 700; cursor: pointer; }
-.acconti button:disabled { opacity: .35; }
-.spunte { display: flex; flex-direction: column; gap: 7px; }
-.sp { display: flex; align-items: center; gap: 11px; border: none; border-radius: 14px; padding: 10px 12px;
-  background: var(--carta2); color: var(--txt); font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; min-height: 52px; }
-.sp .box { width: 30px; height: 30px; border-radius: 9px; border: 2px solid rgba(255,255,255,.3);
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.sp.on { background: #14243A; box-shadow: 0 0 0 2px var(--sel) inset; }
-.sp.on .box { background: var(--sel); border-color: var(--sel); color: #06162E; }
-.sp.fatta { opacity: .45; }
-.sp .nm { flex: 1; min-width: 0; text-align: left; }
-.sp .im { font-family: 'Fredoka', sans-serif; font-weight: 700; }
-.quote { display: flex; gap: 9px; flex-wrap: wrap; }
-.quote .qt { flex: 1 1 120px; border: none; border-radius: 16px; min-height: 62px; background: var(--carta2);
-  color: var(--txt); font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
-.quote .qt small { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; color: var(--txt2); }
-.quote .qt.fatta { opacity: .45; }
-.registro { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px;
-  font-size: 13px; color: var(--txt2); }
-.registro b { font-family: 'Fredoka', sans-serif; font-size: 15px; color: var(--txt); }
-.registro span { background: rgba(255,255,255,.06); border-radius: 10px; padding: 4px 9px; }
+/* ══ PAGATO A QUANTITA' ══
+   Sotto il contatore delle cose prese sta quello delle cose gia'
+   pagate: gli stessi due tasti, ma verdi. Cosi' "una Coca l'ha pagata
+   e una no" si dice sulla riga, senza aprire niente e senza scegliere
+   nessun modo. Quando i due numeri pareggiano la tessera diventa verde:
+   quella voce non deve piu' niente. */
+.tess .pag { display: flex; align-items: center; background: rgba(25,192,138,.13);
+  border-top: 1px solid rgba(25,192,138,.26); }
+.tess .pag button { flex: 1; min-height: 46px; border: none; background: none; color: var(--soldi);
+  font-family: 'Fredoka', sans-serif; font-size: 21px; font-weight: 700; cursor: pointer; }
+.tess .pag button:disabled { opacity: .22; cursor: default; }
+.tess .pag .n { min-width: 64px; text-align: center; align-self: center; color: var(--soldi);
+  font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 700; line-height: 1.15; }
+.tess .pag .n small { display: block; font-family: 'Inter', sans-serif; font-size: 9.5px;
+  font-weight: 700; letter-spacing: .09em; text-transform: uppercase; opacity: .8; }
+.tess.saldata { background: #10241D; box-shadow: 0 0 0 3px var(--soldi) inset, 0 6px 18px rgba(25,192,138,.24); }
+.tess.saldata .pr { color: #7FE8C1; }
+.tess.saldata .pag { background: rgba(25,192,138,.22); }
+.riep .voce .q { display: block; font-size: 11.5px; font-weight: 700; color: var(--soldi); }
+.riep .voce .paga.tutta { background: rgba(25,192,138,.18); color: #7FE8C1; }
+.fondo .gia { display: block; font-size: 13px; font-weight: 700; color: var(--soldi); margin-top: 3px; }
 .registro button { margin-left: auto; border: none; border-radius: 10px; min-height: 40px; padding: 0 14px;
   background: rgba(255,255,255,.1); color: var(--txt); font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
 </style>
@@ -174,22 +167,25 @@ h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 10px; }
   </div>
 
   <div class="strada">
-    <header><span class="n">3</span><h2>Il tempo, e quattro modi di incassare</h2></header>
+    <header><span class="n">3</span><h2>Il tempo, e il pagato a quantità</h2></header>
     <p class="perche">Nella sezione <b>Parco</b> ora c'è il tempo, coi tagli del cartello: tocchi
     «1h 30» e il prezzo a bambino diventa 19,00 € da solo, più i ± da 5 minuti per i casi strani.
     È lui a decidere il costo del parco, quindi sta in cima alla sua sezione.</p>
-    <p class="perche">Sopra il riepilogo c'è il selettore dei <b>quattro modi di incassare</b>,
-    perché pagare a pezzi è la norma e non un caso raro:</p>
+    <p class="perche">Per i pagamenti a pezzi ho tolto il selettore dei modi: era una domanda in più
+    da fare all'utente prima di poter lavorare. Adesso ogni tessera ha <b>due contatori</b> —
+    quante ne ha prese, e sotto in verde <b>quante ne ha pagate</b>. Stessi tasti, un piano più
+    in basso.</p>
     <div class="elenco">
-      <b>Per parte</b> — paga il parco, paga il bar. Il caso più comune: «io offro le bibite».<br>
-      <b>Acconto</b> — una cifra qualunque: 5, 10, 20, 50, la metà, o tutto. Per chi lascia
-      qualcosa adesso e il resto all'uscita.<br>
-      <b>A spunte</b> — segni le righe che ti sta pagando (l'ingresso sì, le Coca no) e incassi
-      solo quelle. Le righe già saldate restano spente.<br>
-      <b>A testa</b> — il conto diviso per i bambini, un tasto per ciascuno: due genitori che
-      pagano ognuno il proprio.<br>
-      Sotto resta sempre il <b>registro</b> di quello che hai già preso, con «annulla l'ultimo»
-      per quando sbagli.
+      <b>«Una Coca l'ha pagata e una no»</b> si dice sulla riga: <i>1 / 2 pagate</i>. Il totale
+      scende da solo e in fondo compare «già presi».<br>
+      <b>Quando i due numeri pareggiano</b> la tessera diventa verde: quella voce non deve più
+      niente, si vede da lontano senza leggere cifre.<br>
+      <b>L'errore si annulla dove è stato fatto</b> — il − verde sulla stessa riga. Non serve un
+      registro a parte né «annulla l'ultimo».<br>
+      <b>I tasti «paga»</b> del riepilogo sono solo scorciatoie: fanno in un colpo quello che
+      faresti coi + verdi, e il ✓ che resta al loro posto li disfa.<br>
+      <b>Se togli roba dal conto</b>, il pagato si accorcia con lei: non puoi avere due Coca
+      pagate e una sola Coca.
     </div>
   </div>
 
@@ -200,7 +196,9 @@ h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 10px; }
       <b>Lo scelto</b> resta blu ma su fondo scuro: anello #3B8CFF e carta blu notte.<br>
       <b>La sezione Parco</b> come prima categoria, con le stesse tessere e lo stesso contatore.<br>
       <b>Il riepilogo</b> Parco / Crazy / Bar sta sopra il totale, con «paga solo questo».<br>
-      <b>Icone disegnate</b>: niente emoji, niente sorprese da un tablet all'altro.
+      <b>Icone disegnate</b>: niente emoji, niente sorprese da un tablet all'altro.<br>
+      <b>Il pagamento</b> non è più una cifra a parte: è una quantità sulla riga, quindi non
+      c'è nessun modo da scegliere prima di cominciare.
     </div>
   </div>
 </div>
@@ -434,24 +432,30 @@ const TARIFFE = [[10,300],[15,450],[20,600],[30,700],[40,1000],[50,1200],[60,120
 const prezzoTempo = (m) => { for (const t of TARIFFE) if (m <= t[0]) return t[1];
                              return TARIFFE[TARIFFE.length-1][1]; };
 
-const S = { q: { bimbi:2, crazy:1, coca:2, pata:1 }, minuti: 60,
-            incassi: [], cat:'Bevande', resto: null, modo: 'sezioni',
-            scelte: {}, quote: {} };
-const cost = id => id === 'bimbi'
-  ? Math.max(1, S.q.bimbi || 0) * prezzoTempo(S.minuti)
-  : (S.q[id] || 0) * prod(id).pz;
+const S = { q: { bimbi:2, crazy:1, coca:2, pata:1 },
+            pagate: {},          /* quante unita' di ogni voce sono gia' pagate */
+            minuti: 60, cat:'Bevande', resto: null };
+
+/* ---------- i soldi, contati a quantita' ----------
+   Prima il pagamento era una cifra staccata dal conto e serviva un
+   "modo" per dire a cosa si riferisse. Adesso il pagamento E' il conto:
+   ogni voce sa quante unita' sono state pagate, e il resto viene da se'. */
+const qEff  = id => id === 'bimbi' ? Math.max(1, S.q.bimbi || 0) : (S.q[id] || 0);
+const pzUn  = id => id === 'bimbi' ? prezzoTempo(S.minuti) : prod(id).pz;
+const cost  = id => qEff(id) * pzUn(id);
+const pagQ  = id => Math.min(S.pagate[id] || 0, qEff(id));
+const pagIm = id => pagQ(id) * pzUn(id);
+const BAR   = () => LISTINO.filter(p => p.cat !== 'Parco');
 const tParco = () => cost('bimbi') + cost('crazy');
-const tBar = () => LISTINO.filter(p => p.cat !== 'Parco').reduce((a,p) => a + cost(p.id), 0);
+const tBar   = () => BAR().reduce((a, p) => a + cost(p.id), 0);
 const tTutto = () => tParco() + tBar();
-const incassato = () => S.incassi.reduce((a,x) => a + x.im, 0);
-const totale = () => Math.max(0, tTutto() - incassato());
-/* quanto e' stato incassato attribuito a una parte */
-const presoSu = (dove) => S.incassi.filter(x => x.dove === dove).reduce((a,x) => a + x.im, 0);
-const rParco = () => Math.max(0, tParco() - presoSu('Parco') - presoSu('tutto'));
-const rBar = () => Math.max(0, tBar() - presoSu('Bar'));
-function incassa(ds, im, dove) {
-  if (im <= 0) return;
-  S.incassi.push({ ds, im: Math.min(im, totale()), dove: dove || 'tutto' });
+const pBar   = () => BAR().reduce((a, p) => a + pagIm(p.id), 0);
+const pagato = () => pagIm('bimbi') + pagIm('crazy') + pBar();
+const totale = () => Math.max(0, tTutto() - pagato());
+const tutteLeVoci = () => ['bimbi', 'crazy'].concat(BAR().map(p => p.id));
+/* segna pagate (o non pagate) tutte le unita' di un gruppo di voci */
+function segna(ids, tutte) {
+  ids.forEach(id => { S.pagate[id] = tutte ? qEff(id) : 0; });
 }
 
 /* Il TEMPO: e' la cosa che decide il prezzo del parco, quindi sta in
@@ -467,89 +471,50 @@ function blocoTempo() {
     '<button data-min="meno">−5</button><button data-min="piu">+5</button></div></div>';
 }
 
-/* ============ I QUATTRO MODI DI INCASSARE ============ */
-function selettoreModo() {
-  const M = [['sezioni','Per parte'], ['acconto','Acconto'], ['spunte','A spunte'], ['quote','A testa']];
-  return '<div class="modi">' + M.map(m => '<button data-modo="' + m[0] + '"' +
-    (S.modo === m[0] ? ' class="on"' : '') + '>' + m[1] + '</button>').join('') + '</div>';
-}
-function areaPagamento() {
-  if (S.resto) return pannelloResto();
-  if (S.modo === 'sezioni') return modoSezioni();
-  if (S.modo === 'acconto') return modoAcconto();
-  if (S.modo === 'spunte') return modoSpunte();
-  return modoQuote();
-}
-/* P1 — per parte: paga il parco, paga il bar */
-function modoSezioni() {
+/* Il riepilogo: le tre parti del conto, ognuna con quanto e' gia'
+   stato pagato. Il tasto "paga" e' solo una scorciatoia: fa in un colpo
+   quello che faresti coi + verdi sulle tessere. */
+function riepilogo() {
+  const bar = BAR().filter(p => qEff(p.id) > 0).map(p => p.id);
   return '<div class="riep">' +
-    voce('Parco', 'Parco', tParco(), rParco(), 'Parco') +
-    voce('Bar', 'Bevande', tBar(), rBar(), 'Bar') + '</div>' + registro();
+    voce('Parco', 'bimbi', cost('bimbi'), pagIm('bimbi'), ['bimbi']) +
+    voce('Crazy Jumping', 'crazy', cost('crazy'), pagIm('crazy'), ['crazy']) +
+    voce('Bar', 'coca', tBar(), pBar(), bar) + '</div>';
 }
-/* P2 — acconto: qualunque cifra, anche spicciola */
-function modoAcconto() {
-  const R = totale();
-  const tagli = [500, 1000, 2000, 5000];
-  return '<div class="pagamento"><div class="pk">Quanto ti sta dando adesso</div>' +
-    '<div class="acconti">' + tagli.map(t => '<button data-acc="' + t + '"' + (t > R ? ' disabled' : '') + '>' +
-      eur(t) + '</button>').join('') +
-      '<button data-acc="meta"' + (R <= 0 ? ' disabled' : '') + '>metà · ' + eur(Math.round(R/2)) + '</button>' +
-      '<button data-acc="tutto"' + (R <= 0 ? ' disabled' : '') + '>tutto · ' + eur(R) + '</button>' +
-    '</div></div>' + registro();
-}
-/* P3 — a spunte: segni le voci che sta pagando */
-function modoSpunte() {
-  const v = vociTutte();
-  const scelto = v.filter(x => S.scelte[x.k]).reduce((a,x) => a + x.im, 0);
-  return '<div class="pagamento"><div class="pk">Segna quello che ti sta pagando</div>' +
-    '<div class="spunte">' + v.map(x =>
-      '<button class="sp' + (S.scelte[x.k] ? ' on' : '') + (x.pagata ? ' fatta' : '') + '" data-sp="' + x.k + '"' +
-      (x.pagata ? ' disabled' : '') + '><span class="box">' + (x.pagata ? '✓' : (S.scelte[x.k] ? '✓' : '')) + '</span>' +
-      '<span class="nm">' + x.nm + '</span><span class="im">' + eur(x.im) + '</span></button>').join('') + '</div>' +
-    (scelto > 0 ? '<button class="bt pieno" style="width:100%;margin-top:10px" data-pagasel>Incassa i segnati · ' + eur(scelto) + '</button>' : '') +
-    '</div>' + registro();
-}
-/* P4 — a testa: il conto diviso per i bambini */
-function modoQuote() {
-  const n = Math.max(1, S.q.bimbi || 0);
-  const quota = Math.round(tTutto() / n);
-  return '<div class="pagamento"><div class="pk">Il conto diviso in ' + n + ' · ' + eur(quota) + ' a testa</div>' +
-    '<div class="quote">' + Array.from({length: n}, (_, k) => {
-      const pagata = !!S.quote[k];
-      return '<button class="qt' + (pagata ? ' fatta' : '') + '" data-quota="' + k + '"' + (pagata ? ' disabled' : '') + '>' +
-        (pagata ? '✓ pagata' : 'Paga ' + eur(quota)) + '<small>persona ' + (k+1) + '</small></button>';
-    }).join('') + '</div></div>' + registro();
-}
-function vociTutte() {
-  const out = [];
-  if (S.q.bimbi) out.push({ k:'bimbi', nm:'Ingresso ×' + S.q.bimbi, im: cost('bimbi'), dove:'Parco' });
-  if (S.q.crazy) out.push({ k:'crazy', nm:'Crazy Jumping ×' + S.q.crazy, im: cost('crazy'), dove:'Parco' });
-  LISTINO.filter(p => p.cat !== 'Parco' && S.q[p.id]).forEach(p =>
-    out.push({ k:p.id, nm: p.nm + ' ×' + S.q[p.id], im: cost(p.id), dove:'Bar' }));
-  return out.map(x => Object.assign(x, { pagata: !!S.incassi.some(i => i.voce === x.k) }));
-}
-function registro() {
-  if (!S.incassi.length) return '';
-  return '<div class="registro">Già incassato <b>' + eur(incassato()) + '</b>' +
-    S.incassi.slice(-2).map(x => '<span>' + x.ds + ' ' + eur(x.im) + '</span>').join('') +
-    '<button data-annulla>annulla l’ultimo</button></div>';
+function voce(nome, ico, tot, pag, ids) {
+  const resta = tot - pag, chiave = ids.join(',');
+  return '<div class="voce' + (tot > 0 && resta <= 0 ? ' pagata' : '') + '">' + ICONE[ico]() +
+    '<div><span class="k">' + nome + '</span><span class="v">' + eur(tot) + '</span>' +
+    (pag > 0 && resta > 0 ? '<span class="q">pagato ' + eur(pag) + '</span>' : '') + '</div>' +
+    (tot <= 0
+      ? '<span class="paga" style="background:none;opacity:.35">—</span>'
+      : resta > 0
+        ? '<button class="paga" data-sez="' + chiave + '">paga</button>'
+        : '<button class="paga tutta" data-desez="' + chiave + '">✓</button>') +
+    '</div>';
 }
 
+/* La tessera: sopra quante ne ha prese, sotto quante ne ha pagate.
+   Il contatore verde compare solo se quella cosa e' sul conto, cosi'
+   le tessere che non c'entrano restano basse. */
 function tessera(p) {
-  const n = S.q[p.id] || 0;
-  return '<div class="tess' + (n ? ' preso' : '') + (p.fisso ? ' fisso' : '') + '">' +
+  const n = S.q[p.id] || 0, eff = qEff(p.id), pg = pagQ(p.id);
+  const saldata = eff > 0 && pg >= eff;
+  return '<div class="tess' + (saldata ? ' saldata' : n ? ' preso' : '') + (p.fisso ? ' fisso' : '') + '">' +
     '<button class="su" data-add="' + p.id + '">' + icona(p) +
     '<span class="nm">' + p.nm + '</span><span class="pr">' + eur(p.pz) + '</span></button>' +
     '<div class="conta' + (n || p.fisso ? '' : ' spenta') + '">' +
       '<button data-meno="' + p.id + '">−</button><span class="n">' + n + '</span>' +
-      '<button data-add="' + p.id + '">+</button></div></div>';
-}
-function voce(nome, tipo, importo, resto, chiave) {
-  return '<div class="voce' + (resto <= 0 ? ' pagata' : '') + '">' + iconaCat(tipo) +
-    '<div><span class="k">' + nome + '</span><span class="v">' + eur(importo) + '</span></div>' +
-    (resto > 0 ? '<button class="paga" data-paga="' + chiave + '">paga</button>' : '<span class="paga" style="background:none">✓</span>') +
+      '<button data-add="' + p.id + '">+</button></div>' +
+    (eff > 0
+      ? '<div class="pag">' +
+        '<button data-pmeno="' + p.id + '"' + (pg <= 0 ? ' disabled' : '') + '>−</button>' +
+        '<span class="n">' + pg + ' / ' + eff + '<small>pagate</small></span>' +
+        '<button data-ppiu="' + p.id + '"' + (pg >= eff ? ' disabled' : '') + '>+</button></div>'
+      : '') +
     '</div>';
 }
+
 function disegna() {
   const box = document.querySelector('.tablet[data-p="X"] .dentro');
   const q = LISTINO.filter(p => p.cat === S.cat);
@@ -561,12 +526,16 @@ function disegna() {
         iconaCat(c) + c + '</button>').join('') + '</div>' +
       (S.cat === 'Parco' ? blocoTempo() : '') +
       '<div class="griglia">' + q.map(tessera).join('') + '</div>' +
-      selettoreModo() + areaPagamento() +
+      (S.resto ? pannelloResto() : '') + riepilogo() +
     '</div>' +
-    '<div class="fondo"><div><span class="k">' + (totale() > 0 ? 'da incassare' : 'tutto pagato') + '</span>' +
-      '<span class="v">' + (totale() > 0 ? eur(totale()) : '✓') + '</span></div>' +
-      '<div class="tasti">' + (totale() > 0 ?
-        '<button class="bt" data-resto>🧮 Resto</button><button class="bt pieno" data-tutto>Incassa</button>' : '') +
+    '<div class="fondo"><div>' +
+      '<span class="k">' + (totale() > 0 ? (pagato() > 0 ? 'restano' : 'da incassare') : 'tutto pagato') + '</span>' +
+      '<span class="v">' + (totale() > 0 ? eur(totale()) : '✓') + '</span>' +
+      (pagato() > 0 && totale() > 0 ? '<span class="gia">già presi ' + eur(pagato()) + '</span>' : '') +
+      '</div><div class="tasti">' +
+        (pagato() > 0 ? '<button class="bt" data-azzera>↺</button>' : '') +
+        (totale() > 0 ? '<button class="bt" data-resto>🧮 Resto</button>' +
+          '<button class="bt pieno" data-tutto>Incassa tutto</button>' : '') +
       '</div></div></div>';
   aggancia(box);
   misura();
@@ -583,24 +552,31 @@ function pannelloResto() {
       [[200,'2 €'],[100,'1 €'],[50,'50c'],[20,'20c']].map(t => '<button class="mon" data-tag="' + t[0] + '">' + t[1] + '</button>').join('') + '</div>' +
     '<div style="display:flex;gap:10px"><button class="bt" data-rzero>↺</button>' +
       '<button class="bt" data-rchiudi>Chiudi</button>' +
-      (d > 0 ? '<button class="bt pieno" style="flex:1" data-rok>Incassa ' + eur(Math.min(d,R)) +
+      (d > 0 ? '<button class="bt pieno" style="flex:1" data-rok>Salda tutto · ' + eur(R) +
         (av > 0 ? ' · rendi ' + eur(av) : '') + '</button>' : '') + '</div>' +
   '</div></div>';
 }
 function aggancia(box) {
-  box.querySelectorAll('[data-add]').forEach(b => b.onclick = () => { S.q[b.dataset.add] = (S.q[b.dataset.add]||0) + 1; disegna(); });
+  box.querySelectorAll('[data-add]').forEach(b => b.onclick = () => {
+    S.q[b.dataset.add] = (S.q[b.dataset.add] || 0) + 1; disegna(); });
   box.querySelectorAll('[data-meno]').forEach(b => b.onclick = () => {
-    const id = b.dataset.meno, n = (S.q[id]||0) - 1;
+    const id = b.dataset.meno, n = (S.q[id] || 0) - 1;
     if (n > 0) S.q[id] = n; else delete S.q[id];
+    /* se toglie roba dal conto, non puo' restare "pagata" piu' di quanta ce n'e' */
+    if (S.pagate[id]) S.pagate[id] = Math.min(S.pagate[id], Math.max(0, n));
     disegna();
   });
-  box.querySelectorAll('[data-cat]').forEach(b => b.onclick = () => { S.cat = b.dataset.cat; S.resto = null; disegna(); });
-  box.querySelectorAll('[data-paga]').forEach(b => b.onclick = () => {
-    const k = b.dataset.paga;
-    incassa(k === 'Parco' ? 'parco' : 'bar', k === 'Parco' ? rParco() : rBar(), k);
-    disegna();
-  });
-  const t = box.querySelector('[data-tutto]'); if (t) t.onclick = () => { incassa('tutto', totale()); disegna(); };
+  /* i due tasti nuovi: pagato a quantita' */
+  box.querySelectorAll('[data-ppiu]').forEach(b => b.onclick = () => {
+    const id = b.dataset.ppiu; S.pagate[id] = Math.min(qEff(id), pagQ(id) + 1); disegna(); });
+  box.querySelectorAll('[data-pmeno]').forEach(b => b.onclick = () => {
+    const id = b.dataset.pmeno; S.pagate[id] = Math.max(0, pagQ(id) - 1); disegna(); });
+  box.querySelectorAll('[data-sez]').forEach(b => b.onclick = () => {
+    segna(b.dataset.sez.split(',').filter(Boolean), true); disegna(); });
+  box.querySelectorAll('[data-desez]').forEach(b => b.onclick = () => {
+    segna(b.dataset.desez.split(',').filter(Boolean), false); disegna(); });
+  box.querySelectorAll('[data-cat]').forEach(b => b.onclick = () => {
+    S.cat = b.dataset.cat; S.resto = null; disegna(); });
   box.querySelectorAll('[data-min]').forEach(b => b.onclick = () => {
     const v = b.dataset.min;
     if (v === 'meno') S.minuti = Math.max(5, S.minuti - 5);
@@ -608,39 +584,13 @@ function aggancia(box) {
     else S.minuti = +v;
     disegna();
   });
-  box.querySelectorAll('[data-modo]').forEach(b => b.onclick = () => { S.modo = b.dataset.modo; S.resto = null; disegna(); });
-  box.querySelectorAll('[data-acc]').forEach(b => b.onclick = () => {
-    const v = b.dataset.acc, R = totale();
-    const im = v === 'tutto' ? R : (v === 'meta' ? Math.round(R/2) : Math.min(+v, R));
-    incassa('acconto', im);
-    disegna();
-  });
-  box.querySelectorAll('[data-sp]').forEach(b => b.onclick = () => {
-    S.scelte[b.dataset.sp] = !S.scelte[b.dataset.sp]; disegna();
-  });
-  const ps = box.querySelector('[data-pagasel]'); if (ps) ps.onclick = () => {
-    vociTutte().filter(x => S.scelte[x.k]).forEach(x => {
-      S.incassi.push({ ds: x.nm, im: x.im, dove: x.dove, voce: x.k });
-    });
-    S.scelte = {}; disegna();
-  };
-  box.querySelectorAll('[data-quota]').forEach(b => b.onclick = () => {
-    const k = +b.dataset.quota, n = Math.max(1, S.q.bimbi || 0);
-    S.quote[k] = true;
-    incassa('quota di ' + (k+1), Math.round(tTutto() / n));
-    disegna();
-  });
-  const an = box.querySelector('[data-annulla]'); if (an) an.onclick = () => {
-    const x = S.incassi.pop();
-    if (x && x.voce) delete S.scelte[x.voce];
-    S.quote = {};
-    disegna();
-  };
+  const t = box.querySelector('[data-tutto]'); if (t) t.onclick = () => { segna(tutteLeVoci(), true); disegna(); };
+  const z = box.querySelector('[data-azzera]'); if (z) z.onclick = () => { S.pagate = {}; disegna(); };
   const r = box.querySelector('[data-resto]'); if (r) r.onclick = () => { S.resto = { dato: 0 }; disegna(); };
   box.querySelectorAll('[data-tag]').forEach(b => b.onclick = () => { S.resto.dato += (+b.dataset.tag); disegna(); });
-  const z = box.querySelector('[data-rzero]'); if (z) z.onclick = () => { S.resto.dato = 0; disegna(); };
-  const c = box.querySelector('[data-rchiudi]'); if (c) c.onclick = () => { S.resto = null; disegna(); };
-  const o = box.querySelector('[data-rok]'); if (o) o.onclick = () => { incassa('contanti', Math.min(S.resto.dato, totale())); S.resto = null; disegna(); };
+  const rz = box.querySelector('[data-rzero]'); if (rz) rz.onclick = () => { S.resto.dato = 0; disegna(); };
+  const rc = box.querySelector('[data-rchiudi]'); if (rc) rc.onclick = () => { S.resto = null; disegna(); };
+  const ro = box.querySelector('[data-rok]'); if (ro) ro.onclick = () => { segna(tutteLeVoci(), true); S.resto = null; disegna(); };
 }
 function misura() {
   const tab = document.querySelector('.tablet[data-p="X"]');
