@@ -6,7 +6,7 @@
 <!-- il foglio di stile VERO dell'app: i blocchi qui dentro sono quelli
      di "+ Nuovo", identici, non una loro imitazione -->
 <link rel="stylesheet" href="./css/fonts.css">
-<link rel="stylesheet" href="./css/app.css?v=192">
+<link rel="stylesheet" href="./css/app.css?v=193">
 <style>
   /* ── la pagina di studio attorno al pannello ── */
   body { margin: 0; background: #0B0B10; color: #E9E9F2; padding: 26px 18px 80px;
@@ -141,6 +141,7 @@
     background: rgba(0,0,0,.22); color: rgba(255,255,255,.86); font: inherit; font-size: 12.5px;
     font-weight: 700; cursor: pointer; }
   .tratti button.on { background: #fff; color: #221944; }
+  .libero.largo { width: 100%; flex: 1 1 100%; }
   .libero { flex: 1 1 190px; min-width: 150px; border: 1px solid rgba(255,255,255,.18); border-radius: 11px;
     background: rgba(0,0,0,.25); color: #fff; font: inherit; font-size: 13px;
     padding: 7px 11px; min-height: 34px; }
@@ -229,8 +230,8 @@
   </div>
 </div>
 
-<script src="./js/icone.js?v=192"></script>
-<script src="./js/avatar.js?v=192"></script>
+<script src="./js/icone.js?v=193"></script>
+<script src="./js/avatar.js?v=193"></script>
 <script>
 const TARIFFE = [[10,3],[15,4.5],[20,6],[30,7],[40,10],[50,12],[60,12],
                  [70,15],[80,16.5],[90,19],[100,22],[110,24],[120,24]];
@@ -256,13 +257,6 @@ const MENU = {
   Snack:    [['pata','Patatine',1.5]],
   Alcolici: [['limon','Limoncello',3],['amari','Amari',3],['grappa','Grappa',4],['spritz','Spritz',6]]
 };
-const TRATTI = [
-  { k:'hat:cappellino', n:'🧢 Cappellino' }, { k:'hat:panama', n:'👒 Cappello' },
-  { k:'glasses:vista', n:'👓 Occhiali' },    { k:'glasses:sole', n:'🕶️ Da sole' },
-  { k:'facial:barba', n:'🧔 Barba' },        { k:'bag:zaino', n:'🎒 Zaino' },
-  { k:'bag:borsa', n:'👜 Borsa' },           { k:'hair:lunghi', n:'💇‍♀️ Lunghi' },
-  { k:'hair:ricci', n:'🧑‍🦱 Ricci' },          { k:'hair:codino', n:'🎀 Codino' }
-];
 const CAT = ['Parco','Bevande','Birre','Snack','Alcolici'];
 const catIcona = { Parco:'bimbi', Bevande:'coca', Birre:'heine', Snack:'pata', Alcolici:'spritz' };
 
@@ -341,22 +335,33 @@ const tastiRuoli = () => '<div class="ruoli">' + RUOLI.map(r => {
     '<span class="em">' + r[2] + '</span><span class="nm">' + r[1] + '</span></button>';
 }).join('') + '</div>';
 
-/* la pezza fa vedere davvero la fantasia, coi due colori del capo */
+/* La pezza fa vedere DAVVERO la fantasia. Prima le sei nuove -- oblique,
+   scacchi, fiori, cuori, zigzag, animalier -- cadevano sul caso "tinta
+   unita" e nel selettore erano sei quadrati identici: si sceglieva alla
+   cieca. Qui ognuna ha il suo disegno, con gli stessi due colori che
+   finiranno sulla figura. */
 function pezza(pat, c1, c2) {
   const st = {
-    'solid': 'background:' + c1,
+    'solid':     'background:' + c1,
     'stripes-h': 'background:repeating-linear-gradient(180deg,' + c1 + ' 0 5px,' + c2 + ' 5px 10px)',
     'stripes-v': 'background:repeating-linear-gradient(90deg,' + c1 + ' 0 5px,' + c2 + ' 5px 10px)',
-    'dots': 'background:' + c1 + ';background-image:radial-gradient(' + c2 + ' 2.2px,transparent 2.4px);background-size:9px 9px',
-    'plaid': 'background:' + c1 + ';background-image:repeating-linear-gradient(90deg,' + c2 + ' 0 3px,transparent 3px 10px),repeating-linear-gradient(180deg,' + c2 + ' 0 3px,transparent 3px 10px)',
-    'camo': 'background:' + c1 + ';background-image:radial-gradient(' + c2 + ' 42%,transparent 43%),radial-gradient(' + c2 + ' 38%,transparent 39%);background-size:14px 12px,10px 9px;background-position:0 0,7px 5px',
-    'stars': 'background:' + c1 + ';color:' + c2,
-    'logo': 'background:' + c1
+    'diag':      'background:repeating-linear-gradient(45deg,' + c1 + ' 0 5px,' + c2 + ' 5px 10px)',
+    'dots':      'background:' + c1 + ';background-image:radial-gradient(' + c2 + ' 2.2px,transparent 2.4px);background-size:9px 9px',
+    'plaid':     'background:' + c1 + ';background-image:repeating-linear-gradient(90deg,' + c2 + ' 0 3px,transparent 3px 10px),repeating-linear-gradient(180deg,' + c2 + ' 0 3px,transparent 3px 10px)',
+    'scacchi':   'background:' + c1 + ';background-image:linear-gradient(45deg,' + c2 + ' 25%,transparent 25% 75%,' + c2 + ' 75%),linear-gradient(45deg,' + c2 + ' 25%,transparent 25% 75%,' + c2 + ' 75%);background-size:12px 12px;background-position:0 0,6px 6px',
+    'camo':      'background:' + c1 + ';background-image:radial-gradient(' + c2 + ' 42%,transparent 43%),radial-gradient(' + c2 + ' 38%,transparent 39%);background-size:14px 12px,10px 9px;background-position:0 0,7px 5px',
+    'animalier': 'background:' + c1 + ';background-image:radial-gradient(ellipse 3px 2px,' + c2 + ' 60%,transparent 62%),radial-gradient(ellipse 2.6px 2px,' + c2 + ' 60%,transparent 62%);background-size:11px 9px,11px 9px;background-position:0 0,5px 4px',
+    'zigzag':    'background:' + c1 + ';background-image:linear-gradient(135deg,' + c2 + ' 25%,transparent 25%),linear-gradient(225deg,' + c2 + ' 25%,transparent 25%);background-size:8px 8px',
+    'fiori':     'background:' + c1 + ';color:' + c2,
+    'cuori':     'background:' + c1 + ';color:' + c2,
+    'stars':     'background:' + c1 + ';color:' + c2,
+    'logo':      'background:' + c1 + ';color:' + c2
   };
-  const dentro = pat === 'stars' ? '★'
-    : (pat === 'logo' ? '<span style="display:block;width:13px;height:8px;margin:8px auto;border-radius:2px;background:' + c2 + '"></span>' : '');
+  /* fiori, cuori, stelle e stampa sono SEGNI: si disegnano col carattere,
+     che a questa misura si legge meglio di un motivo ripetuto */
+  const segno = { fiori: '\u273f', cuori: '\u2665', stars: '\u2605', logo: '\u25c9' }[pat] || '';
   return '<span class="sw" style="' + (st[pat] || st.solid) +
-    ';font-size:14px;line-height:24px;text-align:center">' + dentro + '</span>';
+    ';font-size:15px;line-height:22px;text-align:center;font-weight:700">' + segno + '</span>';
 }
 
 function armadio() {
@@ -364,7 +369,7 @@ function armadio() {
   if (!p) return '<div class="invito">Tocca chi è venuto — Mamma, Papà, Nonna… — e qui sotto ' +
     'compare come vestirlo, senza aprire nient\'altro.</div>';
   const av = p.av, vestito = av.top.style === 'vestito';
-  const c1 = av.top.color, c2 = av.top.color2 || '#F4F6F8';
+  const c1 = av.top.color, c2 = AV.coloreFantasia(c1);
   const tinte = (dove, campo, val) => '<div class="tinte">' + AV.COLORS.slice(0,10).map(c =>
     '<button data-a="col" data-v="' + dove + '|' + campo + '|' + c.c + '" style="background:' + c.c + '"' +
     (val === c.c ? ' class="on"' : '') + '></button>').join('') + '</div>';
@@ -381,16 +386,12 @@ function armadio() {
           '<span class="nome">' + f.n + '</span></button>').join('') + '</div></div>' +
     '</div>' +
     /* da qui in giù si va a TUTTA LARGHEZZA: la figura sta solo di
-       fianco a capi e fantasie, e cosí le pastiglie dei due colori
-       stanno su una riga sola invece che su due */
+       fianco a capi e fantasie */
     '<div class="largo">' +
-      '<div class="duecolori">' +
-        '<div><span class="et">Colore del capo</span>' + tinte('top','color',c1) + '</div>' +
-        '<div class="' + (av.top.pattern === 'solid' ? 'spento' : '') + '">' +
-          '<span class="et">Colore della fantasia' +
-          (av.top.pattern === 'solid' ? ' — non serve' : '') + '</span>' +
-          tinte('top','color2',c2) + '</div>' +
-      '</div>' +
+      /* Un colore solo. Quello della fantasia se lo ricava da sé,
+         schiarendo o scurendo il capo: sceglierlo era una domanda in più
+         al banco per una cosa che si decide da sola. */
+      '<div><span class="et">Colore del capo</span>' + tinte('top','color',c1) + '</div>' +
       '<div class="' + (vestito ? 'spento' : '') + '"><span class="et">Sotto' +
         (vestito ? ' — col vestito non serve' : '') + '</span>' +
         '<div class="sottoriga"><div class="icone">' +
@@ -400,11 +401,11 @@ function armadio() {
         tinte('pants','color',av.pants.color) + '</div></div>' +
       /* la riga libera sta IN FILA coi tratti e si prende quello che
          avanza: su una riga sua costava altezza per niente */
-      '<div><span class="et">Tratti particolari</span><div class="tratti">' +
-        TRATTI.map(t => { const [d, v] = t.k.split(':');
-          return '<button class="' + (av[d] && av[d].style === v ? 'on' : '') +
-            '" data-a="tratto" data-v="' + t.k + '">' + t.n + '</button>'; }).join('') +
-        '<input class="libero" placeholder="Altro: «zaino giallo», «gamba ingessata»…" ' +
+      /* Le pastiglie di cappello, occhiali, barba, zaino, borsa e capelli
+         sono sparite: erano sei righe di scelte per cose che si scrivono
+         più in fretta di come si spuntano. Resta la riga libera. */
+      '<div><span class="et">Qualcosa che salta all\'occhio</span>' +
+        '<input class="libero largo" placeholder="«zaino giallo», «gamba ingessata», «barba lunga», «cappellino rosso»…" ' +
           'value="' + (p.note||'') + '" data-a="nota"></div>' +
     '</div></div>';
 }
@@ -496,8 +497,6 @@ function azione(a, v) {
   if (a === 'pat' && p)    p.av.top.pattern = v;
   if (a === 'pants' && p)  p.av.pants.style = v;
   if (a === 'col' && p)    { const [d, campo, c] = v.split('|'); p.av[d][campo] = c; }
-  if (a === 'tratto' && p) { const [d, val] = v.split(':'); p.av[d] = p.av[d] || {};
-                             p.av[d].style = (p.av[d].style === val ? 'none' : val); }
   if (a === 'add')   S.bar[v] = (S.bar[v]||0) + 1;
   if (a === 'meno')  S.bar[v] = Math.max(0, (S.bar[v]||0) - 1);
   if (a === 'ppiu')  S.pagate[v] = (S.pagate[v]||0) + 1;

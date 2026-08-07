@@ -211,6 +211,13 @@ function freshDraft() {
     barItems: [],
     braceletColor: null,
     braceletCustom: true,   // si parte "senza": il colore va scelto apposta
+    /* il conto vive qui insieme all'ingresso: la linguetta aperta, che
+       cosa e' gia' stato pagato riga per riga, e le due sezioni grosse */
+    cat: 'Parco',
+    paidLines: {},
+    parkPaid: false,
+    crazyPaid: false,
+    soloBar: false,
     touched: false
   };
 }
@@ -397,9 +404,15 @@ const R = {};   // riferimenti DOM riutilizzati
 
 function buildNewView() {
   const root = $('#view-new');
+  /* Le linguette sono la NAVIGAZIONE: Parco apre l'ingresso vero,
+     le altre aprono il bar di quella categoria. Il blocco del Parco si
+     costruisce una volta sola e resta li' nascosto: se lo rifacessi a
+     ogni cambio di linguetta perderei quello che c'e' scritto dentro. */
   root.innerHTML = `
     <div class="edit-banner hidden" id="nEditBanner"></div>
+    <div class="bc-cat" id="nCat"></div>
 
+    <div id="nParco">
     <div class="card blk c-blu">
       <h2><span class="em">\ud83d\udd52</span> Orario di inizio</h2>
       <div class="blk-in">
@@ -419,12 +432,14 @@ function buildNewView() {
     <div class="card blk c-ambra sec-dur">
       <h2><span class="em">\u23f3</span> Quanto restano</h2>
       <div class="blk-in">
-      <div class="chips" id="nDur"></div>
-      <div class="dur-custom">
-        <span class="lab">oppure minuti esatti</span>
-        <button class="step-b sm" id="nDurM">\u2212</button>
-        <input type="number" id="nDurInput" min="1" step="5" inputmode="numeric" value="60">
-        <button class="step-b sm plus" id="nDurP">+</button>
+      <div class="riga-dur">
+        <div class="chips" id="nDur"></div>
+        <div class="dur-custom">
+          <span class="lab">oppure minuti esatti</span>
+          <button class="step-b sm" id="nDurM">\u2212</button>
+          <input type="number" id="nDurInput" min="1" step="5" inputmode="numeric" value="60">
+          <button class="step-b sm plus" id="nDurP">+</button>
+        </div>
       </div>
       </div>
     </div>
@@ -445,27 +460,23 @@ function buildNewView() {
           <div class="c-val num" id="nCrazy">0</div>
           <button class="step-b plus" id="nCrazyP">+</button>
         </div>
+        <button class="solobar" id="nSoloBar"><span class="em">\ud83e\udd64</span> Solo bar<small>nessuno entra</small></button>
       </div>
       </div>
     </div>
 
     <div class="card blk c-viola sec-people">
-      <h2><span class="em">\ud83e\uddd1\u200d\ud83e\udd1d\u200d\ud83e\uddd1</span> Chi accompagna</h2>
+      <div class="testa-viola">
+        <h2><span class="em">\ud83e\uddd1\u200d\ud83e\udd1d\u200d\ud83e\uddd1</span> Chi accompagna</h2>
+        <button class="butta hidden" id="nButta"></button>
+      </div>
       <div class="blk-in">
         <div class="person-list" id="nPeople"></div>
       </div>
     </div>
-
-    <div class="card blk c-ciano sec-bar">
-      <div class="sect-head">
-        <h2><span class="em">\ud83e\udd64</span> Bar</h2>
-        <button class="pill" id="nBarToggle">Apri</button>
-      </div>
-      <div class="blk-in">
-        <div class="bar-wrap hidden" id="nBar"></div>
-      </div>
     </div>
 
+    <div class="bc-griglia hidden" id="nGriglia"></div>
     <div class="btn-row" id="nEditRow" style="margin-bottom:8px;"></div>
   `;
 
@@ -478,7 +489,9 @@ function buildNewView() {
   R.nChildM = $('#nChildM');
   R.nCrazyM = $('#nCrazyM');
   R.nPeople = $('#nPeople');
-  R.nBar = $('#nBar');
+  R.nCat = $('#nCat');
+  R.nParco = $('#nParco');
+  R.nGriglia = $('#nGriglia');
   R.nEditRow = $('#nEditRow');
 
   const bump = (fn) => () => { draft.touched = true; fn(); syncNew(); };
@@ -486,9 +499,17 @@ function buildNewView() {
   $('#nStartPlus').onclick = bump(() => { draft.startTime += 5 * 60000; });
   $('#nStartNow').onclick = bump(() => { draft.startTime = roundTo5(new Date()).getTime(); draft.braceletCustom = false; });
   $('#nChildM').onclick = bump(() => { draft.children = clamp(draft.children - 1, 0, 999); });
-  $('#nChildP').onclick = bump(() => { draft.children = clamp(draft.children + 1, 0, 999); });
+  $('#nChildP').onclick = bump(() => { draft.children = clamp(draft.children + 1, 0, 999); draft.soloBar = false; });
   $('#nCrazyM').onclick = bump(() => { draft.crazyJumping = clamp(draft.crazyJumping - 1, 0, 999); });
-  $('#nCrazyP').onclick = bump(() => { draft.crazyJumping = clamp(draft.crazyJumping + 1, 0, 999); });
+  $('#nCrazyP').onclick = bump(() => { draft.crazyJumping = clamp(draft.crazyJumping + 1, 0, 999); draft.soloBar = false; });
+  /* "Solo bar" e' l'unico modo di non pagare l'ingresso: la regola resta
+     che si paga per almeno un bambino, ma qui si dice apposta che
+     nessuno entra -- e' quello che prima faceva il banco a parte */
+  $('#nSoloBar').onclick = bump(() => {
+    draft.soloBar = !draft.soloBar;
+    if (draft.soloBar) { draft.children = 0; draft.crazyJumping = 0; }
+    else if (draft.children <= 0) draft.children = 1;
+  });
 
   const setDur = (v) => {
     draft.durationMinutes = clamp(Math.round(v), 1, 99999);
@@ -509,17 +530,65 @@ function buildNewView() {
   };
   R.nDurInput.onblur = () => { R.nDurInput.value = draft.durationMinutes; };
 
-  const barToggle = $('#nBarToggle');
-  barToggle.onclick = () => {
-    const open = R.nBar.classList.toggle('hidden');
-    barToggle.textContent = open ? 'Apri' : 'Chiudi';
-    barToggle.classList.toggle('on', !open);
+  /* i tocchi sulla griglia del bar: rifanno SOLO la card toccata, se no
+     tutta la schermata lampeggia sotto le dita */
+  R.nGriglia.onclick = (ev) => {
+    const b = ev.target.closest('button');
+    if (!b || !R.nGriglia.contains(b)) return;
+    const d = b.dataset;
+    const id = d.add || d.meno || d.ppiu || d.pmeno;
+    if (!id) return;
+    tocchi.id = id;
+    draft.paidLines = draft.paidLines || {};
+    if (d.add !== undefined) {
+      if (bcQ(id) === 0) tocchi.nato = id;
+      bcSetQ(id, bcQ(id) + 1);
+    } else if (d.meno !== undefined) bcSetQ(id, bcQ(id) - 1);
+    else if (d.ppiu !== undefined) draft.paidLines[id] = Math.min(bcQ(id), bcPag(id) + 1);
+    else draft.paidLines[id] = Math.max(0, bcPag(id) - 1);
+    draft.touched = true;
+    disegnaVoce(id);
+    syncActionBar();
+  };
+
+  R.nCat.onclick = (ev) => {
+    const b = ev.target.closest('button');
+    if (!b || b.dataset.cat === undefined) return;
+    draft.cat = b.dataset.cat;
+    syncNew({ entra: true });
+  };
+
+  $('#nButta').onclick = () => {
+    const ap = R.nPeople.dataset.apri;
+    if (ap) {
+      const k = draft.people.findIndex(p => p.id === ap);
+      if (k > -1) draft.people.splice(k, 1);
+      R.nPeople.dataset.apri = '';
+    } else draft.people = [];
+    draft.touched = true;
+    R.nPeople.dataset.sig = '';
+    syncNew();
   };
 
   buildWristRow();
   buildDurationChips();
-  buildBarRows(R.nBar, () => draft.barItems, () => { draft.touched = true; syncNew(); });
   newBuilt = true;
+}
+
+/* la firma della griglia: quantita' e pagate di ogni voce */
+function firmaGriglia() {
+  return draft.cat + '\u00a7' + bcVociDi(draft.cat).map(v =>
+    v.id + ':' + bcQ(v.id) + '/' + bcPag(v.id)).join(',');
+}
+/* rifa' una sola card della griglia, al posto suo */
+function disegnaVoce(id) {
+  const vecchia = R.nGriglia.querySelector('.bc-card[data-id="' + id + '"]');
+  if (!vecchia) return;
+  const t = el('div');
+  t.innerHTML = bcCard(bcVoce(id));
+  vecchia.replaceWith(t.firstElementChild);
+  R.nGriglia.dataset.sig = firmaGriglia();
+  tocchi.id = null; tocchi.nato = null;
 }
 
 function buildDurationChips() {
@@ -658,120 +727,162 @@ function syncBarRows(container, items) {
 /* Lista persone (draft e schede).
    Si ridisegna solo se qualcosa è davvero cambiato: senza questo controllo
    ogni tocco su "+1 bambino" ricostruirebbe anche tutti gli sprite. */
+/* La pezza fa vedere DAVVERO la fantasia. Se nel selettore fossero
+   quattordici quadrati uguali si sceglierebbe alla cieca. */
+function pezzaFantasia(pat, c1, c2) {
+  const st = {
+    'solid':     'background:' + c1,
+    'stripes-h': 'background:repeating-linear-gradient(180deg,' + c1 + ' 0 5px,' + c2 + ' 5px 10px)',
+    'stripes-v': 'background:repeating-linear-gradient(90deg,' + c1 + ' 0 5px,' + c2 + ' 5px 10px)',
+    'diag':      'background:repeating-linear-gradient(45deg,' + c1 + ' 0 5px,' + c2 + ' 5px 10px)',
+    'dots':      'background:' + c1 + ';background-image:radial-gradient(' + c2 + ' 2.2px,transparent 2.4px);background-size:9px 9px',
+    'plaid':     'background:' + c1 + ';background-image:repeating-linear-gradient(90deg,' + c2 + ' 0 3px,transparent 3px 10px),repeating-linear-gradient(180deg,' + c2 + ' 0 3px,transparent 3px 10px)',
+    'scacchi':   'background:' + c1 + ';background-image:linear-gradient(45deg,' + c2 + ' 25%,transparent 25% 75%,' + c2 + ' 75%),linear-gradient(45deg,' + c2 + ' 25%,transparent 25% 75%,' + c2 + ' 75%);background-size:12px 12px;background-position:0 0,6px 6px',
+    'camo':      'background:' + c1 + ';background-image:radial-gradient(' + c2 + ' 42%,transparent 43%),radial-gradient(' + c2 + ' 38%,transparent 39%);background-size:14px 12px,10px 9px;background-position:0 0,7px 5px',
+    'animalier': 'background:' + c1 + ';background-image:radial-gradient(ellipse 3px 2px,' + c2 + ' 60%,transparent 62%),radial-gradient(ellipse 2.6px 2px,' + c2 + ' 60%,transparent 62%);background-size:11px 9px,11px 9px;background-position:0 0,5px 4px',
+    'zigzag':    'background:' + c1 + ';background-image:linear-gradient(135deg,' + c2 + ' 25%,transparent 25%),linear-gradient(225deg,' + c2 + ' 25%,transparent 25%);background-size:8px 8px'
+  };
+  /* fiori, cuori, stelle e stampa sono SEGNI: a questa misura un
+     carattere si legge meglio di un motivo ripetuto */
+  const segno = { fiori: '\u273f', cuori: '\u2665', stars: '\u2605', logo: '\u25c9' }[pat] || '';
+  return '<span class="sw" style="' + (st[pat] || ('background:' + c1 + ';color:' + c2)) + '">' + segno + '</span>';
+}
+
+/* CHI ACCOMPAGNA
+   I ruoli stanno tutti su una riga, con l'icona sopra e il nome sotto:
+   si trovano a colpo d'occhio. Toccarne uno lo aggiunge e apre subito
+   l'armadio; toccarlo ancora lo richiude. Uno per ruolo: due "Mamma"
+   nello stesso gruppo non servono a riconoscere nessuno. */
 function syncPeople(container, people, onChange) {
-  /* Se arriva un ELENCO diverso (per esempio si apre in modifica un
-     altro ingresso) va ridisegnato anche se il contenuto e' uguale:
-     altrimenti i tasti restano agganciati all'elenco di prima e la
-     persona finisce nell'ingresso sbagliato. */
   if (container.__lista !== people) {
     container.__lista = people;
     container.dataset.sig = '';
+    container.dataset.apri = '';
   }
-  const sig = people.map(p => p.id + '|' + (p.name || '') + '|' + (p.note || '') + '|' + JSON.stringify(p.avatar)).join('\u00a7')
-    + '|apri:' + (container.dataset.apri || '');
+  /* chi non c'e' piu' non puo' restare aperto */
+  if (container.dataset.apri && !people.some(p => p.id === container.dataset.apri)) {
+    container.dataset.apri = '';
+  }
+  const sig = people.map(p => p.id + '|' + p.role + '|' + (p.name || '') + '|' + (p.note || '') +
+    '|' + JSON.stringify(p.avatar)).join('\u00a7') + '>' + (container.dataset.apri || '');
   if (container.dataset.sig === sig) return;
   container.dataset.sig = sig;
-  container.innerHTML = '';
 
-  const rinfresca = () => { container.dataset.sig = ''; syncPeople(container, people, onChange); };
-  const aggiungi = (person, apriSubito) => {
-    people.push(person);
-    if (apriSubito) container.dataset.apri = person.id;
-    onChange();
-    rinfresca();
-  };
+  people.forEach(p => { p.avatar = AV.normalize(p.avatar, p.role); });
+  const chi = people.find(p => p.id === container.dataset.apri) || null;
 
-  /* La persona: solo l'editor. Il banner compatto che stava qui sopra
-     (avatar piccolo, nome, pennello, X e tratti colorati) faceva vedere
-     due volte le stesse cose. E il riferimento e' UNO solo. */
-  people.forEach(p => {
-    p.avatar = AV.normalize(p.avatar, p.role);
-    const blocco = el('div', 'p-blocco aperto');
-    const ed = el('div', 'p-editor');
+  const ruoli = '<div class="ruoli">' + AV.ROLES.map(r => {
+    const ce = people.find(p => p.role === r.key);
+    const cls = !ce ? '' : (chi && ce.id === chi.id ? ' class="on"' : ' class="messo"');
+    return '<button data-ruolo="' + r.key + '"' + cls + '>' +
+      '<span class="em">' + r.em + '</span><span class="nm">' + esc(r.label) + '</span></button>';
+  }).join('') + '</div>';
 
-    const barra = el('div', 'ed-barra');
-    barra.appendChild(el('span', 'ed-tit', '\ud83c\udfa8 Com\u2019\u00e8 vestito ' + roleOf(p.role).label.toLowerCase()));
-    const nome = el('input', 'ed-nome');
-    nome.placeholder = 'Nome (facoltativo)';
-    nome.value = p.name || '';
-    nome.oninput = () => { p.name = nome.value; onChange(); };
-    barra.appendChild(nome);
-    const via = el('button', 'ed-via', '\u2715');
-    via.title = 'Togli questa persona';
-    via.onclick = () => {
-      const k = people.indexOf(p);
-      if (k > -1) people.splice(k, 1);
-      onChange();
-      rinfresca();
-    };
-    barra.appendChild(via);
+  container.innerHTML = ruoli + armadioDi(chi);
 
-    buildAvatarEditor(ed, p, () => {
-      container.dataset.sig = '';   // la prossima volta ridisegna davvero
-      onChange();
-    });
-    ed.insertBefore(barra, ed.firstChild);
-    blocco.appendChild(ed);
-    container.appendChild(blocco);
-  });
-
-  /* la scelta: subito visibile se non c'è nessuno, dietro un "+" se ce n'è già */
-  const scelta = el('div', 'p-scelta');
-  /* il riferimento e' uno solo: finche' c'e' una persona non si sceglie */
-  const mostraScelta = people.length === 0;
-
-  if (mostraScelta) {
-    /* i ruoli: la scelta principale. Emoji grande, si trova a colpo d'occhio
-       molto prima di uno sprite. Chi si aggiunge parte NEUTRO (AV.baseFor):
-       caratteristiche del ruolo, niente accessori, tinte da cambiare al volo. */
-    const griglia = el('div', 'who-pick ruoli');
-    AV.ROLES.forEach(r => {
-      const b = el('button', 'wp wp-role');
-      const em = el('div', 'wp-em');
-      em.innerHTML = '<span class="em">' + r.em + '</span>';
-      b.appendChild(em);
-      b.appendChild(el('div', 'wp-n', r.label));
-      b.onclick = () => {
-        container.dataset.scegli = '';
-        /* Scelta l'emoji si apre SUBITO il palco: e' il flusso che ha
-           scelto guardando il modello E2. (All'inizio lo aprivo e gli
-           dava fastidio, ma allora l'editor era quello vecchio, lungo
-           e da scorrere.) */
-        const nato = AV.baseFor(r.key);
-        nato.scelti = {};      // ancora niente scelto: la scheda non descrive nulla
-        aggiungi({ id: uid(), role: r.key, name: '', avatar: nato, note: '' }, true);
-      };
-      griglia.appendChild(b);
-    });
-    scelta.appendChild(griglia);
-
-    /* gli avatar salvati: scorciatoia, in secondo piano */
-    if (presets.length) {
-      const sav = el('details', 'p-preset');
-      const sum = el('summary');
-      sum.innerHTML = '\ud83d\uddbc\ufe0f oppure usa un avatar gi\u00e0 pronto (' + presets.length + ')';
-      sav.appendChild(sum);
-      const g2 = el('div', 'who-pick');
-      presets.forEach(p => {
-        const b = el('button', 'wp wp-preset');
-        const av = el('div', 'wp-av');
-        av.innerHTML = AV.build(p.avatar);
-        b.appendChild(av);
-        b.appendChild(el('div', 'wp-n', p.name || roleOf(p.role).label));
-        b.onclick = () => {
-          container.dataset.scegli = '';
-          aggiungi({
-            id: uid(), role: p.role || 'altro', name: p.name || '',
-            avatar: JSON.parse(JSON.stringify(AV.normalize(p.avatar, p.role))), note: ''
-          }, true);
-        };
-        g2.appendChild(b);
-      });
-      sav.appendChild(g2);
-      scelta.appendChild(sav);
-    }
+  /* il tasto per togliere sta in testa al blocco: toglie chi stai
+     vestendo, o tutti se non ne stai vestendo nessuno */
+  const via = document.getElementById('nButta');
+  if (via) {
+    via.classList.toggle('hidden', people.length === 0);
+    via.innerHTML = '\ud83d\uddd1\ufe0f ' + (chi ? 'Togli ' + esc(roleOf(chi.role).label) : 'Togli tutti');
   }
-  container.appendChild(scelta);
+
+  /* I comandi si agganciano UNA volta sola, quindi non possono tenersi
+     stretto ne' l'elenco ne' chi e' aperto: li ripescano dal contenitore
+     a ogni tocco. Con l'elenco congelato nella chiusura, aprire un altro
+     ingresso in modifica faceva finire la persona nel gruppo sbagliato,
+     e il tasto gia' aperto non si richiudeva piu'. */
+  container.__cambia = onChange;
+  if (container.dataset.agganciato !== 'si') {
+    container.dataset.agganciato = 'si';
+    const elenco = () => container.__lista || [];
+    const avvisa = () => { if (container.__cambia) container.__cambia(); };
+    container.addEventListener('input', (ev) => {
+      const t = ev.target;
+      const people = elenco();
+      const p = people.find(x => x.id === container.dataset.apri);
+      if (!p || !t.dataset.campo) return;
+      p[t.dataset.campo] = t.value;
+      /* la firma si aggiorna a mano: ridisegnare mentre scrive gli
+         porterebbe via il cursore da sotto le dita */
+      container.dataset.sig = people.map(q => q.id + '|' + q.role + '|' + (q.name || '') + '|' +
+        (q.note || '') + '|' + JSON.stringify(q.avatar)).join('\u00a7') + '>' + (container.dataset.apri || '');
+      avvisa();
+    });
+    container.addEventListener('click', (ev) => {
+      const b = ev.target.closest('button');
+      if (!b || !container.contains(b)) return;
+      const d = b.dataset;
+      const people = elenco();
+      const p = people.find(x => x.id === container.dataset.apri);
+      if (d.ruolo !== undefined) {
+        const ce = people.find(x => x.role === d.ruolo);
+        if (!ce) {
+          /* chi arriva parte NEUTRO: caratteristiche del ruolo, tinte da
+             cambiare al volo, niente ancora "scelto" */
+          const nato = AV.baseFor(d.ruolo);
+          nato.scelti = {};
+          const nuovo = { id: uid(), role: d.ruolo, name: '', avatar: nato, note: '' };
+          people.push(nuovo);
+          container.dataset.apri = nuovo.id;
+        } else container.dataset.apri = (container.dataset.apri === ce.id) ? '' : ce.id;
+      } else if (p && d.top !== undefined)   p.avatar.top.style = d.top;
+      else if (p && d.pat !== undefined)     p.avatar.top.pattern = d.pat;
+      else if (p && d.pants !== undefined)   p.avatar.pants.style = d.pants;
+      else if (p && d.col !== undefined) {
+        const parti = d.col.split('|');
+        p.avatar[parti[0]][parti[1]] = parti[2];
+      } else return;
+      container.dataset.sig = '';
+      avvisa();
+      syncPeople(container, people, container.__cambia);
+    });
+  }
+}
+
+/* l'armadio di chi si sta vestendo: figura a sinistra, scelte a destra */
+function armadioDi(p) {
+  if (!p) return '<div class="invito">Tocca chi \u00e8 venuto \u2014 Mamma, Pap\u00e0, Nonna\u2026 \u2014 ' +
+    'e qui sotto compare come vestirlo, senza aprire nient\u2019altro.</div>';
+  const av = p.avatar, vestito = av.top.style === 'vestito';
+  /* un colore solo: quello della fantasia se lo ricava da se', schiarendo
+     o scurendo il capo. Sceglierlo era una domanda in piu' al banco per
+     una cosa che si decide da sola. */
+  const c1 = av.top.color, c2 = AV.coloreFantasia(c1);
+  const tinte = (dove, val) => '<div class="tinte">' + AV.COLORS.slice(0, 10).map(c =>
+    '<button data-col="' + dove + '|color|' + c.c + '" style="background:' + c.c + '"' +
+    (val === c.c ? ' class="on"' : '') + '></button>').join('') + '</div>';
+
+  return '<div class="armadio">' +
+    '<div class="figura">' + AV.build(av) +
+      '<input class="libero chi" placeholder="' + esc(roleOf(p.role).label) + '" value="' +
+        esc(p.name || '') + '" data-campo="name"></div>' +
+    '<div class="roba">' +
+      '<div><span class="et">Che cosa indossa</span><div class="icone">' +
+        AV.TOP.map(t => '<button class="ico' + (av.top.style === t.key ? ' on' : '') +
+          '" data-top="' + t.key + '"><span class="dis">' + t.em + '</span>' +
+          '<span class="nome">' + esc(t.label) + '</span></button>').join('') + '</div></div>' +
+      '<div><span class="et">Fantasia</span><div class="icone">' +
+        AV.PATTERNS.map(f => '<button class="ico' + (av.top.pattern === f.key ? ' on' : '') +
+          '" data-pat="' + f.key + '">' + pezzaFantasia(f.key, c1, c2) +
+          '<span class="nome">' + esc(f.n) + '</span></button>').join('') + '</div></div>' +
+    '</div>' +
+    /* da qui in giu' si va a TUTTA LARGHEZZA: la figura sta solo di
+       fianco a capi e fantasie */
+    '<div class="largo">' +
+      '<div><span class="et">Colore del capo</span>' + tinte('top', c1) + '</div>' +
+      '<div class="' + (vestito ? 'spento' : '') + '"><span class="et">Sotto' +
+        (vestito ? ' \u2014 col vestito non serve' : '') + '</span>' +
+        '<div class="sottoriga"><div class="icone">' +
+        AV.PANTS.map(t => '<button class="ico' + (av.pants.style === t.key ? ' on' : '') +
+          '" data-pants="' + t.key + '"><span class="dis">' + t.em + '</span>' +
+          '<span class="nome">' + esc(t.label) + '</span></button>').join('') + '</div>' +
+        tinte('pants', av.pants.color) + '</div></div>' +
+      '<div><span class="et">Qualcosa che salta all\u2019occhio</span>' +
+        '<input class="libero largo" data-campo="note" value="' + esc(p.note || '') + '" ' +
+        'placeholder="\u00abzaino giallo\u00bb, \u00abgamba ingessata\u00bb, \u00abbarba lunga\u00bb, \u00abcappellino rosso\u00bb\u2026"></div>' +
+    '</div></div>';
 }
 
 /* ---------- cloud: accensione, arrivi da fuori, schermata d'accesso ---------- */
@@ -1223,8 +1334,33 @@ function syncNew(opts) {
   R.nChildM.disabled = draft.children <= 0;
   R.nCrazyM.disabled = draft.crazyJumping <= 0;
 
-  syncPeople(R.nPeople, draft.people, () => { draft.touched = true; syncActionBar(); });
-  syncBarRows(R.nBar, draft.barItems);
+  $('#nSoloBar').classList.toggle('on', !!draft.soloBar);
+
+  /* le linguette: il Parco davanti, poi le categorie del menu */
+  const cats = bcCategorie();
+  if (!draft.cat || cats.indexOf(draft.cat) < 0) draft.cat = 'Parco';
+  const firmaCat = cats.join('|') + '>' + draft.cat;
+  if (R.nCat.dataset.sig !== firmaCat) {
+    R.nCat.dataset.sig = firmaCat;
+    R.nCat.innerHTML = cats.map(c =>
+      '<button data-cat="' + esc(c) + '"' + (draft.cat === c ? ' class="on"' : '') + '>' +
+      iconaCat(c) + esc(c) + '</button>').join('');
+  }
+  const inParco = draft.cat === 'Parco';
+  R.nParco.classList.toggle('hidden', !inParco);
+  R.nGriglia.classList.toggle('hidden', inParco);
+  if (inParco) {
+    syncPeople(R.nPeople, draft.people, () => { draft.touched = true; syncActionBar(); });
+  } else if (R.nGriglia.dataset.sig !== firmaGriglia()) {
+    R.nGriglia.dataset.sig = firmaGriglia();
+    R.nGriglia.innerHTML = bcVociDi(draft.cat).map(bcCard).join('');
+    tocchi.id = null; tocchi.nato = null;
+  }
+  if (opts.entra && anima()) {
+    const q = inParco ? R.nParco : R.nGriglia;
+    q.classList.remove('entra'); void q.offsetWidth; q.classList.add('entra');
+    setTimeout(() => q.classList.remove('entra'), 340);
+  }
 
   // riga "annulla modifica": si tocca solo quando cambia davvero
   const editSig = editingId || '';
@@ -1252,28 +1388,56 @@ function syncNew(opts) {
   syncActionBar();
 }
 
+/* l'icona della linguetta: il primo prodotto di quella categoria, cosi'
+   "Birre" mostra una birra senza doverlo scrivere da nessuna parte */
+function iconaCat(cat) {
+  if (cat === 'Parco') return typeof ICONE !== 'undefined' && ICONE.bimbi ? ICONE.bimbi() : '';
+  const v = (settings.barMenu || []).find(it => ((it.cat || 'Altro').trim() || 'Altro') === cat);
+  return v ? iconaBar(v.name, v.em) : '';
+}
+
+/* La barra del prezzo resta IN ALTO: sotto ci va la tastiera del tablet,
+   e la riga libera di "Chi accompagna" la fa uscire per davvero.
+   Le tre voci non dicono solo quanto viene: si toccano per segnare che
+   quella parte e' gia' stata pagata. */
 function syncActionBar() {
   const ab = $('#actionbar');
   if (tab !== 'new') { ab.classList.add('hidden'); return; }
   ab.classList.remove('hidden');
 
-  const c = { children: Math.max(1, draft.children), crazy: draft.crazyJumping };
-  /* si paga il tempo del parco: i minuti regalati dal Crazy allungano
-     la permanenza ma non lo scaglione */
-  const parco = draft.payLater ? 0 : Math.round(priceFor(up5(draft.durationMinutes)) * c.children * 100) / 100;
-  const crazy = Math.round(c.crazy * settings.crazyJumpingPrice * 100) / 100;
-  const bar = Math.round(draft.barItems.reduce((s, i) => s + i.price * i.qty, 0) * 100) / 100;
+  const parco = contoParco(), crazy = contoCrazy(), bar = contoBar();
+  const tot = contoTot(), pag = contoPagato(), resta = contoResta();
 
   $('#abNow').textContent = fmtTime(draft.startTime);
   $('#abArrow').textContent = '\u2192';
-  $('#abEnd').textContent = draft.payLater ? 'aperta' : fmtTime(draftEnd());
-  $('#abParco').textContent = draft.payLater ? 'a consumo' : eur(parco);
-  $('#abCrazy').textContent = eur(crazy);
-  $('#abCrazyBox').classList.toggle('hidden', crazy <= 0);
-  $('#abBar').textContent = eur(bar);
-  $('#abBarBox').classList.toggle('hidden', bar <= 0);
-  $('#abEur').textContent = draft.payLater ? eur(crazy + bar) + '+' : eur(parco + crazy + bar);
-  $('#abSave').textContent = editingId ? 'Salva modifiche' : 'Registra';
+  $('#abEnd').textContent = draft.soloBar ? 'solo bar' : draft.payLater ? 'aperta' : fmtTime(draftEnd());
+
+  const voce = (nome, id, im, fatta) =>
+    '<button class="ab-voce' + (fatta ? ' pagata' : '') + '" data-sez="' + id + '"' +
+      (im > 0 ? '' : ' disabled') + '>' +
+      '<span class="ab-k">' + nome + '</span>' +
+      '<span class="num">' + im.toFixed(2).replace('.', ',') + ' \u20ac</span>' +
+      '<span class="ab-seg">' + (fatta ? '\u2713 pagato' : im > 0 ? 'segna pagato' : ' ') + '</span>' +
+    '</button>';
+  const barPag = contoPagatoBar();
+  const voci =
+    voce(draft.payLater ? 'Parco (a consumo)' : 'Parco', 'bimbi', parco, parco > 0 && draft.parkPaid) +
+    (crazy > 0 ? voce('Crazy', 'crazy', crazy, draft.crazyPaid) : '') +
+    (bar > 0 ? voce('Bar', 'bar', bar, barPag >= bar - 0.005) : '');
+  const box = $('#abVoci');
+  if (box.dataset.sig !== voci) { box.dataset.sig = voci; box.innerHTML = voci; }
+
+  $('#abTotK').textContent = tot <= 0 ? 'niente sul conto'
+    : resta > 0 ? (pag > 0 ? 'restano' : 'da incassare') : 'tutto pagato';
+  $('#abEur').textContent = (resta > 0 ? eur(resta) : '\u2713 ' + eur(tot)) + (draft.payLater ? '+' : '');
+  /* la riga sotto c'e' sempre, anche vuota: se comparisse solo quando
+     serve, la cifra grande saltellerebbe a ogni incasso */
+  const gia = $('#abGia');
+  gia.textContent = pag > 0 && resta > 0 ? 'gi\u00e0 presi ' + eur(pag) : ' ';
+  gia.classList.toggle('vuota', !(pag > 0 && resta > 0));
+
+  $('#abSave').textContent = editingId ? 'Salva modifiche'
+    : tot > 0 && resta <= 0 ? 'Registra e incassa' : 'Registra';
 }
 
 function pickRole(onPick) {
@@ -1503,36 +1667,63 @@ function buildAvatarEditor(box, person, onChange, opts) {
     return sc;
   };
 
-  const patterns = (r, get, set, colGet, col2Get, col2Set) => {
+  /* Il colore della fantasia non si sceglie piu': se lo ricava dal capo,
+     schiarendolo o scurendolo. Era una domanda in piu' per una cosa che
+     si decide da sola -- e il campione qui sotto lo fa vedere. */
+  const patterns = (r, get, set, colGet) => {
     const sc = el('div', 'ed-cols');
     sc.appendChild(el('span', 'ed-sub', 'fantasia'));
+    const rifai = () => $$('.ed-pat', sc).forEach((x, i2) => {
+      x.innerHTML = campionePattern(colGet(), AV.PATTERNS[i2].key);
+    });
     AV.PATTERNS.forEach(p => {
       const b = el('button', 'ed-col ed-pat' + (get() === p.key ? ' on' : ''));
       b.title = p.n;
-      b.innerHTML = campionePattern(colGet(), col2Get(), p.key);
+      b.innerHTML = campionePattern(colGet(), p.key);
       b.onclick = () => {
         set(p.key);
         segna(r);
         $$('.ed-col', sc).forEach(o => o.classList.remove('on'));
         b.classList.add('on');
         aggiorna();
-        $$('.ed-pat', sc).forEach((x, i) => { x.innerHTML = campionePattern(colGet(), col2Get(), AV.PATTERNS[i].key); });
+        rifai();
       };
       sc.appendChild(b);
     });
     r.appendChild(sc);
-    /* il secondo colore della fantasia */
-    const r2 = colori(r, AV.COLORS, col2Get, (v) => { col2Set(v); }, 'colore della fantasia');
+    sc.rifai = rifai;
     return sc;
   };
-  function campionePattern(c1, c2, key) {
+  function campionePattern(c1, key) {
+    const c2 = AV.coloreFantasia(c1);
+    const scuro = AV.shade(c1, -34);
     const d = {
       solid: '<rect width="24" height="24" fill="' + c1 + '"/>',
       'stripes-h': '<rect width="24" height="24" fill="' + c1 + '"/><rect width="24" height="6" y="3" fill="' + c2 + '"/><rect width="24" height="6" y="15" fill="' + c2 + '"/>',
       'stripes-v': '<rect width="24" height="24" fill="' + c1 + '"/><rect width="6" height="24" x="3" fill="' + c2 + '"/><rect width="6" height="24" x="15" fill="' + c2 + '"/>',
+      diag: '<rect width="24" height="24" fill="' + c1 + '"/><path d="M-6 6 L6 -6 M0 24 L24 0 M18 30 L30 18" stroke="' + c2 + '" stroke-width="7"/>',
       dots: '<rect width="24" height="24" fill="' + c1 + '"/><circle cx="8" cy="8" r="3" fill="' + c2 + '"/><circle cx="17" cy="16" r="3" fill="' + c2 + '"/>',
       plaid: '<rect width="24" height="24" fill="' + c1 + '"/><rect y="9" width="24" height="5" fill="' + c2 + '"/><rect x="9" width="5" height="24" fill="' + c2 + '"/>',
-      camo: '<rect width="24" height="24" fill="' + c1 + '"/><ellipse cx="7" cy="8" rx="6" ry="4.6" fill="' + AV.shade(c1, -34) + '"/><ellipse cx="18" cy="17" rx="6" ry="4.6" fill="' + c2 + '"/>',
+      scacchi: '<rect width="24" height="24" fill="' + c1 + '"/><rect width="12" height="12" fill="' + c2 + '"/><rect x="12" y="12" width="12" height="12" fill="' + c2 + '"/>',
+      fiori: '<rect width="24" height="24" fill="' + c1 + '"/>' +
+        [[8, 8], [17, 17]].map(function (p) {
+          let o = '';
+          for (let k = 0; k < 5; k++) {
+            const a = k * 72 * Math.PI / 180;
+            o += '<circle cx="' + (p[0] + 3.4 * Math.cos(a)).toFixed(1) + '" cy="' +
+                 (p[1] + 3.4 * Math.sin(a)).toFixed(1) + '" r="2.6" fill="' + c2 + '"/>';
+          }
+          return o + '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="1.9" fill="' + AV.shade(c2, -40) + '"/>';
+        }).join(''),
+      cuori: '<rect width="24" height="24" fill="' + c1 + '"/>' +
+        '<path d="M12 19 C4.4 13.6 5.2 7.2 9.2 6.4 C11 6 12 7.6 12 8.8 C12 7.6 13 6 14.8 6.4 C18.8 7.2 19.6 13.6 12 19 Z" fill="' + c2 + '"/>',
+      zigzag: '<rect width="24" height="24" fill="' + c1 + '"/>' +
+        '<path d="M0 8 L6 2 L12 8 L18 2 L24 8 M0 20 L6 14 L12 20 L18 14 L24 20" stroke="' + c2 + '" stroke-width="4" fill="none"/>',
+      animalier: '<rect width="24" height="24" fill="' + c1 + '"/>' +
+        '<ellipse cx="7" cy="6" rx="4" ry="3" fill="' + scuro + '"/>' +
+        '<ellipse cx="17" cy="13" rx="3.6" ry="2.8" fill="' + scuro + '"/>' +
+        '<ellipse cx="9" cy="19" rx="4" ry="2.9" fill="' + scuro + '"/>',
+      camo: '<rect width="24" height="24" fill="' + c1 + '"/><ellipse cx="7" cy="8" rx="6" ry="4.6" fill="' + scuro + '"/><ellipse cx="18" cy="17" rx="6" ry="4.6" fill="' + c2 + '"/>',
       stars: '<rect width="24" height="24" fill="' + c1 + '"/><path d="M12 4.5 14 10h5.6l-4.5 3.3 1.7 5.4L12 15.4 7.2 18.7l1.7-5.4L4.4 10H10Z" fill="' + c2 + '"/>',
       logo: '<rect width="24" height="24" fill="' + c1 + '"/><circle cx="12" cy="12" r="6" fill="none" stroke="' + c2 + '" stroke-width="3"/>'
     };
@@ -1553,15 +1744,15 @@ function buildAvatarEditor(box, person, onChange, opts) {
 
   const rTop = riga('maglietta', 'Maglietta');
   stili(rTop, AV.TOP, () => av.top.style, v => { av.top.style = v; }, 'busto');
-  colori(rTop, AV.COLORS, () => av.top.color, v => { av.top.color = v; });
-  patterns(rTop, () => av.top.pattern, v => { av.top.pattern = v; },
-    () => av.top.color, () => av.top.color2, v => { av.top.color2 = v; });
+  colori(rTop, AV.COLORS, () => av.top.color, v => { av.top.color = v; if (patTop) patTop.rifai(); });
+  const patTop = patterns(rTop, () => av.top.pattern, v => { av.top.pattern = v; },
+    () => av.top.color);
 
   const rPants = riga('pantaloni', 'Sotto', 'pants');
   stili(rPants, AV.PANTS, () => av.pants.style, v => { av.pants.style = v; }, 'gambe');
-  colori(rPants, AV.COLORS, () => av.pants.color, v => { av.pants.color = v; });
-  patterns(rPants, () => av.pants.pattern, v => { av.pants.pattern = v; },
-    () => av.pants.color, () => av.pants.color2, v => { av.pants.color2 = v; });
+  colori(rPants, AV.COLORS, () => av.pants.color, v => { av.pants.color = v; if (patPants) patPants.rifai(); });
+  const patPants = patterns(rPants, () => av.pants.pattern, v => { av.pants.pattern = v; },
+    () => av.pants.color);
 
   const rShoes = riga('scarpe', 'Scarpe');
   stili(rShoes, AV.SHOES, () => av.shoes.style, v => { av.shoes.style = v; }, 'piedi');
@@ -1652,6 +1843,7 @@ function commitEntry() {
         startTime: draft.startTime, durationMinutes: draft.durationMinutes, payLater: draft.payLater,
         children: draft.children, crazyJumping: draft.crazyJumping,
         people: draft.people, barItems: draft.barItems,
+        paidLines: JSON.parse(JSON.stringify(draft.paidLines || {})),
         braceletColor: draft.braceletColor, braceletCustom: draft.braceletCustom
       });
     }
@@ -1664,10 +1856,18 @@ function commitEntry() {
       children: draft.children, crazyJumping: draft.crazyJumping,
       people: draft.people, barItems: draft.barItems || [],
       braceletColor: draft.braceletColor, braceletCustom: draft.braceletCustom,
-      status: 'active', barPaid: 0, parkPaid: false, paidLines: {},
-      baseMinutes: draft.durationMinutes, paidPark: 0, paidBar: 0
+      status: draft.soloBar ? 'closed' : 'active',
+      closedAt: draft.soloBar ? Date.now() : undefined,
+      cassaRapida: !!draft.soloBar,
+      barPaid: 0, parkPaid: !!draft.parkPaid,
+      paidLines: JSON.parse(JSON.stringify(draft.paidLines || {})),
+      baseMinutes: draft.durationMinutes,
+      /* quello che e' gia' stato incassato al banco entra subito nei
+         conti del giorno: se no la sera i totali non tornano */
+      paidPark: (draft.parkPaid ? contoParco() : 0) + (draft.crazyPaid ? contoCrazy() : 0),
+      paidBar: contoPagatoBar()
     });
-    toast('Ingresso registrato ✅');
+    toast(draft.soloBar ? 'Conto del bar registrato ✅' : 'Ingresso registrato ✅');
   }
   saveEntries();
   draft = freshDraft();
@@ -2040,66 +2240,65 @@ function entryCard(entry) {
 
 
 /* ============================================================
-   CASSA RAPIDA — la terza linguetta.
-   Per chi passa solo a consumare, o per segnare una cosa al volo
-   senza aprire un ingresso. Ci sono comunque bambini, Crazy e le
-   fasce di tempo, cosi' da qui parte anche un ingresso vero.
+   IL CONTO DI QUEL CHE SI STA REGISTRANDO
+   Non c'e' piu' un banco a parte: le bibite si segnano nella stessa
+   schermata dell'ingresso, sotto le linguette in alto. Ogni voce del
+   bar ha DUE contatori -- quante ne ha prese e quante ne ha gia'
+   pagate -- cosi' pagare a pezzi non e' un caso speciale.
    ============================================================ */
-const cassa = { bar: [], children: 0, crazy: 0, minutes: 0, pagate: {}, cat: null,
-                tocco: null, nato: null, chiedeSvuota: false };
+/* chi e' stato toccato per ultimo: serve solo alle animazioni, per far
+   muovere QUELLA card e non tutta la griglia */
+const tocchi = { id: null, nato: null };
 
-/* ---------- quanto costa una voce, adesso ---------- */
-const bcMinuti = () => cassa.minutes || settings.defaultMinutes || 60;
+const bcMinuti = () => draft.durationMinutes || settings.defaultMinutes || 60;
 const bcPrezzoBimbo = () => priceFor(up5(bcMinuti()));
 function bcVoce(id) {
-  if (id === 'bimbi') return { id: 'bimbi', name: 'Bambini', price: bcPrezzoBimbo(), em: '\ud83e\uddd2' };
-  if (id === 'crazy') return { id: 'crazy', name: 'Crazy Jumping', price: num(settings.crazyJumpingPrice, 0), em: '\ud83e\udd38' };
   return (settings.barMenu || []).find(x => x.id === id) || null;
 }
 function bcQ(id) {
-  if (id === 'bimbi') return clamp(cassa.children, 0, 9999);
-  if (id === 'crazy') return clamp(cassa.crazy, 0, 9999);
-  const bi = cassa.bar.find(x => x.id === id);
+  const bi = (draft.barItems || []).find(x => x.id === id);
   return bi ? clamp(bi.qty, 0, 9999) : 0;
 }
 function bcSetQ(id, n) {
   n = clamp(n, 0, 9999);
-  if (id === 'bimbi') { cassa.children = n; }
-  else if (id === 'crazy') { cassa.crazy = n; }
-  else {
-    const v = bcVoce(id); if (!v) return;
-    let bi = cassa.bar.find(x => x.id === id);
-    if (!bi) { bi = { id: id, name: v.name, price: v.price, qty: 0 }; cassa.bar.push(bi); }
-    bi.qty = n; bi.price = v.price; bi.name = v.name;
-    if (n <= 0) cassa.bar = cassa.bar.filter(x => x.qty > 0);
-  }
-  /* se toglie roba dal conto, non puo' restare "pagata" piu' di quanta
+  const v = bcVoce(id); if (!v) return;
+  draft.barItems = draft.barItems || [];
+  let bi = draft.barItems.find(x => x.id === id);
+  if (!bi) { bi = { id: id, name: v.name, price: v.price, qty: 0 }; draft.barItems.push(bi); }
+  bi.qty = n; bi.price = v.price; bi.name = v.name;
+  if (n <= 0) draft.barItems = draft.barItems.filter(x => x.qty > 0);
+  /* se toglie roba dal conto non puo' restare "pagata" piu' di quanta
      ce n'e' rimasta */
-  if (cassa.pagate[id]) cassa.pagate[id] = Math.min(cassa.pagate[id], n);
+  draft.paidLines = draft.paidLines || {};
+  if (draft.paidLines[id]) draft.paidLines[id] = Math.min(draft.paidLines[id], n);
 }
-const bcPag = id => clamp(num(cassa.pagate[id], 0), 0, bcQ(id));
-const bcTotVoce = id => { const v = bcVoce(id); return v ? bcQ(id) * num(v.price, 0) : 0; };
+const bcPag = id => clamp(num((draft.paidLines || {})[id], 0), 0, bcQ(id));
 
-function cassaBarTot() {
-  return cassa.bar.reduce((a, i) => a + num(i.price, 0) * num(i.qty, 0), 0);
+/* ---------- quanto viene, adesso ----------
+   La regola dei soldi NON cambia: si paga sempre per almeno un bambino,
+   il Crazy costa a parte, i suoi minuti non si contano. L'unica uscita
+   e' "Solo bar", che si sceglie apposta quando nessuno entra. */
+function contoParco() {
+  if (draft.payLater || draft.soloBar) return 0;
+  return Math.round(priceFor(up5(draft.durationMinutes)) * Math.max(1, draft.children) * 100) / 100;
 }
-/* Il parco si conta SOLO se c'e' almeno un bambino: qui zero bambini
-   vuol dire "e' passato solo a bere", non "un ingresso da uno". */
-function cassaParcoTot() {
-  if (cassa.children <= 0) return 0;
-  return Math.round(bcTotVoce('bimbi') * 100) / 100;
+function contoCrazy() {
+  return Math.round(draft.crazyJumping * num(settings.crazyJumpingPrice, 0) * 100) / 100;
 }
-function cassaCrazyTot() { return Math.round(bcTotVoce('crazy') * 100) / 100; }
-function cassaTot() {
-  return Math.round((cassaBarTot() + cassaParcoTot() + cassaCrazyTot()) * 100) / 100;
+function contoBar() {
+  return Math.round((draft.barItems || []).reduce((a, i) => a + num(i.price, 0) * num(i.qty, 0), 0) * 100) / 100;
 }
-function cassaPagato() {
-  let t = (cassa.children > 0 ? bcPag('bimbi') * bcPrezzoBimbo() : 0) +
-          bcPag('crazy') * num(settings.crazyJumpingPrice, 0);
-  cassa.bar.forEach(bi => { t += bcPag(bi.id) * num(bi.price, 0); });
-  return Math.round(Math.min(t, cassaTot()) * 100) / 100;
+function contoTot() {
+  return Math.round((contoParco() + contoCrazy() + contoBar()) * 100) / 100;
 }
-const cassaResta = () => Math.max(0, Math.round((cassaTot() - cassaPagato()) * 100) / 100);
+function contoPagatoBar() {
+  return Math.round((draft.barItems || []).reduce((a, bi) => a + bcPag(bi.id) * num(bi.price, 0), 0) * 100) / 100;
+}
+function contoPagato() {
+  const t = (draft.parkPaid ? contoParco() : 0) + (draft.crazyPaid ? contoCrazy() : 0) + contoPagatoBar();
+  return Math.round(Math.min(t, contoTot()) * 100) / 100;
+}
+const contoResta = () => Math.max(0, Math.round((contoTot() - contoPagato()) * 100) / 100);
 
 /* le categorie: il Parco davanti, poi quelle vere del menu */
 function bcCategorie() {
@@ -2111,28 +2310,10 @@ function bcCategorie() {
   return out;
 }
 function bcVociDi(cat) {
-  if (cat === 'Parco') return [bcVoce('bimbi'), bcVoce('crazy')];
   return (settings.barMenu || []).filter(it => ((it.cat || 'Altro').trim() || 'Altro') === cat);
 }
 
 /* ---------- i pezzi disegnati ---------- */
-function bcTempoBlocco() {
-  const TAGLI = [10, 15, 20, 30, 40, 50, 60, 90, 120];
-  const dur = m => m >= 60 ? (Math.floor(m / 60) + 'h' + (m % 60 ? ' ' + (m % 60) + "'" : '')) : m + "'";
-  const m = bcMinuti();
-  return '<div class="bc-tempo">' +
-    '<div class="bc-tempo-k">Quanto restano ' +
-      '<b>' + dur(m) + '</b> \u00b7 <b class="q">' + eur(bcPrezzoBimbo()) + '</b> a bambino</div>' +
-    '<div class="bc-chips">' + TAGLI.map(t =>
-      '<button data-min="' + t + '"' + (m === t ? ' class="on"' : '') + '>' + dur(t) + '</button>').join('') +
-      '<button data-min="meno">\u22125</button><button data-min="piu">+5</button></div>' +
-    '<div class="bc-chips bc-allunga"><span class="et">Allunga</span>' +
-      '<button data-est="15">+15\'</button><button data-est="30">+30\'</button>' +
-      '<button data-est="60">+1h</button>' +
-      '<button data-solobar class="solo">\ud83e\udd64 Solo bar</button></div>' +
-  '</div>';
-}
-
 function bcCard(v) {
   if (!v) return '';
   const q = bcQ(v.id), pg = bcPag(v.id);
@@ -2141,8 +2322,8 @@ function bcCard(v) {
     /* la pasticca fa un saltino solo sulla card toccata; le fasce dei
        tasti scivolano su solo quando NASCONO, non a ogni tocco -- se no
        i tasti sembrano spostarsi a caso sotto il dito */
-    (cassa.tocco === v.id ? ' tocca' : '') +
-    (cassa.nato === v.id ? ' nato' : '') +
+    (tocchi.id === v.id ? ' tocca' : '') +
+    (tocchi.nato === v.id ? ' nato' : '') +
     '" data-id="' + v.id + '">' +
     '<button class="bc-su" data-add="' + v.id + '">' +
       (q > 0 ? '<span class="bc-fant">' + q + '</span>' : '') +
@@ -2160,61 +2341,12 @@ function bcCard(v) {
   '</div>';
 }
 
-function bcFondo() {
-  const tot = cassaTot(), pag = cassaPagato(), resta = cassaResta();
-  /* come nel modello: icona, l'etichetta sopra la cifra, e il tasto
-     "paga" a destra. Tre blocchi attaccati sopra il totale. */
-  const parte = (nome, ico, id, im) => {
-    const p = id === 'bar' ? bcPagatoBar() : (bcQ(id) > 0 ? bcPag(id) * num(bcVoce(id).price, 0) : 0);
-    const fatto = im > 0 && p >= im - 0.005;
-    return '<div class="bc-parte' + (fatto ? ' fatta' : '') + '">' + ICONE[ico]() +
-      '<div class="bc-pk"><span class="k">' + nome + '</span>' +
-      '<span class="v num">' + eur(im) + '</span>' +
-      /* la riga del "pagato" c'e' SEMPRE, anche vuota: se comparisse solo
-         quando serve, il blocco si alzerebbe e abbasserebbe sotto le dita
-         a ogni tocco */
-      '<span class="q' + (p > 0 && !fatto ? '' : ' vuota') + '">' +
-        (p > 0 && !fatto ? 'pagato ' + eur(p) : ' ') + '</span></div>' +
-      (im > 0
-        ? (fatto
-          ? '<button class="paga ok" data-desez="' + id + '">\u2713</button>'
-          : '<button class="paga" data-sez="' + id + '">paga</button>')
-        : '') + '</div>';
-  };
-  return '<div class="bc-fondo">' +
-    '<div class="bc-parti">' +
-      parte('Totale Parco', 'bimbi', 'bimbi', cassaParcoTot()) +
-      parte('Totale Crazy', 'crazy', 'crazy', cassaCrazyTot()) +
-      parte('Totale Bar', 'coca', 'bar', cassaBarTot()) +
-    '</div>' +
-    '<div class="bc-conto"><div>' +
-      '<span class="k">' + (tot <= 0 ? 'niente sul conto' : resta > 0 ? (pag > 0 ? 'restano' : 'da incassare') : 'tutto pagato') + '</span>' +
-      '<span class="v num' + (cassa.tocco ? ' tocca' : '') + '">' +
-        (tot <= 0 ? eur(0) : resta > 0 ? eur(resta) : '\u2713 ' + eur(tot)) + '</span>' +
-      /* anche questa riga c'e' sempre, anche vuota: se no la cifra grande
-         saltella su e gi\u00f9 ogni volta che incassi qualcosa */
-      '<span class="gia' + (pag > 0 && resta > 0 ? '' : ' vuota') + '">' +
-        (pag > 0 && resta > 0 ? 'gi\u00e0 presi ' + eur(pag) : ' ') + '</span>' +
-    '</div><div class="bc-tasti">' +
-      /* Svuota c'e' solo se c'e' qualcosa da svuotare, e chiede conferma:
-         buttare via un conto per sbaglio vuol dire rifarlo tutto davanti
-         al cliente */
-      (tot > 0
-        ? (cassa.chiedeSvuota
-          ? '<button class="btn bc-pericolo" data-svuota>\u26a0\ufe0f Butto via tutto? tocca ancora</button>'
-          : '<button class="btn" data-svuota>\ud83e\uddf9 Svuota</button>')
-        : '') +
-      (resta > 0 ? '<button class="btn" data-resto>\ud83e\uddee Resto</button>' +
-        '<button class="btn btn-ok" data-tutto>Paga tutto</button>' : '') +
-      (tot > 0 && resta <= 0 ? '<button class="btn btn-ok" data-chiudi>\u2705 Incassa e chiudi</button>' : '') +
-    '</div></div></div>';
-}
-function bcPagatoBar() {
-  return Math.round(cassa.bar.reduce((a, bi) => a + bcPag(bi.id) * num(bi.price, 0), 0) * 100) / 100;
-}
+/* segna (o dissegna) come pagate tutte le voci di una sezione */
 function bcSegna(quali, pieno) {
-  const ids = quali === 'bar' ? cassa.bar.map(x => x.id) : [quali];
-  ids.forEach(id => { cassa.pagate[id] = pieno ? bcQ(id) : 0; });
+  if (quali === 'bimbi') { draft.parkPaid = !!pieno; return; }
+  if (quali === 'crazy') { draft.crazyPaid = !!pieno; return; }
+  draft.paidLines = draft.paidLines || {};
+  (draft.barItems || []).forEach(bi => { draft.paidLines[bi.id] = pieno ? bcQ(bi.id) : 0; });
 }
 
 /* Il velo: un pannello sovrapposto, incollato in basso, con dietro il
@@ -2244,130 +2376,6 @@ function chiudiVelo() {
   if (!anima()) { v.remove(); return; }
   v.classList.add('via');
   setTimeout(() => v.remove(), 180);
-}
-
-/* ============================================================
-   BAR & CONTO — la terza linguetta.
-   Per chi passa solo a consumare, o per segnare una cosa al volo senza
-   aprire un ingresso. Ogni voce ha DUE contatori: quante ne ha prese e
-   quante ne ha gia' pagate, cosi' pagare a pezzi non e' un caso
-   speciale ma la cosa normale.
-   ============================================================ */
-function buildCassaView() {
-  const root = $('#view-cassa');
-  const cats = bcCategorie();
-  if (!cassa.cat || cats.indexOf(cassa.cat) < 0) cassa.cat = cats.indexOf('Bevande') >= 0 ? 'Bevande' : cats[0];
-
-  /* Rifare TUTTA la schermata a ogni tocco faceva lampeggiare mezza
-     pagina: distraeva, e per un istante i tasti sembravano spostarsi.
-     Adesso il disegno intero si fa solo quando cambia davvero la
-     schermata (categoria, tempo, svuota); per un piu' o un meno si
-     rifanno solo la card toccata e il blocco del conto. */
-  const dis = (opz) => {
-    root.innerHTML =
-      '<div class="bc-cat">' + cats.map(c =>
-        '<button data-cat="' + esc(c) + '"' + (cassa.cat === c ? ' class="on"' : '') + '>' + esc(c) + '</button>').join('') + '</div>' +
-      (cassa.cat === 'Parco' ? bcTempoBlocco() : '') +
-      '<div class="bc-griglia' + (opz && opz.entra ? ' entra' : '') + '">' +
-        bcVociDi(cassa.cat).map(bcCard).join('') + '</div>' +
-      bcFondo();
-    cassa.tocco = null; cassa.nato = null;
-  };
-  const disFondo = () => {
-    const vecchio = root.querySelector('.bc-fondo');
-    if (!vecchio) { dis(); return; }
-    const t = el('div');
-    t.innerHTML = bcFondo();
-    vecchio.replaceWith(t.firstElementChild);
-  };
-  const disVoce = (id) => {
-    const vecchia = root.querySelector('.bc-card[data-id="' + id + '"]');
-    if (!vecchia) { dis(); return; }
-    const t = el('div');
-    t.innerHTML = bcCard(bcVoce(id));
-    vecchia.replaceWith(t.firstElementChild);
-    /* il prezzo dei bambini dipende dal tempo, quindi quando cambia il
-       tempo si rifanno tutte e due le card del Parco */
-    disFondo();
-    cassa.tocco = null; cassa.nato = null;
-  };
-
-  const registra = (preso) => {
-    /* finisce in archivio come conto gia' saldato: cosi' entra nei
-       totali del giorno e nelle copie, senza un magazzino a parte */
-    entries.push({
-      id: uid(), createdAt: Date.now(), startTime: Date.now(),
-      durationMinutes: cassa.minutes || 0, payLater: false,
-      children: cassa.children, crazyJumping: cassa.crazy,
-      people: [], barItems: JSON.parse(JSON.stringify(cassa.bar)),
-      braceletColor: null, braceletCustom: true,
-      status: 'closed', closedAt: Date.now(), cassaRapida: true,
-      paidLines: {}, paidPark: cassaParcoTot() + cassaCrazyTot(), paidBar: cassaBarTot(),
-      barPaid: 0, parkPaid: false
-    });
-    saveEntries();
-    svuota();
-    updateBadge();
-    toast('Incassati ' + eur(preso));
-  };
-  const svuota = () => {
-    cassa.bar = []; cassa.children = 0; cassa.crazy = 0; cassa.minutes = 0; cassa.pagate = {};
-    cassa.chiedeSvuota = false; cassa.tocco = null;
-    dis();
-  };
-
-  root.onclick = (ev) => {
-    const b = ev.target.closest('button');
-    if (!b || !root.contains(b)) return;
-    const d = b.dataset;
-    /* toccare qualunque altra cosa annulla la domanda dello Svuota */
-    if (d.svuota === undefined) cassa.chiedeSvuota = false;
-    /* chi è stato toccato: serve alle animazioni, per far muovere solo
-       quella card e non tutte a ogni ridisegno */
-    cassa.tocco = d.add || d.meno || d.ppiu || d.pmeno || null;
-    if (d.cat !== undefined)  { cassa.cat = d.cat; dis({ entra: true }); return; }
-    if (d.add !== undefined)  {
-      /* se prima non c'era, le sue fasce dei tasti NASCONO adesso */
-      if (bcQ(d.add) === 0) cassa.nato = d.add;
-      bcSetQ(d.add, bcQ(d.add) + 1); disVoce(d.add); return;
-    }
-    if (d.meno !== undefined) { bcSetQ(d.meno, bcQ(d.meno) - 1); disVoce(d.meno); return; }
-    if (d.ppiu !== undefined) { cassa.pagate[d.ppiu] = Math.min(bcQ(d.ppiu), bcPag(d.ppiu) + 1); disVoce(d.ppiu); return; }
-    if (d.pmeno !== undefined){ cassa.pagate[d.pmeno] = Math.max(0, bcPag(d.pmeno) - 1); disVoce(d.pmeno); return; }
-    if (d.sez !== undefined)  { bcSegna(d.sez, true); dis(); return; }
-    if (d.desez !== undefined){ bcSegna(d.desez, false); dis(); return; }
-    if (d.min !== undefined)  {
-      if (d.min === 'meno') cassa.minutes = Math.max(5, bcMinuti() - 5);
-      else if (d.min === 'piu') cassa.minutes = Math.min(600, bcMinuti() + 5);
-      else cassa.minutes = parseInt(d.min, 10);
-      dis(); return;
-    }
-    if (d.est !== undefined)  { cassa.minutes = Math.min(600, bcMinuti() + parseInt(d.est, 10)); dis(); return; }
-    if (d.solobar !== undefined) { cassa.minutes = 0; cassa.children = 0; cassa.crazy = 0; dis(); return; }
-    if (d.tutto !== undefined) {
-      bcSegna('bimbi', true); bcSegna('crazy', true); bcSegna('bar', true); dis(); return;
-    }
-    if (d.chiudi !== undefined) { const t = cassaTot(); if (t > 0) registra(t); return; }
-    /* due tocchi: il primo chiede, il secondo butta via */
-    if (d.svuota !== undefined) {
-      if (!cassa.chiedeSvuota) { cassa.chiedeSvuota = true; dis(); return; }
-      cassa.chiedeSvuota = false; svuota(); return;
-    }
-    if (d.resto !== undefined) {
-      const t = cassaResta();
-      if (t <= 0) return;
-      /* sovrapposto a tutto: se lo infilassi nella pagina, la pagina si
-         ridimensionerebbe sotto le dita proprio mentre conti i soldi */
-      apriVelo(pannelloResto(null, t, () => {
-        chiudiVelo();
-        bcSegna('bimbi', true); bcSegna('crazy', true); bcSegna('bar', true);
-        registra(cassaTot());
-      }));
-      return;
-    }
-  };
-
-  dis();
 }
 
 /* ================= LA SCHEDA CHE VOLA =================
@@ -2953,6 +2961,14 @@ function editEntry(entry) {
     barItems: JSON.parse(JSON.stringify(entry.barItems || [])),
     braceletColor: entry.braceletColor || null,
     braceletCustom: !!entry.braceletCustom,
+    /* si riapre sul Parco, con quello che era gia' stato pagato: se
+       ripartisse da zero, correggere un ingresso vorrebbe dire farsi
+       ripagare quello che il cliente aveva gia' saldato */
+    cat: 'Parco',
+    paidLines: JSON.parse(JSON.stringify(entry.paidLines || {})),
+    parkPaid: !!entry.parkPaid,
+    crazyPaid: false,
+    soloBar: false,
     touched: true
   };
   switchTab('new');
@@ -3407,16 +3423,11 @@ function switchTab(t) {
   tabPrec = t;
   $('#view-new').classList.toggle('hidden', t !== 'new');
   $('#view-active').classList.toggle('hidden', t !== 'active');
-  $('#view-cassa').classList.toggle('hidden', t !== 'cassa');
   $('#view-settings').classList.toggle('hidden', t !== 'settings');
-  /* nel Bar & Conto la barra del totale tocca il bordo basso dello
-     schermo: il respiro che main tiene sotto lo mette lei, se no lo
-     sticky si ferma 24px prima e il conto resta a mezz'aria */
-  document.querySelector('main').classList.toggle('bc-attivo', t === 'cassa');
   /* La vista che arriva entra dal lato da cui si veniva: dice da dove
      sei arrivato invece di comparire e basta. */
   if (anima() && primaEra && primaEra !== t) {
-    const ordine = ['new', 'active', 'cassa', 'settings'];
+    const ordine = ['new', 'active', 'settings'];
     const vista = $('#view-' + t);
     if (vista) {
       vista.classList.remove('entra-dx', 'entra-sx');
@@ -3425,6 +3436,7 @@ function switchTab(t) {
       setTimeout(() => vista.classList.remove('entra-dx', 'entra-sx'), 320);
     }
   }
+  document.querySelector('main').classList.toggle('senza-fondo', t === 'new');
   $('main').scrollTop = 0;
 
   if (t === 'new') {
@@ -3438,7 +3450,6 @@ function switchTab(t) {
     syncActionBar();
   }
   if (t === 'active') buildActiveView();   // ridisegna: cosi' la scheda in modifica si segna o si libera
-  if (t === 'cassa') buildCassaView();
   if (t === 'settings') buildSettingsView();
   updateBadge();
 }
@@ -3501,6 +3512,18 @@ function init() {
     b.onclick = () => switchTab(b.dataset.tab);
   });
   $('#abSave').onclick = commitEntry;
+  /* toccare una voce la segna pagata, toccarla ancora la dissegna */
+  $('#abVoci').onclick = (ev) => {
+    const b = ev.target.closest('[data-sez]');
+    if (!b) return;
+    const id = b.dataset.sez;
+    const gia = id === 'bimbi' ? draft.parkPaid
+      : id === 'crazy' ? draft.crazyPaid
+      : contoPagatoBar() >= contoBar() - 0.005;
+    bcSegna(id, !gia);
+    draft.touched = true;
+    syncNew();
+  };
 
 
   const clock = () => { $('#clock').textContent = fmtTime(Date.now()); };

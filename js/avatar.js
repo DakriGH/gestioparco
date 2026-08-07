@@ -334,9 +334,23 @@
       .map(v => v.toString(16).padStart(2, '0')).join('');
   }
 
+  /* Il colore della fantasia NON si sceglie: è quello del capo, schiarito
+     o scurito. Sceglierlo a parte era una domanda in più al banco per una
+     cosa che si può decidere da sola, e con la regola "chiaro su scuro,
+     scuro su chiaro" il motivo si vede sempre. */
+  function coloreFantasia(hex) {
+    let c = String(hex || '#888').replace('#', '');
+    if (c.length === 3) c = c.split('').map(x => x + x).join('');
+    const n = parseInt(c, 16);
+    if (isNaN(n)) return '#FFFFFF';
+    const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    const luce = (r * 299 + g * 587 + b * 114) / 1000;
+    return shade(hex, luce > 150 ? -78 : 86);
+  }
+
   function patternDef(color, pattern, id, color2) {
     color = color || '#888';
-    color2 = color2 || '#FFFFFF';
+    color2 = coloreFantasia(color);
     if (!pattern || pattern === 'solid') return { fill: color, def: '' };
     let s = '', size = 10;
     if (pattern === 'stripes-h') {
@@ -744,6 +758,6 @@
   global.AV = {
     COLORS, HAIR_COLORS, SKINS, PATTERNS,
     HAIR, HAT, GLASSES, FACIAL, TOP, PANTS, SHOES, BAG, ROLES,
-    build, traits, normalize, defaultFor, baseFor, colorName, findIn, shade
+    build, traits, normalize, defaultFor, baseFor, colorName, findIn, shade, coloreFantasia
   };
 })(window);

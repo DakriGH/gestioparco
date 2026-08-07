@@ -893,12 +893,10 @@ main {
 
 /* ---------- persone ---------- */
 /* le persone stanno AFFIANCATE: in colonna la pagina diventava lunghissima */
-.person-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(272px, 1fr));
-  gap: 10px;
-  align-items: start;
-}
+/* Una colonna sola: dentro non c'e' piu' un elenco di schede ma i ruoli
+   su una riga e l'armadio di chi si sta vestendo. A due colonne l'armadio
+   restava largo 243px e le fantasie andavano a capo cinque volte. */
+.person-list { display: block; }
 .person-row {
   display: flex;
   align-items: center;
@@ -2533,8 +2531,6 @@ main {
 html:not(.anima) .view.esce-sx,
 html:not(.anima) .view.entra-dx { animation: none; }
 
-/* =============== CASSA RAPIDA =============== */
-#view-cassa { display: flex; flex-direction: column; gap: 12px; }
 /* ══════════════════════════════════════════════════════════
    BAR & CONTO — la terza linguetta
    Card a griglia: icona grande, prezzo e nome, e sotto due file di
@@ -2548,9 +2544,8 @@ html:not(.anima) .view.entra-dx { animation: none; }
 /* Chrome ferma lo sticky al bordo INTERNO di main, cioe' sopra il suo
    padding: col respiro di main sotto, il conto restava 24px a mezz'aria.
    In questa linguetta il respiro lo mette la barra stessa. */
-main.bc-attivo { padding-bottom: 0; }
-#view-cassa { display: flex; flex-direction: column; min-height: 100%; }
-#view-cassa .bc-griglia { flex: 0 0 auto; }
+#view-new { display: flex; flex-direction: column; gap: 12px; }
+#view-new .bc-griglia { flex: 0 0 auto; }
 
 .bc-cat { position: sticky; top: 0; z-index: 6; display: flex; gap: 8px; flex-wrap: wrap;
   padding: 8px 0 10px; background: var(--bg); }
@@ -2779,7 +2774,6 @@ main.bc-attivo { padding-bottom: 0; }
 .resto-tagli button { display: flex; align-items: center; justify-content: center;
   min-height: 62px; padding: 4px; }
 .resto-tagli button svg { width: 62px; height: 48px; }
-#view-cassa .resto-box { margin: 0; }
 
 /* l'ultimo inserito: si trova a colpo d'occhio per mezzo minuto */
 .entry.appena { position: relative; }
@@ -2866,24 +2860,158 @@ html:not(.anima) .entry.appena::before { animation: none; opacity: 1; }
 .e-inmod .btn { margin-left: auto; }
 .e-cella.spento { opacity: 0.45; }
 
-/* La cassa rapida e' una cosa a parte: prende il fondo scuro del
-   sottomenu che si apre sotto le schede, cosi' si vede al volo che non
-   e' l'elenco di chi e' dentro. Struttura e ordine restano quelli di
-   "Nuovo": cambia solo il fondo. */
-#view-cassa .card.blk {
-  background: #191921;
-  border: 1px solid rgba(255, 255, 255, 0.09);
+/* ══════════════════════════════════════════════════════════
+   LA SCHERMATA CHE FA TUTTO
+   Le linguette in alto sono la navigazione: "Parco" apre l'ingresso
+   vero — orario, durata, bambini, chi accompagna — e le altre aprono
+   il bar di quella categoria. Prima erano due schermate diverse e per
+   segnare una coca durante un ingresso bisognava cambiare linguetta.
+   ══════════════════════════════════════════════════════════ */
+/* Qui dentro i blocchi perdono un filo di respiro: in "+ Nuovo" la
+   pagina scorreva e potevano stare larghi, adesso devono starci tutti
+   e quattro insieme sotto le linguette. Il respiro si toglie
+   dall'INTESTAZIONE e dal pannello interno: la card in se' ha gia'
+   padding zero, e mettercelo la farebbe CRESCERE invece di accorciarla. */
+#view-new .card.blk { margin-bottom: 8px; }
+#view-new .card.blk > h2,
+#view-new .card.blk > .testa-viola > h2 { font-size: 15.5px; padding: 5px 14px; }
+#view-new .blk-in { padding: 8px 14px 10px; }
+/* Qui sotto non c'e' nessuna barra incollata in fondo -- il conto sta
+   in alto, dove la tastiera del tablet non arriva -- quindi il respiro
+   che main tiene sotto e' spazio buttato. */
+main.senza-fondo { padding-bottom: 6px; }
+#view-new .bc-cat { padding: 6px 0 8px; }
+
+.bc-cat button { display: flex; align-items: center; gap: 7px; }
+.bc-cat button svg { width: 21px; height: 21px; }
+.bc-cat button .bc-em { font-size: 18px; line-height: 1; }
+/* la vista che arriva entra da sotto, appena */
+#nParco.entra > .card, .bc-griglia.entra > .bc-card { animation: bcEntra .3s ease both; }
+#nParco.entra > .card:nth-child(2) { animation-delay: .04s; }
+#nParco.entra > .card:nth-child(3) { animation-delay: .08s; }
+#nParco.entra > .card:nth-child(4) { animation-delay: .12s; }
+
+/* "Quanto restano" sta su UNA riga: i tagli, i minuti esatti e per
+   ultimo il "paga dopo", che e' l'eccezione e sta in fondo come tale */
+.riga-dur { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.riga-dur .chips { flex: 0 1 auto; margin: 0; gap: 7px; }
+.riga-dur .dur-custom { margin: 0; flex: 0 0 auto; flex-wrap: nowrap; gap: 7px; }
+.riga-dur .dur-custom .lab { white-space: nowrap; font-size: 12.5px; }
+.riga-dur .dur-custom input { width: 74px; }
+.riga-dur .dur-custom .step-b.sm { width: 38px; height: 38px; }
+/* i chip di serie sono larghi un pollice l'uno: qui i tagli, i minuti
+   esatti e il "paga dopo" devono stare tutti su una riga, quindi si
+   stringono al testo */
+.riga-dur .chip { padding: 0 11px; min-width: 0; font-size: 15px; }
+.riga-dur .chip.later { flex: 0 0 auto; margin-left: auto; font-size: 14.5px; }
+
+/* "Solo bar": l'unica uscita dalla regola che si paga sempre per almeno
+   un bambino. Si dice apposta che nessuno entra. */
+.solobar { border: none; border-radius: 14px; padding: 8px 14px; min-height: 62px;
+  background: var(--surface-2); color: var(--txt-2); font: inherit; font-size: 14px;
+  font-weight: 700; cursor: pointer; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 1px;
+  transition: background .14s ease, color .14s ease, transform .08s ease; }
+.solobar small { font-size: 10.5px; font-weight: 600; opacity: .7; }
+.solobar:active { transform: scale(.96); }
+.solobar.on { background: var(--ok); color: #08301F; }
+.solobar.on small { opacity: .85; }
+
+/* ── CHI ACCOMPAGNA ──
+   I ruoli su una riga sola, icona sopra e nome sotto: si trovano a
+   colpo d'occhio e non rubano altezza. */
+.testa-viola { display: flex; align-items: center; }
+.testa-viola h2 { flex: 1; }
+.butta { margin-right: 13px; border: none; border-radius: 11px; padding: 6px 11px; min-height: 36px;
+  background: rgba(0,0,0,.28); color: rgba(255,255,255,.92); font: inherit; font-size: 12.5px;
+  font-weight: 700; cursor: pointer; transition: transform .08s ease; }
+.butta:active { transform: scale(.95); }
+
+.ruoli { display: flex; gap: 6px; }
+.ruoli button { flex: 1; min-width: 0; border: none; border-radius: 13px; padding: 5px 2px;
+  background: rgba(0,0,0,.22); color: rgba(255,255,255,.86); font: inherit; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  transition: background .15s ease, transform .08s ease; }
+.ruoli button:active { transform: scale(.95); }
+.ruoli button .em { font-size: 23px; line-height: 1.15; }
+.ruoli button .nm { font-size: 11px; font-weight: 700; line-height: 1.1; }
+.ruoli button.messo { background: rgba(255,255,255,.2); }
+.ruoli button.on { background: #fff; color: #221944; }
+
+/* L'armadio: la figura affianca solo capi e fantasie; colori, pantaloni
+   e la riga libera passano SOTTO a tutta larghezza, cosi' le pastiglie
+   dei colori stanno su una riga sola invece che su due. */
+.armadio { display: grid; grid-template-columns: 142px 1fr; gap: 7px 12px;
+  margin-top: 7px; align-items: start; }
+.armadio .largo { grid-column: span 2; display: flex; flex-direction: column; gap: 5px; }
+.armadio .figura { background: rgba(0,0,0,.24); border-radius: 16px; display: flex;
+  flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 7px; }
+.armadio .figura svg { width: 116px; height: 152px; }
+.armadio .roba { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.armadio .et { font-size: 10px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
+  color: rgba(255,255,255,.62); margin-bottom: 2px; display: block; line-height: 1.3; }
+.armadio .icone { display: flex; gap: 5px; flex-wrap: wrap; }
+.armadio .ico { border: none; border-radius: 12px; background: rgba(0,0,0,.22);
+  color: rgba(255,255,255,.86); width: 62px; padding: 4px 2px 3px; font: inherit; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  transition: background .15s ease, transform .08s ease; }
+.armadio .ico:active { transform: scale(.95); }
+.armadio .ico .dis { font-size: 21px; line-height: 1.05; }
+.armadio .ico .nome { font-size: 9.5px; font-weight: 700; line-height: 1.1; text-align: center; }
+.armadio .ico.on { background: #fff; color: #221944; }
+/* la pezza: la fantasia vera, coi colori che finiranno sulla figura */
+.armadio .ico .sw { width: 32px; height: 22px; border-radius: 6px; font-size: 15px;
+  line-height: 22px; text-align: center; font-weight: 700;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.4) inset; }
+.armadio .sottoriga { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.armadio .tinte { display: flex; gap: 6px; flex-wrap: wrap; }
+.armadio .tinte button { width: 34px; height: 34px; border-radius: 9px; border: 3px solid transparent;
+  padding: 0; cursor: pointer; transition: transform .1s ease; }
+.armadio .tinte button.on { border-color: #fff; transform: scale(1.08); }
+.armadio .spento { opacity: .38; pointer-events: none; }
+.armadio .libero { flex: 1 1 190px; min-width: 140px; border: 1px solid rgba(255,255,255,.18);
+  border-radius: 11px; background: rgba(0,0,0,.25); color: #fff; font: inherit; font-size: 13px;
+  padding: 7px 11px; min-height: 36px; }
+.armadio .libero.largo { width: 100%; flex: 1 1 100%; }
+/* La figura e' una colonna: senza azzerare il flex, il flex-basis di
+   190px diventava l'ALTEZZA e il campo del nome cresceva fino a 190px. */
+.armadio .libero.chi { flex: 0 0 auto; width: 100%; box-sizing: border-box; text-align: center;
+  font-weight: 700; min-height: 32px; padding: 5px 8px; }
+.armadio .libero::placeholder { color: rgba(255,255,255,.5); }
+.person-list .invito { color: rgba(255,255,255,.65); font-size: 14.5px; line-height: 1.6;
+  padding: 14px 4px 4px; }
+
+/* ── la barra del prezzo: le tre voci si toccano per segnarle pagate ── */
+.ab-voci { display: flex; gap: 7px; flex-wrap: wrap; }
+button.ab-voce { border: none; border-radius: 13px; padding: 5px 11px; min-height: 46px;
+  background: rgba(0,0,0,.14); font: inherit; cursor: pointer; color: inherit;
+  display: flex; flex-direction: column; justify-content: center; text-align: left;
+  transition: background .14s ease, transform .08s ease; }
+button.ab-voce:active { transform: scale(.96); }
+button.ab-voce:disabled { opacity: .45; cursor: default; }
+.ab-voce .ab-seg { font-size: 9.5px; font-weight: 700; color: var(--txt-3);
+  min-height: 12px; line-height: 12px; }
+.ab-voce.pagata { background: var(--ok-soft); }
+.ab-voce.pagata .ab-seg { color: var(--ok); }
+/* la riga sotto il totale c'e' sempre, anche vuota: se comparisse solo
+   quando serve, la cifra grande saltellerebbe a ogni incasso */
+.ab-gia { display: block; font-size: 11px; font-weight: 700; color: var(--ok);
+  min-height: 14px; line-height: 14px; }
+.ab-gia.vuota { visibility: hidden; }
+
+@media (max-width: 900px) {
+  .armadio { grid-template-columns: 116px 1fr; }
+  .armadio .figura svg { width: 96px; height: 128px; }
+  /* Tutti e otto su UNA riga anche stretti: con flex-wrap l'ultimo
+     ("Altro") finiva da solo su una riga sua larga tutto il blocco. Si
+     stringono invece di andare a capo. */
+  .ruoli { gap: 4px; }
+  .ruoli button { flex: 1 1 0; min-width: 0; padding: 5px 1px; }
+  .ruoli button .nm { font-size: 10px; }
 }
-#view-cassa .card.blk > h2,
-#view-cassa .card.blk > .sect-head > h2 { color: #E9E9F2; }
-#view-cassa .card.blk .blk-in { background: rgb(16, 16, 22); }
-#view-cassa .hint { color: rgba(255, 255, 255, 0.62); }
-#view-cassa .chip { background: rgba(255, 255, 255, 0.10); border-color: transparent; color: #E9E9F2; }
-#view-cassa .chip.on { background: #fff; color: #17171E; }
-#view-cassa .counter { background: rgba(255, 255, 255, 0.06); }
-#view-cassa .bar-row { background: rgba(255, 255, 255, 0.06); }
-#view-cassa .bar-row.has-qty { background: #fff; }
-#view-cassa .dur-custom input { background: rgba(0, 0, 0, 0.34); }
+@media (max-width: 700px) {
+  .ruoli button .nm { font-size: 9px; letter-spacing: -.02em; }
+}
 
 /* quando non e' stato ancora scelto niente */
 .ed-tr.vuoto { opacity: 0.55; font-style: italic; }
