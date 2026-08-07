@@ -75,14 +75,17 @@
               <path d="M15 37.4 Q24 39.2 33 37.4" fill="none" stroke="${sc(c, -28)}" stroke-width="1.1" opacity=".8"/>`
     }),
 
+    /* la felpa ha le maniche LUNGHE -- sulla figura arrivano al polso,
+       e l'icona deve dire la stessa cosa */
     felpa: (c) => ({
-      sagoma: 'M16 11 L20 8 Q24 11 28 8 L32 11 L42 17 L37.5 23.5 L34 21.5 L34 39 Q24 41.5 14 39 L14 21.5 L10.5 23.5 L6 17 Z',
-      ombra: 'M14 21.5 L10.5 23.5 L6 17 L16 11 L14 16 Z',
+      sagoma: 'M16 11 L20 8 Q24 11 28 8 L32 11 L42 17 L39 34 L34 33 L34 39 Q24 41.5 14 39 L14 33 L9 34 L6 17 Z',
+      ombra: 'M14 33 L9 34 L6 17 L16 11 L14 20 Z',
       segni: `<path d="M18 8 Q24 18 30 8 Q33 11 31 15 Q24 21 17 15 Q15 11 18 8 Z" fill="${sc(c, 26)}" stroke="${sc(c, -30)}" stroke-width="0.8"/>
               <path d="M21.5 15.5 L20.6 23 M26.5 15.5 L27.4 23" stroke="${sc(c, -44)}" stroke-width="1.2" stroke-linecap="round"/>
               <circle cx="21.5" cy="15.4" r="0.8" fill="${sc(c, -50)}"/>
               <circle cx="26.5" cy="15.4" r="0.8" fill="${sc(c, -50)}"/>
               <path d="M17 27.5 L31 27.5 L29.5 34 L18.5 34 Z" fill="none" stroke="${sc(c, -34)}" stroke-width="1.1"/>
+              <path d="M9.6 30.6 L14.4 31.6 M38.4 30.6 L33.6 31.6" stroke="${sc(c, -34)}" stroke-width="1.6"/>
               <path d="M14 36.5 L34 36.5" stroke="${sc(c, -34)}" stroke-width="2.4"/>`
     }),
 
