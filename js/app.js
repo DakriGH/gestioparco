@@ -2044,7 +2044,8 @@ function entryCard(entry) {
    senza aprire un ingresso. Ci sono comunque bambini, Crazy e le
    fasce di tempo, cosi' da qui parte anche un ingresso vero.
    ============================================================ */
-const cassa = { bar: [], children: 0, crazy: 0, minutes: 0, pagate: {}, cat: null };
+const cassa = { bar: [], children: 0, crazy: 0, minutes: 0, pagate: {}, cat: null,
+                tocco: null, chiedeSvuota: false };
 
 /* ---------- quanto costa una voce, adesso ---------- */
 const bcMinuti = () => cassa.minutes || settings.defaultMinutes || 60;
@@ -2135,7 +2136,10 @@ function bcCard(v) {
   if (!v) return '';
   const q = bcQ(v.id), pg = bcPag(v.id);
   const saldata = q > 0 && pg >= q;
-  return '<div class="bc-card' + (saldata ? ' saldata' : (q ? ' presa' : '')) + '">' +
+  return '<div class="bc-card' + (saldata ? ' saldata' : (q ? ' presa' : '')) +
+    /* solo la card appena toccata fa il saltino: se no ballerebbero
+       tutte insieme a ogni ridisegno */
+    (cassa.tocco === v.id ? ' tocca' : '') + '">' +
     '<button class="bc-su" data-add="' + v.id + '">' +
       (q > 0 ? '<span class="bc-fant">' + q + '</span>' : '') +
       iconaBar(v.name, v.em) +
@@ -2162,7 +2166,11 @@ function bcFondo() {
     return '<div class="bc-parte' + (fatto ? ' fatta' : '') + '">' + ICONE[ico]() +
       '<div class="bc-pk"><span class="k">' + nome + '</span>' +
       '<span class="v num">' + eur(im) + '</span>' +
-      (p > 0 && !fatto ? '<span class="q">pagato ' + eur(p) + '</span>' : '') + '</div>' +
+      /* la riga del "pagato" c'e' SEMPRE, anche vuota: se comparisse solo
+         quando serve, il blocco si alzerebbe e abbasserebbe sotto le dita
+         a ogni tocco */
+      '<span class="q' + (p > 0 && !fatto ? '' : ' vuota') + '">' +
+        (p > 0 && !fatto ? 'pagato ' + eur(p) : ' ') + '</span></div>' +
       (im > 0
         ? (fatto
           ? '<button class="paga ok" data-desez="' + id + '">\u2713</button>'
@@ -2177,13 +2185,21 @@ function bcFondo() {
     '</div>' +
     '<div class="bc-conto"><div>' +
       '<span class="k">' + (tot <= 0 ? 'niente sul conto' : resta > 0 ? (pag > 0 ? 'restano' : 'da incassare') : 'tutto pagato') + '</span>' +
-      '<span class="v num">' + (tot <= 0 ? eur(0) : resta > 0 ? eur(resta) : '\u2713 ' + eur(tot)) + '</span>' +
-      (pag > 0 && resta > 0 ? '<span class="gia">gi\u00e0 presi ' + eur(pag) + '</span>' : '') +
+      '<span class="v num' + (cassa.tocco ? ' tocca' : '') + '">' +
+        (tot <= 0 ? eur(0) : resta > 0 ? eur(resta) : '\u2713 ' + eur(tot)) + '</span>' +
+      /* anche questa riga c'e' sempre, anche vuota: se no la cifra grande
+         saltella su e gi\u00f9 ogni volta che incassi qualcosa */
+      '<span class="gia' + (pag > 0 && resta > 0 ? '' : ' vuota') + '">' +
+        (pag > 0 && resta > 0 ? 'gi\u00e0 presi ' + eur(pag) : ' ') + '</span>' +
     '</div><div class="bc-tasti">' +
-      (pag > 0 && resta > 0 ? '<button class="btn" data-azzera>\u21ba Azzera</button>' : '') +
-      /* Svuota compare solo se c'\u00e8 qualcosa da svuotare: un tasto che
-         non pu\u00f2 fare niente \u00e8 solo un ostacolo in mezzo agli altri */
-      (tot > 0 ? '<button class="btn" data-svuota>\ud83e\uddf9 Svuota</button>' : '') +
+      /* Svuota c'e' solo se c'e' qualcosa da svuotare, e chiede conferma:
+         buttare via un conto per sbaglio vuol dire rifarlo tutto davanti
+         al cliente */
+      (tot > 0
+        ? (cassa.chiedeSvuota
+          ? '<button class="btn bc-pericolo" data-svuota>\u26a0\ufe0f Butto via tutto? tocca ancora</button>'
+          : '<button class="btn" data-svuota>\ud83e\uddf9 Svuota</button>')
+        : '') +
       (resta > 0 ? '<button class="btn" data-resto>\ud83e\uddee Resto</button>' +
         '<button class="btn btn-ok" data-tutto>Paga tutto</button>' : '') +
       (tot > 0 && resta <= 0 ? '<button class="btn btn-ok" data-chiudi>\u2705 Incassa e chiudi</button>' : '') +
@@ -2195,6 +2211,35 @@ function bcPagatoBar() {
 function bcSegna(quali, pieno) {
   const ids = quali === 'bar' ? cassa.bar.map(x => x.id) : [quali];
   ids.forEach(id => { cassa.pagate[id] = pieno ? bcQ(id) : 0; });
+}
+
+/* Il velo: un pannello sovrapposto, incollato in basso, con dietro il
+   resto della pagina sfocato. Si chiude toccando fuori o la X, e la
+   pagina sotto non si muove di un pixel. */
+let veloAperto = null;
+function apriVelo(dentro, titolo) {
+  chiudiVelo();
+  const velo = el('div', 'bc-velo');
+  const foglio = el('div', 'bc-foglio');
+  const testa = el('div', 'bc-foglio-testa');
+  testa.appendChild(el('h3', '', titolo || '\ud83e\uddee Resto'));
+  const via = el('button', 'bc-via', '\u2715');
+  via.onclick = chiudiVelo;
+  testa.appendChild(via);
+  foglio.appendChild(testa);
+  foglio.appendChild(dentro);
+  velo.appendChild(foglio);
+  velo.onclick = (ev) => { if (ev.target === velo) chiudiVelo(); };
+  document.body.appendChild(velo);
+  veloAperto = velo;
+  return velo;
+}
+function chiudiVelo() {
+  if (!veloAperto) return;
+  const v = veloAperto; veloAperto = null;
+  if (!anima()) { v.remove(); return; }
+  v.classList.add('via');
+  setTimeout(() => v.remove(), 180);
 }
 
 /* ============================================================
@@ -2215,8 +2260,10 @@ function buildCassaView() {
         '<button data-cat="' + esc(c) + '"' + (cassa.cat === c ? ' class="on"' : '') + '>' + esc(c) + '</button>').join('') + '</div>' +
       (cassa.cat === 'Parco' ? bcTempoBlocco() : '') +
       '<div class="bc-griglia">' + bcVociDi(cassa.cat).map(bcCard).join('') + '</div>' +
-      '<div class="bc-resto"></div>' +
       bcFondo();
+    /* il segno del tocco vale per UN disegno solo: se restasse, la card
+       rifarebbe il saltino a ogni ridisegno successivo */
+    cassa.tocco = null;
   };
 
   const registra = (preso) => {
@@ -2239,6 +2286,7 @@ function buildCassaView() {
   };
   const svuota = () => {
     cassa.bar = []; cassa.children = 0; cassa.crazy = 0; cassa.minutes = 0; cassa.pagate = {};
+    cassa.chiedeSvuota = false; cassa.tocco = null;
     dis();
   };
 
@@ -2246,6 +2294,11 @@ function buildCassaView() {
     const b = ev.target.closest('button');
     if (!b || !root.contains(b)) return;
     const d = b.dataset;
+    /* toccare qualunque altra cosa annulla la domanda dello Svuota */
+    if (d.svuota === undefined) cassa.chiedeSvuota = false;
+    /* chi è stato toccato: serve alle animazioni, per far muovere solo
+       quella card e non tutte a ogni ridisegno */
+    cassa.tocco = d.add || d.meno || d.ppiu || d.pmeno || null;
     if (d.cat !== undefined)  { cassa.cat = d.cat; dis(); return; }
     if (d.add !== undefined)  { bcSetQ(d.add, bcQ(d.add) + 1); dis(); return; }
     if (d.meno !== undefined) { bcSetQ(d.meno, bcQ(d.meno) - 1); dis(); return; }
@@ -2261,22 +2314,25 @@ function buildCassaView() {
     }
     if (d.est !== undefined)  { cassa.minutes = Math.min(600, bcMinuti() + parseInt(d.est, 10)); dis(); return; }
     if (d.solobar !== undefined) { cassa.minutes = 0; cassa.children = 0; cassa.crazy = 0; dis(); return; }
-    if (d.azzera !== undefined) { cassa.pagate = {}; dis(); return; }
     if (d.tutto !== undefined) {
       bcSegna('bimbi', true); bcSegna('crazy', true); bcSegna('bar', true); dis(); return;
     }
     if (d.chiudi !== undefined) { const t = cassaTot(); if (t > 0) registra(t); return; }
-    if (d.svuota !== undefined) { svuota(); return; }
+    /* due tocchi: il primo chiede, il secondo butta via */
+    if (d.svuota !== undefined) {
+      if (!cassa.chiedeSvuota) { cassa.chiedeSvuota = true; dis(); return; }
+      cassa.chiedeSvuota = false; svuota(); return;
+    }
     if (d.resto !== undefined) {
-      const qui = root.querySelector('.bc-resto');
-      if (qui.firstChild) { qui.innerHTML = ''; return; }
       const t = cassaResta();
       if (t <= 0) return;
-      qui.appendChild(pannelloResto(null, t, () => {
+      /* sovrapposto a tutto: se lo infilassi nella pagina, la pagina si
+         ridimensionerebbe sotto le dita proprio mentre conti i soldi */
+      apriVelo(pannelloResto(null, t, () => {
+        chiudiVelo();
         bcSegna('bimbi', true); bcSegna('crazy', true); bcSegna('bar', true);
         registra(cassaTot());
       }));
-      qui.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       return;
     }
   };
@@ -2632,7 +2688,11 @@ function pannelloResto(entry, dovuto, onIncassa) {
       const g = el('div', 'resto-tagli');
       TAGLI.forEach(t => {
         const b = el('button', t[0] < 500 ? 'mon' : '');
-        b.textContent = t[1];
+        /* la banconota disegnata coi colori veri: al banco si riconosce
+           il taglio dal colore prima che dal numero. Il valore sta gia'
+           scritto sopra, quindi niente didascalia che lo ripeta. */
+        const dis = (typeof iconaSoldi === 'function' ? iconaSoldi(t[0]) : '');
+        if (dis) b.innerHTML = dis; else b.textContent = t[1];
         b.onclick = () => { dato += t[0]; disegna(); };
         g.appendChild(b);
       });

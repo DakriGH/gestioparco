@@ -2586,11 +2586,22 @@ main.bc-attivo { padding-bottom: 0; }
 .bc-griglia { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
   gap: 12px; align-items: stretch; }
 
-.bc-card { --bcfondo: var(--surface); position: relative; background: var(--bcfondo);
-  border-radius: 20px; box-shadow: 0 4px 14px rgba(0,0,0,.3); overflow: hidden;
-  display: flex; flex-direction: column; }
-.bc-card.presa   { --bcfondo: #262038; box-shadow: 0 0 0 3px var(--accent) inset, 0 6px 18px rgba(182,158,255,.22); }
-.bc-card.saldata { --bcfondo: var(--card-ok); box-shadow: 0 0 0 3px var(--ok) inset, 0 6px 18px rgba(106,220,175,.2); }
+.bc-card { --bcfondo: var(--surface); --bcorlo: transparent; position: relative;
+  background: var(--bcfondo); border-radius: 20px; box-shadow: 0 4px 14px rgba(0,0,0,.3);
+  overflow: hidden; display: flex; flex-direction: column;
+  transition: background .22s ease, box-shadow .22s ease; }
+/* L'ORLO E' UN ANELLO SOPRA TUTTO.
+   Prima era un box-shadow interno, che si disegna sotto ai figli: dove
+   passava sopra le fasce dei tasti -- che sono semitrasparenti -- il
+   colore usciva diverso, e l'orlo sembrava cambiare tinta a meta'
+   altezza. Un ::after sopra a tutto e' dello stesso colore ovunque. */
+.bc-card::after { content: ''; position: absolute; inset: 0; border-radius: inherit;
+  border: 3px solid var(--bcorlo); pointer-events: none; z-index: 4;
+  transition: border-color .22s ease; }
+.bc-card.presa   { --bcfondo: #262038; --bcorlo: var(--accent);
+  box-shadow: 0 6px 18px rgba(182,158,255,.22); }
+.bc-card.saldata { --bcfondo: var(--card-ok); --bcorlo: var(--ok);
+  box-shadow: 0 6px 18px rgba(106,220,175,.2); }
 
 /* la testa prende lo spazio in piu' quando su una riga c'e' una card
    piu' alta: cosi' i tasti restano incollati al fondo e non resta mai
@@ -2665,7 +2676,11 @@ main.bc-attivo { padding-bottom: 0; }
 .bc-parte .k { display: block; font-size: 11px; font-weight: 700; color: var(--txt-3); }
 .bc-parte .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 700;
   line-height: 1.15; }
-.bc-parte .q { display: block; font-size: 11px; font-weight: 700; color: var(--ok); }
+/* la riga del pagato c'e' sempre: vuota diventa invisibile ma tiene il
+   suo posto, cosi' il blocco non si alza e abbassa a ogni incasso */
+.bc-parte .q { display: block; font-size: 11px; font-weight: 700; color: var(--ok);
+  min-height: 14px; line-height: 14px; }
+.bc-parte .q.vuota, .bc-conto .gia.vuota { visibility: hidden; }
 /* sul telefono (o col tablet in mano stretto) il numerone e i tasti
    stanno larghi uguale ma senza far crescere il fondo */
 @media (max-width: 560px) {
@@ -2682,9 +2697,66 @@ main.bc-attivo { padding-bottom: 0; }
 .bc-conto .k { display: block; font-size: 12px; font-weight: 700; color: var(--txt-3); }
 .bc-conto .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 42px; font-weight: 700;
   line-height: 1; }
-.bc-conto .gia { display: block; font-size: 12.5px; font-weight: 700; color: var(--ok); margin-top: 2px; }
+.bc-conto .gia { display: block; font-size: 12.5px; font-weight: 700; color: var(--ok);
+  margin-top: 2px; min-height: 16px; line-height: 16px; }
 .bc-tasti { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
 .bc-resto { margin-top: 12px; }
+
+/* ══ LE ANIMAZIONI ══
+   Tutte spente da sole quando l'utente toglie le animazioni: c'e' gia'
+   una regola che azzera le durate su html:not(.anima). */
+@keyframes bcPop   { 0% { transform: scale(1) } 42% { transform: scale(1.22) } 100% { transform: scale(1) } }
+@keyframes bcSu    { from { opacity: 0; transform: translateY(7px) } to { opacity: 1; transform: none } }
+@keyframes bcEntra { from { opacity: 0; transform: translateY(9px) } to { opacity: 1; transform: none } }
+@keyframes bcVelo  { from { opacity: 0 } to { opacity: 1 } }
+@keyframes bcFoglio{ from { transform: translateY(26px); opacity: .4 } to { transform: none; opacity: 1 } }
+
+/* la griglia entra quando cambi categoria */
+.bc-griglia { animation: bcEntra .2s ease both; }
+/* le fasce dei tasti spuntano quando la voce entra sul conto */
+.bc-card.tocca .bc-zone { animation: bcSu .18s ease both; }
+/* la pasticca e il numero fantasma fanno un saltino: solo sulla card
+   che hai appena toccato */
+.bc-card.tocca .bc-chip, .bc-card.tocca .bc-fant { animation: bcPop .26s ease; }
+/* e il totale in fondo pulsa quando cambia */
+.bc-conto .v.tocca { animation: bcPop .24s ease; }
+/* i tasti affondano sotto il dito */
+.bc-zone button, .bc-chips button, .bc-cat button, .bc-parte .paga {
+  transition: background .12s ease, transform .08s ease; }
+.bc-zone button:active, .bc-chips button:active,
+.bc-cat button:active, .bc-parte .paga:active { transform: scale(.95); }
+
+/* lo Svuota che chiede conferma: rosso e con un battito, cosi' non lo
+   tocchi due volte per inerzia */
+.bc-pericolo { background: var(--danger-soft) !important; color: var(--danger) !important;
+  animation: bcPop .3s ease; }
+
+/* ══ IL VELO: il Resto sovrapposto a tutto ══
+   Se lo infilassi nella pagina, la pagina si ridimensionerebbe sotto le
+   dita proprio mentre conti i soldi. Cosi' invece copre, sta in basso
+   dove sono le mani, e sotto non si muove niente. */
+.bc-velo { position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end;
+  justify-content: center; padding: 12px; background: rgba(0,0,0,.55);
+  -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+  animation: bcVelo .16s ease both; }
+.bc-velo.via { animation: bcVelo .16s ease reverse both; }
+.bc-foglio { width: 100%; max-width: 760px; background: var(--surface); border-radius: 22px;
+  padding: 14px 16px calc(16px + var(--safe-b)); box-shadow: 0 -14px 44px rgba(0,0,0,.6);
+  display: flex; flex-direction: column; gap: 12px;
+  max-height: calc(100% - 24px); overflow-y: auto;
+  animation: bcFoglio .22s cubic-bezier(.2,.9,.3,1) both; }
+.bc-velo.via .bc-foglio { animation: bcFoglio .18s ease reverse both; }
+.bc-foglio-testa { display: flex; align-items: center; gap: 12px; }
+.bc-foglio-testa h3 { margin: 0; font-family: 'Fredoka', sans-serif; font-size: 20px; font-weight: 600; }
+.bc-via { margin-left: auto; width: 44px; height: 44px; border-radius: 14px; border: none;
+  background: var(--surface-2); color: var(--txt); font-size: 17px; cursor: pointer; }
+.bc-velo .resto-box { background: none; padding: 0; }
+
+/* le banconote nei tasti dei tagli: il disegno E' il tasto */
+.resto-tagli { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); }
+.resto-tagli button { display: flex; align-items: center; justify-content: center;
+  min-height: 62px; padding: 4px; }
+.resto-tagli button svg { width: 62px; height: 48px; }
 #view-cassa .resto-box { margin: 0; }
 
 /* l'ultimo inserito: si trova a colpo d'occhio per mezzo minuto */

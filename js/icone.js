@@ -220,3 +220,49 @@ function iconaBar(nome, emoji) {
   if (k && ICONE[k]) return ICONE[k]();
   return '<span class="bc-em">' + (emoji || '\ud83e\udd64') + '</span>';
 }
+
+/* ============================================================
+   I SOLDI, coi colori veri: il 5 grigio, il 10 rosso, il 20 blu, il
+   50 arancione; le monete da 2 e da 1 con l'anello di un metallo e il
+   centro dell'altro, come sono davvero in mano.
+   ============================================================ */
+function banconota(val, carta, bordo, inchiostro) {
+  return svg(
+    '<rect x="2.5" y="9" width="35" height="22" rx="2.6" fill="' + carta + '"/>' +
+    '<rect x="2.5" y="9" width="35" height="22" rx="2.6" fill="none" stroke="' + bordo + '" stroke-width="1.4"/>' +
+    /* la finestra chiara a sinistra, come l'ologramma */
+    '<rect x="5" y="11.6" width="7.4" height="16.8" rx="1.4" fill="#fff" opacity=".45"/>' +
+    /* l'arco di stelle, appena accennato */
+    '<circle cx="30.6" cy="14.6" r="1" fill="' + inchiostro + '" opacity=".55"/>' +
+    '<circle cx="33.4" cy="17" r="1" fill="' + inchiostro + '" opacity=".55"/>' +
+    '<circle cx="33.4" cy="23" r="1" fill="' + inchiostro + '" opacity=".55"/>' +
+    '<circle cx="30.6" cy="25.4" r="1" fill="' + inchiostro + '" opacity=".55"/>' +
+    '<text x="20.5" y="24.8" text-anchor="middle" font-family="Fredoka, sans-serif" ' +
+      'font-size="13.5" font-weight="700" fill="' + inchiostro + '">' + val + '</text>'
+  );
+}
+function moneta(val, fuori, dentro, inchiostro, piccola) {
+  const r = piccola ? 14.5 : 16.5;
+  return svg(
+    '<circle cx="20" cy="20" r="' + r + '" fill="' + fuori + '"/>' +
+    '<circle cx="20" cy="20" r="' + r + '" fill="none" stroke="#000" stroke-width="1" opacity=".18"/>' +
+    '<circle cx="20" cy="20" r="' + (r - 4.2) + '" fill="' + dentro + '"/>' +
+    '<path d="M20 ' + (20 - r) + 'a' + r + ' ' + r + ' 0 0 1 ' + r + ' ' + r +
+      'l-2.6 0a' + (r - 2.6) + ' ' + (r - 2.6) + ' 0 0 0 ' + (-(r - 2.6)) + ' ' + (-(r - 2.6)) + 'Z" ' +
+      'fill="#fff" opacity=".3"/>' +
+    '<text x="20" y="25" text-anchor="middle" font-family="Fredoka, sans-serif" ' +
+      'font-size="' + (piccola ? 11 : 13.5) + '" font-weight="700" fill="' + inchiostro + '">' + val + '</text>'
+  );
+}
+/* quello che gira davvero in cassa, dal piu' grosso al piu' piccolo */
+const SOLDI = {
+  5000: () => banconota('50', '#F0B45C', '#C98426', '#7A4A0E'),
+  2000: () => banconota('20', '#7FB6E8', '#3D7CB8', '#123E68'),
+  1000: () => banconota('10', '#E08A8A', '#B84A4A', '#6B1414'),
+  500:  () => banconota('5',  '#CFCBC3', '#9A958C', '#3E3B35'),
+  200:  () => moneta('2€', '#C9CDD6', '#E8C36B', '#5A4413', true),
+  100:  () => moneta('1€', '#E8C36B', '#C9CDD6', '#3A3D45', true),
+  50:   () => moneta('50c', '#E3B457', '#D9A63F', '#5A4413', true),
+  20:   () => moneta('20c', '#EAC46B', '#DDB55A', '#5A4413', true)
+};
+const iconaSoldi = c => (SOLDI[c] ? SOLDI[c]() : '');
