@@ -31,16 +31,18 @@
     { c: '#9AA5B4', n: ['grigio', 'grigia', 'grigi', 'grigie'] }
   ];
 
+  /* TRE colori, non otto. Al banco una persona si guarda per due
+     secondi: fra "castano" e "castano chiaro" non sceglie nessuno, e
+     otto pastiglie rallentavano senza aggiungere niente. Scuri, biondi,
+     grigi: quello che si nota davvero da lontano.
+     I colori vecchi non si perdono — colorName() prende il più vicino,
+     quindi un avatar "biondo platino" di ieri resta biondo. */
   const HAIR_COLORS = [
-    { c: '#1B1714', n: ['nero', 'nera', 'neri', 'nere'] },
-    { c: '#4A2E1E', n: ['castano', 'castana', 'castani', 'castane'] },
-    { c: '#8B5A2B', n: ['castano chiaro', 'castana chiara', 'castani chiari', 'castane chiare'] },
+    { c: '#2A1E16', n: ['scuro', 'scura', 'scuri', 'scure'] },
     { c: '#D8A657', n: ['biondo', 'bionda', 'biondi', 'bionde'] },
-    { c: '#F0DFA8', n: ['biondo platino', 'bionda platino', 'biondi platino', 'bionde platino'] },
-    { c: '#B4471F', n: ['rosso', 'rossa', 'rossi', 'rosse'] },
-    { c: '#C9CDD3', n: ['grigio', 'grigia', 'grigi', 'grigie'] },
-    { c: '#F2F4F6', n: ['bianco', 'bianca', 'bianchi', 'bianche'] }
+    { c: '#C9CDD3', n: ['grigio', 'grigia', 'grigi', 'grigie'] }
   ];
+  const SCURI = HAIR_COLORS[0].c, BIONDI = HAIR_COLORS[1].c, GRIGI = HAIR_COLORS[2].c;
 
   const SKINS = ['#FFE0C0', '#F6CFA8', '#E8B98A', '#D19A68', '#B67A4C', '#8F5A33', '#6B4226', '#4A2C18'];
 
@@ -110,8 +112,10 @@
   const PANTS = [
     { key: 'pantaloni', label: 'Lunghi', em: '👖', g: 2, noun: 'Pantaloni' },
     { key: 'pantaloncini', label: 'Corti', em: '🩳', g: 2, noun: 'Pantaloncini' },
-    { key: 'tuta', label: 'Tuta', em: '🧥', g: 2, noun: 'Pantaloni della tuta' },
-    { key: 'gonna', label: 'Gonna', em: '👗', g: 1, noun: 'Gonna' }
+    { key: 'jeans', label: 'Jeans', em: '👖', g: 2, noun: 'Jeans' },
+    { key: 'jeanscorti', label: 'Jeans corti', em: '🩳', g: 2, noun: 'Jeans corti' },
+    { key: 'gonna', label: 'Gonna', em: '👗', g: 1, noun: 'Gonna' },
+    { key: 'tuta', label: 'Tuta', em: '🧥', g: 2, noun: 'Pantaloni della tuta' }
   ];
 
   const SHOES = [
@@ -173,7 +177,7 @@
     const a = {
       role: role || 'altro',
       skin: SKINS[1],
-      hair: { style: 'corti', color: '#4A2E1E' },
+      hair: { style: 'medio', color: SCURI },
       hat: { style: 'none', color: '#E23D4B' },
       glasses: 'none',
       facial: 'none',
@@ -184,40 +188,40 @@
     };
     switch (role) {
       case 'mamma':
-        a.hair = { style: 'lunghi', color: '#4A2E1E' };
+        a.hair = { style: 'lunghi', color: SCURI };
         a.top = { style: 'camicia', color: '#EC4899', color2: '#F4F6F8', pattern: 'solid' };
         a.bag = { style: 'borsa', color: '#7C4A2D' };
         break;
       case 'papa':
-        a.hair = { style: 'corti', color: '#1B1714' };
+        a.hair = { style: 'corti', color: SCURI };
         a.top = { style: 'polo', color: '#2547C4', color2: '#F4F6F8', pattern: 'solid' };
         a.facial = 'barba';
         break;
       case 'nonna':
-        a.hair = { style: 'chignon', color: '#C9CDD3' };
+        a.hair = { style: 'chignon', color: GRIGI };
         a.top = { style: 'maglietta', color: '#8B5CF6', color2: '#F4F6F8', pattern: 'solid' };
         a.pants = { style: 'gonna', color: '#1F2430', color2: '#F4F6F8', pattern: 'solid' };
         a.glasses = 'vista';
         break;
       case 'nonno':
-        a.hair = { style: 'pelato', color: '#C9CDD3' };
+        a.hair = { style: 'pelato', color: GRIGI };
         a.hat = { style: 'panama', color: '#FBBF24' };
         a.top = { style: 'camicia', color: '#9AA5B4', color2: '#F4F6F8', pattern: 'solid' };
         a.glasses = 'vista';
         a.facial = 'baffi';
         break;
       case 'ragazza':
-        a.hair = { style: 'codino', color: '#8B5A2B' };
+        a.hair = { style: 'codino', color: BIONDI };
         a.top = { style: 'maglietta', color: '#EC4899', color2: '#F4F6F8', pattern: 'dots' };
-        a.pants = { style: 'pantaloncini', color: '#2547C4', color2: '#F4F6F8', pattern: 'solid' };
+        a.pants = { style: 'jeanscorti', color: '#2547C4', color2: '#F4F6F8', pattern: 'solid' };
         break;
       case 'ragazzo':
-        a.hair = { style: 'ricci', color: '#1B1714' };
+        a.hair = { style: 'ricci', color: SCURI };
         a.top = { style: 'maglietta', color: '#22C55E', color2: '#F4F6F8', pattern: 'stripes-h' };
         a.pants = { style: 'pantaloncini', color: '#1F2430', color2: '#F4F6F8', pattern: 'solid' };
         break;
       case 'baby':
-        a.hair = { style: 'codino', color: '#4A2E1E' };
+        a.hair = { style: 'treccine', color: SCURI };
         a.hat = { style: 'cappellino', color: '#FBBF24' };
         a.top = { style: 'felpa', color: '#0EA5E9', color2: '#F4F6F8', pattern: 'solid' };
         break;
@@ -244,23 +248,45 @@
       shoes: { style: 'sneakers', color: NEUTRO.shoes },
       bag: { style: 'none', color: '#7C4A2D' }
     };
+    /* LA TESTA E' L'ARCHETIPO. Il taglio di capelli non si sceglie più
+       dal pannello, quindi è qui che si decide: ogni ruolo deve avere
+       una testa che si riconosce da lontano e da ferma, se no otto
+       figurine sembrano la stessa persona vestita diversa.
+       Barba e occhiali fanno parte della testa, non sono accessori da
+       spuntare: sono quello che distingue il nonno dal papà. */
+    const sotto = (stile) => ({ style: stile, color: NEUTRO.pants, color2: '#F4F6F8', pattern: 'solid' });
     switch (role) {
-      case 'mamma': a.hair = { style: 'lunghi', color: '#4A2E1E' }; break;
-      case 'papa': a.hair = { style: 'corti', color: '#1B1714' }; break;
-      case 'nonna':
-        a.hair = { style: 'chignon', color: '#C9CDD3' };
-        a.pants = { style: 'gonna', color: NEUTRO.pants, color2: '#F4F6F8', pattern: 'solid' };
+      case 'mamma':
+        a.hair = { style: 'lunghi', color: SCURI };
         break;
-      case 'nonno': a.hair = { style: 'pelato', color: '#C9CDD3' }; break;
+      case 'papa':
+        a.hair = { style: 'corti', color: SCURI };
+        a.facial = 'barba';
+        break;
+      case 'nonna':
+        a.hair = { style: 'chignon', color: GRIGI };
+        a.glasses = 'vista';
+        a.pants = sotto('gonna');
+        break;
+      case 'nonno':
+        a.hair = { style: 'pelato', color: GRIGI };
+        a.facial = 'baffi';
+        a.glasses = 'vista';
+        break;
       case 'ragazza':
-        a.hair = { style: 'codino', color: '#8B5A2B' };
-        a.pants = { style: 'pantaloncini', color: NEUTRO.pants, color2: '#F4F6F8', pattern: 'solid' };
+        a.hair = { style: 'codino', color: BIONDI };
+        a.pants = sotto('jeanscorti');
         break;
       case 'ragazzo':
-        a.hair = { style: 'ricci', color: '#1B1714' };
-        a.pants = { style: 'pantaloncini', color: NEUTRO.pants, color2: '#F4F6F8', pattern: 'solid' };
+        a.hair = { style: 'ricci', color: SCURI };
+        a.pants = sotto('jeanscorti');
         break;
-      case 'baby': a.hair = { style: 'codino', color: '#4A2E1E' }; break;
+      case 'baby':
+        a.hair = { style: 'treccine', color: SCURI };
+        a.pants = sotto('jeans');
+        break;
+      default:
+        a.hair = { style: 'medio', color: SCURI };
     }
     return a;
   }
@@ -428,9 +454,15 @@
     } else if (hairStyle === 'treccine') {
       hairBack = `<path d="M28 36 L24 76" stroke="${shade(hairCol, -12)}" stroke-width="7" stroke-linecap="round"/><path d="M72 36 L76 76" stroke="${shade(hairCol, -12)}" stroke-width="7" stroke-linecap="round"/>`;
     } else if (hairStyle === 'chignon') {
-      hairBack = `<circle cx="50" cy="14" r="11" fill="${shade(hairCol, -10)}"/>`;
+      /* la crocchia della nonna: alta e ben staccata dalla testa, con
+         due giri di piega, se no a piccolo sembrava un cappello */
+      hairBack = `<ellipse cx="50" cy="13" rx="13" ry="11" fill="${shade(hairCol, -12)}"/>
+                  <path d="M40 13 Q50 6 60 13 M41 17 Q50 23 59 17" stroke="${shade(hairCol, -30)}" stroke-width="1.3" fill="none" opacity=".8"/>`;
     } else if (hairStyle === 'codino') {
-      hairBack = `<path d="M74 32 Q88 42 82 66 Q78 48 68 40 Z" fill="${shade(hairCol, -10)}"/>`;
+      /* la coda: parte da dietro l'orecchio e scende lunga di fianco.
+         Prima era un ciuffetto corto che si perdeva sul bordo. */
+      hairBack = `<path d="M72 30 Q90 40 86 72 Q80 78 78 70 Q84 48 66 38 Z" fill="${shade(hairCol, -10)}"/>
+                  <ellipse cx="74" cy="33" rx="5" ry="4.5" fill="${shade(hairCol, 18)}"/>`;
     }
 
     /* --- gambe --- */
@@ -439,7 +471,7 @@
     if (isDress || av.pants.style === 'gonna') {
       legs = `<rect x="40" y="112" width="8.5" height="28" rx="4" fill="${skin}"/>
               <rect x="51.5" y="112" width="8.5" height="28" rx="4" fill="${skin}"/>`;
-    } else if (av.pants.style === 'pantaloncini') {
+    } else if (av.pants.style === 'pantaloncini' || av.pants.style === 'jeanscorti') {
       legs = `<rect x="39" y="110" width="9.5" height="30" rx="4.5" fill="${skin}"/>
               <rect x="51.5" y="110" width="9.5" height="30" rx="4.5" fill="${skin}"/>`;
     } else if (av.pants.style === 'tuta') {
@@ -509,6 +541,27 @@
         bottom = `<path d="M32 96 L68 96 L67 132 L53 132 L50 108 L47 132 L33 132 Z" fill="${botP.fill}" ${line}/>
                   <path d="M33.5 98 L34.5 130 M66.5 98 L65.5 130" stroke="${shade(av.pants.color, 60)}" stroke-width="2.6"/>
                   <path d="M33 128 L47.5 128 M52.5 128 L67 128" stroke="${shade(av.pants.color, -40)}" stroke-width="3.4"/>`;
+      } else if (av.pants.style === 'jeans' || av.pants.style === 'jeanscorti') {
+        /* I jeans si riconoscono dalla CUCITURA chiara e dai rivetti,
+           non dal blu: uno puo' averli neri e restano jeans. Quindi il
+           filo e' sempre color miele e le tasche si vedono. */
+        const filo = '#E3B04B';
+        const corti = av.pants.style === 'jeanscorti';
+        const giu = corti ? 116 : 134;
+        const sagoma = corti
+          ? `M33 96 L67 96 L66 ${giu} L53 ${giu} L50 106 L47 ${giu} L34 ${giu} Z`
+          : `M34 96 L66 96 L64.5 ${giu} L52.5 ${giu} L50 108 L47.5 ${giu} L35.5 ${giu} Z`;
+        bottom = `<path d="${sagoma}" fill="${botP.fill}" ${line}/>
+                  <path d="M34 100 L66 100" stroke="${shade(av.pants.color, -42)}" stroke-width="3"/>
+                  <path d="M34 98.5 L66 98.5 M34 101.8 L66 101.8" stroke="${filo}" stroke-width="0.8" opacity=".85"/>
+                  <path d="M38 104 Q42 104 43.5 108" stroke="${filo}" stroke-width="0.9" fill="none" opacity=".8"/>
+                  <path d="M62 104 Q58 104 56.5 108" stroke="${filo}" stroke-width="0.9" fill="none" opacity=".8"/>
+                  <circle cx="37.6" cy="103.4" r="0.85" fill="${filo}"/>
+                  <circle cx="62.4" cy="103.4" r="0.85" fill="${filo}"/>
+                  <path d="M50 102 L50 ${giu - 4}" stroke="${shade(av.pants.color, -30)}" stroke-width="1" opacity=".55"/>` +
+          (corti
+            ? `<path d="M34 ${giu - 4} L47 ${giu - 4} M53 ${giu - 4} L66 ${giu - 4}" stroke="${shade(av.pants.color, -34)}" stroke-width="3.2"/>`
+            : `<path d="M36.5 ${giu - 2} L47.5 ${giu - 2} M52.5 ${giu - 2} L64.5 ${giu - 2}" stroke="${filo}" stroke-width="0.8" opacity=".7"/>`);
       } else {
         // lunghi, dritti, con la cucitura al centro
         bottom = `<path d="M34 96 L66 96 L64.5 134 L52.5 134 L50 108 L47.5 134 L35.5 134 Z" fill="${botP.fill}" ${line}/>
@@ -621,8 +674,13 @@
     /* --- capelli davanti --- */
     let hair = '';
     if (hairStyle === 'pelato') {
-      hair = `<path d="M29 38 Q30 34 32 32" stroke="${shade(hairCol, 0)}" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.5"/>
-              <path d="M71 38 Q70 34 68 32" stroke="${shade(hairCol, 0)}" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.5"/>`;
+      /* la corona di capelli del nonno: sopra niente, ai lati una fascia
+         piena che scende fin sopra l'orecchio. Due trattini sbiaditi non
+         si vedevano, e il nonno sembrava un ragazzo rasato. */
+      hair = `<path d="M28 44 Q27 30 32 25 Q30 36 31 46 Z" fill="${hairCol}"/>
+              <path d="M72 44 Q73 30 68 25 Q70 36 69 46 Z" fill="${hairCol}"/>
+              <path d="M28 40 Q29 31 34 27" stroke="${hairCol}" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+              <path d="M72 40 Q71 31 66 27" stroke="${hairCol}" stroke-width="4.5" fill="none" stroke-linecap="round"/>`;
     } else if (hairStyle === 'corti') {
       hair = `<path d="M28 40 Q28 18 50 18 Q72 18 72 40 Q68 28 50 28 Q32 28 28 40 Z" fill="${hairCol}"/>`;
     } else if (hairStyle === 'medio') {
@@ -636,9 +694,14 @@
               <circle cx="57" cy="21" r="9" fill="${hairCol}"/><circle cx="67" cy="30" r="8" fill="${hairCol}"/>
               <circle cx="50" cy="24" r="9" fill="${hairCol}"/>`;
     } else if (hairStyle === 'codino') {
-      hair = `<path d="M28 40 Q28 17 50 17 Q72 17 72 40 Q68 27 50 27 Q32 27 28 40 Z" fill="${hairCol}"/>`;
+      /* la riga di lato: dice "coda" anche prima di vedere la coda */
+      hair = `<path d="M28 40 Q28 17 50 17 Q72 17 72 40 Q68 27 50 27 Q32 27 28 40 Z" fill="${hairCol}"/>
+              <path d="M40 19 Q36 27 34 38" stroke="${shade(hairCol, 24)}" stroke-width="1.6" fill="none" opacity=".85"/>`;
     } else if (hairStyle === 'chignon') {
-      hair = `<path d="M28 40 Q28 17 50 17 Q72 17 72 40 Q68 26 50 26 Q32 26 28 40 Z" fill="${hairCol}"/>`;
+      /* tirati indietro, lisci, con le tempie scoperte: la testa della
+         signora che ha i capelli raccolti */
+      hair = `<path d="M28 40 Q28 17 50 17 Q72 17 72 40 Q69 25 50 25 Q31 25 28 40 Z" fill="${hairCol}"/>
+              <path d="M34 30 Q42 22 50 21 Q58 22 66 30" stroke="${shade(hairCol, 20)}" stroke-width="1.3" fill="none" opacity=".7"/>`;
     } else if (hairStyle === 'treccine') {
       hair = `<path d="M28 40 Q28 17 50 17 Q72 17 72 40 Q68 27 50 27 Q32 27 28 40 Z" fill="${hairCol}"/>
               <path d="M36 24 L34 32 M44 20 L43 29 M56 20 L57 29 M64 24 L66 32" stroke="${shade(hairCol, 22)}" stroke-width="1.4" stroke-linecap="round"/>`;
@@ -758,6 +821,10 @@
   global.AV = {
     COLORS, HAIR_COLORS, SKINS, PATTERNS,
     HAIR, HAT, GLASSES, FACIAL, TOP, PANTS, SHOES, BAG, ROLES,
-    build, traits, normalize, defaultFor, baseFor, colorName, findIn, shade, coloreFantasia
+    build, traits, normalize, defaultFor, baseFor, colorName, findIn, shade, coloreFantasia,
+    /* la stoffa: serve alle icone dei capi, che devono mostrare la
+       fantasia VERA e non una sua imitazione. Un solo posto dove sono
+       definite le trame, cosi' l'icona e la figura non divergono mai. */
+    tessuto: patternDef
   };
 })(window);

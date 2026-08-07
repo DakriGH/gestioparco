@@ -898,15 +898,22 @@ function syncPeople(container, people, onChange) {
           container.dataset.apri = (container.dataset.apri === gia.id) ? '' : gia.id;
         } else {
           gia.role = d.ruolo;
-          /* Se il vestito non lo hai ancora toccato, riparte da quello
-             di serie del ruolo nuovo -- e' quello che ci si aspetta
-             passando da Mamma a Papa'. Se invece lo avevi gia' vestito,
-             i vestiti restano: sono la parte che costa fatica. */
+          const nuovo = AV.baseFor(d.ruolo);
           if (!gia.tocco) {
-            gia.avatar = AV.baseFor(d.ruolo);
+            /* vestito mai toccato: riparte tutto da quello di serie del
+               ruolo nuovo -- e' quello che ci si aspetta passando da
+               Mamma a Papa' */
+            gia.avatar = nuovo;
             gia.avatar.scelti = {};
           } else {
+            /* LA TESTA SEGUE SEMPRE IL RUOLO: capelli, barba e occhiali
+               sono l'archetipo, non un vestito, e non si scelgono da
+               nessuna parte. I VESTITI invece restano, perche' quelli li
+               hai messi tu e sono la parte che costa fatica. */
             gia.avatar = AV.normalize(gia.avatar, d.ruolo);
+            gia.avatar.hair = { style: nuovo.hair.style, color: nuovo.hair.color };
+            gia.avatar.facial = nuovo.facial;
+            gia.avatar.glasses = nuovo.glasses;
           }
           container.dataset.apri = gia.id;
         }

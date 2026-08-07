@@ -2598,7 +2598,15 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
 .armadio .ico .sw { width: 32px; height: 22px; border-radius: 6px; font-size: 15px;
   line-height: 22px; text-align: center; font-weight: 700;
   box-shadow: 0 0 0 1px rgba(0,0,0,.4) inset; }
-.armadio .sottoriga { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+/* I capi di sotto sono passati da quattro a sei (ci sono i jeans): con
+   le misure di prima le icone e le tinte non stavano piu' su una riga
+   sola e il blocco cresceva di una quarantina di pixel, cioe' quanto
+   basta a far scorrere una schermata che deve stare ferma. Qui dentro
+   si stringono quel tanto che serve. */
+.armadio .sottoriga { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.armadio .sottoriga .ico { width: 55px; }
+.armadio .sottoriga .tinte { gap: 5px; }
+.armadio .sottoriga .tinte button { width: 31px; height: 31px; }
 .armadio .tinte { display: flex; gap: 6px; flex-wrap: wrap; }
 .armadio .tinte button { width: 34px; height: 34px; border-radius: 9px; border: 3px solid transparent;
   padding: 0; cursor: pointer; transition: transform .1s ease; }

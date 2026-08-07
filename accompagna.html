@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="dark">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chi accompagna — proposte</title>
+<link rel="stylesheet" href="./css/fonts.css">
+<link rel="stylesheet" href="./css/app.css?v=200">
+<style>
+  body { margin: 0; background: #0B0B10; color: #E9E9F2; padding: 24px 18px 90px;
+    font-family: 'Inter', system-ui, sans-serif; }
+  .foglio { max-width: 1180px; margin: 0 auto; }
+  .occhiello { color: #E8B44C; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; margin: 0 0 8px; }
+  h1.tit { font-family: 'Fredoka', sans-serif; font-size: 27px; margin: 0 0 10px; }
+  .intro { color: #A8A8BD; font-size: 15px; line-height: 1.65; max-width: 76ch; margin: 0 0 8px; }
+  .intro b { color: #E8B44C; font-weight: 600; }
+
+  .testa { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 32px 0 4px; }
+  .lett { font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 700; background: #23232F;
+    color: #E8B44C; border-radius: 20px; padding: 4px 12px; }
+  .testa h3 { font-family: 'Fredoka', sans-serif; font-size: 19px; margin: 0; }
+  .perche { color: #8F8FA6; font-size: 13.5px; margin: 0 0 10px; max-width: 74ch; line-height: 1.55; }
+  .mis { margin-left: auto; font-size: 11px; font-weight: 800; letter-spacing: .04em;
+    text-transform: uppercase; border-radius: 20px; padding: 4px 10px; background: rgba(0,0,0,.55); }
+  .telaio { border-radius: 20px; overflow: hidden; max-width: 772px;
+    border: 1px solid rgba(255,255,255,.1); box-shadow: 0 16px 38px rgba(0,0,0,.5); background: var(--bg); }
+
+  /* la barra dei ruoli, comune a tutte le proposte */
+  .ruoli { display: flex; gap: 5px; }
+  .ruoli button { flex: 1 1 0; min-width: 0; border: none; border-radius: 13px; padding: 5px 2px;
+    background: rgba(0,0,0,.22); color: rgba(255,255,255,.86); font: inherit; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 1px; }
+  .ruoli button .em { font-size: 22px; line-height: 1.15; }
+  .ruoli button .nm { font-size: 10px; font-weight: 700; line-height: 1.1; }
+  .ruoli button.on { background: #fff; color: #221944; }
+
+  /* ── il pezzo nuovo: il capo come MINI FIGURA, col nome sotto ── */
+  .capi { display: flex; flex-wrap: wrap; gap: 6px; }
+  .capo { border: none; border-radius: 13px; background: rgba(0,0,0,.24);
+    color: rgba(255,255,255,.9); padding: 4px 3px 5px; cursor: pointer; font: inherit;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    transition: background .14s ease, transform .08s ease; }
+  .capo:active { transform: scale(.95); }
+  .capo svg { display: block; }
+  .capo .nm { font-size: 11px; font-weight: 700; line-height: 1.1; text-align: center;
+    letter-spacing: -.01em; }
+  .capo.on { background: #fff; color: #221944; }
+  .capo.on svg { filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
+
+  .et { font-size: 10px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
+    color: rgba(255,255,255,.62); display: block; margin-bottom: 3px; }
+  .tinte { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tinte button { width: 32px; height: 32px; border-radius: 9px; border: 3px solid transparent;
+    padding: 0; cursor: pointer; }
+  .tinte button.on { border-color: #fff; transform: scale(1.08); }
+  .sw { width: 32px; height: 22px; border-radius: 6px; box-shadow: 0 0 0 1px rgba(0,0,0,.4) inset;
+    font-size: 14px; line-height: 22px; text-align: center; font-weight: 700; }
+  .libero { width: 100%; box-sizing: border-box; border: 1px solid rgba(255,255,255,.18);
+    border-radius: 11px; background: rgba(0,0,0,.25); color: #fff; font: inherit; font-size: 13px;
+    padding: 7px 11px; min-height: 36px; }
+  .libero::placeholder { color: rgba(255,255,255,.5); }
+  .riga { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
+  .col { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+  .grande { background: rgba(0,0,0,.24); border-radius: 16px; padding: 8px;
+    display: flex; flex-direction: column; align-items: center; gap: 5px; }
+
+  .nota { background: #181A22; border: 1px solid rgba(255,255,255,.08); border-left: 3px solid #E8B44C;
+    border-radius: 0 14px 14px 0; padding: 14px 16px; margin: 34px 0 0; color: #B9BFC9;
+    font-size: 14.5px; line-height: 1.65; }
+  .nota b { color: #E9E9F2; }
+  .teste { display: flex; gap: 10px; flex-wrap: wrap; background: #14141B; border-radius: 18px;
+    padding: 14px; margin-top: 12px; }
+  .teste figure { margin: 0; text-align: center; }
+  .teste figcaption { font-size: 12px; font-weight: 700; color: #A8A8BD; margin-top: 2px; }
+</style>
+
+<div class="foglio">
+  <p class="occhiello">Chi accompagna</p>
+  <h1 class="tit">Sei modi di far scegliere i vestiti</h1>
+  <p class="intro">In tutte le proposte il capo è <b>disegnato da solo</b>, steso come in vetrina, <b>col suo colore
+  e la sua fantasia addosso</b> — niente emoji e niente avatar intero: quello che serve è
+  distinguere la maglietta dalla polo, e il nome sta sotto, leggibile.
+  Sotto ci sono <b>gonna, pantaloni lunghi e corti, jeans lunghi e corti</b> e la tuta.</p>
+  <p class="intro">I capelli non si scelgono più: <b>la testa è l'archetipo</b>. Qui sotto le sei
+  teste, da guardare prima delle proposte — se non si distinguono queste, non serve il resto.</p>
+
+  <div class="teste" id="teste"></div>
+
+  <div id="proposte"></div>
+
+  <div class="nota">
+    <b>Come leggerle:</b> il cartellino a destra dice quanto è alta la sottocard. Il blocco viola
+    ha circa <b>484px</b> prima di far scorrere la schermata: sopra quella cifra, qualcosa deve
+    uscire. Dimmi la lettera e la rifinisco.
+  </div>
+</div>
+
+<script src="./js/icone.js?v=200"></script>
+<script src="./js/avatar.js?v=200"></script>
+<script src="./js/capi.js?v=200"></script>
+<script>
+const RUOLI = AV.ROLES;
+let ruolo = 'mamma';
+let av = AV.baseFor(ruolo);
+let nota = '';
+
+/* Il capo DA SOLO, col suo colore e la sua fantasia. La figura intera
+   con un pezzo cambiato era onesta ma ingombrante, e a colpo d'occhio
+   erano tutte la stessa persona: quello che serve e' riconoscere la
+   maglietta dalla polo, non l'avatar. */
+function capi(lista, quale, campo, alt) {
+  const col = av[campo].color, fan = av[campo].pattern;
+  return '<div class="capi">' + lista.map(t =>
+    '<button class="capo' + (av[campo].style === t.key ? ' on' : '') + '" data-set="' + campo + '|' + t.key + '">' +
+    CAPI.capo(t.key, col, fan, alt || 42) +
+    '<span class="nm">' + t.label + '</span></button>').join('') + '</div>';
+}
+function tinte(campo) {
+  return '<div class="tinte">' + AV.COLORS.slice(0, 10).map(c =>
+    '<button data-col="' + campo + '|' + c.c + '" style="background:' + c.c + '"' +
+    (av[campo].color === c.c ? ' class="on"' : '') + '></button>').join('') + '</div>';
+}
+function pezza(pat) {
+  const c1 = av.top.color, c2 = AV.coloreFantasia(c1);
+  const st = {
+    'solid': 'background:' + c1,
+    'stripes-h': 'background:repeating-linear-gradient(180deg,' + c1 + ' 0 5px,' + c2 + ' 5px 10px)',
+    'stripes-v': 'background:repeating-linear-gradient(90deg,' + c1 + ' 0 5px,' + c2 + ' 5px 10px)',
+    'diag': 'background:repeating-linear-gradient(45deg,' + c1 + ' 0 5px,' + c2 + ' 5px 10px)',
+    'dots': 'background:' + c1 + ';background-image:radial-gradient(' + c2 + ' 2.2px,transparent 2.4px);background-size:9px 9px',
+    'plaid': 'background:' + c1 + ';background-image:repeating-linear-gradient(90deg,' + c2 + ' 0 3px,transparent 3px 10px),repeating-linear-gradient(180deg,' + c2 + ' 0 3px,transparent 3px 10px)',
+    'scacchi': 'background:' + c1 + ';background-image:linear-gradient(45deg,' + c2 + ' 25%,transparent 25% 75%,' + c2 + ' 75%),linear-gradient(45deg,' + c2 + ' 25%,transparent 25% 75%,' + c2 + ' 75%);background-size:12px 12px;background-position:0 0,6px 6px',
+    'camo': 'background:' + c1 + ';background-image:radial-gradient(' + c2 + ' 42%,transparent 43%),radial-gradient(' + c2 + ' 38%,transparent 39%);background-size:14px 12px,10px 9px;background-position:0 0,7px 5px',
+    'animalier': 'background:' + c1 + ';background-image:radial-gradient(ellipse 3px 2px,' + c2 + ' 60%,transparent 62%),radial-gradient(ellipse 2.6px 2px,' + c2 + ' 60%,transparent 62%);background-size:11px 9px,11px 9px;background-position:0 0,5px 4px',
+    'zigzag': 'background:' + c1 + ';background-image:linear-gradient(135deg,' + c2 + ' 25%,transparent 25%),linear-gradient(225deg,' + c2 + ' 25%,transparent 25%);background-size:8px 8px'
+  };
+  const segno = { fiori: '✿', cuori: '♥', stars: '★', logo: '◉' }[pat] || '';
+  return '<span class="sw" style="' + (st[pat] || ('background:' + c1 + ';color:' + c2)) + '">' + segno + '</span>';
+}
+function fantasie() {
+  return '<div class="capi">' + AV.PATTERNS.map(f =>
+    '<button class="capo' + (av.top.pattern === f.key ? ' on' : '') + '" data-pat="' + f.key + '">' +
+    pezza(f.key) + '<span class="nm">' + f.n + '</span></button>').join('') + '</div>';
+}
+const figuraGrande = (h) => '<div class="grande">' + AV.build(av).replace('<svg', '<svg width="' + Math.round((h||132)*100/150) + '" height="' + (h||132) + '"') +
+  '<input class="libero" style="text-align:center;min-height:30px;padding:4px 8px" placeholder="' + AV.ROLES.find(r=>r.key===ruolo).label + '"></div>';
+const riferimento = () => '<div><span class="et">Qualcosa che salta all’occhio</span>' +
+  '<input class="libero" value="' + nota + '" data-nota placeholder="«zaino giallo», «gamba ingessata»…"></div>';
+const barraRuoli = () => '<div class="ruoli">' + RUOLI.map(r =>
+  '<button data-ruolo="' + r.key + '"' + (ruolo === r.key ? ' class="on"' : '') + '>' +
+  '<span class="em">' + r.em + '</span><span class="nm">' + r.label + '</span></button>').join('') + '</div>';
+
+/* ══════ le sei proposte ══════ */
+const P = [
+  { l: 'A', t: 'Tutto in fila, una cosa per riga',
+    p: 'La più semplice: sopra i capi, sotto i sotto, poi colori e fantasie. La figura grande sta a sinistra e non si muove mai. Costa altezza, ma non c\'è niente da cercare.',
+    html: () => '<div class="riga"><div style="flex:0 0 auto">' + figuraGrande(140) + '</div>' +
+      '<div class="col" style="flex:1">' +
+        '<div><span class="et">Che cosa indossa</span>' + capi(AV.TOP, 'top', 'top', 40) + '</div>' +
+        '<div><span class="et">Sotto</span>' + capi(AV.PANTS, 'pants', 'pants', 40) + '</div>' +
+      '</div></div>' +
+      '<div class="col" style="margin-top:8px">' +
+        '<div class="riga"><div style="flex:1 1 300px"><span class="et">Colore del capo</span>' + tinte('top') + '</div>' +
+        '<div style="flex:1 1 300px"><span class="et">Colore del sotto</span>' + tinte('pants') + '</div></div>' +
+        '<div><span class="et">Fantasia</span>' + fantasie() + '</div>' + riferimento() + '</div>' },
+
+  { l: 'B', t: 'Sopra e sotto affiancati',
+    p: 'Due colonne: a sinistra tutto quello che va sopra, a destra tutto quello che va sotto, ognuna col suo colore sotto le figure. Si guarda una metà per volta.',
+    html: () => '<div class="riga">' + figuraGrande(150) +
+      '<div class="col" style="flex:1 1 240px"><span class="et">Sopra</span>' + capi(AV.TOP, 'top', 'top', 34) +
+        tinte('top') + '</div>' +
+      '<div class="col" style="flex:1 1 200px"><span class="et">Sotto</span>' + capi(AV.PANTS, 'pants', 'pants', 34) +
+        tinte('pants') + '</div></div>' +
+      '<div class="col" style="margin-top:8px"><div><span class="et">Fantasia</span>' + fantasie() + '</div>' + riferimento() + '</div>' },
+
+  { l: 'C', t: 'Figure grandi, nomi grandi',
+    p: 'I capi si vedono per davvero: mini figure da 62px e nome in chiaro. È la più leggibile col dito e da lontano, ed è anche la più alta: le fantasie vanno su una riga sola più stretta.',
+    html: () => '<div class="riga"><div style="flex:0 0 auto">' + figuraGrande(120) + '</div>' +
+      '<div class="col" style="flex:1"><div><span class="et">Che cosa indossa</span>' + capi(AV.TOP, 'top', 'top', 54) + '</div></div></div>' +
+      '<div class="col" style="margin-top:8px">' +
+        '<div><span class="et">Sotto</span>' + capi(AV.PANTS, 'pants', 'pants', 54) + '</div>' +
+        '<div class="riga"><div style="flex:1 1 280px"><span class="et">Colore</span>' + tinte('top') + '</div>' +
+          '<div style="flex:1 1 280px"><span class="et">Fantasia</span>' + fantasie() + '</div></div>' +
+        riferimento() + '</div>' },
+
+  { l: 'D', t: 'Compatta: mini figure piccole',
+    p: 'Le stesse cose in meno spazio: figure da 40px, nomi da 10px. Ci sta tutto senza scorrere anche con la scheda in volo, ma i capi si distinguono meno.',
+    html: () => '<div class="riga"><div style="flex:0 0 auto">' + figuraGrande(112) + '</div>' +
+      '<div class="col" style="flex:1">' +
+        '<div><span class="et">Sopra</span>' + capi(AV.TOP, 'top', 'top', 34) + '</div>' +
+        '<div><span class="et">Sotto</span>' + capi(AV.PANTS, 'pants', 'pants', 34) + '</div>' +
+        '<div><span class="et">Fantasia</span>' + fantasie() + '</div>' +
+      '</div></div>' +
+      '<div class="riga" style="margin-top:7px"><div style="flex:1 1 250px"><span class="et">Colore capo</span>' + tinte('top') + '</div>' +
+        '<div style="flex:1 1 250px"><span class="et">Colore sotto</span>' + tinte('pants') + '</div></div>' +
+      '<div style="margin-top:7px">' + riferimento() + '</div>' },
+
+  { l: 'E', t: 'Il manichino al centro',
+    p: 'La figura grande in mezzo, i capi a sinistra e i sotto a destra: l\'occhio torna sempre al manichino, che è quello che poi si riconosce all\'uscita.',
+    html: () => '<div class="riga" style="align-items:stretch">' +
+      '<div class="col" style="flex:1 1 210px"><span class="et">Sopra</span>' + capi(AV.TOP, 'top', 'top', 40) + '</div>' +
+      '<div style="flex:0 0 auto;align-self:center">' + figuraGrande(146) + '</div>' +
+      '<div class="col" style="flex:1 1 180px"><span class="et">Sotto</span>' + capi(AV.PANTS, 'pants', 'pants', 40) + '</div></div>' +
+      '<div class="riga" style="margin-top:8px">' +
+        '<div style="flex:1 1 240px"><span class="et">Colore capo</span>' + tinte('top') + '</div>' +
+        '<div style="flex:1 1 240px"><span class="et">Colore sotto</span>' + tinte('pants') + '</div></div>' +
+      '<div style="margin-top:7px"><span class="et">Fantasia</span>' + fantasie() + '</div>' +
+      '<div style="margin-top:7px">' + riferimento() + '</div>' },
+
+  { l: 'F', t: 'Solo l\'essenziale, il resto sotto',
+    p: 'Davanti solo quello che si cambia sempre — capo, sotto, colore — e le quattordici fantasie in una riga sola in fondo, più piccole. La più bassa di tutte.',
+    html: () => '<div class="riga">' + figuraGrande(126) +
+      '<div class="col" style="flex:1">' +
+        '<div><span class="et">Che cosa indossa</span>' + capi(AV.TOP, 'top', 'top', 42) + '</div>' +
+        '<div><span class="et">Sotto</span>' + capi(AV.PANTS, 'pants', 'pants', 42) + '</div>' +
+        '<div class="riga"><div style="flex:1 1 220px"><span class="et">Colore capo</span>' + tinte('top') + '</div>' +
+          '<div style="flex:1 1 220px"><span class="et">Colore sotto</span>' + tinte('pants') + '</div></div>' +
+      '</div></div>' +
+      '<div style="margin-top:7px"><span class="et">Fantasia</span>' +
+        '<div class="capi" style="gap:4px">' + AV.PATTERNS.map(f =>
+          '<button class="capo' + (av.top.pattern === f.key ? ' on' : '') + '" data-pat="' + f.key +
+          '" style="padding:3px 2px 4px">' + pezza(f.key) + '<span class="nm" style="font-size:9.5px">' + f.n + '</span></button>').join('') + '</div></div>' +
+      '<div style="margin-top:7px">' + riferimento() + '</div>' }
+];
+
+function disegna() {
+  document.getElementById('teste').innerHTML = ['mamma','papa','nonna','nonno','ragazza','ragazzo'].map(r => {
+    const a = AV.baseFor(r);
+    return '<figure>' + AV.build(a).replace('<svg', '<svg width="72" height="108"') +
+      '<figcaption>' + AV.ROLES.find(x => x.key === r).label + '</figcaption></figure>';
+  }).join('');
+
+  document.getElementById('proposte').innerHTML = P.map(p =>
+    '<div class="testa"><span class="lett">' + p.l + '</span><h3>' + p.t + '</h3>' +
+      '<span class="mis" id="mis' + p.l + '"></span></div>' +
+    '<p class="perche">' + p.p + '</p>' +
+    '<div class="telaio"><div class="card blk c-viola sec-people" style="margin:0">' +
+      '<h2><span class="em">🧑‍🤝‍🧑</span> Chi accompagna</h2>' +
+      '<div class="blk-in" id="blk' + p.l + '">' + barraRuoli() + '<div style="margin-top:8px">' + p.html() + '</div></div>' +
+    '</div></div>').join('');
+
+  P.forEach(p => {
+    const h = Math.round(document.getElementById('blk' + p.l).closest('.card').getBoundingClientRect().height);
+    const t = document.getElementById('mis' + p.l);
+    /* 484px e' quanto occupava il blocco viola quando l'intera schermata
+       ci stava esatta a 800x1280: quello e' il budget vero. */
+    t.textContent = h + 'px' + (h <= 484 ? ' · ci sta' : ' · ' + (h - 484) + ' di troppo');
+    t.style.color = h <= 484 ? '#7FE8C1' : h <= 540 ? '#FFD166' : '#FF9AA2';
+  });
+}
+
+document.addEventListener('click', (ev) => {
+  const b = ev.target.closest('button'); if (!b) return;
+  const d = b.dataset;
+  if (d.ruolo) { ruolo = d.ruolo; av = AV.baseFor(ruolo); }
+  else if (d.set) { const [campo, k] = d.set.split('|'); av[campo].style = k; }
+  else if (d.col) { const [campo, c] = d.col.split('|'); av[campo].color = c; }
+  else if (d.pat) { av.top.pattern = d.pat; }
+  else return;
+  disegna();
+});
+document.addEventListener('input', (ev) => { if (ev.target.hasAttribute('data-nota')) nota = ev.target.value; });
+disegna();
+</script>
+</html>
