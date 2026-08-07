@@ -102,6 +102,49 @@ h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 10px; }
 .tagli button { min-height: 58px; border: none; border-radius: 16px; background: var(--carta2); color: var(--txt);
   font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 700; cursor: pointer; }
 .tagli button.mon { background: rgba(255,255,255,.06); font-size: 15px; }
+
+/* il tempo, in cima alla sezione Parco */
+.tempo { background: var(--carta); border-radius: 20px; padding: 14px 16px; box-shadow: 0 2px 8px rgba(0,0,0,.28); flex-shrink: 0; }
+.tempo-k { font-size: 13px; font-weight: 700; color: var(--txt2); display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.tempo-v { font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 700; color: var(--txt); }
+.tempo-chip { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.tempo-chip button { border: none; border-radius: 14px; min-height: 46px; padding: 0 16px; background: var(--carta2);
+  color: var(--txt); font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
+.tempo-chip button.on { background: var(--parco); color: #06162E; }
+
+/* i quattro modi di incassare */
+.modi { display: flex; gap: 8px; flex-shrink: 0; }
+.modi button { flex: 1; border: none; border-radius: 14px; min-height: 46px; background: var(--carta);
+  color: var(--txt2); font: inherit; font-size: 14.5px; font-weight: 700; cursor: pointer; }
+.modi button.on { background: var(--txt); color: #14141B; }
+.pagamento { background: var(--carta); border-radius: 20px; padding: 14px 16px; box-shadow: 0 2px 8px rgba(0,0,0,.28); flex-shrink: 0; }
+.pk { font-size: 13px; font-weight: 700; color: var(--txt2); margin-bottom: 10px; }
+.acconti { display: flex; gap: 9px; flex-wrap: wrap; }
+.acconti button { flex: 1 1 100px; border: none; border-radius: 14px; min-height: 54px; background: var(--carta2);
+  color: var(--txt); font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 700; cursor: pointer; }
+.acconti button:disabled { opacity: .35; }
+.spunte { display: flex; flex-direction: column; gap: 7px; }
+.sp { display: flex; align-items: center; gap: 11px; border: none; border-radius: 14px; padding: 10px 12px;
+  background: var(--carta2); color: var(--txt); font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; min-height: 52px; }
+.sp .box { width: 30px; height: 30px; border-radius: 9px; border: 2px solid rgba(255,255,255,.3);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.sp.on { background: #14243A; box-shadow: 0 0 0 2px var(--sel) inset; }
+.sp.on .box { background: var(--sel); border-color: var(--sel); color: #06162E; }
+.sp.fatta { opacity: .45; }
+.sp .nm { flex: 1; min-width: 0; text-align: left; }
+.sp .im { font-family: 'Fredoka', sans-serif; font-weight: 700; }
+.quote { display: flex; gap: 9px; flex-wrap: wrap; }
+.quote .qt { flex: 1 1 120px; border: none; border-radius: 16px; min-height: 62px; background: var(--carta2);
+  color: var(--txt); font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.quote .qt small { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; color: var(--txt2); }
+.quote .qt.fatta { opacity: .45; }
+.registro { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px;
+  font-size: 13px; color: var(--txt2); }
+.registro b { font-family: 'Fredoka', sans-serif; font-size: 15px; color: var(--txt); }
+.registro span { background: rgba(255,255,255,.06); border-radius: 10px; padding: 4px 9px; }
+.registro button { margin-left: auto; border: none; border-radius: 10px; min-height: 40px; padding: 0 14px;
+  background: rgba(255,255,255,.1); color: var(--txt); font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -128,6 +171,26 @@ h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 10px; }
     La sezione Parco è la prima categoria: bambini e Crazy si contano con le stesse tessere del bar,
     quindi non c'è niente di nuovo da imparare.</p>
     <div class="tablet" data-p="X"></div>
+  </div>
+
+  <div class="strada">
+    <header><span class="n">3</span><h2>Il tempo, e quattro modi di incassare</h2></header>
+    <p class="perche">Nella sezione <b>Parco</b> ora c'è il tempo, coi tagli del cartello: tocchi
+    «1h 30» e il prezzo a bambino diventa 19,00 € da solo, più i ± da 5 minuti per i casi strani.
+    È lui a decidere il costo del parco, quindi sta in cima alla sua sezione.</p>
+    <p class="perche">Sopra il riepilogo c'è il selettore dei <b>quattro modi di incassare</b>,
+    perché pagare a pezzi è la norma e non un caso raro:</p>
+    <div class="elenco">
+      <b>Per parte</b> — paga il parco, paga il bar. Il caso più comune: «io offro le bibite».<br>
+      <b>Acconto</b> — una cifra qualunque: 5, 10, 20, 50, la metà, o tutto. Per chi lascia
+      qualcosa adesso e il resto all'uscita.<br>
+      <b>A spunte</b> — segni le righe che ti sta pagando (l'ingresso sì, le Coca no) e incassi
+      solo quelle. Le righe già saldate restano spente.<br>
+      <b>A testa</b> — il conto diviso per i bambini, un tasto per ciascuno: due genitori che
+      pagano ognuno il proprio.<br>
+      Sotto resta sempre il <b>registro</b> di quello che hai già preso, con «annulla l'ultimo»
+      per quando sbagli.
+    </div>
   </div>
 
   <div class="strada">
@@ -176,22 +239,41 @@ function lattina(o) {
     '<rect x="12.6" y="33" width="14.8" height="2.6" rx="1.3" fill="#B9BFC9"/>'
   );
 }
-/* BOTTIGLIA: snella di suo, "larga" per la forma tozza dell'Ichnusa */
+/* BOTTIGLIA costruita dal CENTRO: ogni misura e' 20 +/- qualcosa,
+   cosi' la simmetria non dipende dall'occhio ma dal conto.
+   o.larga  -> forma tozza (Ichnusa)
+   o.piccola-> bottiglietta di vetro (Brasilena) */
 function bottiglia(o) {
-  const L = !!o.larga;
-  const bx = L ? 9.4 : 12.6, bw = L ? 21.2 : 14.8;   /* corpo */
-  const sy = L ? 13.6 : 8.4;                          /* dove iniziano le spalle */
-  const nx = L ? 17.2 : 16.8, nw = L ? 5.6 : 6.4;     /* collo */
+  const larga = !!o.larga, mini = !!o.piccola;
+  const bw = larga ? 22 : (mini ? 16 : 15);      /* larghezza del corpo */
+  const nw = larga ? 6.4 : (mini ? 6 : 6);       /* larghezza del collo */
+  const yTappo = larga ? 8.2 : (mini ? 8.6 : 3.4);
+  const hTappo = 4.2;
+  const ySpalla = larga ? 16.4 : (mini ? 16.8 : 11.6);   /* fine collo */
+  const yCorpo = larga ? 21.6 : (mini ? 22 : 18.6);      /* inizio corpo dritto */
+  const yFondo = 35.6, r = 2.8;
+  const bx = 20 - bw / 2, bx2 = 20 + bw / 2;
+  const nx = 20 - nw / 2, nx2 = 20 + nw / 2;
+  const d =
+    'M' + nx + ' ' + (yTappo + hTappo) +
+    'L' + nx + ' ' + ySpalla +
+    'C' + nx + ' ' + (ySpalla + 2) + ' ' + bx + ' ' + (yCorpo - 2.4) + ' ' + bx + ' ' + yCorpo +
+    'L' + bx + ' ' + (yFondo - r) +
+    'a' + r + ' ' + r + ' 0 0 0 ' + r + ' ' + r +
+    'h' + (bw - 2 * r) +
+    'a' + r + ' ' + r + ' 0 0 0 ' + r + ' ' + (-r) +
+    'L' + bx2 + ' ' + yCorpo +
+    'C' + bx2 + ' ' + (yCorpo - 2.4) + ' ' + nx2 + ' ' + (ySpalla + 2) + ' ' + nx2 + ' ' + ySpalla +
+    'L' + nx2 + ' ' + (yTappo + hTappo) + 'Z';
+  const yEt = yCorpo + 2.2, hEt = Math.min(9.4, yFondo - yEt - 2.4);
   return svg(
-    '<path d="M' + nx + ' ' + sy + 'h' + nw + 'v2.4c0 1.4.5 2.7 1.4 3.8l1 1.2c1 1.2 1.6 2.8 1.6 4.4V33a3 3 0 0 1-3 3H' +
-      (L ? '12.4' : '15.6') + 'a3 3 0 0 1-3-3V17.8c0-1.6.6-3.2 1.6-4.4l1-1.2c.9-1.1 1.4-2.4 1.4-3.8V' + sy + 'Z" fill="' + (o.vetro || '#BFE6F2') + '"/>' +
-    (L ? '<path d="M9.4 20h21.2v13a3 3 0 0 1-3 3H12.4a3 3 0 0 1-3-3V20Z" fill="' + (o.vetro || '#BFE6F2') + '"/>' : '') +
-    '<path d="M' + (bx + 1.6) + ' 21h' + (bw - 3.2) + 'v15h-' + (bw - 3.2) + 'V21Z" fill="#fff" opacity=".14"/>' +
-    (o.etichetta ? '<rect x="' + bx + '" y="' + (L ? 22.6 : 22) + '" width="' + bw + '" height="' + (L ? 8.8 : 9.6) + '" rx="1.6" fill="' + o.etichetta + '"/>' : '') +
-    (o.stella ? STELLA(20, L ? 27 : 26.8, 3.4, o.stella) : '') +
-    (o.riga ? '<rect x="' + (bx + 1.4) + '" y="' + (L ? 25.6 : 25.4) + '" width="' + (bw - 2.8) + '" height="2.6" rx="1.3" fill="' + o.riga + '"/>' : '') +
-    '<rect x="' + (nx - .4) + '" y="' + (L ? 7.4 : 2.6) + '" width="' + (nw + .8) + '" height="4.6" rx="1.4" fill="' + (o.tappo || '#2F6FBF') + '"/>' +
-    '<rect x="' + (nx - .4) + '" y="' + (L ? 11.4 : 6.6) + '" width="' + (nw + .8) + '" height="1.8" fill="#000" opacity=".18"/>'
+    '<path d="' + d + '" fill="' + (o.vetro || '#BFE6F2') + '"/>' +
+    '<rect x="' + (bx + 1.4) + '" y="' + (yCorpo + 0.6) + '" width="2.6" height="' + (yFondo - yCorpo - 3) + '" rx="1.3" fill="#fff" opacity=".22"/>' +
+    (o.etichetta ? '<rect x="' + bx + '" y="' + yEt + '" width="' + bw + '" height="' + hEt + '" rx="1.6" fill="' + o.etichetta + '"/>' : '') +
+    (o.stella ? STELLA(20, yEt + hEt / 2, Math.min(3.4, hEt / 2.6), o.stella) : '') +
+    (o.riga ? '<rect x="' + (bx + 1.6) + '" y="' + (yEt + hEt / 2 - 1.3) + '" width="' + (bw - 3.2) + '" height="2.6" rx="1.3" fill="' + o.riga + '"/>' : '') +
+    '<rect x="' + (nx - 0.5) + '" y="' + yTappo + '" width="' + (nw + 1) + '" height="' + hTappo + '" rx="1.3" fill="' + (o.tappo || '#2F6FBF') + '"/>' +
+    '<rect x="' + (nx - 0.5) + '" y="' + (yTappo + hTappo - 0.6) + '" width="' + (nw + 1) + '" height="1.6" fill="#000" opacity=".18"/>'
   );
 }
 /* BUSTA di patatine: sacchetto con la saldatura sopra e sotto */
@@ -293,7 +375,7 @@ const ICONE = {
   gazz:      () => bottiglia({ vetro:'#E4EEF2', tappo:'#8FB8C9', etichetta:'#8FB8C9', riga:'#ffffff' }),
   estalim:   () => lattina({ corpo:'#E8B923', fascia:'#FBF7EC', frutto:'#FFE24A', foglia:true }),
   estapes:   () => lattina({ corpo:'#E8834F', fascia:'#FBF7EC', frutto:'#FFB58A', foglia:true }),
-  bras:      () => lattina({ corpo:'#5B3A22', fascia:'#C9A227', scritta:'#5B3A22' }),
+  bras:      () => bottiglia({ piccola:true, vetro:'#6B4226', tappo:'#C9A227', etichetta:'#C9A227', riga:'#5B3A22' }),
   /* --- snack --- */
   pata:      () => busta({ corpo:'#F2C230', chip:'#E8873D' }),
   /* --- birre --- */
@@ -346,13 +428,112 @@ document.getElementById('vetrina').innerHTML = LISTINO.map(p =>
   '<div class="ic-demo">' + icona(p) + '<span>' + p.nm + '</span></div>').join('');
 
 /* ---------- il pannello ---------- */
-const S = { q: { bimbi:2, crazy:1, coca:2, pata:1 }, pag: { Parco:0, Bar:0 }, cat:'Bevande', resto:null };
-const cost = id => (S.q[id] || 0) * prod(id).pz;
+/* Il listino vero del cartello, a scaglioni di 10 minuti. */
+const TARIFFE = [[10,300],[15,450],[20,600],[30,700],[40,1000],[50,1200],[60,1200],
+                 [70,1500],[80,1650],[90,1900],[100,2200],[110,2400],[120,2400]];
+const prezzoTempo = (m) => { for (const t of TARIFFE) if (m <= t[0]) return t[1];
+                             return TARIFFE[TARIFFE.length-1][1]; };
+
+const S = { q: { bimbi:2, crazy:1, coca:2, pata:1 }, minuti: 60,
+            incassi: [], cat:'Bevande', resto: null, modo: 'sezioni',
+            scelte: {}, quote: {} };
+const cost = id => id === 'bimbi'
+  ? Math.max(1, S.q.bimbi || 0) * prezzoTempo(S.minuti)
+  : (S.q[id] || 0) * prod(id).pz;
 const tParco = () => cost('bimbi') + cost('crazy');
 const tBar = () => LISTINO.filter(p => p.cat !== 'Parco').reduce((a,p) => a + cost(p.id), 0);
-const rParco = () => Math.max(0, tParco() - S.pag.Parco);
-const rBar = () => Math.max(0, tBar() - S.pag.Bar);
-const totale = () => rParco() + rBar();
+const tTutto = () => tParco() + tBar();
+const incassato = () => S.incassi.reduce((a,x) => a + x.im, 0);
+const totale = () => Math.max(0, tTutto() - incassato());
+/* quanto e' stato incassato attribuito a una parte */
+const presoSu = (dove) => S.incassi.filter(x => x.dove === dove).reduce((a,x) => a + x.im, 0);
+const rParco = () => Math.max(0, tParco() - presoSu('Parco') - presoSu('tutto'));
+const rBar = () => Math.max(0, tBar() - presoSu('Bar'));
+function incassa(ds, im, dove) {
+  if (im <= 0) return;
+  S.incassi.push({ ds, im: Math.min(im, totale()), dove: dove || 'tutto' });
+}
+
+/* Il TEMPO: e' la cosa che decide il prezzo del parco, quindi sta in
+   cima alla sua sezione, coi tagli del cartello. */
+function blocoTempo() {
+  const scelte = [10, 15, 20, 30, 40, 50, 60, 90, 120];
+  return '<div class="tempo"><div class="tempo-k">Quanto restano' +
+    '<span class="tempo-v">' + (S.minuti >= 60 ? Math.floor(S.minuti/60) + 'h' + (S.minuti%60 ? ' ' + (S.minuti%60) + "'" : '') : S.minuti + "'") +
+    ' · ' + eur(prezzoTempo(S.minuti)) + ' a bambino</span></div>' +
+    '<div class="tempo-chip">' + scelte.map(m =>
+      '<button data-min="' + m + '"' + (S.minuti === m ? ' class="on"' : '') + '>' +
+      (m >= 60 ? (m/60 % 1 ? Math.floor(m/60) + 'h' + (m%60) : m/60 + 'h') : m + "'") + '</button>').join('') +
+    '<button data-min="meno">−5</button><button data-min="piu">+5</button></div></div>';
+}
+
+/* ============ I QUATTRO MODI DI INCASSARE ============ */
+function selettoreModo() {
+  const M = [['sezioni','Per parte'], ['acconto','Acconto'], ['spunte','A spunte'], ['quote','A testa']];
+  return '<div class="modi">' + M.map(m => '<button data-modo="' + m[0] + '"' +
+    (S.modo === m[0] ? ' class="on"' : '') + '>' + m[1] + '</button>').join('') + '</div>';
+}
+function areaPagamento() {
+  if (S.resto) return pannelloResto();
+  if (S.modo === 'sezioni') return modoSezioni();
+  if (S.modo === 'acconto') return modoAcconto();
+  if (S.modo === 'spunte') return modoSpunte();
+  return modoQuote();
+}
+/* P1 — per parte: paga il parco, paga il bar */
+function modoSezioni() {
+  return '<div class="riep">' +
+    voce('Parco', 'Parco', tParco(), rParco(), 'Parco') +
+    voce('Bar', 'Bevande', tBar(), rBar(), 'Bar') + '</div>' + registro();
+}
+/* P2 — acconto: qualunque cifra, anche spicciola */
+function modoAcconto() {
+  const R = totale();
+  const tagli = [500, 1000, 2000, 5000];
+  return '<div class="pagamento"><div class="pk">Quanto ti sta dando adesso</div>' +
+    '<div class="acconti">' + tagli.map(t => '<button data-acc="' + t + '"' + (t > R ? ' disabled' : '') + '>' +
+      eur(t) + '</button>').join('') +
+      '<button data-acc="meta"' + (R <= 0 ? ' disabled' : '') + '>metà · ' + eur(Math.round(R/2)) + '</button>' +
+      '<button data-acc="tutto"' + (R <= 0 ? ' disabled' : '') + '>tutto · ' + eur(R) + '</button>' +
+    '</div></div>' + registro();
+}
+/* P3 — a spunte: segni le voci che sta pagando */
+function modoSpunte() {
+  const v = vociTutte();
+  const scelto = v.filter(x => S.scelte[x.k]).reduce((a,x) => a + x.im, 0);
+  return '<div class="pagamento"><div class="pk">Segna quello che ti sta pagando</div>' +
+    '<div class="spunte">' + v.map(x =>
+      '<button class="sp' + (S.scelte[x.k] ? ' on' : '') + (x.pagata ? ' fatta' : '') + '" data-sp="' + x.k + '"' +
+      (x.pagata ? ' disabled' : '') + '><span class="box">' + (x.pagata ? '✓' : (S.scelte[x.k] ? '✓' : '')) + '</span>' +
+      '<span class="nm">' + x.nm + '</span><span class="im">' + eur(x.im) + '</span></button>').join('') + '</div>' +
+    (scelto > 0 ? '<button class="bt pieno" style="width:100%;margin-top:10px" data-pagasel>Incassa i segnati · ' + eur(scelto) + '</button>' : '') +
+    '</div>' + registro();
+}
+/* P4 — a testa: il conto diviso per i bambini */
+function modoQuote() {
+  const n = Math.max(1, S.q.bimbi || 0);
+  const quota = Math.round(tTutto() / n);
+  return '<div class="pagamento"><div class="pk">Il conto diviso in ' + n + ' · ' + eur(quota) + ' a testa</div>' +
+    '<div class="quote">' + Array.from({length: n}, (_, k) => {
+      const pagata = !!S.quote[k];
+      return '<button class="qt' + (pagata ? ' fatta' : '') + '" data-quota="' + k + '"' + (pagata ? ' disabled' : '') + '>' +
+        (pagata ? '✓ pagata' : 'Paga ' + eur(quota)) + '<small>persona ' + (k+1) + '</small></button>';
+    }).join('') + '</div></div>' + registro();
+}
+function vociTutte() {
+  const out = [];
+  if (S.q.bimbi) out.push({ k:'bimbi', nm:'Ingresso ×' + S.q.bimbi, im: cost('bimbi'), dove:'Parco' });
+  if (S.q.crazy) out.push({ k:'crazy', nm:'Crazy Jumping ×' + S.q.crazy, im: cost('crazy'), dove:'Parco' });
+  LISTINO.filter(p => p.cat !== 'Parco' && S.q[p.id]).forEach(p =>
+    out.push({ k:p.id, nm: p.nm + ' ×' + S.q[p.id], im: cost(p.id), dove:'Bar' }));
+  return out.map(x => Object.assign(x, { pagata: !!S.incassi.some(i => i.voce === x.k) }));
+}
+function registro() {
+  if (!S.incassi.length) return '';
+  return '<div class="registro">Già incassato <b>' + eur(incassato()) + '</b>' +
+    S.incassi.slice(-2).map(x => '<span>' + x.ds + ' ' + eur(x.im) + '</span>').join('') +
+    '<button data-annulla>annulla l’ultimo</button></div>';
+}
 
 function tessera(p) {
   const n = S.q[p.id] || 0;
@@ -378,12 +559,9 @@ function disegna() {
       '<div class="cat">' + CAT.map(c => '<button data-cat="' + c + '"' +
         (S.cat === c ? ' class="on' + (c === 'Parco' ? ' parco' : '') + '"' : '') + '>' +
         iconaCat(c) + c + '</button>').join('') + '</div>' +
+      (S.cat === 'Parco' ? blocoTempo() : '') +
       '<div class="griglia">' + q.map(tessera).join('') + '</div>' +
-      (S.resto ? pannelloResto() :
-        '<div class="riep">' +
-          voce('Parco', 'Parco', tParco(), rParco(), 'Parco') +
-          voce('Bar', 'Bevande', tBar(), rBar(), 'Bar') +
-        '</div>') +
+      selettoreModo() + areaPagamento() +
     '</div>' +
     '<div class="fondo"><div><span class="k">' + (totale() > 0 ? 'da incassare' : 'tutto pagato') + '</span>' +
       '<span class="v">' + (totale() > 0 ? eur(totale()) : '✓') + '</span></div>' +
@@ -419,15 +597,50 @@ function aggancia(box) {
   box.querySelectorAll('[data-cat]').forEach(b => b.onclick = () => { S.cat = b.dataset.cat; S.resto = null; disegna(); });
   box.querySelectorAll('[data-paga]').forEach(b => b.onclick = () => {
     const k = b.dataset.paga;
-    S.pag[k] = k === 'Parco' ? tParco() : tBar();
+    incassa(k === 'Parco' ? 'parco' : 'bar', k === 'Parco' ? rParco() : rBar(), k);
     disegna();
   });
-  const t = box.querySelector('[data-tutto]'); if (t) t.onclick = () => { S.pag.Parco = tParco(); S.pag.Bar = tBar(); disegna(); };
+  const t = box.querySelector('[data-tutto]'); if (t) t.onclick = () => { incassa('tutto', totale()); disegna(); };
+  box.querySelectorAll('[data-min]').forEach(b => b.onclick = () => {
+    const v = b.dataset.min;
+    if (v === 'meno') S.minuti = Math.max(5, S.minuti - 5);
+    else if (v === 'piu') S.minuti = Math.min(240, S.minuti + 5);
+    else S.minuti = +v;
+    disegna();
+  });
+  box.querySelectorAll('[data-modo]').forEach(b => b.onclick = () => { S.modo = b.dataset.modo; S.resto = null; disegna(); });
+  box.querySelectorAll('[data-acc]').forEach(b => b.onclick = () => {
+    const v = b.dataset.acc, R = totale();
+    const im = v === 'tutto' ? R : (v === 'meta' ? Math.round(R/2) : Math.min(+v, R));
+    incassa('acconto', im);
+    disegna();
+  });
+  box.querySelectorAll('[data-sp]').forEach(b => b.onclick = () => {
+    S.scelte[b.dataset.sp] = !S.scelte[b.dataset.sp]; disegna();
+  });
+  const ps = box.querySelector('[data-pagasel]'); if (ps) ps.onclick = () => {
+    vociTutte().filter(x => S.scelte[x.k]).forEach(x => {
+      S.incassi.push({ ds: x.nm, im: x.im, dove: x.dove, voce: x.k });
+    });
+    S.scelte = {}; disegna();
+  };
+  box.querySelectorAll('[data-quota]').forEach(b => b.onclick = () => {
+    const k = +b.dataset.quota, n = Math.max(1, S.q.bimbi || 0);
+    S.quote[k] = true;
+    incassa('quota di ' + (k+1), Math.round(tTutto() / n));
+    disegna();
+  });
+  const an = box.querySelector('[data-annulla]'); if (an) an.onclick = () => {
+    const x = S.incassi.pop();
+    if (x && x.voce) delete S.scelte[x.voce];
+    S.quote = {};
+    disegna();
+  };
   const r = box.querySelector('[data-resto]'); if (r) r.onclick = () => { S.resto = { dato: 0 }; disegna(); };
   box.querySelectorAll('[data-tag]').forEach(b => b.onclick = () => { S.resto.dato += (+b.dataset.tag); disegna(); });
   const z = box.querySelector('[data-rzero]'); if (z) z.onclick = () => { S.resto.dato = 0; disegna(); };
   const c = box.querySelector('[data-rchiudi]'); if (c) c.onclick = () => { S.resto = null; disegna(); };
-  const o = box.querySelector('[data-rok]'); if (o) o.onclick = () => { S.pag.Parco = tParco(); S.pag.Bar = tBar(); S.resto = null; disegna(); };
+  const o = box.querySelector('[data-rok]'); if (o) o.onclick = () => { incassa('contanti', Math.min(S.resto.dato, totale())); S.resto = null; disegna(); };
 }
 function misura() {
   const tab = document.querySelector('.tablet[data-p="X"]');
