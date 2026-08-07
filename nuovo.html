@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="it">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nuovo — proposte compatte</title>
+<link rel="stylesheet" href="./css/fonts.css">
+<style>
+  :root { --bg:#17171E; --surface:#21212B; --surface-2:#292933; --surface-3:#34343F;
+          --txt:#E9E9F2; --txt-2:#C2C2D4; --txt-3:#A8A8BD; --line:rgba(255,255,255,.08);
+          --accent:#B69EFF; --accent-ink:#18122A; --accent-soft:rgba(167,139,250,.16);
+          --ok:#6ADCAF; --warn:#E8B44C; --late:#5FCBD6; --hot:#E8776C; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  body { margin: 0; background: #0B0B10; color: var(--txt); padding: 26px 18px 80px;
+    font-family: 'Inter', system-ui, sans-serif; }
+  .foglio { max-width: 1240px; margin: 0 auto; }
+  .occhiello { color: var(--warn); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; margin: 0 0 8px; }
+  h1 { font-family: 'Fredoka', sans-serif; font-size: 28px; margin: 0 0 10px; }
+  h2.sez { font-family: 'Fredoka', sans-serif; font-size: 23px; margin: 44px 0 6px;
+    padding-top: 26px; border-top: 1px solid var(--line); }
+  .intro { color: #A8A8BD; font-size: 15px; line-height: 1.6; max-width: 74ch; margin: 0 0 6px; }
+  .intro b { color: var(--warn); font-weight: 600; }
+
+  .casi { display: grid; gap: 32px; margin-top: 26px;
+    grid-template-columns: repeat(auto-fill, minmax(430px, 1fr)); }
+  .caso { min-width: 0; }
+  .testa { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+  .lett { font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 700; background: #23232F;
+    color: var(--warn); border-radius: 20px; padding: 4px 12px; }
+  .testa h3 { font-family: 'Fredoka', sans-serif; font-size: 20px; margin: 0; }
+  .mis { margin-left: auto; font-size: 11px; font-weight: 800; letter-spacing: .04em;
+    text-transform: uppercase; border-radius: 20px; padding: 4px 10px; background: rgba(0,0,0,.55); }
+  .idea { color: #9A9AB0; font-size: 14px; line-height: 1.55; margin: 0 0 12px; }
+  .idea b { color: #C9CDD6; font-weight: 600; }
+  .telaio { border-radius: 22px; overflow: hidden; border: 1px solid rgba(255,255,255,.1);
+    box-shadow: 0 20px 44px rgba(0,0,0,.5); }
+  .telaio > .dentro { width: 820px; height: 1180px; transform-origin: top left; }
+
+  /* ═══ lo scheletro ═══ */
+  .pan { width: 820px; height: 1180px; display: flex; flex-direction: column;
+    background: var(--bg); color: var(--txt); overflow: hidden; }
+  .corpo { flex: 1; min-height: 0; overflow-y: auto; padding: 14px 16px 8px;
+    display: flex; flex-direction: column; gap: 10px; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .num { font-family: 'Fredoka', sans-serif; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  /* riga compatta: etichetta a sinistra, comandi a destra */
+  .riga { background: var(--surface); border-radius: 16px; padding: 9px 12px;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .riga > .k { font-size: 11.5px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase;
+    color: var(--txt-3); flex: 0 0 auto; }
+  .riga .sp { margin-left: auto; }
+  .chip { border: none; border-radius: 12px; min-height: 42px; padding: 0 13px; background: var(--surface-2);
+    color: var(--txt); font-size: 14.5px; font-weight: 700; transition: transform .08s, background .12s; }
+  .chip:active { transform: scale(.95); }
+  .chip.on { background: var(--accent); color: var(--accent-ink); }
+  .chip.pic { min-height: 36px; padding: 0 10px; font-size: 13px; }
+  .chip.dopo.on { background: var(--late); color: #06222A; }
+
+  .ora { font-family: 'Fredoka', sans-serif; font-size: 26px; font-weight: 700; }
+  .brac { display: flex; gap: 6px; }
+  .brac button { width: 34px; height: 34px; border-radius: 50%; border: 3px solid transparent; padding: 0; }
+  .brac button.on { border-color: var(--txt); transform: scale(1.08); }
+
+  .cont { display: flex; align-items: center; background: rgba(0,0,0,.3); border-radius: 13px; overflow: hidden; }
+  .cont button { border: none; background: rgba(255,255,255,.06); width: 46px; min-height: 46px;
+    font-family: 'Fredoka', sans-serif; font-size: 24px; font-weight: 700; color: var(--txt); }
+  .cont button:active { background: rgba(255,255,255,.2); }
+  .cont .n { min-width: 44px; text-align: center; font-family: 'Fredoka', sans-serif;
+    font-size: 24px; font-weight: 700; }
+  .cont.vi button { color: var(--accent); }
+
+  /* le persone */
+  .gente { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pers { position: relative; width: 78px; border-radius: 14px; background: var(--surface-2);
+    border: 2px solid transparent; padding: 5px 4px 6px; display: flex; flex-direction: column;
+    align-items: center; gap: 2px; }
+  .pers.on { border-color: var(--accent); background: #262038; }
+  .pers svg { width: 56px; height: 74px; }
+  .pers .nm { font-size: 10.5px; font-weight: 700; color: var(--txt-3); }
+  .pers.piu { justify-content: center; color: var(--txt-3); font-size: 30px; min-height: 96px; }
+
+  /* editor del capo */
+  .ed { background: var(--surface); border-radius: 18px; padding: 11px 12px; display: flex; gap: 12px; }
+  .ed .figura { flex: 0 0 118px; background: rgba(0,0,0,.25); border-radius: 14px;
+    display: grid; place-items: center; padding: 6px; }
+  .ed .figura svg { width: 104px; height: 138px; }
+  .ed .comandi { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 9px; }
+  .et { font-size: 10.5px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
+    color: var(--txt-3); margin-bottom: 5px; display: block; }
+  .capi { display: flex; gap: 6px; flex-wrap: wrap; }
+  .capo { border: none; border-radius: 12px; padding: 6px 9px; background: var(--surface-2);
+    color: var(--txt-2); font-size: 12.5px; font-weight: 700; display: flex; align-items: center; gap: 5px;
+    min-height: 40px; }
+  .capo.on { background: var(--accent); color: var(--accent-ink); }
+  .colori { display: flex; gap: 5px; flex-wrap: wrap; }
+  .colori button { width: 30px; height: 30px; border-radius: 9px; border: 2px solid transparent; padding: 0; }
+  .colori button.on { border-color: var(--txt); transform: scale(1.1); }
+  .spento { opacity: .35; pointer-events: none; }
+
+  .tratti { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tratti button { border: none; border-radius: 999px; padding: 7px 12px; min-height: 38px;
+    background: var(--surface-2); color: var(--txt-2); font-size: 13px; font-weight: 700; }
+  .tratti button.on { background: var(--late); color: #06222A; }
+  .libero { width: 100%; border: 1px solid var(--line); border-radius: 12px; background: rgba(0,0,0,.25);
+    color: var(--txt); font: inherit; font-size: 14px; padding: 10px 12px; min-height: 44px; }
+  .libero::placeholder { color: var(--txt-3); }
+
+  /* il bar */
+  .bar-t { width: 100%; border: none; background: var(--surface); border-radius: 16px;
+    padding: 11px 12px; display: flex; align-items: center; gap: 10px; color: inherit; }
+  .bar-t b { font-size: 15px; }
+  .bar-t .q { margin-left: auto; font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 700; }
+  .bar-g { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px,1fr)); gap: 7px;
+    margin-top: 7px; }
+  .bar-v { background: var(--surface-2); border-radius: 13px; padding: 7px 8px; display: flex;
+    align-items: center; gap: 7px; border: none; color: inherit; }
+  .bar-v svg { width: 30px; height: 30px; flex: 0 0 auto; }
+  .bar-v .n2 { flex: 1; min-width: 0; text-align: left; font-size: 12.5px; font-weight: 700; }
+  .bar-v .p2 { font-family: 'Fredoka', sans-serif; font-size: 13px; color: var(--txt-3); }
+  .bar-v.presa { background: #262038; box-shadow: 0 0 0 2px var(--accent) inset; }
+  .bar-v .bollo { min-width: 24px; height: 24px; border-radius: 8px; background: var(--accent);
+    color: var(--accent-ink); font-family: 'Fredoka', sans-serif; font-size: 14px; font-weight: 700;
+    display: grid; place-items: center; }
+
+  /* la barra del prezzo */
+  .fondo { flex: 0 0 auto; margin: 8px 12px 12px; background: var(--surface); border-radius: 20px;
+    padding: 11px 13px 12px; box-shadow: 0 -8px 26px rgba(0,0,0,.45);
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .fondo .prezzo .k { display: block; font-size: 11.5px; font-weight: 700; color: var(--txt-3); }
+  .fondo .prezzo .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 34px;
+    font-weight: 700; line-height: 1; }
+  .modi { display: flex; gap: 3px; background: rgba(0,0,0,.3); border-radius: 13px; padding: 3px; }
+  .modi button { border: none; background: none; border-radius: 10px; padding: 8px 11px; min-height: 42px;
+    color: var(--txt-3); font-size: 13px; font-weight: 700; }
+  .modi button.on { background: var(--ok); color: #08301F; }
+  .reg { margin-left: auto; border: none; border-radius: 16px; min-height: 56px; padding: 0 22px;
+    background: var(--accent); color: var(--accent-ink); font-family: 'Fredoka', sans-serif;
+    font-size: 18px; font-weight: 700; }
+  .parte { display: flex; align-items: center; gap: 7px; }
+  .parte .cont { background: rgba(0,0,0,.35); }
+  .parte .cont button { width: 40px; min-height: 42px; font-size: 20px; }
+  .parte .cont .n { min-width: 74px; font-size: 18px; }
+
+  .nota { background: #181A22; border: 1px solid var(--line); border-left: 3px solid var(--warn);
+    border-radius: 0 14px 14px 0; padding: 14px 16px; margin-top: 34px; color: #B9BFC9;
+    font-size: 14.5px; line-height: 1.65; }
+  .nota b { color: var(--txt); }
+</style>
+
+<div class="foglio">
+  <p class="occhiello">Nuovo ingresso · proposte</p>
+  <h1>Quattro modi di fare «Nuovo», più compatti</h1>
+  <p class="intro">Tutto quello che serve — <b>orario, bracciale, quanto restano, bambini e Crazy,
+  chi accompagna, il bar, il prezzo</b> — in una schermata sola, senza scorrere mezza pagina.</p>
+  <p class="intro">«Chi accompagna» è rifatto: si sceglie <b>il capo con le sue fantasie</b> e
+  <b>i pantaloni se ci sono</b> (col vestito lungo spariscono da soli), e tutto il resto —
+  cappello, occhiali, barba, zaino — diventa un <b>elenco di tratti</b> da spuntare, più una riga
+  libera per quello che non è in elenco.</p>
+  <p class="intro">In fondo la barra del prezzo: si <b>registra senza incassare</b>, oppure
+  incassando tutto o solo una parte.</p>
+
+  <div class="casi" id="casi"></div>
+
+  <h2 class="sez">E qui solo «Chi accompagna», in grande</h2>
+  <p class="intro">Tre modi di montare lo stesso editor. Sono gli stessi comandi: cambia
+  quanto spazio prende la figura e come stanno in fila i controlli.</p>
+  <div class="casi" id="editor"></div>
+
+  <div class="nota">
+    <b>Come guardarle.</b> La domanda è «quanti tocchi per registrare un ingresso normale» —
+    due bambini, un'ora, una mamma con la maglietta rossa — e «ci sta tutto senza scorrere».
+    Il cartellino in alto a destra risponde alla seconda.
+  </div>
+</div>
+
+<script src="./js/icone.js"></script>
+<script src="./js/avatar.js"></script>
+<script>
+/* ══════════ dati veri ══════════ */
+const TARIFFE = [[10,3],[15,4.5],[20,6],[30,7],[40,10],[50,12],[60,12],
+                 [70,15],[80,16.5],[90,19],[100,22],[110,24],[120,24]];
+const prezzoTempo = m => { for (const t of TARIFFE) if (m <= t[0]) return t[1];
+                           return TARIFFE[TARIFFE.length-1][1]; };
+const CRAZY = 4;
+const eur = n => n.toFixed(2).replace('.', ',') + ' €';
+const hhmm = t => new Date(t).toLocaleTimeString('it-IT', { hour:'2-digit', minute:'2-digit' });
+const durata = m => m >= 60 ? (Math.floor(m/60) + 'h' + (m%60 ? ' ' + (m%60) + "'" : '')) : m + "'";
+
+const MENU = [
+  { id:'acqua', nm:'Acqua', pz:1 }, { id:'coca', nm:'Coca Cola', pz:2.5 },
+  { id:'fanta', nm:'Fanta', pz:2.5 }, { id:'pata', nm:'Patatine', pz:1.5 },
+  { id:'caffe', nm:'Caffè', pz:1.2 }, { id:'heine', nm:'Heineken', pz:3 }
+];
+const BRACCIALI = ['#E23D4B','#F97316','#FBBF24','#22C55E','#0EA5E9','#8B5CF6','#EC4899','#94A3B8'];
+
+/* i tratti particolari: cappello, occhiali, barba, borse, capelli */
+const TRATTI = [
+  { k:'hat:cappellino', n:'🧢 Cappellino' }, { k:'hat:panama', n:'👒 Cappello' },
+  { k:'glasses:vista', n:'👓 Occhiali' },    { k:'glasses:sole', n:'🕶️ Da sole' },
+  { k:'facial:barba', n:'🧔 Barba' },        { k:'facial:baffi', n:'👨 Baffi' },
+  { k:'bag:zaino', n:'🎒 Zaino' },           { k:'bag:borsa', n:'👜 Borsa' },
+  { k:'hair:lunghi', n:'💇‍♀️ Capelli lunghi' }, { k:'hair:ricci', n:'🧑‍🦱 Ricci' },
+  { k:'hair:codino', n:'🎀 Codino' },        { k:'hair:pelato', n:'🧑‍🦲 Pelato' }
+];
+
+function statoNuovo() {
+  const mamma = AV.defaultFor('mamma');
+  return {
+    inizio: Date.now(), bracciale: BRACCIALI[0],
+    minuti: 60, pagaDopo: false, bimbi: 2, crazy: 0,
+    gente: [{ id: 1, nome: 'Mamma', av: mamma, note: '' }],
+    chi: 0, barAperto: false, bar: {}, modo: 'niente', acconto: 0
+  };
+}
+const totale = S => {
+  const parco = S.pagaDopo ? 0 : Math.max(1, S.bimbi) * prezzoTempo(S.minuti);
+  const bar = MENU.reduce((a,m) => a + (S.bar[m.id]||0) * m.pz, 0);
+  return Math.round((parco + S.crazy * CRAZY + bar) * 100) / 100;
+};
+
+/* ══════════ i mattoni ══════════ */
+const bloccoInizio = S =>
+  '<div class="riga"><span class="k">Entrano</span>' +
+    '<span class="ora">' + hhmm(S.inizio) + '</span>' +
+    '<button class="chip pic" data-a="ora" data-v="-5">−5</button>' +
+    '<button class="chip pic" data-a="ora" data-v="5">+5</button>' +
+    '<button class="chip pic" data-a="ora" data-v="now">adesso</button>' +
+    '<span class="sp brac">' + BRACCIALI.map(c =>
+      '<button data-a="brac" data-v="' + c + '" style="background:' + c + '"' +
+      (S.bracciale === c ? ' class="on"' : '') + '></button>').join('') + '</span>' +
+  '</div>';
+
+const bloccoTempo = S => {
+  const T = [10, 15, 30, 60];
+  return '<div class="riga"><span class="k">Restano</span>' +
+    '<span class="' + (S.pagaDopo ? 'spento' : '') + '" style="display:flex;gap:6px;flex-wrap:wrap">' +
+      T.map(m => '<button class="chip' + (!S.pagaDopo && S.minuti === m ? ' on' : '') + '" ' +
+        'data-a="min" data-v="' + m + '">' + durata(m) + '</button>').join('') +
+      '<button class="chip pic" data-a="min" data-v="-5">−5</button>' +
+      '<button class="chip pic" data-a="min" data-v="+5">+5</button>' +
+      '<span class="chip pic" style="background:none;color:var(--txt-3)">' + durata(S.minuti) + '</span>' +
+    '</span>' +
+    '<button class="chip dopo sp' + (S.pagaDopo ? ' on' : '') + '" data-a="dopo">⏳ Paga dopo</button>' +
+  '</div>';
+};
+
+const bloccoNumeri = S =>
+  '<div class="riga"><span class="k">🧒 Bambini</span>' +
+    '<span class="cont"><button data-a="bimbi" data-v="-1">−</button>' +
+    '<span class="n">' + S.bimbi + '</span>' +
+    '<button data-a="bimbi" data-v="1">+</button></span>' +
+    '<span class="k sp">🤸 Crazy</span>' +
+    '<span class="cont vi"><button data-a="crazy" data-v="-1">−</button>' +
+    '<span class="n">' + S.crazy + '</span>' +
+    '<button data-a="crazy" data-v="1">+</button></span>' +
+  '</div>';
+
+const strisciaGente = S =>
+  '<div class="gente">' + S.gente.map((p, i) =>
+    '<button class="pers' + (S.chi === i ? ' on' : '') + '" data-a="chi" data-v="' + i + '">' +
+    AV.build(p.av) + '<span class="nm">' + p.nome + '</span></button>').join('') +
+    '<button class="pers piu" data-a="agg">＋</button></div>';
+
+/* ---- l'editor del capo: solo vestito, pantaloni e tratti ---- */
+function editorCapo(S, disteso) {
+  const p = S.gente[S.chi];
+  if (!p) return '';
+  const av = p.av;
+  const vestito = av.top.style === 'vestito';
+  const colori = (chi, val) => '<div class="colori">' + AV.COLORS.slice(0, 10).map(c =>
+    '<button data-a="col" data-v="' + chi + '|' + c.c + '" style="background:' + c.c + '"' +
+    (val === c.c ? ' class="on"' : '') + '></button>').join('') + '</div>';
+  const comandi =
+    '<div><span class="et">Che cosa indossa</span><div class="capi">' +
+      AV.TOP.map(t => '<button class="capo' + (av.top.style === t.key ? ' on' : '') + '" ' +
+        'data-a="top" data-v="' + t.key + '">' + t.em + ' ' + t.label + '</button>').join('') +
+    '</div></div>' +
+    '<div><span class="et">Di che colore</span>' + colori('top', av.top.color) + '</div>' +
+    '<div><span class="et">Fantasia</span><div class="capi">' +
+      AV.PATTERNS.map(f => '<button class="capo' + (av.top.pattern === f.key ? ' on' : '') + '" ' +
+        'data-a="pat" data-v="' + f.key + '">' + f.n + '</button>').join('') +
+    '</div></div>' +
+    '<div class="' + (vestito ? 'spento' : '') + '"><span class="et">Sotto' +
+      (vestito ? ' — col vestito lungo non serve' : '') + '</span>' +
+      '<div class="capi">' + AV.PANTS.map(t =>
+        '<button class="capo' + (av.pants.style === t.key ? ' on' : '') + '" ' +
+        'data-a="pants" data-v="' + t.key + '">' + t.em + ' ' + t.label + '</button>').join('') + '</div>' +
+      '<div style="height:6px"></div>' + colori('pants', av.pants.color) +
+    '</div>' +
+    '<div><span class="et">Tratti particolari</span><div class="tratti">' +
+      TRATTI.map(t => {
+        const [dove, val] = t.k.split(':');
+        const acceso = av[dove] && av[dove].style === val;
+        return '<button class="' + (acceso ? 'on' : '') + '" data-a="tratto" data-v="' + t.k + '">' +
+          t.n + '</button>';
+      }).join('') + '</div>' +
+      '<div style="height:7px"></div>' +
+      '<input class="libero" placeholder="Altro che salta all\'occhio: «zaino giallo», «gamba ingessata»…" ' +
+        'value="' + (p.note || '') + '" data-a="nota">' +
+    '</div>';
+  return '<div class="ed"' + (disteso ? ' style="flex-direction:column"' : '') + '>' +
+    '<div class="figura">' + AV.build(av) + '</div>' +
+    '<div class="comandi">' + comandi + '</div></div>';
+}
+
+const bloccoBar = S => {
+  const n = MENU.reduce((a,m) => a + (S.bar[m.id]||0), 0);
+  const im = MENU.reduce((a,m) => a + (S.bar[m.id]||0) * m.pz, 0);
+  return '<div>' +
+    '<button class="bar-t" data-a="bar">' + (S.barAperto ? '▴' : '▾') + ' <b>🥤 Bar</b>' +
+      '<span class="q">' + (n ? n + ' cose · ' + eur(im) : 'niente') + '</span></button>' +
+    (S.barAperto ? '<div class="bar-g">' + MENU.map(m => {
+      const q = S.bar[m.id] || 0;
+      return '<button class="bar-v' + (q ? ' presa' : '') + '" data-a="bar+" data-v="' + m.id + '">' +
+        iconaBar(m.nm) + '<span class="n2">' + m.nm + '<br><span class="p2">' + eur(m.pz) + '</span></span>' +
+        (q ? '<span class="bollo">' + q + '</span>' : '') + '</button>';
+    }).join('') + '</div>' : '') + '</div>';
+};
+
+const barraPrezzo = S => {
+  const t = totale(S);
+  return '<div class="fondo">' +
+    '<div class="prezzo"><span class="k">' + (S.pagaDopo ? 'si conta all\'uscita' : 'da pagare') + '</span>' +
+      '<span class="v">' + eur(t) + '</span></div>' +
+    '<div class="modi">' +
+      '<button class="' + (S.modo === 'niente' ? 'on' : '') + '" data-a="modo" data-v="niente">non incassa</button>' +
+      '<button class="' + (S.modo === 'tutto' ? 'on' : '') + '" data-a="modo" data-v="tutto">tutto</button>' +
+      '<button class="' + (S.modo === 'parte' ? 'on' : '') + '" data-a="modo" data-v="parte">in parte</button>' +
+    '</div>' +
+    (S.modo === 'parte'
+      ? '<span class="parte"><span class="cont">' +
+        '<button data-a="acc" data-v="-5">−</button>' +
+        '<span class="n">' + eur(S.acconto) + '</span>' +
+        '<button data-a="acc" data-v="5">+</button></span></span>'
+      : '') +
+    '<button class="reg" data-a="reg">Registra' +
+      (S.modo === 'tutto' ? ' e incassa' : S.modo === 'parte' ? ' con acconto' : '') + '</button>' +
+  '</div>';
+};
+
+/* ══════════ le quattro proposte ══════════ */
+function N1(S) {   /* tutto in righe */
+  return '<div class="pan"><div class="corpo">' +
+    bloccoInizio(S) + bloccoTempo(S) + bloccoNumeri(S) +
+    '<div class="riga" style="flex-direction:column;align-items:stretch;gap:9px">' +
+      '<span class="k">Chi accompagna</span>' + strisciaGente(S) + '</div>' +
+    editorCapo(S) + bloccoBar(S) +
+  '</div>' + barraPrezzo(S) + '</div>';
+}
+
+function N2(S) {
+  /* Le due colonne servono ai NUMERI, che sono righe corte e sprecavano
+     mezza larghezza. Le persone e il capo restano larghi tutto: li' lo
+     spazio serve davvero, e in colonna stretta sbordava di 109px. */
+  return '<div class="pan"><div class="corpo">' +
+    '<div style="display:flex;gap:10px;align-items:flex-start">' +
+      '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:10px">' +
+        bloccoInizio(S) + bloccoTempo(S) +
+      '</div>' +
+      '<div style="flex:0 0 300px;display:flex;flex-direction:column;gap:10px">' +
+        bloccoNumeri(S) + bloccoBar(S) +
+      '</div>' +
+    '</div>' +
+    '<div class="riga" style="flex-direction:column;align-items:stretch;gap:9px">' +
+      '<span class="k">Chi accompagna</span>' + strisciaGente(S) + '</div>' +
+    editorCapo(S) +
+  '</div>' + barraPrezzo(S) + '</div>';
+}
+
+function N3(S) {   /* la scheda del biglietto: una testa colorata e il resto sotto */
+  return '<div class="pan"><div class="corpo">' +
+    '<div style="background:linear-gradient(150deg,#3A2E6E,#2A2050);border-radius:20px;padding:12px 14px;' +
+      'display:flex;align-items:center;gap:14px;flex-wrap:wrap">' +
+      '<div><span class="k" style="font-size:11px;color:#CFC4FF">Entrano alle</span>' +
+        '<div class="ora" style="font-size:34px">' + hhmm(S.inizio) + '</div></div>' +
+      '<button class="chip pic" data-a="ora" data-v="-5">−5</button>' +
+      '<button class="chip pic" data-a="ora" data-v="5">+5</button>' +
+      '<span class="sp brac">' + BRACCIALI.map(c =>
+        '<button data-a="brac" data-v="' + c + '" style="background:' + c + '"' +
+        (S.bracciale === c ? ' class="on"' : '') + '></button>').join('') + '</span>' +
+    '</div>' +
+    bloccoTempo(S) + bloccoNumeri(S) +
+    '<div class="riga" style="flex-direction:column;align-items:stretch;gap:9px">' +
+      '<span class="k">Chi accompagna</span>' + strisciaGente(S) + '</div>' +
+    editorCapo(S) + bloccoBar(S) +
+  '</div>' + barraPrezzo(S) + '</div>';
+}
+
+function N4(S) {   /* prima le persone: e' la parte che costa piu' tempo */
+  return '<div class="pan"><div class="corpo">' +
+    '<div class="riga" style="flex-direction:column;align-items:stretch;gap:9px">' +
+      '<span class="k">Chi accompagna</span>' + strisciaGente(S) + '</div>' +
+    editorCapo(S) +
+    bloccoInizio(S) + bloccoTempo(S) + bloccoNumeri(S) + bloccoBar(S) +
+  '</div>' + barraPrezzo(S) + '</div>';
+}
+
+/* ══════════ tre modi di fare l'editor ══════════ */
+function E1(S) { return '<div class="pan"><div class="corpo">' + strisciaGente(S) + editorCapo(S) + '</div></div>'; }
+function E2(S) { return '<div class="pan"><div class="corpo">' + strisciaGente(S) + editorCapo(S, true) + '</div></div>'; }
+function E3(S) {   /* a passi: un pezzo per volta, tasti grandi */
+  const p = S.gente[S.chi]; if (!p) return '';
+  const av = p.av, vestito = av.top.style === 'vestito';
+  const passi = [['capo','Capo'], ['fantasia','Fantasia'], ['sotto','Sotto'], ['tratti','Tratti']];
+  const passo = S.passo || 'capo';
+  let dentro = '';
+  if (passo === 'capo') dentro =
+    '<div class="capi">' + AV.TOP.map(t => '<button class="capo' + (av.top.style === t.key ? ' on' : '') +
+      '" data-a="top" data-v="' + t.key + '" style="min-height:56px;font-size:14px">' + t.em + ' ' + t.label + '</button>').join('') + '</div>' +
+    '<div style="height:9px"></div><span class="et">Colore</span><div class="colori">' +
+      AV.COLORS.slice(0,10).map(c => '<button data-a="col" data-v="top|' + c.c + '" style="background:' + c.c +
+      ';width:40px;height:40px"' + (av.top.color === c.c ? ' class="on"' : '') + '></button>').join('') + '</div>';
+  if (passo === 'fantasia') dentro =
+    '<div class="capi">' + AV.PATTERNS.map(f => '<button class="capo' + (av.top.pattern === f.key ? ' on' : '') +
+      '" data-a="pat" data-v="' + f.key + '" style="min-height:56px;font-size:14px">' + f.n + '</button>').join('') + '</div>';
+  if (passo === 'sotto') dentro = vestito
+    ? '<p style="color:var(--txt-3);font-size:14px">Col vestito lungo non si vede niente sotto: qui non c\'è niente da scegliere.</p>'
+    : '<div class="capi">' + AV.PANTS.map(t => '<button class="capo' + (av.pants.style === t.key ? ' on' : '') +
+      '" data-a="pants" data-v="' + t.key + '" style="min-height:56px;font-size:14px">' + t.em + ' ' + t.label + '</button>').join('') + '</div>' +
+      '<div style="height:9px"></div><div class="colori">' + AV.COLORS.slice(0,10).map(c =>
+      '<button data-a="col" data-v="pants|' + c.c + '" style="background:' + c.c + ';width:40px;height:40px"' +
+      (av.pants.color === c.c ? ' class="on"' : '') + '></button>').join('') + '</div>';
+  if (passo === 'tratti') dentro =
+    '<div class="tratti">' + TRATTI.map(t => {
+      const [dove, val] = t.k.split(':');
+      return '<button class="' + (av[dove] && av[dove].style === val ? 'on' : '') +
+        '" data-a="tratto" data-v="' + t.k + '" style="min-height:46px">' + t.n + '</button>';
+    }).join('') + '</div><div style="height:8px"></div>' +
+    '<input class="libero" placeholder="Altro che salta all\'occhio…" value="' + (p.note||'') + '" data-a="nota">';
+  return '<div class="pan"><div class="corpo">' + strisciaGente(S) +
+    '<div class="ed" style="flex-direction:row">' +
+      '<div class="figura" style="flex:0 0 150px"><div>' + AV.build(av) + '</div></div>' +
+      '<div class="comandi">' +
+        '<div class="modi" style="background:rgba(0,0,0,.3)">' + passi.map(x =>
+          '<button class="' + (passo === x[0] ? 'on' : '') + '" data-a="passo" data-v="' + x[0] + '" ' +
+          'style="flex:1">' + x[1] + '</button>').join('') + '</div>' +
+        '<div>' + dentro + '</div>' +
+      '</div></div>' +
+  '</div></div>';
+}
+
+/* ══════════ montaggio ══════════ */
+function azione(S, a, v, el) {
+  const p = S.gente[S.chi];
+  if (a === 'ora')   S.inizio = v === 'now' ? Date.now() : S.inizio + (+v) * 60000;
+  if (a === 'brac')  S.bracciale = v;
+  if (a === 'min')   { S.pagaDopo = false;
+                       if (v === '-5') S.minuti = Math.max(5, S.minuti - 5);
+                       else if (v === '+5') S.minuti = Math.min(240, S.minuti + 5);
+                       else S.minuti = +v; }
+  if (a === 'dopo')  S.pagaDopo = !S.pagaDopo;
+  if (a === 'bimbi') S.bimbi = Math.max(0, S.bimbi + (+v));
+  if (a === 'crazy') S.crazy = Math.max(0, S.crazy + (+v));
+  if (a === 'chi')   S.chi = +v;
+  if (a === 'agg')   { const r = ['Papà','Nonna','Nonno','Zia','Amico'][S.gente.length % 5];
+                       S.gente.push({ id: Date.now(), nome: r, av: AV.defaultFor('papa'), note: '' });
+                       S.chi = S.gente.length - 1; }
+  if (a === 'top' && p)   { p.av.top.style = v; }
+  if (a === 'pat' && p)   { p.av.top.pattern = v; }
+  if (a === 'pants' && p) { p.av.pants.style = v; }
+  if (a === 'col' && p)   { const [dove, c] = v.split('|'); p.av[dove].color = c; }
+  if (a === 'tratto' && p) { const [dove, val] = v.split(':');
+                             p.av[dove] = p.av[dove] || {};
+                             p.av[dove].style = (p.av[dove].style === val ? 'none' : val); }
+  if (a === 'bar')   S.barAperto = !S.barAperto;
+  if (a === 'bar+')  S.bar[v] = (S.bar[v] || 0) + 1;
+  if (a === 'modo')  { S.modo = v; if (v === 'parte' && !S.acconto) S.acconto = Math.min(5, totale(S)); }
+  if (a === 'acc')   S.acconto = Math.max(0, Math.min(totale(S), S.acconto + (+v)));
+  if (a === 'passo') S.passo = v;
+}
+
+function monta(dove, casi) {
+  const box = document.getElementById(dove);
+  casi.forEach(([lett, nome, idea, ren]) => {
+    const S = statoNuovo();
+    const sez = document.createElement('div');
+    sez.className = 'caso';
+    sez.innerHTML = '<div class="testa"><span class="lett">' + lett + '</span><h3>' + nome + '</h3>' +
+      '<span class="mis"></span></div><p class="idea">' + idea + '</p>' +
+      '<div class="telaio"><div class="dentro"></div></div>';
+    box.appendChild(sez);
+    const d = sez.querySelector('.dentro'), mis = sez.querySelector('.mis');
+    const dis = () => {
+      d.innerHTML = ren(S);
+      const pan = d.querySelector('.pan');
+      const corpo = d.querySelector('.corpo');
+      const fuori = pan.scrollHeight - pan.clientHeight;
+      const scorre = corpo.scrollHeight - corpo.clientHeight;
+      mis.textContent = fuori > 2 ? 'sborda ' + fuori + 'px'
+        : scorre > 2 ? 'scorre ' + scorre + 'px' : 'ci sta tutto';
+      mis.style.color = fuori > 2 ? '#FF9AA2' : scorre > 2 ? '#FFD166' : '#7FE8C1';
+      adatta();
+    };
+    sez.addEventListener('click', e => {
+      const b = e.target.closest('[data-a]');
+      if (!b || b.tagName === 'INPUT') return;
+      azione(S, b.dataset.a, b.dataset.v, b);
+      dis();
+    });
+    sez.addEventListener('input', e => {
+      const i = e.target.closest('input[data-a="nota"]');
+      if (i && S.gente[S.chi]) S.gente[S.chi].note = i.value;
+    });
+    dis();
+  });
+}
+
+monta('casi', [
+  ['N1', 'Tutto in righe', 'Una riga per cosa, tutte uguali: <b>orario, tempo, numeri</b>, poi la gente, poi il bar. Niente titoli e niente riquadri colorati: si scorre con l\'occhio dall\'alto in basso e si tocca solo dove serve.', N1],
+  ['N2', 'Due colonne', 'A sinistra i <b>numeri</b> — orario, tempo, bambini, bar — a destra <b>le persone</b>, che sono la parte che prende più spazio. Il tablet è largo: usarne solo metà per riga è uno spreco.', N2],
+  ['N3', 'Testa da biglietto', 'In cima una <b>fascia colorata</b> con l\'ora grande e il bracciale, come la testa di un biglietto. Sotto tutto il resto in righe. L\'orario d\'ingresso è la cosa che sbagli più facilmente: qui non puoi non vederlo.', N3],
+  ['N4', 'Prima le persone', 'Si parte da <b>chi accompagna</b>, che è la parte che costa più tempo e va fatta mentre la persona è lì davanti. I numeri, che sai già, stanno sotto.', N4]
+]);
+monta('editor', [
+  ['E1', 'Figura di fianco', 'La figura a sinistra, <b>i comandi in colonna</b> a destra: capo, colore, fantasia, sotto, tratti. Tutto insieme, si vede l\'effetto mentre scegli.', E1],
+  ['E2', 'Figura sopra', 'La figura in cima a tutta larghezza e i comandi sotto: <b>la figura si vede grande</b>, ma bisogna guardare in alto ogni volta.', E2],
+  ['E3', 'A passi', 'Quattro linguette — <b>capo, fantasia, sotto, tratti</b> — e un pezzo per volta con tasti grandi. Meno roba in vista, ma un tocco in più per cambiare pezzo. Col vestito lungo il passo «sotto» lo dice da solo che non serve.', E3]
+]);
+
+function adatta() {
+  document.querySelectorAll('.telaio').forEach(t => {
+    const d = t.querySelector('.dentro');
+    const s = t.clientWidth / 820;
+    d.style.transform = 'scale(' + s + ')';
+    t.style.height = (1180 * s) + 'px';
+  });
+}
+addEventListener('resize', adatta);
+adatta();
+</script>
