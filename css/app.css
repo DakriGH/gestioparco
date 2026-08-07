@@ -2544,8 +2544,12 @@ html:not(.anima) .view.entra-dx { animation: none; }
 /* Chrome ferma lo sticky al bordo INTERNO di main, cioe' sopra il suo
    padding: col respiro di main sotto, il conto restava 24px a mezz'aria.
    In questa linguetta il respiro lo mette la barra stessa. */
-#view-new { display: flex; flex-direction: column; gap: 12px; }
-#view-new .bc-griglia { flex: 0 0 auto; }
+#view-new { display: flex; flex-direction: column; }
+/* Il pannello e la colonna: e lui ad avere il gap e il flex, non la
+   vista, perche il pannello si sposta e se lo lasciassi alla vista
+   dentro la scheda che vola non avrebbe piu niente sotto. */
+.pan-conto { display: flex; flex-direction: column; gap: 12px; flex: 1; min-height: 0; }
+.pan-conto .bc-griglia { flex: 0 0 auto; }
 
 .bc-cat { position: sticky; top: 0; z-index: 6; display: flex; gap: 8px; flex-wrap: wrap;
   padding: 8px 0 10px; background: var(--bg); }
@@ -2872,10 +2876,10 @@ html:not(.anima) .entry.appena::before { animation: none; opacity: 1; }
    e quattro insieme sotto le linguette. Il respiro si toglie
    dall'INTESTAZIONE e dal pannello interno: la card in se' ha gia'
    padding zero, e mettercelo la farebbe CRESCERE invece di accorciarla. */
-#view-new .card.blk { margin-bottom: 8px; }
-#view-new .card.blk > h2,
-#view-new .card.blk > .testa-viola > h2 { font-size: 15.5px; padding: 5px 14px; }
-#view-new .blk-in { padding: 8px 14px 10px; }
+.pan-conto .card.blk { margin-bottom: 8px; }
+.pan-conto .card.blk > h2,
+.pan-conto .card.blk > .testa-viola > h2 { font-size: 15.5px; padding: 5px 14px; }
+.pan-conto .blk-in { padding: 8px 14px 10px; }
 /* Il conto e' incollato al bordo basso dello schermo, e Chrome ferma lo
    sticky al bordo INTERNO di main: col respiro di main sotto si
    fermerebbe 24px prima, a mezz'aria. Qui il respiro lo mette lui.
@@ -2884,27 +2888,28 @@ html:not(.anima) .entry.appena::before { animation: none; opacity: 1; }
    al riparo, e col 100% quei 74px finivano fuori dallo schermo. */
 main.conto-in-fondo { padding-bottom: 0; display: flex; flex-direction: column; }
 main.conto-in-fondo > #view-new { flex: 1; min-height: 0; }
+main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
 /* un dito di respiro sotto, lo stesso che tiene lo sticky quando invece
    la schermata scorre: cosi' il pannello sta allo stesso posto nei due
    casi, e non sembra incollato al vetro */
-#nFondo { margin-top: auto; padding-bottom: max(10px, var(--safe-b)); }
+.pc-fondo { margin-top: auto; padding-bottom: max(10px, var(--safe-b)); }
 /* i quattro tasti stanno in fila accanto alla cifra: coi 150px di
    minimo che hanno di serie andavano a capo e il pannello cresceva di
    74px, mangiandosi il respiro di tutta la schermata */
-#nFondo .bc-tasti .btn { min-width: 0; padding: 0 15px; }
+.pc-fondo .bc-tasti .btn { min-width: 0; padding: 0 15px; }
 /* i posti vuoti non devono occupare il loro giro di gap: la fascia
    della modifica e la riga del suo annulla ci sono solo quando servono */
-#view-new > .edit-banner.hidden, #view-new > .btn-row:empty { display: none; }
-#view-new .bc-cat { padding: 6px 0 8px; }
+
+.pan-conto .bc-cat { padding: 6px 0 8px; }
 
 .bc-cat button { display: flex; align-items: center; gap: 7px; }
 .bc-cat button svg { width: 21px; height: 21px; }
 .bc-cat button .bc-em { font-size: 18px; line-height: 1; }
 /* la vista che arriva entra da sotto, appena */
-#nParco.entra > .card, .bc-griglia.entra > .bc-card { animation: bcEntra .3s ease both; }
-#nParco.entra > .card:nth-child(2) { animation-delay: .04s; }
-#nParco.entra > .card:nth-child(3) { animation-delay: .08s; }
-#nParco.entra > .card:nth-child(4) { animation-delay: .12s; }
+.pc-parco.entra > .card, .pc-parco.entra > .bc-griglia, .bc-griglia.entra > .bc-card { animation: bcEntra .3s ease both; }
+.pc-parco.entra > .card:nth-child(2) { animation-delay: .04s; }
+.pc-parco.entra > .card:nth-child(3) { animation-delay: .08s; }
+.pc-parco.entra > .card:nth-child(4) { animation-delay: .12s; }
 
 /* "Quanto restano" sta su UNA riga: i tagli, i minuti esatti e per
    ultimo il "paga dopo", che e' l'eccezione e sta in fondo come tale */
@@ -3027,6 +3032,46 @@ button.ab-voce:disabled { opacity: .45; cursor: default; }
 @media (max-width: 700px) {
   .ruoli button .nm { font-size: 9px; letter-spacing: -.02em; }
 }
+
+/* ══════════════════════════════════════════════════════════
+   IL PANNELLO DENTRO LA SCHEDA CHE VOLA
+   Le card del bar hanno colori loro (fondo nero al 45%, filigrana
+   bianca al 7%): su un gradiente verde o ambra diventerebbero isole
+   che stonano. Quindi dentro la scheda il pannello si porta un fondo
+   scuro suo e ci rimette dentro le variabili della pagina, che .entry
+   riscrive in versione bianco-su-colore.
+   ══════════════════════════════════════════════════════════ */
+.pc-parco { display: flex; flex-direction: column; gap: 8px; }
+.pc-due { grid-template-columns: 1fr 1fr; }
+
+.entry .pan-conto {
+  --bg: #14141B;
+  --surface: rgba(255, 255, 255, 0.07);
+  --surface-2: rgba(255, 255, 255, 0.10);
+  --surface-3: rgba(255, 255, 255, 0.16);
+  background: rgba(6, 6, 12, 0.42);
+  border-radius: 16px;
+  padding: 8px 10px 10px;
+  gap: 9px;
+}
+/* Il conto va IN ALTO qui dentro: e la prima cosa che serve quando
+   apri la scheda di chi e gia dentro, e in fondo a una scheda lunga
+   finirebbe fuori dallo schermo. */
+.entry .pc-fondo { order: -1; margin-top: 0; padding-bottom: 0; }
+.entry .pan-conto .bc-cat { position: static; background: none; padding: 0 0 2px; }
+.entry .pan-conto .bc-fondo { position: static; box-shadow: none; background: rgba(0, 0, 0, 0.3); }
+/* dentro la scheda i tasti del conto sono quattro o meno: possono
+   respirare senza andare a capo */
+.entry .pan-conto .bc-tasti { flex-wrap: wrap; }
+
+/* La scheda che vola: qui dentro ci sta un pannello intero, quindi
+   scorre. Le card del bar restano larghe come in "+ Nuovo". */
+.entry.vola .pan-conto { max-height: none; }
+
+/* ── le due card sopra l'orario: bambini e Crazy Jumping ──
+   Sono sempre in ballo, quindi tengono le due fasce SEMPRE aperte:
+   vederle comparire e sparire faceva ballare mezza schermata. */
+.bc-griglia.pc-due { grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); }
 
 /* quando non e' stato ancora scelto niente */
 .ed-tr.vuoto { opacity: 0.55; font-style: italic; }
