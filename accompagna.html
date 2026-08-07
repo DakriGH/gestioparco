@@ -4,7 +4,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Chi accompagna — varianti della B</title>
 <link rel="stylesheet" href="./css/fonts.css">
-<link rel="stylesheet" href="./css/app.css?v=204">
+<link rel="stylesheet" href="./css/app.css?v=205">
 <style>
   /* app.css blocca lo scorrimento (l’app è un guscio a tutto schermo).
      Questa è una PAGINA e deve scorrere. */
@@ -46,6 +46,9 @@
   .capo.on { background: #fff; color: #221944; }
   /* col vestito lungo i sotto non hanno senso: si spengono, non spariscono */
   .spento { opacity: .32; pointer-events: none; }
+  /* col vestito lungo si spengono i pantaloni, NON gli accessori:
+     cappello, scarpe e zaino se li mette lo stesso */
+  .spento-capi [data-set^="pants|"] { opacity: .3; pointer-events: none; }
   .spento-k { font-size: 10px; font-weight: 700; color: #E8B44C; text-transform: none;
     letter-spacing: 0; margin-left: 6px; }
 
@@ -130,9 +133,9 @@
   </div>
 </div>
 
-<script src="./js/icone.js?v=204"></script>
-<script src="./js/avatar.js?v=204"></script>
-<script src="./js/capi.js?v=204"></script>
+<script src="./js/icone.js?v=205"></script>
+<script src="./js/avatar.js?v=205"></script>
+<script src="./js/capi.js?v=205"></script>
 <script>
 let ruolo = 'mamma';
 let av = AV.baseFor(ruolo);
@@ -179,7 +182,24 @@ const griglia = (lista, campo, colonne, mis) =>
     CAPI.capo(t.key, av[campo].color, av[campo].pattern, mis || 46) +
     '<span class="nm">' + t.label + '</span></button>').join('') + '</div>';
 const sopra = (c, m) => griglia(AV.TOP, 'top', c || 6, m);
-const sotto = (c, m) => '<div class="' + (vestitoLungo() ? 'spento' : '') + '">' + griglia(AV.PANTS, 'pants', c || 8, m) + '</div>';
+/* IL SOTTO comprende gli accessori: otto capi piu' capelli, cappello,
+   scarpe e zaino, tutti nella stessa fila. Sono roba che sta sotto o
+   attorno alla persona, non un capitolo a parte. */
+const sotto = (colonne, mis) => {
+  const capi = AV.PANTS.map(t =>
+    '<button class="capo' + (av.pants.style === t.key ? ' on' : '') + '" data-set="pants|' + t.key + '">' +
+    CAPI.capo(t.key, av.pants.color, av.pants.pattern, mis || 44) +
+    '<span class="nm">' + t.label + '</span></button>').join('');
+  const acc = ACC.map(a => {
+    const c = DOVE[a.k]();
+    return '<button class="capo acc-b' + (c ? ' on' : '') + '" data-acc="' + a.k + '">' +
+      CAPI.accessorio(a.k, c || '#8A8AA0', mis || 44) + '<span class="nm">' + a.nome + '</span></button>';
+  }).join('');
+  return '<div class="' + (vestitoLungo() ? 'spento-capi' : '') + '" style="position:relative">' +
+    '<div class="capi" style="grid-template-columns:repeat(' + (colonne || 12) + ',1fr)">' + capi + acc + '</div>' +
+    (apertoAcc ? tavolozza(apertoAcc) : '') + '</div>';
+};
+
 const etichettaSotto = () => 'Sotto' +
   (vestitoLungo() ? '<span class="spento-k">col vestito lungo non serve</span>' : '');
 const etSotto = () => et('Sotto', vestitoLungo() ? '<span class="spento-k">col vestito lungo non serve</span>' : '');
@@ -243,67 +263,67 @@ const barraRuoli = () => '<div class="ruoli">' + AV.ROLES.map(r =>
   '<button data-ruolo="' + r.key + '"' + (ruolo === r.key ? ' class="on"' : '') + '>' +
   '<span class="em">' + r.em + '</span><span class="nm">' + r.label + '</span></button>').join('') + '</div>';
 
-/* ══════ quattro varianti della B, tutte dentro il budget ══════
-   Il guardaroba e' cresciuto (12 sopra, 8 sotto, 16 colori, 4
-   accessori): per starci in 484px ognuna taglia da una parte diversa,
-   e si vede subito quale rinuncia costa meno. */
+/* ══════ la B, con le correzioni ══════
+   L'impianto e' quello della B: figura gigante a sinistra, e a destra
+   ogni gruppo col SUO colore attaccato sotto. Le tre correzioni:
+     - la FANTASIA sta subito sotto il sopra, perche' la fantasia e'
+       del capo di sopra ed e' li' che la si cerca;
+     - capelli, cappello, scarpe e zaino stanno DENTRO il sotto, in
+       coda ai capi, non in un capitolo loro;
+     - il colore di ogni gruppo resta attaccato al gruppo.
+   Le quattro varianti cambiano solo quanto sono grandi le cose. */
 const P = [
-  { l: 'B1', t: 'Tutto su una riga: dodici sopra, otto sotto',
-    p: 'I capi non vanno mai a capo — dodici in fila e otto in fila — e i colori stanno su una riga sola divisa a meta’, con l’etichetta a fianco. E’ la piu’ bassa di tutte, e la riga libera resta grande.',
+  { l: 'B1', t: 'La B con le correzioni',
+    p: 'Figura gigante a sinistra. A destra: sopra, la sua fantasia, il suo colore; poi sotto — otto capi piu’ i quattro accessori nella stessa fila — e il suo colore. La riga libera grande in fondo.',
     html: () => riga(
-        fisso(150, col(figura(206) + accessori(), 'gap:6px;height:100%')) +
+        fisso(154, figura(214)) +
         elastico(col(
-          bandaLato('Sopra', sopra(12, 42), 52) +
-          bandaLato(etichettaSotto(), sotto(8, 42), 52) +
-          riga(elastico(bandaLato('Colore', tinte('top', 'due'), 46)) +
-               elastico(bandaLato('Colore', tinte('pants', 'due'), 46)), 'gap:8px') +
-          bandaLato('Fantasia', fantasie(), 52)
+          bandaLato('Sopra', sopra(12, 42), 54) +
+          bandaLato('Fantasia', fantasie(), 54) +
+          bandaLato('Colore', tinte('top'), 54) +
+          bandaLato(etichettaSotto(), sotto(12, 42), 54) +
+          bandaLato('Colore', tinte('pants'), 54)
         , 'gap:5px')), 'align-items:stretch') +
       '<div style="margin-top:7px">' + riferimento(true) + '</div>' },
 
-  { l: 'B2', t: 'Figura piu’ grande, capi su due righe da sei',
-    p: 'Figura da 224px e capi piu’ larghi su due righe da sei, che si leggono meglio. Il prezzo lo pagano i colori, tutti e due su una riga sola da sedici a testa con l’etichetta a fianco.',
+  { l: 'B2', t: 'Come la B1, ma con le etichette sopra le file',
+    p: 'Le stesse cose e lo stesso ordine, con i titoletti sopra ogni fila invece che a fianco: si legge meglio e si guadagna larghezza per le icone, ma ogni banda costa quattordici pixel in piu’.',
     html: () => riga(
-        fisso(160, col(figura(224) + accessori(), 'gap:6px;height:100%')) +
+        fisso(150, figura(206)) +
         elastico(col(
-          bandaLato('Sopra', sopra(6, 46), 50) +
-          bandaLato('Colore', tinte('top'), 50) +
-          bandaLato(etichettaSotto(), sotto(8, 40), 50) +
-          bandaLato('Colore', tinte('pants'), 50)
-        , 'gap:5px')), 'align-items:stretch') +
-      '<div style="margin-top:6px">' + bandaLato('Fantasia', fantasie(), 58) + '</div>' +
-      '<div style="margin-top:6px">' + riferimento(true) + '</div>' },
+          et('Sopra') + sopra(12, 42) +
+          et('Fantasia') + fantasie() +
+          et('Colore del sopra') + tinte('top') +
+          '<span class="et">' + etichettaSotto() + '</span>' + sotto(12, 42) +
+          et('Colore del sotto') + tinte('pants')
+        , 'gap:3px')), 'align-items:stretch') +
+      '<div style="margin-top:7px">' + riferimento(true) + '</div>' },
 
-  { l: 'B3', t: 'La riga libera in cima, dove arriva la mano',
-    p: 'Il campo di scrittura sta subito sotto i ruoli, perche’ spesso e’ l’unica cosa che si scrive di corsa: si tocca il ruolo e si scrive, senza scendere. Sotto, la figura grande e il guardaroba compatto.',
+  { l: 'B3', t: 'Capi grandi: sopra e sotto su due righe da sei',
+    p: 'Le icone diventano grandi il doppio — dodici sopra su due righe da sei, dodici sotto idem — cosi’ si distinguono anche di fretta. Costa due righe in piu’, che si recuperano tenendo la figura a 190px.',
+    html: () => riga(
+        fisso(136, figura(190)) +
+        elastico(col(
+          bandaLato('Sopra', sopra(6, 48), 50) +
+          bandaLato('Fantasia', fantasie(), 50) +
+          bandaLato('Colore', tinte('top'), 50)
+        , 'gap:5px')), 'align-items:stretch') +
+      '<div style="margin-top:6px">' + bandaLato(etichettaSotto(), sotto(6, 48), 50) + '</div>' +
+      '<div style="margin-top:5px">' + bandaLato('Colore', tinte('pants'), 50) + '</div>' +
+      '<div style="margin-top:7px">' + riferimento(true) + '</div>' },
+
+  { l: 'B4', t: 'Figura enorme e riga libera in cima',
+    p: 'La figura sale a 238px, la piu’ grande possibile, e il campo di scrittura sta in alto dove arriva la mano: si tocca il ruolo e si scrive subito, senza scendere. Il guardaroba resta identico, solo piu’ stretto.',
     html: () => '<div style="margin-bottom:7px">' + riferimento(true) + '</div>' +
       riga(
-        fisso(148, col(figura(200) + accessori(), 'gap:6px;height:100%')) +
+        fisso(166, figura(232)) +
         elastico(col(
-          bandaLato('Sopra', sopra(12, 42), 46) +
-          bandaLato(etichettaSotto(), sotto(8, 42), 46) +
-          riga(elastico(bandaLato('Colore', tinte('top', 'due'), 44)) +
-               elastico(bandaLato('Colore', tinte('pants', 'due'), 44)), 'gap:8px') +
-          bandaLato('Fantasia', fantasie(), 46)
-        , 'gap:5px')), 'align-items:stretch') },
-
-  { l: 'B4', t: 'Accessori in colonna accanto alla figura',
-    p: 'I quattro accessori non stanno sotto la figura ma in colonna al suo fianco, cosi’ la figura puo’ essere la piu’ alta di tutte (232px) senza far crescere il blocco. Il guardaroba resta su due sole righe.',
-    html: () => riga(
-        fisso(122, figura(232)) +
-        fisso(58, '<div style="display:flex;flex-direction:column;gap:5px;height:100%">' +
-          ACC.map(a => { const c = DOVE[a.k]();
-            return '<button class="capo' + (c ? ' on' : '') + '" data-acc="' + a.k + '" style="flex:1">' +
-              CAPI.accessorio(a.k, c || '#8A8AA0', 34) + '<span class="nm">' + a.nome + '</span></button>'; }).join('') +
-          (apertoAcc ? '<div style="position:relative">' + tavolozza(apertoAcc) + '</div>' : '') + '</div>') +
-        elastico(col(
-          bandaLato('Sopra', sopra(12, 42), 46) +
-          bandaLato(etichettaSotto(), sotto(8, 42), 46) +
-          riga(elastico(bandaLato('Colore', tinte('top', 'due'), 44)) +
-               elastico(bandaLato('Colore', tinte('pants', 'due'), 44)), 'gap:8px') +
-          bandaLato('Fantasia', fantasie(), 46)
-        , 'gap:5px')), 'align-items:stretch') +
-      '<div style="margin-top:7px">' + riferimento(true) + '</div>' }
+          bandaLato('Sopra', sopra(12, 40), 48) +
+          bandaLato('Fantasia', fantasie(), 48) +
+          bandaLato('Colore', tinte('top'), 48) +
+          bandaLato(etichettaSotto(), sotto(12, 40), 48) +
+          bandaLato('Colore', tinte('pants'), 48)
+        , 'gap:5px')), 'align-items:stretch') }
 ];
 
 function disegna() {
@@ -341,7 +361,7 @@ document.addEventListener('click', (ev) => {
   else if (d.col) { const [campo, c] = d.col.split('|'); av[campo].color = c; }
   else if (d.pat) { av.top.pattern = d.pat; }
   else if (d.acc) { apertoAcc = (apertoAcc === d.acc) ? null : d.acc; }
-  else if (d.accol) { const [a, c] = d.accol.split('|'); metti(a, c); apertoAcc = null; }
+  else if (d.acccol) { const [a, c] = d.acccol.split('|'); metti(a, c); apertoAcc = null; }
   else if (d.accvia) { togli(d.accvia); apertoAcc = null; }
   else return;
   disegna();
