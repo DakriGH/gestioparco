@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bar &amp; Conto — quattro linguaggi visivi</title>
+<link rel="stylesheet" href="./css/fonts.css">
+<style>
+/* ============================================================
+   Le volte scorse ho fatto strutture diverse dentro UN SOLO
+   linguaggio visivo: per questo sembravano la stessa cosa.
+   Qui la struttura e' quasi la stessa e cambia il LINGUAGGIO:
+   materiale, colore, carattere, forma, respiro.
+   ============================================================ */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #0B0B10; color: #E9E9F2; padding: 0 0 70px; }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 22px 18px; }
+h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 10px; }
+.intro { color: #A8A8BD; font-size: 15px; line-height: 1.55; margin: 0 0 8px; max-width: 72ch; }
+.intro b { color: #FFD166; font-weight: 600; }
+.strada { padding: 34px 0 4px; }
+.strada > header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.strada > header .n { font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 700; background: #23232F; color: #FFD166; border-radius: 20px; padding: 4px 12px; }
+.strada > header h2 { font-family: 'Fredoka', sans-serif; font-size: 22px; margin: 0; }
+.perche { color: #9A9AB0; font-size: 14.5px; line-height: 1.6; margin: 9px 0 12px; max-width: 72ch; }
+.perche b { color: #FFD166; font-weight: 600; }
+.ricetta { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 14px; }
+.ricetta span { font-size: 12px; font-weight: 700; border-radius: 20px; padding: 5px 11px; background: #1A1A24; color: #9A9AB0; }
+.ricetta i { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+
+.tablet { position: relative; width: 410px; height: 590px; border-radius: 20px; overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 22px 50px rgba(0,0,0,0.55); }
+.tablet > .dentro { width: 820px; height: 1180px; transform: scale(0.5); transform-origin: top left; }
+.misura { position: absolute; top: 9px; right: 9px; z-index: 9; font-size: 11px; font-weight: 800;
+  letter-spacing: 0.04em; text-transform: uppercase; border-radius: 20px; padding: 4px 10px;
+  background: rgba(0,0,0,0.55); color: #7FE8C1; }
+
+.pan { width: 820px; height: 1180px; display: flex; flex-direction: column; overflow: hidden; }
+
+/* ══════════════ D1 · CARTA ══════════════
+   Ricevuta di carta: crema, inchiostro, righe punteggiate, timbro.
+   Il denaro si legge come su uno scontrino vero. */
+.D1 { background: #EFE7D8; color: #221E17; font-family: 'Inter', system-ui, sans-serif; }
+.D1 .cap { display: flex; align-items: center; gap: 14px; padding: 26px 30px 16px; }
+.D1 .cap h3 { margin: 0; font-family: 'Fredoka', sans-serif; font-size: 25px; font-weight: 600; letter-spacing: .01em; }
+.D1 .cap .sot { font-size: 14px; color: #6E6558; }
+.D1 .via { margin-left: auto; width: 52px; height: 52px; border-radius: 50%; background: #221E17; border: none; color: #EFE7D8; font-size: 20px; cursor: pointer; }
+.D1 .riga-punti { height: 2px; margin: 0 30px; background: repeating-linear-gradient(90deg,#C9BFAC 0 6px,transparent 6px 12px); }
+.D1 .corpo { flex: 1; min-height: 0; padding: 18px 30px 0; display: flex; flex-direction: column; gap: 16px; }
+.D1 .cat { display: flex; gap: 10px; flex-wrap: wrap; }
+.D1 .cat button { border: 2px solid #221E17; background: none; color: #221E17; border-radius: 30px;
+  padding: 10px 18px; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; min-height: 46px; }
+.D1 .cat button.on { background: #221E17; color: #EFE7D8; }
+.D1 .griglia { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; overflow-y: auto; min-height: 0; align-content: start; }
+.D1 .tess { border: 2px solid #C9BFAC; border-radius: 4px; background: #F7F2E8; overflow: hidden; display: flex; flex-direction: column; }
+.D1 .tess .su { border: none; background: none; font: inherit; cursor: pointer; padding: 12px 8px 9px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px; color: inherit; }
+.D1 .tess .em { font-size: 24px; }
+.D1 .tess .nm { font-size: 14px; font-weight: 700; line-height: 1.15; text-align: center; }
+.D1 .tess .pr { font-family: 'Fredoka', sans-serif; font-size: 14px; color: #6E6558; }
+.D1 .tess.preso { border-color: #221E17; background: #fff; }
+.D1 .tess .conta { display: flex; border-top: 2px dashed #C9BFAC; }
+.D1 .tess .conta.spenta { display: none; }
+.D1 .tess .conta button { flex: 1; min-height: 44px; border: none; background: none; font-family: 'Fredoka', sans-serif; font-size: 20px; font-weight: 700; cursor: pointer; color: #221E17; }
+.D1 .tess .conta .n { font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 700; min-width: 32px; text-align: center; align-self: center; }
+.D1 .scont { border-top: 2px dashed #C9BFAC; padding-top: 12px; }
+.D1 .sr { display: flex; align-items: baseline; gap: 8px; padding: 7px 0; font-size: 16px; }
+.D1 .sr .nn { font-weight: 600; }
+.D1 .sr .pt { flex: 1; border-bottom: 2px dotted #C9BFAC; transform: translateY(-5px); }
+.D1 .sr .im { font-family: 'Fredoka', sans-serif; font-weight: 700; font-variant-numeric: tabular-nums; }
+.D1 .fondo { border-top: 3px double #221E17; margin: 12px 30px 0; padding: 16px 0 26px; display: flex; align-items: flex-end; gap: 18px; flex-wrap: wrap; }
+.D1 .fondo .k { display: block; font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #6E6558; }
+.D1 .fondo .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 44px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.D1 .fondo .tasti { margin-left: auto; display: flex; gap: 10px; }
+.D1 .bt { border: 2px solid #221E17; background: none; color: #221E17; border-radius: 30px; padding: 14px 22px;
+  font: inherit; font-size: 16px; font-weight: 700; cursor: pointer; min-height: 54px; }
+.D1 .bt.pieno { background: #221E17; color: #EFE7D8; font-family: 'Fredoka', sans-serif; }
+
+/* ══════════════ D2 · NOTTE ══════════════
+   Quasi nero, un solo accento acido, numeri enormi. Meno cose, piu'
+   grandi: quello che conta si vede da due metri. */
+.D2 { background: #08090C; color: #F2F4F8; }
+.D2 .cap { display: flex; align-items: center; gap: 14px; padding: 28px 30px 10px; }
+.D2 .cap h3 { margin: 0; font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: #5B6472; }
+.D2 .via { margin-left: auto; width: 52px; height: 52px; border-radius: 16px; background: #14171D; border: none; color: #8D97A6; font-size: 20px; cursor: pointer; }
+.D2 .totone { padding: 4px 30px 20px; }
+.D2 .totone .k { font-size: 13px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: #5B6472; }
+.D2 .totone .v { font-family: 'Fredoka', sans-serif; font-size: 84px; font-weight: 700; line-height: .95; letter-spacing: -.02em; color: #D6FF3D; font-variant-numeric: tabular-nums; }
+.D2 .corpo { flex: 1; min-height: 0; padding: 0 30px; display: flex; flex-direction: column; gap: 14px; }
+.D2 .cat { display: flex; gap: 24px; border-bottom: 1px solid #1B1F27; }
+.D2 .cat button { border: none; background: none; color: #5B6472; font: inherit; font-size: 16px; font-weight: 700;
+  padding: 12px 0 14px; cursor: pointer; position: relative; }
+.D2 .cat button.on { color: #F2F4F8; }
+.D2 .cat button.on::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; background: #D6FF3D; }
+.D2 .lista { overflow-y: auto; min-height: 0; }
+.D2 .lr { display: flex; align-items: center; gap: 16px; padding: 15px 0; border-bottom: 1px solid #14171D; }
+.D2 .lr .nm { flex: 1; min-width: 0; font-size: 19px; font-weight: 600; }
+.D2 .lr .nm small { display: block; font-size: 14px; color: #5B6472; font-weight: 500; margin-top: 2px; }
+.D2 .lr .q { display: flex; align-items: center; gap: 10px; }
+.D2 .lr .q button { width: 48px; height: 48px; border-radius: 50%; border: 1px solid #262B34; background: none; color: #F2F4F8; font-size: 21px; cursor: pointer; }
+.D2 .lr .q button.piu { background: #D6FF3D; color: #08090C; border-color: #D6FF3D; }
+.D2 .lr .q button:disabled { opacity: .3; }
+.D2 .lr .n { font-family: 'Fredoka', sans-serif; font-size: 22px; font-weight: 700; min-width: 34px; text-align: center; }
+.D2 .fondo { padding: 18px 30px 28px; display: flex; gap: 12px; }
+.D2 .bt { flex: 1; border: none; border-radius: 18px; background: #14171D; color: #F2F4F8; font: inherit;
+  font-size: 17px; font-weight: 700; cursor: pointer; min-height: 64px; }
+.D2 .bt.acido { background: #D6FF3D; color: #08090C; font-family: 'Fredoka', sans-serif; font-size: 19px; }
+
+/* ══════════════ D3 · CHIARO ══════════════
+   Foglio chiaro che galleggia sull'app scura: ombre morbide, angoli
+   generosi, colori tenui per categoria. Riposa gli occhi. */
+.D3 { background: #F4F5F9; color: #1D2030; }
+.D3 .cap { display: flex; align-items: center; gap: 14px; padding: 24px 26px 12px; }
+.D3 .cap h3 { margin: 0; font-family: 'Fredoka', sans-serif; font-size: 26px; font-weight: 600; }
+.D3 .via { margin-left: auto; width: 52px; height: 52px; border-radius: 18px; background: #fff; border: none;
+  color: #1D2030; font-size: 20px; cursor: pointer; box-shadow: 0 3px 10px rgba(29,32,48,.12); }
+.D3 .corpo { flex: 1; min-height: 0; padding: 6px 26px 0; display: flex; flex-direction: column; gap: 16px; }
+.D3 .cat { display: flex; gap: 10px; flex-wrap: wrap; }
+.D3 .cat button { border: none; border-radius: 18px; padding: 12px 18px; background: #fff; color: #6B7089;
+  font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; min-height: 48px; box-shadow: 0 2px 8px rgba(29,32,48,.07); }
+.D3 .cat button.on { background: #1D2030; color: #fff; }
+.D3 .griglia { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; overflow-y: auto; min-height: 0; align-content: start; padding-bottom: 4px; }
+.D3 .tess { background: #fff; border-radius: 22px; box-shadow: 0 4px 14px rgba(29,32,48,.08); overflow: hidden; display: flex; flex-direction: column; }
+.D3 .tess .su { border: none; background: none; font: inherit; color: inherit; cursor: pointer; padding: 18px 10px 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.D3 .tess .em { font-size: 30px; }
+.D3 .tess .nm { font-size: 15px; font-weight: 700; line-height: 1.2; text-align: center; }
+.D3 .tess .pr { font-family: 'Fredoka', sans-serif; font-size: 15px; color: #8A8FA6; }
+.D3 .tess.preso { background: #EAF4FF; box-shadow: 0 0 0 3px #3B8CFF inset, 0 6px 18px rgba(59,140,255,.22); }
+.D3 .tess .conta { display: flex; background: rgba(29,32,48,.05); }
+.D3 .tess .conta.spenta { display: none; }
+.D3 .tess .conta button { flex: 1; min-height: 46px; border: none; background: none; color: #1D2030;
+  font-family: 'Fredoka', sans-serif; font-size: 21px; font-weight: 700; cursor: pointer; }
+.D3 .tess .conta .n { font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 700; min-width: 34px; text-align: center; align-self: center; }
+.D3 .fondo { margin: 14px 26px 24px; background: #fff; border-radius: 26px; box-shadow: 0 8px 26px rgba(29,32,48,.12);
+  padding: 18px 22px; display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.D3 .fondo .k { display: block; font-size: 13px; font-weight: 700; color: #8A8FA6; }
+.D3 .fondo .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 42px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.D3 .fondo .tasti { margin-left: auto; display: flex; gap: 10px; }
+.D3 .bt { border: none; border-radius: 18px; padding: 15px 22px; background: #EDEFF5; color: #1D2030;
+  font: inherit; font-size: 16px; font-weight: 700; cursor: pointer; min-height: 58px; }
+.D3 .bt.pieno { background: #19C08A; color: #062A20; font-family: 'Fredoka', sans-serif; font-size: 18px; }
+.D3 .conto-mini { display: flex; flex-wrap: wrap; gap: 8px; }
+.D3 .chip { background: #fff; border-radius: 16px; padding: 9px 14px; font-size: 14.5px; font-weight: 700; box-shadow: 0 2px 8px rgba(29,32,48,.07); }
+.D3 .chip b { color: #3B8CFF; }
+
+/* ══════════════ D4 · BANCO ══════════════
+   Cassa da bancone: tasti duri, ambra su nero, tutto a portata di
+   pollice, niente decorazione. Sembra un attrezzo, non un'app. */
+.D4 { background: #101112; color: #F6E7C8; }
+.D4 .cap { display: flex; align-items: center; gap: 14px; padding: 18px 22px; background: #17181A; border-bottom: 2px solid #2A2C2F; }
+.D4 .cap h3 { margin: 0; font-family: 'Fredoka', sans-serif; font-size: 20px; font-weight: 600; color: #F6E7C8; }
+.D4 .via { margin-left: auto; width: 52px; height: 52px; border-radius: 8px; background: #2A2C2F; border: none; color: #F6E7C8; font-size: 20px; cursor: pointer; }
+.D4 .barra { display: flex; align-items: baseline; gap: 14px; padding: 14px 22px; background: #0A0B0C; border-bottom: 2px solid #2A2C2F; }
+.D4 .barra .k { font-size: 13px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #7A6E56; }
+.D4 .barra .v { margin-left: auto; font-family: 'Fredoka', sans-serif; font-size: 46px; font-weight: 700; line-height: 1; color: #FFB020; font-variant-numeric: tabular-nums; }
+.D4 .corpo { flex: 1; min-height: 0; display: flex; }
+.D4 .rail { flex: 0 0 140px; display: flex; flex-direction: column; border-right: 2px solid #2A2C2F; }
+.D4 .rail button { flex: 1; border: none; border-bottom: 2px solid #2A2C2F; background: #17181A; color: #B9A87F;
+  font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
+.D4 .rail button.on { background: #FFB020; color: #101112; }
+.D4 .tasti { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; padding: 2px; overflow-y: auto; align-content: start; }
+.D4 .tst { background: #1C1E20; border: none; color: #F6E7C8; font: inherit; cursor: pointer; padding: 14px 8px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 104px; position: relative; }
+.D4 .tst .em { font-size: 24px; }
+.D4 .tst .nm { font-size: 14.5px; font-weight: 700; line-height: 1.15; text-align: center; }
+.D4 .tst .pr { font-family: 'Fredoka', sans-serif; font-size: 14px; color: #8B7F63; }
+.D4 .tst.preso { background: #2E2411; box-shadow: inset 0 0 0 2px #FFB020; }
+.D4 .tst .qt { position: absolute; top: 6px; right: 8px; font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 700; color: #FFB020; }
+.D4 .conto { flex: 0 0 250px; border-left: 2px solid #2A2C2F; display: flex; flex-direction: column; }
+.D4 .conto .righe { flex: 1; overflow-y: auto; padding: 10px 12px; }
+.D4 .cr { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid #24262A; font-size: 14.5px; }
+.D4 .cr .nm { flex: 1; min-width: 0; font-weight: 600; }
+.D4 .cr button { width: 34px; height: 34px; border: none; border-radius: 6px; background: #2A2C2F; color: #F6E7C8; font-size: 17px; cursor: pointer; }
+.D4 .cr .n { font-family: 'Fredoka', sans-serif; font-weight: 700; min-width: 22px; text-align: center; }
+.D4 .cr .pr { font-family: 'Fredoka', sans-serif; font-weight: 700; min-width: 62px; text-align: right; font-variant-numeric: tabular-nums; }
+.D4 .azioni { padding: 10px; display: flex; flex-direction: column; gap: 8px; border-top: 2px solid #2A2C2F; }
+.D4 .bt { border: none; border-radius: 8px; padding: 14px; background: #2A2C2F; color: #F6E7C8; font: inherit;
+  font-size: 16px; font-weight: 700; cursor: pointer; min-height: 56px; }
+.D4 .bt.pieno { background: #FFB020; color: #101112; font-family: 'Fredoka', sans-serif; font-size: 18px; }
+
+.elenco { color: #9A9AB0; font-size: 14.5px; line-height: 1.75; border-radius: 20px; padding: 14px 16px; background: #16161F; border: 1px solid rgba(255,255,255,0.08); }
+.elenco b { color: #FFD166; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Quattro linguaggi visivi, la stessa cassa</h1>
+  <p class="intro">La critica era giusta: le volte scorse ho fatto <b>strutture</b> diverse dentro
+  <b>un solo linguaggio visivo</b>. Fondo scuro, tessere arrotondate, gli stessi due colori — per
+  questo sembravano tutte la stessa cosa.</p>
+  <p class="intro">Qui la struttura è quasi la stessa e cambia tutto il resto: <b>materiale, colore,
+  carattere, forma, respiro</b>. Sono quattro mondi, presi da quattro famiglie di prodotti diversi.
+  In tutte si aggiunge e si toglie, i nomi sono interi, e il pallino in alto misura se ci sta.</p>
+
+  <div class="strada">
+    <header><span class="n">D1</span><h2>Carta — la ricevuta vera</h2></header>
+    <div class="ricetta">
+      <span><i style="background:#EFE7D8"></i>crema #EFE7D8</span>
+      <span><i style="background:#221E17"></i>inchiostro #221E17</span>
+      <span>angoli quasi vivi (4px)</span>
+      <span>righe punteggiate</span>
+      <span>totale 44px</span>
+    </div>
+    <p class="perche">Il pannello <b>è</b> uno scontrino: carta crema, inchiostro scuro, righe di
+    puntini, doppia riga sopra il totale, tasti a pastiglia col bordo. Non assomiglia a nessuna app
+    del tablet, quindi <b>non lo confondi mai con l'elenco dietro</b>, e la parte dei soldi si legge
+    come si legge una ricevuta: sai già dove guardare. È anche l'unico che puoi girare verso il
+    cliente senza che sembri un pannello di controllo.</p>
+    <div class="tablet" data-p="D1"></div>
+  </div>
+
+  <div class="strada">
+    <header><span class="n">D2</span><h2>Notte — un solo accento, numeri enormi</h2></header>
+    <div class="ricetta">
+      <span><i style="background:#08090C"></i>quasi nero</span>
+      <span><i style="background:#D6FF3D"></i>lime, unico accento</span>
+      <span>totale 84px</span>
+      <span>lista, niente griglia</span>
+      <span>tondi da 48px</span>
+    </div>
+    <p class="perche">Meno cose, molto più grandi. Il totale è alto <b>84 pixel</b>: lo leggi in
+    piedi, da lontano, mentre fai altro. Un accento solo — lime acido — usato esclusivamente per
+    ciò che conta: il totale e il tasto che incassa. Niente riquadri, niente ombre: solo righe
+    sottili. È il linguaggio delle app di banca, e per i soldi funziona.</p>
+    <div class="tablet" data-p="D2"></div>
+  </div>
+
+  <div class="strada">
+    <header><span class="n">D3</span><h2>Chiaro — un foglio che galleggia</h2></header>
+    <div class="ricetta">
+      <span><i style="background:#F4F5F9"></i>nebbia #F4F5F9</span>
+      <span><i style="background:#3B8CFF"></i>blu per lo scelto</span>
+      <span>angoli 22–26px</span>
+      <span>ombre morbide</span>
+      <span>respiro doppio</span>
+    </div>
+    <p class="perche">L'app è scura: un pannello <b>chiaro</b> che ci galleggia sopra si stacca da
+    solo, senza bisogno di sfocature o cornici. Angoli larghi, ombre morbide, tanto respiro fra le
+    cose. Lo scelto diventa una tessera azzurra con l'anello: si vede da lontano cosa hai preso.
+    È il linguaggio delle app che si usano tutto il giorno senza stancarsi.</p>
+    <div class="tablet" data-p="D3"></div>
+  </div>
+
+  <div class="strada">
+    <header><span class="n">D4</span><h2>Banco — sembra un attrezzo, non un'app</h2></header>
+    <div class="ricetta">
+      <span><i style="background:#101112"></i>nero macchina</span>
+      <span><i style="background:#FFB020"></i>ambra da display</span>
+      <span>angoli 6–8px</span>
+      <span>tasti attaccati, 2px di fuga</span>
+      <span>tre zone fisse</span>
+    </div>
+    <p class="perche">Nessuna decorazione: tasti duri e attaccati come su una cassa da bancone,
+    ambra su nero come i display dei registratori. Tre zone che non si muovono mai — categorie,
+    tastiera, conto — quindi <b>il dito impara a memoria</b> e dopo due giorni non guardi più.
+    È il più brutto da guardare e probabilmente il più veloce da usare.</p>
+    <div class="tablet" data-p="D4"></div>
+  </div>
+
+  <div class="strada">
+    <header><span class="n">≡</span><h2>Come sceglierlo</h2></header>
+    <div class="elenco">
+      <b>Guardali sul tablet, non sul PC</b>: la differenza vera è quanto stancano dopo mezz'ora.<br>
+      <b>D1 carta</b> se ti piace poterlo girare verso il cliente.<br>
+      <b>D2 notte</b> se la cosa che ti serve di più è leggere il totale da lontano.<br>
+      <b>D3 chiaro</b> se lo usi con la luce del sole addosso.<br>
+      <b>D4 banco</b> se conta solo la velocità e vuoi andare a memoria.<br>
+      Si possono anche incrociare: la struttura di uno col vestito di un altro.
+    </div>
+  </div>
+</div>
+
+<script>
+const eur = c => (c / 100).toFixed(2).replace('.', ',') + ' €';
+const LISTINO = [
+  { id:'acqua', em:'💧', nm:'Acqua', pz:100, cat:'Bevande' },
+  { id:'caffe', em:'☕', nm:'Caffè', pz:120, cat:'Bevande' },
+  { id:'coca', em:'🥤', nm:'Coca Cola', pz:250, cat:'Bevande' },
+  { id:'cocaz', em:'🥤', nm:'Coca Cola Zero', pz:250, cat:'Bevande' },
+  { id:'fanta', em:'🍊', nm:'Fanta', pz:250, cat:'Bevande' },
+  { id:'sprite', em:'🍋', nm:'Sprite', pz:250, cat:'Bevande' },
+  { id:'schw', em:'🥤', nm:'Schweppes', pz:200, cat:'Bevande' },
+  { id:'gazz', em:'🍋', nm:'Gazzosa', pz:200, cat:'Bevande' },
+  { id:'esta', em:'🧃', nm:'Estathè', pz:250, cat:'Bevande' },
+  { id:'bras', em:'🥤', nm:'Brasilena', pz:200, cat:'Bevande' },
+  { id:'pata', em:'🍟', nm:'Patatine', pz:150, cat:'Snack' },
+  { id:'heine', em:'🍺', nm:'Heineken', pz:300, cat:'Birre' },
+  { id:'nastro', em:'🍺', nm:'Nastro Azzurro', pz:300, cat:'Birre' },
+  { id:'ichnu', em:'🍺', nm:'Ichnusa', pz:300, cat:'Birre' },
+  { id:'tenn', em:'🍺', nm:"Tennent's", pz:350, cat:'Birre' },
+  { id:'limon', em:'🍋', nm:'Limoncello', pz:300, cat:'Alcolici' },
+  { id:'amari', em:'🥃', nm:'Amari', pz:300, cat:'Alcolici' },
+  { id:'grappa', em:'🥃', nm:'Grappa', pz:400, cat:'Alcolici' },
+  { id:'spritz', em:'🍹', nm:'Spritz', pz:600, cat:'Alcolici' }
+];
+const CAT = ['Bevande', 'Birre', 'Snack', 'Alcolici'];
+const prod = id => LISTINO.find(p => p.id === id);
+const nuovo = () => ({ bar:{ coca:2, pata:1 }, parco:2800, pagato:0, cat:'Bevande' });
+const tBar = s => Object.keys(s.bar).reduce((a,k) => a + s.bar[k]*prod(k).pz, 0);
+const totale = s => Math.max(0, tBar(s) + s.parco - s.pagato);
+const pezzi = s => Object.keys(s.bar).reduce((a,k) => a + s.bar[k], 0);
+function tocca(s, id, d) { const q = (s.bar[id]||0) + d; if (q > 0) s.bar[id] = q; else delete s.bar[id]; }
+const diCat = s => LISTINO.filter(p => p.cat === s.cat);
+
+/* ---------------- D1 carta ---------------- */
+function dD1(s) {
+  return '<div class="pan D1"><div class="cap"><div><h3>Bar &amp; Conto</h3>' +
+    '<div class="sot">' + pezzi(s) + ' al bar · parco ' + eur(s.parco) + '</div></div>' +
+    '<button class="via">✕</button></div><div class="riga-punti"></div>' +
+    '<div class="corpo"><div class="cat">' + CAT.map(c =>
+      '<button data-cat="' + c + '"' + (s.cat === c ? ' class="on"' : '') + '>' + c + '</button>').join('') + '</div>' +
+    '<div class="griglia">' + diCat(s).map(p => { const n = s.bar[p.id] || 0;
+      return '<div class="tess' + (n ? ' preso' : '') + '"><button class="su" data-add="' + p.id + '">' +
+        '<span class="em">' + p.em + '</span><span class="nm">' + p.nm + '</span>' +
+        '<span class="pr">' + eur(p.pz) + '</span></button>' +
+        '<div class="conta' + (n ? '' : ' spenta') + '"><button data-meno="' + p.id + '">−</button>' +
+        '<span class="n">' + n + '</span><button data-add="' + p.id + '">+</button></div></div>';
+    }).join('') + '</div>' +
+    '<div class="scont">' + Object.keys(s.bar).map(id => { const b = prod(id);
+      return '<div class="sr"><span class="nn">' + b.nm + ' ×' + s.bar[id] + '</span><span class="pt"></span>' +
+        '<span class="im">' + eur(s.bar[id]*b.pz) + '</span></div>'; }).join('') +
+      '<div class="sr"><span class="nn">Parco</span><span class="pt"></span><span class="im">' + eur(s.parco) + '</span></div>' +
+    '</div></div>' +
+    '<div class="fondo"><div><span class="k">da incassare</span><span class="v">' + eur(totale(s)) + '</span></div>' +
+      '<div class="tasti"><button class="bt" data-resto>🧮 Resto</button>' +
+      '<button class="bt pieno" data-p>Incassa</button></div></div></div>';
+}
+/* ---------------- D2 notte ---------------- */
+function dD2(s) {
+  return '<div class="pan D2"><div class="cap"><h3>Bar &amp; Conto</h3><button class="via">✕</button></div>' +
+    '<div class="totone"><div class="k">da incassare</div><div class="v">' + eur(totale(s)) + '</div></div>' +
+    '<div class="corpo"><div class="cat">' + CAT.map(c =>
+      '<button data-cat="' + c + '"' + (s.cat === c ? ' class="on"' : '') + '>' + c + '</button>').join('') + '</div>' +
+    '<div class="lista">' + diCat(s).map(p => { const n = s.bar[p.id] || 0;
+      return '<div class="lr"><span class="nm">' + p.nm + '<small>' + eur(p.pz) +
+        (n ? ' · ' + n + ' → ' + eur(n*p.pz) : '') + '</small></span>' +
+        '<span class="q"><button data-meno="' + p.id + '"' + (n ? '' : ' disabled') + '>−</button>' +
+        '<span class="n">' + n + '</span><button class="piu" data-add="' + p.id + '">+</button></span></div>';
+    }).join('') + '</div></div>' +
+    '<div class="fondo"><button class="bt" data-resto>Resto</button>' +
+      '<button class="bt acido" data-p>Incassa ' + eur(totale(s)) + '</button></div></div>';
+}
+/* ---------------- D3 chiaro ---------------- */
+function dD3(s) {
+  return '<div class="pan D3"><div class="cap"><h3>Bar &amp; Conto</h3><button class="via">✕</button></div>' +
+    '<div class="corpo"><div class="cat">' + CAT.map(c =>
+      '<button data-cat="' + c + '"' + (s.cat === c ? ' class="on"' : '') + '>' + c + '</button>').join('') + '</div>' +
+    '<div class="griglia">' + diCat(s).map(p => { const n = s.bar[p.id] || 0;
+      return '<div class="tess' + (n ? ' preso' : '') + '"><button class="su" data-add="' + p.id + '">' +
+        '<span class="em">' + p.em + '</span><span class="nm">' + p.nm + '</span>' +
+        '<span class="pr">' + eur(p.pz) + '</span></button>' +
+        '<div class="conta' + (n ? '' : ' spenta') + '"><button data-meno="' + p.id + '">−</button>' +
+        '<span class="n">' + n + '</span><button data-add="' + p.id + '">+</button></div></div>';
+    }).join('') + '</div>' +
+    '<div class="conto-mini"><span class="chip">🎟️ Parco <b>' + eur(s.parco) + '</b></span>' +
+      '<span class="chip">🥤 Bar <b>' + eur(tBar(s)) + '</b></span>' +
+      (pezzi(s) ? '<span class="chip">' + pezzi(s) + ' consumazioni</span>' : '') + '</div>' +
+    '</div>' +
+    '<div class="fondo"><div><span class="k">da incassare</span><span class="v">' + eur(totale(s)) + '</span></div>' +
+      '<div class="tasti"><button class="bt" data-resto>🧮 Resto</button>' +
+      '<button class="bt pieno" data-p>Incassa</button></div></div></div>';
+}
+/* ---------------- D4 banco ---------------- */
+function dD4(s) {
+  return '<div class="pan D4"><div class="cap"><h3>BAR &amp; CONTO</h3><button class="via">✕</button></div>' +
+    '<div class="barra"><span class="k">da incassare</span><span class="v">' + eur(totale(s)) + '</span></div>' +
+    '<div class="corpo">' +
+      '<div class="rail">' + CAT.map(c => '<button data-cat="' + c + '"' + (s.cat === c ? ' class="on"' : '') + '>' + c + '</button>').join('') + '</div>' +
+      '<div class="tasti">' + diCat(s).map(p => { const n = s.bar[p.id] || 0;
+        return '<button class="tst' + (n ? ' preso' : '') + '" data-add="' + p.id + '">' +
+          (n ? '<span class="qt">' + n + '</span>' : '') +
+          '<span class="em">' + p.em + '</span><span class="nm">' + p.nm + '</span>' +
+          '<span class="pr">' + eur(p.pz) + '</span></button>'; }).join('') + '</div>' +
+      '<div class="conto"><div class="righe">' +
+        '<div class="cr"><span class="nm">🎟️ Parco</span><span class="pr">' + eur(s.parco) + '</span></div>' +
+        Object.keys(s.bar).map(id => { const b = prod(id);
+          return '<div class="cr"><span class="nm">' + b.nm + '</span>' +
+            '<button data-meno="' + id + '">−</button><span class="n">' + s.bar[id] + '</span>' +
+            '<button data-add="' + id + '">+</button><span class="pr">' + eur(s.bar[id]*b.pz) + '</span></div>'; }).join('') +
+      '</div><div class="azioni"><button class="bt" data-resto>🧮 Resto</button>' +
+        '<button class="bt pieno" data-p>Incassa ' + eur(totale(s)) + '</button></div></div>' +
+    '</div></div>';
+}
+
+const VISTE = { D1: dD1, D2: dD2, D3: dD3, D4: dD4 };
+document.querySelectorAll('.tablet').forEach(tab => {
+  const p = tab.dataset.p, s = nuovo();
+  tab.innerHTML = '<div class="dentro"></div><span class="misura"></span>';
+  const box = tab.querySelector('.dentro'), badge = tab.querySelector('.misura');
+  function disegna() {
+    box.innerHTML = VISTE[p](s);
+    box.querySelectorAll('[data-add]').forEach(b => b.onclick = () => { tocca(s, b.dataset.add, 1); disegna(); });
+    box.querySelectorAll('[data-meno]').forEach(b => b.onclick = () => { tocca(s, b.dataset.meno, -1); disegna(); });
+    box.querySelectorAll('[data-cat]').forEach(b => b.onclick = () => { s.cat = b.dataset.cat; disegna(); });
+    const pg = box.querySelector('[data-p]'); if (pg) pg.onclick = () => { s.pagato = tBar(s) + s.parco; disegna(); };
+    misura();
+  }
+  function misura() {
+    const pan = box.querySelector('.pan');
+    let strisce = 0;
+    box.querySelectorAll('*').forEach(e => { if (e.scrollHeight - e.clientHeight > 2 && e.clientHeight > 60) strisce++; });
+    const fuori = pan ? pan.scrollHeight - pan.clientHeight : 0;
+    badge.textContent = fuori > 2 ? ('sborda ' + fuori + 'px')
+      : (strisce ? strisce + (strisce === 1 ? ' fascia scorre' : ' fasce scorrono') : 'ci sta tutto');
+    badge.style.color = fuori > 2 ? '#FF9AA2' : '#7FE8C1';
+  }
+  disegna();
+});
+</script>
+</body>
+</html>
