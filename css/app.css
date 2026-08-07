@@ -2370,18 +2370,6 @@ main {
 .ed-col.on { border-color: #fff; transform: scale(1.08); }
 .ed-k { font-size: 12px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: rgba(255,255,255,0.62); margin-bottom: 7px; }
 
-/* ---------- tinte leggibili (interruttore in Impostazioni) ----------
-   Stesse tinte, scurite quel tanto che basta perche' il bianco regga
-   >=4,6 anche sul capo piu' chiaro della sfumatura. */
-#app.tinte-leggibili {
-  --blk-blu:    linear-gradient(150deg, #2261B6 0%, #17498D 100%);
-  --blk-viola:  linear-gradient(150deg, #664BC5 0%, #4C3499 100%);
-  --blk-ambra:  linear-gradient(150deg, #825819 0%, #64420F 100%);
-  --blk-verde:  linear-gradient(150deg, #156F53 0%, #0E5640 100%);
-  --blk-rosso:  linear-gradient(150deg, #A64343 0%, #832E2E 100%);
-  --blk-ciano:  linear-gradient(150deg, #1F6978 0%, #14515D 100%);
-}
-
 /* ---------- gli ultimi scarti da E2, trovati leggendo il codice ----------
    Erano quattro veli scuri uno sull'altro (0,26 + 0,22 + 0,16 + 0,30):
    il pannello finiva quasi nero invece che viola. Nel modello i livelli
@@ -2711,10 +2699,12 @@ main.bc-attivo { padding-bottom: 0; }
 @keyframes bcVelo  { from { opacity: 0 } to { opacity: 1 } }
 @keyframes bcFoglio{ from { transform: translateY(26px); opacity: .4 } to { transform: none; opacity: 1 } }
 
-/* la griglia entra quando cambi categoria */
-.bc-griglia { animation: bcEntra .2s ease both; }
-/* le fasce dei tasti spuntano quando la voce entra sul conto */
-.bc-card.tocca .bc-zone { animation: bcSu .18s ease both; }
+/* la griglia entra SOLO quando cambi categoria: prima si rianimava a
+   ogni tocco e sembrava che la schermata si ricaricasse */
+.bc-griglia.entra { animation: bcEntra .2s ease both; }
+/* le fasce dei tasti scivolano su solo quando NASCONO: rifarlo a ogni
+   piu' e meno faceva sembrare che i tasti si spostassero da soli */
+.bc-card.nato .bc-zone { animation: bcSu .18s ease both; }
 /* la pasticca e il numero fantasma fanno un saltino: solo sulla card
    che hai appena toccato */
 .bc-card.tocca .bc-chip, .bc-card.tocca .bc-fant { animation: bcPop .26s ease; }

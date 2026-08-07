@@ -2046,7 +2046,7 @@ function entryCard(entry) {
    fasce di tempo, cosi' da qui parte anche un ingresso vero.
    ============================================================ */
 const cassa = { bar: [], children: 0, crazy: 0, minutes: 0, pagate: {}, cat: null,
-                tocco: null, chiedeSvuota: false };
+                tocco: null, nato: null, chiedeSvuota: false };
 
 /* ---------- quanto costa una voce, adesso ---------- */
 const bcMinuti = () => cassa.minutes || settings.defaultMinutes || 60;
@@ -2138,9 +2138,12 @@ function bcCard(v) {
   const q = bcQ(v.id), pg = bcPag(v.id);
   const saldata = q > 0 && pg >= q;
   return '<div class="bc-card' + (saldata ? ' saldata' : (q ? ' presa' : '')) +
-    /* solo la card appena toccata fa il saltino: se no ballerebbero
-       tutte insieme a ogni ridisegno */
-    (cassa.tocco === v.id ? ' tocca' : '') + '">' +
+    /* la pasticca fa un saltino solo sulla card toccata; le fasce dei
+       tasti scivolano su solo quando NASCONO, non a ogni tocco -- se no
+       i tasti sembrano spostarsi a caso sotto il dito */
+    (cassa.tocco === v.id ? ' tocca' : '') +
+    (cassa.nato === v.id ? ' nato' : '') +
+    '" data-id="' + v.id + '">' +
     '<button class="bc-su" data-add="' + v.id + '">' +
       (q > 0 ? '<span class="bc-fant">' + q + '</span>' : '') +
       iconaBar(v.name, v.em) +
@@ -2255,16 +2258,38 @@ function buildCassaView() {
   const cats = bcCategorie();
   if (!cassa.cat || cats.indexOf(cassa.cat) < 0) cassa.cat = cats.indexOf('Bevande') >= 0 ? 'Bevande' : cats[0];
 
-  const dis = () => {
+  /* Rifare TUTTA la schermata a ogni tocco faceva lampeggiare mezza
+     pagina: distraeva, e per un istante i tasti sembravano spostarsi.
+     Adesso il disegno intero si fa solo quando cambia davvero la
+     schermata (categoria, tempo, svuota); per un piu' o un meno si
+     rifanno solo la card toccata e il blocco del conto. */
+  const dis = (opz) => {
     root.innerHTML =
       '<div class="bc-cat">' + cats.map(c =>
         '<button data-cat="' + esc(c) + '"' + (cassa.cat === c ? ' class="on"' : '') + '>' + esc(c) + '</button>').join('') + '</div>' +
       (cassa.cat === 'Parco' ? bcTempoBlocco() : '') +
-      '<div class="bc-griglia">' + bcVociDi(cassa.cat).map(bcCard).join('') + '</div>' +
+      '<div class="bc-griglia' + (opz && opz.entra ? ' entra' : '') + '">' +
+        bcVociDi(cassa.cat).map(bcCard).join('') + '</div>' +
       bcFondo();
-    /* il segno del tocco vale per UN disegno solo: se restasse, la card
-       rifarebbe il saltino a ogni ridisegno successivo */
-    cassa.tocco = null;
+    cassa.tocco = null; cassa.nato = null;
+  };
+  const disFondo = () => {
+    const vecchio = root.querySelector('.bc-fondo');
+    if (!vecchio) { dis(); return; }
+    const t = el('div');
+    t.innerHTML = bcFondo();
+    vecchio.replaceWith(t.firstElementChild);
+  };
+  const disVoce = (id) => {
+    const vecchia = root.querySelector('.bc-card[data-id="' + id + '"]');
+    if (!vecchia) { dis(); return; }
+    const t = el('div');
+    t.innerHTML = bcCard(bcVoce(id));
+    vecchia.replaceWith(t.firstElementChild);
+    /* il prezzo dei bambini dipende dal tempo, quindi quando cambia il
+       tempo si rifanno tutte e due le card del Parco */
+    disFondo();
+    cassa.tocco = null; cassa.nato = null;
   };
 
   const registra = (preso) => {
@@ -2300,11 +2325,15 @@ function buildCassaView() {
     /* chi è stato toccato: serve alle animazioni, per far muovere solo
        quella card e non tutte a ogni ridisegno */
     cassa.tocco = d.add || d.meno || d.ppiu || d.pmeno || null;
-    if (d.cat !== undefined)  { cassa.cat = d.cat; dis(); return; }
-    if (d.add !== undefined)  { bcSetQ(d.add, bcQ(d.add) + 1); dis(); return; }
-    if (d.meno !== undefined) { bcSetQ(d.meno, bcQ(d.meno) - 1); dis(); return; }
-    if (d.ppiu !== undefined) { cassa.pagate[d.ppiu] = Math.min(bcQ(d.ppiu), bcPag(d.ppiu) + 1); dis(); return; }
-    if (d.pmeno !== undefined){ cassa.pagate[d.pmeno] = Math.max(0, bcPag(d.pmeno) - 1); dis(); return; }
+    if (d.cat !== undefined)  { cassa.cat = d.cat; dis({ entra: true }); return; }
+    if (d.add !== undefined)  {
+      /* se prima non c'era, le sue fasce dei tasti NASCONO adesso */
+      if (bcQ(d.add) === 0) cassa.nato = d.add;
+      bcSetQ(d.add, bcQ(d.add) + 1); disVoce(d.add); return;
+    }
+    if (d.meno !== undefined) { bcSetQ(d.meno, bcQ(d.meno) - 1); disVoce(d.meno); return; }
+    if (d.ppiu !== undefined) { cassa.pagate[d.ppiu] = Math.min(bcQ(d.ppiu), bcPag(d.ppiu) + 1); disVoce(d.ppiu); return; }
+    if (d.pmeno !== undefined){ cassa.pagate[d.pmeno] = Math.max(0, bcPag(d.pmeno) - 1); disVoce(d.pmeno); return; }
     if (d.sez !== undefined)  { bcSegna(d.sez, true); dis(); return; }
     if (d.desez !== undefined){ bcSegna(d.desez, false); dis(); return; }
     if (d.min !== undefined)  {
@@ -2949,10 +2978,6 @@ function buildSettingsView() {
         <span class="sw-txt"><b>Schermo intero</b><span>Toglie la barra di sistema del tablet, che copriva la parte bassa dell'app. Se l'app &egrave; installata, il tutto schermo parte al primo tocco.</span></span>
         <span class="switch"></span>
       </button>
-      <button class="switch-row" id="setTinte" role="switch" style="margin-top:10px;">
-        <span class="sw-txt"><b>Tinte più leggibili</b><span>Gli stessi colori, un po' più scuri. Le scritte piccole passano da 2,6 a 6 di contrasto: al sole si legge molto meglio. Spento = tinte accese come nel disegno.</span></span>
-        <span class="switch"></span>
-      </button>
       </div>
     </div>
 
@@ -3072,20 +3097,6 @@ function buildSettingsView() {
     settings.schermoIntero = !settings.schermoIntero;
     schermoIntero(settings.schermoIntero);
     paintPieno();
-    saveSettings();
-  };
-
-  const tn = $('#setTinte');
-  const paintTinte = () => {
-    const on = settings.tinteLeggibili === true;
-    $('.switch', tn).classList.toggle('on', on);
-    tn.setAttribute('aria-checked', on ? 'true' : 'false');
-  };
-  paintTinte();
-  tn.onclick = () => {
-    settings.tinteLeggibili = settings.tinteLeggibili !== true;
-    applyTheme();
-    paintTinte();
     saveSettings();
   };
 
@@ -3366,7 +3377,6 @@ function aggiornaListinoFinto() {
 function applyTheme() {
   document.documentElement.dataset.theme = 'dark';   // tema unico: il chiaro non serviva
   // tinte: quelle del modello (di serie) o quelle misurate
-  document.getElementById('app').classList.toggle('tinte-leggibili', settings.tinteLeggibili === true);
   /* L'app decide da se' se animare: il risparmio animazioni del sistema
      spegneva tutto e non si capiva piu' dove finivano le schede. */
   document.documentElement.classList.toggle('anima', settings.animazioni !== false);
