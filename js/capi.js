@@ -226,46 +226,68 @@
      nessuno guarda che modello di cappello sia, guarda che ce l'ha e
      di che colore. Quindi una forma sola per tipo, e il colore che
      cambia. */
+  /* Gli accessori hanno la stessa struttura dei capi -- una SAGOMA per
+     il taglio da adesivo e i SEGNI sopra -- cosi' prendono lo stesso
+     bordo bianco spesso e la fila sembra una famiglia sola. */
   const ACCESSORI = {
-    /* CAPELLI: una testa vista di fronte con la capigliatura sopra.
-       Prima era un ciuffo che galleggiava nel vuoto e non si capiva
-       di che cosa fosse l'icona. */
-    capelli: (c) => `<circle cx="24" cy="27" r="11" fill="#E8B98A" stroke="rgba(0,0,0,.5)" stroke-width="1.1"/>
-      <path d="M12 27 Q11 10 24 10 Q37 10 36 27 Q33 17 24 17 Q15 17 12 27 Z" fill="${c}" stroke="rgba(0,0,0,.5)" stroke-width="1.1" stroke-linejoin="round"/>
-      <path d="M12.5 24 Q9 31 11.5 39" fill="none" stroke="${c}" stroke-width="5" stroke-linecap="round"/>
-      <path d="M35.5 24 Q39 31 36.5 39" fill="none" stroke="${c}" stroke-width="5" stroke-linecap="round"/>
-      <circle cx="20" cy="28" r="1.3" fill="#2A2A38"/><circle cx="28" cy="28" r="1.3" fill="#2A2A38"/>
-      <path d="M21 33 Q24 35 27 33" fill="none" stroke="#2A2A38" stroke-width="1.2" stroke-linecap="round"/>`,
+    /* CAPELLI: una testa con la capigliatura SOPRA. La faccia resta
+       bene in vista: se il colore coprisse tutta la testa, l'icona
+       direbbe "faccia verde" invece di "capelli verdi". */
+    capelli: (c) => ({
+      sagoma: 'M11 26 Q10 8 24 8 Q38 8 37 26 Q37 30 35 32 Q36 22 24 22 Q12 22 13 32 Q11 30 11 26 Z',
+      sotto: `<circle cx="24" cy="28" r="12" fill="#EFC9A2" stroke="rgba(18,18,26,.9)" stroke-width="2.4"/>`,
+      segni: `<path d="M11.5 24 Q8 32 10.5 41" fill="none" stroke="${c}" stroke-width="5.5" stroke-linecap="round"/>
+              <path d="M36.5 24 Q40 32 37.5 41" fill="none" stroke="${c}" stroke-width="5.5" stroke-linecap="round"/>
+              <circle cx="19.5" cy="29" r="1.5" fill="#2A2A38"/><circle cx="28.5" cy="29" r="1.5" fill="#2A2A38"/>
+              <path d="M20.5 34 Q24 36.5 27.5 34" fill="none" stroke="#2A2A38" stroke-width="1.4" stroke-linecap="round"/>
+              <path d="M15 15 Q24 11 33 15" fill="none" stroke="${sc(c, 34)}" stroke-width="1.6" opacity=".85"/>`
+    }),
 
-    /* CAPPELLO: un berretto con la VISIERA, visto di tre quarti.
-       La cupola tonda da sola sembrava una ciotola. */
-    cappello: (c) => `<path d="M12 28 Q12 12 24 12 Q36 12 36 28 Q24 32 12 28 Z" fill="${c}" stroke="rgba(0,0,0,.5)" stroke-width="1.1" stroke-linejoin="round"/>
-      <path d="M35 25 Q44 26 44 31 Q44 33 41 33 L34 30 Z" fill="${sc(c, -26)}" stroke="rgba(0,0,0,.5)" stroke-width="1.1" stroke-linejoin="round"/>
-      <path d="M12 27.5 Q24 31 36 27.5" fill="none" stroke="${sc(c, -40)}" stroke-width="2.4"/>
-      <path d="M24 12 L24 29" stroke="${sc(c, -30)}" stroke-width="1" opacity=".7"/>
-      <circle cx="24" cy="12.6" r="1.6" fill="${sc(c, 40)}"/>`,
+    /* CAPPELLO: berretto con una VISIERA bella larga -- e' la visiera
+       che lo distingue da un cappuccio o da una cuffia, quindi deve
+       sporgere per un terzo buono della cupola */
+    cappello: (c) => ({
+      sagoma: 'M10 32 Q10 9 24 9 Q38 9 38 25 Q48 26 48 31 Q48 35 43 35 L37 32.5 L10 32.5 Q9 32.5 9 31.5 Z',
+      segni: `<path d="M37 25.5 Q47 26.5 47 31 Q47 34 43 34 L36.6 31.6 Z" fill="${sc(c, -30)}" stroke="rgba(18,18,26,.85)" stroke-width="1.8" stroke-linejoin="round"/>
+              <path d="M10 29.4 L37 29.4" stroke="${sc(c, -44)}" stroke-width="4"/>
+              <path d="M24 9.4 L24 27" stroke="${sc(c, -30)}" stroke-width="1.2" opacity=".7"/>
+              <circle cx="24" cy="10.4" r="1.9" fill="${sc(c, 44)}"/>`
+    }),
 
-    /* SCARPE: UNA scarpa di profilo, grande. Due scarpette piccole
-       affiancate a 40px diventavano due macchie. */
-    scarpe: (c) => `<path d="M7 34 L7 22 Q13 20.5 17 24 L26 31 Q33 33 38 33.5 Q42 34 42 37 L42 39 Q42 40.5 40 40.5 L9 40.5 Q7 40.5 7 38.5 Z" fill="${c}" stroke="rgba(0,0,0,.5)" stroke-width="1.1" stroke-linejoin="round"/>
-      <path d="M7 37 L42 37" stroke="${sc(c, -46)}" stroke-width="3.4"/>
-      <path d="M10 24.5 L16 27.5 M11 28 L18 31" stroke="${sc(c, 46)}" stroke-width="1.5" stroke-linecap="round"/>
-      <path d="M26 31 Q30 28 33 30" fill="none" stroke="${sc(c, -30)}" stroke-width="1.2"/>`,
+    /* SCARPE: una scarpa di profilo, grande */
+    scarpe: (c) => ({
+      sagoma: 'M6 34 L6 21 Q13 19 17.5 23 L26.5 30.5 Q33.5 32.5 38.5 33 Q43 33.5 43 37 L43 39.5 Q43 41.5 40.5 41.5 L8.5 41.5 Q6 41.5 6 39 Z',
+      segni: `<path d="M6 37.4 L43 37.4" stroke="${sc(c, -48)}" stroke-width="4"/>
+              <path d="M9.6 23.5 L16 27 M10.6 27.5 L18.4 31.4" stroke="${sc(c, 48)}" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M26.5 30.5 Q31 27 34.5 29.4" fill="none" stroke="${sc(c, -32)}" stroke-width="1.5"/>`
+    }),
 
-    /* ZAINO: spallacci, tasca e cinghia. Prima era una scatola. */
-    zaino: (c) => `<path d="M17 12 Q17 7 24 7 Q31 7 31 12" fill="none" stroke="${sc(c, -34)}" stroke-width="2.6"/>
-      <path d="M12 16 Q12 11 18 11 L30 11 Q36 11 36 16 L36 37 Q36 41 32 41 L16 41 Q12 41 12 37 Z" fill="${c}" stroke="rgba(0,0,0,.5)" stroke-width="1.1" stroke-linejoin="round"/>
-      <path d="M12 21 Q24 25 36 21" fill="none" stroke="${sc(c, -40)}" stroke-width="2"/>
-      <path d="M18 27 L30 27 Q31 27 31 28 L31 35 Q31 36 30 36 L18 36 Q17 36 17 35 L17 28 Q17 27 18 27 Z" fill="${sc(c, -20)}" stroke="${sc(c, -42)}" stroke-width="1"/>
-      <rect x="22" y="24.5" width="4" height="4" rx="1" fill="${sc(c, 44)}"/>`
+    /* ZAINO: spallacci, tasca e cinghia */
+    zaino: (c) => ({
+      sagoma: 'M11 17 Q11 11 18 11 L30 11 Q37 11 37 17 L37 37 Q37 42 32 42 L16 42 Q11 42 11 37 Z',
+      sotto: `<path d="M17 12 Q17 5 24 5 Q31 5 31 12" fill="none" stroke="rgba(255,255,255,.94)" stroke-width="7" stroke-linecap="round"/>
+              <path d="M17 12 Q17 5 24 5 Q31 5 31 12" fill="none" stroke="${sc(c, -36)}" stroke-width="3.4" stroke-linecap="round"/>`,
+      segni: `<path d="M11 22 Q24 26.5 37 22" fill="none" stroke="${sc(c, -42)}" stroke-width="2.4"/>
+              <path d="M17.5 28 L30.5 28 Q31.5 28 31.5 29 L31.5 36 Q31.5 37 30.5 37 L17.5 37 Q16.5 37 16.5 36 L16.5 29 Q16.5 28 17.5 28 Z" fill="${sc(c, -20)}" stroke="${sc(c, -46)}" stroke-width="1.6"/>
+              <rect x="21.5" y="24.5" width="5" height="4.5" rx="1.4" fill="${sc(c, 46)}"/>`
+    })
   };
 
   function accessorio(chiave, colore, misura) {
     const fn = ACCESSORI[chiave];
     if (!fn) return '';
     const m = misura || 44;
-    return `<svg viewBox="0 0 48 48" width="${m}" height="${m}" aria-hidden="true">` +
-      fn(colore || '#9AA5B4') + '</svg>';
+    const c = colore || '#9AA5B4';
+    const d = fn(c);
+    /* stesso taglio da adesivo dei capi: bordo bianco spesso, contorno
+       scuro, poi il colore. La fila deve sembrare una sola famiglia di
+       icone, non due. */
+    return `<svg viewBox="-3 -3 54 54" width="${m}" height="${m}" aria-hidden="true">` +
+      (d.sotto || '') +
+      `<path d="${d.sagoma}" fill="none" stroke="rgba(255,255,255,.94)" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>` +
+      `<path d="${d.sagoma}" fill="none" stroke="rgba(18,18,26,.9)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>` +
+      `<path d="${d.sagoma}" fill="${c}"/>` +
+      d.segni + '</svg>';
   }
 
   /* Disegna un capo col suo colore e la sua fantasia. */
@@ -277,15 +299,22 @@
     const t = (global.AV && AV.tessuto) ? AV.tessuto(c, fantasia, id) : { fill: c, def: '' };
     const d = fn(c);
     const m = misura || 48;
-    /* IL CONTORNO E' DOPPIO, e non e' un vezzo: un capo nero sul
-       pannello scuro spariva, e un capo bianco spariva sul tasto
-       bianco della selezione. Fuori un alone scuro, dentro un filo
-       chiaro: uno dei due si stacca sempre, qualunque sia il fondo e
-       qualunque sia il colore del capo. */
-    return `<svg viewBox="0 0 48 48" width="${m}" height="${m}" aria-hidden="true">` +
+    /* CONTORNO DA STICKER: il capo e' ritagliato come un adesivo.
+       Tre passate sulla stessa sagoma —
+         1. un bordo bianco spesso, che e' il taglio dell'adesivo;
+         2. un contorno scuro netto, che disegna la forma;
+         3. la stoffa.
+       Un filo sottile non bastava: un capo nero spariva sul pannello
+       scuro e uno bianco spariva sul tasto bianco della selezione. Con
+       il bordo spesso la sagoma si stacca sempre, e da lontano si
+       riconosce la forma prima ancora del colore.
+       Il viewBox e' allargato di tre pixel per lato, se no il bordo
+       grosso verrebbe tagliato ai margini. */
+    return `<svg viewBox="-3 -3 54 54" width="${m}" height="${m}" aria-hidden="true">` +
       (t.def ? `<defs>${t.def}</defs>` : '') +
-      `<path d="${d.sagoma}" fill="none" stroke="rgba(0,0,0,.55)" stroke-width="3.2" stroke-linejoin="round"/>` +
-      `<path d="${d.sagoma}" fill="${t.fill}" stroke="rgba(255,255,255,.5)" stroke-width="1.1" stroke-linejoin="round"/>` +
+      `<path d="${d.sagoma}" fill="none" stroke="rgba(255,255,255,.94)" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>` +
+      `<path d="${d.sagoma}" fill="none" stroke="rgba(18,18,26,.9)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>` +
+      `<path d="${d.sagoma}" fill="${t.fill}"/>` +
       (d.ombra ? `<path d="${d.ombra}" fill="rgba(0,0,0,.14)"/>` : '') +
       d.segni + '</svg>';
   }
