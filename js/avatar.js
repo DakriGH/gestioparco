@@ -16,19 +16,26 @@
 
   /* ---------- palette ---------- */
   // n = nome accordato: [maschile sing, femminile sing, maschile plur, femminile plur]
+  /* Quindici tinte IN ORDINE DI COLORE -- caldi, freddi, poi i neutri --
+     piu' la ruota, che nel pannello e' il sedicesimo posto. L'ordine
+     conta: al banco si cerca "il verde" scorrendo con l'occhio, e una
+     fila mescolata costringe a leggerle tutte. */
   const COLORS = [
     { c: '#E23D4B', n: ['rosso', 'rossa', 'rossi', 'rosse'] },
     { c: '#F97316', n: ['arancione', 'arancione', 'arancioni', 'arancioni'] },
     { c: '#FBBF24', n: ['giallo', 'gialla', 'gialli', 'gialle'] },
     { c: '#22C55E', n: ['verde', 'verde', 'verdi', 'verdi'] },
+    { c: '#4F6B3A', n: ['verde militare', 'verde militare', 'verdi militare', 'verdi militare'] },
     { c: '#0EA5E9', n: ['azzurro', 'azzurra', 'azzurri', 'azzurre'] },
+    { c: '#3B5C88', n: ['jeans', 'jeans', 'jeans', 'jeans'] },
     { c: '#2547C4', n: ['blu', 'blu', 'blu', 'blu'] },
     { c: '#8B5CF6', n: ['viola', 'viola', 'viola', 'viola'] },
     { c: '#EC4899', n: ['rosa', 'rosa', 'rosa', 'rosa'] },
+    { c: '#E3D2B4', n: ['beige', 'beige', 'beige', 'beige'] },
     { c: '#7C4A2D', n: ['marrone', 'marrone', 'marroni', 'marroni'] },
-    { c: '#1F2430', n: ['nero', 'nera', 'neri', 'nere'] },
     { c: '#F4F6F8', n: ['bianco', 'bianca', 'bianchi', 'bianche'] },
-    { c: '#9AA5B4', n: ['grigio', 'grigia', 'grigi', 'grigie'] }
+    { c: '#9AA5B4', n: ['grigio', 'grigia', 'grigi', 'grigie'] },
+    { c: '#1F2430', n: ['nero', 'nera', 'neri', 'nere'] }
   ];
 
   /* TRE colori, non otto. Al banco una persona si guarda per due
@@ -46,21 +53,20 @@
 
   const SKINS = ['#FFE0C0', '#F6CFA8', '#E8B98A', '#D19A68', '#B67A4C', '#8F5A33', '#6B4226', '#4A2C18'];
 
+  /* Dieci fantasie, quelle che si distinguono a due metri. Erano
+     quattordici e le quattro tolte -- oblique, zigzag, animalier,
+     stelle -- a colpo d'occhio si confondevano con righe e pois. */
   const PATTERNS = [
-    { key: 'solid', n: 'Tinta unita', suf: '' },
+    { key: 'solid', n: 'Nessuna', suf: '' },
     { key: 'stripes-h', n: 'Righe', suf: ' a righe' },
-    { key: 'stripes-v', n: 'Righe vert.', suf: ' a righe' },
-    { key: 'diag', n: 'Oblique', suf: ' a righe oblique' },
+    { key: 'stripes-v', n: 'Vert.', suf: ' a righe verticali' },
     { key: 'dots', n: 'Pois', suf: ' a pois' },
     { key: 'plaid', n: 'Quadretti', suf: ' a quadretti' },
     { key: 'scacchi', n: 'Scacchi', suf: ' a scacchi' },
     { key: 'fiori', n: 'Fiori', suf: ' a fiori' },
     { key: 'cuori', n: 'Cuori', suf: ' a cuori' },
-    { key: 'zigzag', n: 'Zigzag', suf: ' a zigzag' },
-    { key: 'animalier', n: 'Animalier', suf: ' animalier' },
     { key: 'camo', n: 'Mimetico', suf: ' mimetic' },
-    { key: 'stars', n: 'Stelle', suf: ' a stelle' },
-    { key: 'logo', n: 'Stampa', suf: ' con stampa' }
+    { key: 'logo', n: 'Scritta', suf: ' con una scritta' }
   ];
 
   /* ---------- cataloghi capi ----------
@@ -106,7 +112,11 @@
     { key: 'felpa', label: 'Felpa', em: '🧥', g: 1, noun: 'Felpa' },
     { key: 'giacca', label: 'Giacca', em: '🧳', g: 1, noun: 'Giacca' },
     { key: 'gilet', label: 'Gilet', em: '🦺', g: 0, noun: 'Gilet' },
-    { key: 'vestito', label: 'Vestito', em: '👗', g: 0, noun: 'Vestito', full: true }
+    { key: 'maglione', label: 'Maglione', em: '🧶', g: 0, noun: 'Maglione' },
+    { key: 'giubbotto', label: 'Giubbotto', em: '🧥', g: 0, noun: 'Giubbotto' },
+    { key: 'vestito', label: 'Vestito', em: '👗', g: 0, noun: 'Vestito' },
+    /* l'unico che copre le gambe fino ai piedi: sotto non ci va niente */
+    { key: 'vestitolungo', label: 'Vestito lungo', em: '👚', g: 0, noun: 'Vestito lungo', full: true }
   ];
 
   const PANTS = [
@@ -114,7 +124,9 @@
     { key: 'pantaloncini', label: 'Corti', em: '🩳', g: 2, noun: 'Pantaloncini' },
     { key: 'jeans', label: 'Jeans', em: '👖', g: 2, noun: 'Jeans' },
     { key: 'jeanscorti', label: 'Jeans corti', em: '🩳', g: 2, noun: 'Jeans corti' },
+    { key: 'leggings', label: 'Leggings', em: '👟', g: 2, noun: 'Leggings' },
     { key: 'gonna', label: 'Gonna', em: '👗', g: 1, noun: 'Gonna' },
+    { key: 'gonnalunga', label: 'Gonna lunga', em: '👗', g: 1, noun: 'Gonna lunga' },
     { key: 'tuta', label: 'Tuta', em: '🧥', g: 2, noun: 'Pantaloni della tuta' }
   ];
 
@@ -392,7 +404,11 @@
     } else if (pattern === 'stars') {
       size = 14; s = `<rect width="14" height="14" fill="${color}"/><path d="M7 2.4 L8.3 5.8 L11.9 5.8 L9 8 L10.1 11.5 L7 9.3 L3.9 11.5 L5 8 L2.1 5.8 L5.7 5.8 Z" fill="${color2}"/>`;
     } else if (pattern === 'logo') {
-      size = 20; s = `<rect width="20" height="20" fill="${color}"/><circle cx="10" cy="10" r="4.4" fill="none" stroke="${color2}" stroke-width="2"/>`;
+      /* una SCRITTA, non un cerchio: sulla maglietta di solito c'e' scritto
+         qualcosa, e da lontano si legge come due righe di testo */
+      size = 24; s = `<rect width="24" height="24" fill="${color}"/>` +
+        `<rect x="3.5" y="8" width="17" height="2.8" rx="1.4" fill="${color2}"/>` +
+        `<rect x="6.5" y="13.5" width="11" height="2.4" rx="1.2" fill="${color2}"/>`;
     } else if (pattern === 'diag') {
       size = 10; s = `<rect width="10" height="10" fill="${color}"/><path d="M-3 3 L3 -3 M0 10 L10 0 M7 13 L13 7" stroke="${color2}" stroke-width="3.2"/>`;
     } else if (pattern === 'scacchi') {
@@ -405,12 +421,12 @@
         let d = '';
         for (let k = 0; k < 5; k++) {
           const a2 = k * 72 * Math.PI / 180;
-          d += `<circle cx="${(cx + 2.1 * Math.cos(a2)).toFixed(1)}" cy="${(cy + 2.1 * Math.sin(a2)).toFixed(1)}" r="1.7" fill="${color2}"/>`;
+          d += `<circle cx="${(cx + 3.2 * Math.cos(a2)).toFixed(1)}" cy="${(cy + 3.2 * Math.sin(a2)).toFixed(1)}" r="2.6" fill="${color2}"/>`;
         }
-        return d + `<circle cx="${cx}" cy="${cy}" r="1.2" fill="${shade(color2, -42)}"/>`;
+        return d + `<circle cx="${cx}" cy="${cy}" r="1.9" fill="${shade(color2, -42)}"/>`;
       };
-      f = fiore(4, 4) + fiore(11, 11);
-      size = 15; s = `<rect width="15" height="15" fill="${color}"/>` + f;
+      f = fiore(6, 6) + fiore(16, 16);
+      size = 22; s = `<rect width="22" height="22" fill="${color}"/>` + f;
     } else if (pattern === 'cuori') {
       size = 12; s = `<rect width="12" height="12" fill="${color}"/>` +
         `<path d="M6 9.4 C2.2 6.8 2.6 3.6 4.6 3.2 C5.5 3 6 3.8 6 4.4 C6 3.8 6.5 3 7.4 3.2 C9.4 3.6 9.8 6.8 6 9.4 Z" fill="${color2}"/>`;
@@ -437,7 +453,11 @@
     const skinDark = shade(skin, -26);
     const hairCol = av.hair.color;
     const hairStyle = av.hair.style;
-    const isDress = av.top.style === 'vestito';
+    /* "vestito" e' un abito normale e i sotto restano scegliebili (una
+       gonna sopra i leggings si vede eccome); "vestito lungo" invece
+       arriva ai piedi e i sotto non hanno piu' senso */
+    const isDress = av.top.style === 'vestito' || av.top.style === 'vestitolungo';
+    const vestitoLungo = av.top.style === 'vestitolungo';
 
     const topP = patternDef(av.top.color, av.top.pattern, id + 't', av.top.color2);
     const botP = patternDef(av.pants.color, av.pants.pattern, id + 'p', av.pants.color2);
@@ -468,7 +488,7 @@
     /* --- gambe --- */
     const legTop = 98;
     let legs = '';
-    if (isDress || av.pants.style === 'gonna') {
+    if (vestitoLungo || av.pants.style === 'gonna' || av.pants.style === 'gonnalunga') {
       legs = `<rect x="40" y="112" width="8.5" height="28" rx="4" fill="${skin}"/>
               <rect x="51.5" y="112" width="8.5" height="28" rx="4" fill="${skin}"/>`;
     } else if (av.pants.style === 'pantaloncini' || av.pants.style === 'jeanscorti') {
@@ -527,7 +547,7 @@
 
     /* --- pantaloni / gonna --- */
     let bottom = '';
-    if (!isDress) {
+    if (!vestitoLungo) {
       if (av.pants.style === 'gonna') {
         // svasata, con l'orlo ben largo
         bottom = `<path d="M34 96 L66 96 L75 122 L25 122 Z" fill="${botP.fill}" ${line}/>
@@ -536,6 +556,16 @@
         // corti, si fermano sopra il ginocchio: le gambe restano scoperte
         bottom = `<path d="M33 96 L67 96 L66 114 L53 114 L50 105 L47 114 L34 114 Z" fill="${botP.fill}" ${line}/>
                   <path d="M34 112 L47 112 M53 112 L66 112" stroke="${shade(av.pants.color, -40)}" stroke-width="1.6"/>`;
+      } else if (av.pants.style === 'leggings') {
+        /* aderenti fino alla caviglia: si vede la gamba, non il tubo */
+        bottom = `<path d="M35 96 L65 96 L63 138 L54 138 L50 108 L46 138 L37 138 Z" fill="${botP.fill}" ${line}/>
+                  <path d="M35 99 L65 99" stroke="${shade(av.pants.color, -40)}" stroke-width="2.2"/>
+                  <path d="M41 104 L40 134 M59 104 L60 134" stroke="${shade(av.pants.color, 34)}" stroke-width="0.9" opacity=".5"/>`;
+      } else if (av.pants.style === 'gonnalunga') {
+        bottom = `<path d="M34 96 L66 96 L79 134 L21 134 Z" fill="${botP.fill}" ${line}/>
+                  <path d="M21 134 Q50 140 79 134" fill="${botP.fill}" ${line}/>
+                  <path d="M34 99.5 L66 99.5" stroke="${shade(av.pants.color, -40)}" stroke-width="2.2"/>
+                  <path d="M42 103 L34 131 M58 103 L66 131" stroke="${shade(av.pants.color, -22)}" stroke-width="1" opacity=".6"/>`;
       } else if (av.pants.style === 'tuta') {
         // larghi, con la banda chiara sul fianco e i polsini
         bottom = `<path d="M32 96 L68 96 L67 132 L53 132 L50 108 L47 132 L33 132 Z" fill="${botP.fill}" ${line}/>
@@ -589,7 +619,12 @@
     let torso = '';
     const bodyTop = 68;
     if (isDress) {
-      torso = `<path d="M34 ${bodyTop} L42 64 Q50 70 58 64 L66 ${bodyTop} L70 78 L66 82 L72 118 L28 118 L34 82 L30 78 Z" fill="${topP.fill}" ${line}/>`;
+      const orlo = vestitoLungo ? 136 : 114;
+      const largo = vestitoLungo ? 78 : 71;
+      torso = `<path d="M34 ${bodyTop} L42 64 Q50 70 58 64 L66 ${bodyTop} L70 78 L66 82 L${largo} ${orlo} L${100 - largo} ${orlo} L34 82 L30 78 Z" fill="${topP.fill}" ${line}/>` +
+        (vestitoLungo
+          ? `<path d="M${100 - largo} ${orlo - 1} Q50 ${orlo + 5} ${largo} ${orlo - 1}" fill="${topP.fill}" ${line}/>`
+          : '');
     } else if (av.top.style === 'canotta') {
       torso = `<path d="M40 66 Q50 72 60 66 L64 78 L64 102 L36 102 L36 78 Z" fill="${topP.fill}" ${line}/>`;
     } else if (av.top.style === 'polo') {
@@ -602,6 +637,19 @@
                <line x1="50" y1="72" x2="50" y2="102" stroke="${shade(av.top.color, -46)}" stroke-width="1.4"/>
                <circle cx="50" cy="82" r="1.1" fill="${shade(av.top.color, -46)}"/>
                <circle cx="50" cy="92" r="1.1" fill="${shade(av.top.color, -46)}"/>`;
+    } else if (av.top.style === 'maglione') {
+      /* lana grossa: collo, polsi e fondo a coste, e la trama a punto
+         riso che si vede anche piccola */
+      torso = `<path d="M34 ${bodyTop} L42 65 Q50 71 58 65 L66 ${bodyTop} L70 78 L66 82 L66 104 L34 104 L34 82 L30 78 Z" fill="${topP.fill}" ${line}/>
+               <path d="M42 65 Q50 73 58 65 Q58 69 50 75 Q42 69 42 65 Z" fill="${shade(av.top.color, -22)}"/>
+               <path d="M34 100 L66 100" stroke="${shade(av.top.color, -30)}" stroke-width="3"/>
+               <path d="M39 84 L39 98 M45 84 L45 98 M55 84 L55 98 M61 84 L61 98" stroke="${shade(av.top.color, 26)}" stroke-width="1.1" opacity=".75"/>`;
+    } else if (av.top.style === 'giubbotto') {
+      /* piumino: le trapuntature orizzontali e la zip in mezzo */
+      torso = `<path d="M33 ${bodyTop} L42 64 Q50 70 58 64 L67 ${bodyTop} L71 78 L67 82 L67 105 L33 105 L33 82 L29 78 Z" fill="${topP.fill}" ${line}/>
+               <path d="M34 76 L66 76 M34 84 L66 84 M34 92 L66 92 M34 100 L66 100" stroke="${shade(av.top.color, -30)}" stroke-width="1.4" opacity=".85"/>
+               <path d="M50 68 L50 105" stroke="${shade(av.top.color, -48)}" stroke-width="1.8"/>
+               <circle cx="50" cy="72" r="1.4" fill="${shade(av.top.color, 46)}"/>`;
     } else if (av.top.style === 'giacca') {
       /* aperta davanti, coi risvolti: da lontano si distingue dalla
          camicia perché si vede la maglia sotto */
