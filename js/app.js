@@ -218,6 +218,7 @@ function freshDraft() {
     parkPaid: false,
     crazyPaid: false,
     soloBar: false,
+    chiedeSvuota: false,
     touched: false
   };
 }
@@ -478,6 +479,7 @@ function buildNewView() {
 
     <div class="bc-griglia hidden" id="nGriglia"></div>
     <div class="btn-row" id="nEditRow" style="margin-bottom:8px;"></div>
+    <div id="nFondo"></div>
   `;
 
   R.nStart = $('#nStart');
@@ -549,6 +551,45 @@ function buildNewView() {
     draft.touched = true;
     disegnaVoce(id);
     syncActionBar();
+  };
+
+  /* i tasti del conto */
+  $('#nFondo').onclick = (ev) => {
+    const b = ev.target.closest('button');
+    if (!b) return;
+    const d = b.dataset;
+    /* toccare qualunque altra cosa annulla la domanda dello Svuota */
+    if (d.svuota === undefined) draft.chiedeSvuota = false;
+    if (d.sez !== undefined)    { bcSegna(d.sez, true); draft.touched = true; syncNew(); return; }
+    if (d.desez !== undefined)  { bcSegna(d.desez, false); draft.touched = true; syncNew(); return; }
+    if (d.tutto !== undefined)  {
+      bcSegna('bimbi', true); bcSegna('crazy', true); bcSegna('bar', true);
+      draft.touched = true; syncNew(); return;
+    }
+    if (d.reg !== undefined)    { commitEntry(); return; }
+    if (d.svuota !== undefined) {
+      /* due tocchi: il primo chiede, il secondo butta via */
+      if (!draft.chiedeSvuota) { draft.chiedeSvuota = true; syncActionBar(); return; }
+      const cat = draft.cat;
+      draft = freshDraft(); draft.cat = cat; editingId = null;
+      R.nPeople.dataset.apri = ''; R.nPeople.dataset.sig = '';
+      R.nGriglia.dataset.sig = '';
+      syncNew();
+      return;
+    }
+    if (d.resto !== undefined)  {
+      const t = contoResta();
+      if (t <= 0) return;
+      /* sovrapposto a tutto: se lo infilassi nella pagina, la pagina si
+         ridimensionerebbe sotto le dita proprio mentre conti i soldi */
+      apriVelo(pannelloResto(null, t, () => {
+        chiudiVelo();
+        bcSegna('bimbi', true); bcSegna('crazy', true); bcSegna('bar', true);
+        draft.touched = true;
+        commitEntry();
+      }));
+      return;
+    }
   };
 
   R.nCat.onclick = (ev) => {
@@ -1396,48 +1437,77 @@ function iconaCat(cat) {
   return v ? iconaBar(v.name, v.em) : '';
 }
 
-/* La barra del prezzo resta IN ALTO: sotto ci va la tastiera del tablet,
-   e la riga libera di "Chi accompagna" la fa uscire per davvero.
-   Le tre voci non dicono solo quanto viene: si toccano per segnare che
-   quella parte e' gia' stata pagata. */
-function syncActionBar() {
-  const ab = $('#actionbar');
-  if (tab !== 'new') { ab.classList.add('hidden'); return; }
-  ab.classList.remove('hidden');
-
-  const parco = contoParco(), crazy = contoCrazy(), bar = contoBar();
+/* ---------- IL CONTO, IN FONDO ----------
+   Icona, l'etichetta sopra la cifra e il tasto "paga" a destra: tre
+   blocchi attaccati sopra la cifra grande. margin-top:auto lo spinge in
+   fondo quando c'e' spazio, sticky lo tiene incollato al bordo basso
+   quando invece la schermata e' lunga e scorre. */
+function contoFondo() {
   const tot = contoTot(), pag = contoPagato(), resta = contoResta();
+  const parte = (nome, ico, id, im) => {
+    const p = id === 'bar' ? contoPagatoBar()
+      : id === 'bimbi' ? (draft.parkPaid ? contoParco() : 0)
+      : (draft.crazyPaid ? contoCrazy() : 0);
+    const fatto = im > 0 && p >= im - 0.005;
+    return '<div class="bc-parte' + (fatto ? ' fatta' : '') + '">' + ICONE[ico]() +
+      '<div class="bc-pk"><span class="k">' + nome + '</span>' +
+      '<span class="v num">' + eur(im) + '</span>' +
+      /* la riga del "pagato" c'e' SEMPRE, anche vuota: se comparisse solo
+         quando serve, il blocco si alzerebbe e abbasserebbe sotto le dita
+         a ogni tocco */
+      '<span class="q' + (p > 0 && !fatto ? '' : ' vuota') + '">' +
+        (p > 0 && !fatto ? 'pagato ' + eur(p) : ' ') + '</span></div>' +
+      (im > 0
+        ? (fatto
+          ? '<button class="paga ok" data-desez="' + id + '">\u2713</button>'
+          : '<button class="paga" data-sez="' + id + '">paga</button>')
+        : '') + '</div>';
+  };
+  const orario = draft.soloBar ? 'solo bar'
+    : draft.payLater ? fmtTime(draft.startTime) + ' \u2192 aperta'
+    : fmtTime(draft.startTime) + ' \u2192 ' + fmtTime(draftEnd());
+  return '<div class="bc-fondo">' +
+    '<div class="bc-parti">' +
+      parte('Totale Parco', 'bimbi', 'bimbi', contoParco()) +
+      parte('Totale Crazy', 'crazy', 'crazy', contoCrazy()) +
+      parte('Totale Bar', 'coca', 'bar', contoBar()) +
+    '</div>' +
+    '<div class="bc-conto"><div>' +
+      '<span class="k">' + (tot <= 0 ? 'niente sul conto' :
+        resta > 0 ? (pag > 0 ? 'restano' : 'da incassare') : 'tutto pagato') +
+        ' \u00b7 <b>' + orario + '</b></span>' +
+      '<span class="v num' + (tocchi.id ? ' tocca' : '') + '">' +
+        (tot <= 0 ? eur(0) : resta > 0 ? eur(resta) : '\u2713 ' + eur(tot)) + '</span>' +
+      /* anche questa riga c'e' sempre, anche vuota: se no la cifra grande
+         saltella su e giu' ogni volta che incassi qualcosa */
+      '<span class="gia' + (pag > 0 && resta > 0 ? '' : ' vuota') + '">' +
+        (pag > 0 && resta > 0 ? 'gi\u00e0 presi ' + eur(pag) : ' ') + '</span>' +
+    '</div><div class="bc-tasti">' +
+      /* Svuota chiede conferma: buttare via un ingresso a meta' per
+         sbaglio vuol dire rifarlo tutto davanti al cliente */
+      (draft.touched && !editingId
+        ? (draft.chiedeSvuota
+          ? '<button class="btn bc-pericolo" data-svuota>\u26a0\ufe0f Butto via tutto? tocca ancora</button>'
+          : '<button class="btn" data-svuota>\ud83e\uddf9 Svuota</button>')
+        : '') +
+      (resta > 0 ? '<button class="btn" data-resto>\ud83e\uddee Resto</button>' +
+        '<button class="btn" data-tutto>Paga tutto</button>' : '') +
+      '<button class="btn btn-ok" data-reg>' +
+        (editingId ? 'Salva modifiche' : tot > 0 && resta <= 0 ? '\u2705 Registra e incassa' : 'Registra') +
+      '</button>' +
+    '</div></div></div>';
+}
 
-  $('#abNow').textContent = fmtTime(draft.startTime);
-  $('#abArrow').textContent = '\u2192';
-  $('#abEnd').textContent = draft.soloBar ? 'solo bar' : draft.payLater ? 'aperta' : fmtTime(draftEnd());
-
-  const voce = (nome, id, im, fatta) =>
-    '<button class="ab-voce' + (fatta ? ' pagata' : '') + '" data-sez="' + id + '"' +
-      (im > 0 ? '' : ' disabled') + '>' +
-      '<span class="ab-k">' + nome + '</span>' +
-      '<span class="num">' + im.toFixed(2).replace('.', ',') + ' \u20ac</span>' +
-      '<span class="ab-seg">' + (fatta ? '\u2713 pagato' : im > 0 ? 'segna pagato' : ' ') + '</span>' +
-    '</button>';
-  const barPag = contoPagatoBar();
-  const voci =
-    voce(draft.payLater ? 'Parco (a consumo)' : 'Parco', 'bimbi', parco, parco > 0 && draft.parkPaid) +
-    (crazy > 0 ? voce('Crazy', 'crazy', crazy, draft.crazyPaid) : '') +
-    (bar > 0 ? voce('Bar', 'bar', bar, barPag >= bar - 0.005) : '');
-  const box = $('#abVoci');
-  if (box.dataset.sig !== voci) { box.dataset.sig = voci; box.innerHTML = voci; }
-
-  $('#abTotK').textContent = tot <= 0 ? 'niente sul conto'
-    : resta > 0 ? (pag > 0 ? 'restano' : 'da incassare') : 'tutto pagato';
-  $('#abEur').textContent = (resta > 0 ? eur(resta) : '\u2713 ' + eur(tot)) + (draft.payLater ? '+' : '');
-  /* la riga sotto c'e' sempre, anche vuota: se comparisse solo quando
-     serve, la cifra grande saltellerebbe a ogni incasso */
-  const gia = $('#abGia');
-  gia.textContent = pag > 0 && resta > 0 ? 'gi\u00e0 presi ' + eur(pag) : ' ';
-  gia.classList.toggle('vuota', !(pag > 0 && resta > 0));
-
-  $('#abSave').textContent = editingId ? 'Salva modifiche'
-    : tot > 0 && resta <= 0 ? 'Registra e incassa' : 'Registra';
+/* Il pannello si rifa' da solo, al posto suo: e' l'unico pezzo che
+   cambia a ogni tocco, e rifare la schermata intera faceva lampeggiare
+   mezza pagina sotto le dita. */
+function syncActionBar() {
+  const box = document.getElementById('nFondo');
+  if (!box) return;
+  if (tab !== 'new') { box.classList.add('hidden'); return; }
+  box.classList.remove('hidden');
+  box.innerHTML = contoFondo();
+  tocchi.id = null;
 }
 
 function pickRole(onPick) {
@@ -3436,7 +3506,7 @@ function switchTab(t) {
       setTimeout(() => vista.classList.remove('entra-dx', 'entra-sx'), 320);
     }
   }
-  document.querySelector('main').classList.toggle('senza-fondo', t === 'new');
+  document.querySelector('main').classList.toggle('conto-in-fondo', t === 'new');
   $('main').scrollTop = 0;
 
   if (t === 'new') {
@@ -3511,19 +3581,6 @@ function init() {
     b.insertAdjacentHTML('afterbegin', '<span class="em">' + (emTab[b.dataset.tab] || '') + '</span>');
     b.onclick = () => switchTab(b.dataset.tab);
   });
-  $('#abSave').onclick = commitEntry;
-  /* toccare una voce la segna pagata, toccarla ancora la dissegna */
-  $('#abVoci').onclick = (ev) => {
-    const b = ev.target.closest('[data-sez]');
-    if (!b) return;
-    const id = b.dataset.sez;
-    const gia = id === 'bimbi' ? draft.parkPaid
-      : id === 'crazy' ? draft.crazyPaid
-      : contoPagatoBar() >= contoBar() - 0.005;
-    bcSegna(id, !gia);
-    draft.touched = true;
-    syncNew();
-  };
 
 
   const clock = () => { $('#clock').textContent = fmtTime(Date.now()); };

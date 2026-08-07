@@ -2221,7 +2221,7 @@ main {
 /* quando la barra "Registra" e' nascosta, gli angoli tondi in fondo li
    prende quella sopra: la cornice resta della stessa forma */
 .topbar { border-radius: 0; }
-#app:has(> .actionbar.hidden) .topbar { border-radius: 0 0 20px 20px; }
+.topbar { border-radius: 0 0 20px 20px; }
 
 /* Il riquadro di una persona dentro il blocco viola: era un velo BIANCO
    sopra il viola, quindi schiariva il fondo e il testo tenue ci finiva
@@ -2876,10 +2876,25 @@ html:not(.anima) .entry.appena::before { animation: none; opacity: 1; }
 #view-new .card.blk > h2,
 #view-new .card.blk > .testa-viola > h2 { font-size: 15.5px; padding: 5px 14px; }
 #view-new .blk-in { padding: 8px 14px 10px; }
-/* Qui sotto non c'e' nessuna barra incollata in fondo -- il conto sta
-   in alto, dove la tastiera del tablet non arriva -- quindi il respiro
-   che main tiene sotto e' spazio buttato. */
-main.senza-fondo { padding-bottom: 6px; }
+/* Il conto e' incollato al bordo basso dello schermo, e Chrome ferma lo
+   sticky al bordo INTERNO di main: col respiro di main sotto si
+   fermerebbe 24px prima, a mezz'aria. Qui il respiro lo mette lui.
+   La vista si allunga fino in fondo con flex e NON con min-height:100%:
+   sopra di lei, dentro lo stesso main, ci puo' stare l'avviso dei dati
+   al riparo, e col 100% quei 74px finivano fuori dallo schermo. */
+main.conto-in-fondo { padding-bottom: 0; display: flex; flex-direction: column; }
+main.conto-in-fondo > #view-new { flex: 1; min-height: 0; }
+/* un dito di respiro sotto, lo stesso che tiene lo sticky quando invece
+   la schermata scorre: cosi' il pannello sta allo stesso posto nei due
+   casi, e non sembra incollato al vetro */
+#nFondo { margin-top: auto; padding-bottom: max(10px, var(--safe-b)); }
+/* i quattro tasti stanno in fila accanto alla cifra: coi 150px di
+   minimo che hanno di serie andavano a capo e il pannello cresceva di
+   74px, mangiandosi il respiro di tutta la schermata */
+#nFondo .bc-tasti .btn { min-width: 0; padding: 0 15px; }
+/* i posti vuoti non devono occupare il loro giro di gap: la fascia
+   della modifica e la riga del suo annulla ci sono solo quando servono */
+#view-new > .edit-banner.hidden, #view-new > .btn-row:empty { display: none; }
 #view-new .bc-cat { padding: 6px 0 8px; }
 
 .bc-cat button { display: flex; align-items: center; gap: 7px; }
