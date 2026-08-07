@@ -62,61 +62,67 @@ h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 10px; }
   min-height: 0; align-content: start; padding-bottom: 4px; grid-auto-rows: max-content; }
 
 /* ══ LA CARD ══
-   Quadrata come prima ma schiacciata: la TESTA e' sdraiata — icona
-   grande a sinistra, nome e prezzo su due righe a destra, alte quanto
-   l'icona — e sotto restano le due fasce dei tasti a tutta larghezza.
-   Cosi' l'altezza scende da 216 a 180 e le dodici bevande ci stanno. */
-.tess { background: var(--carta); border-radius: 22px; box-shadow: 0 4px 14px rgba(0,0,0,.3);
-  overflow: hidden; display: flex; flex-direction: column; }
-.tess .su { border: none; background: none; font: inherit; color: inherit; cursor: pointer;
-  padding: 13px; display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; }
-.tess .su svg { width: 64px; height: 64px; flex: 0 0 auto; }
-/* Le due righe stanno INSIEME al centro, non spalmate agli angoli: lo
-   space-between apriva un buco di quaranta pixel fra prezzo e nome e
-   sembravano due cose scollegate. Prezzo sopra, grosso, perche' e' il
-   dato che serve; il nome sotto, che tanto lo riconosci dall'icona. */
-.tess .testi { flex: 1; min-width: 0; min-height: 64px; display: flex; flex-direction: column;
-  justify-content: center; gap: 6px; }
+   Testa sdraiata — icona grande a sinistra, prezzo e nome a destra — e
+   sotto i comandi. La quantita' non sta piu' in mezzo ai segni: e'
+   scritta gigante DIETRO la card, come una filigrana. */
+.tess { position: relative; background: var(--carta); border-radius: 22px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.3); overflow: hidden; display: flex; flex-direction: column; }
+.tess .su { position: relative; overflow: hidden; border: none; background: none; font: inherit;
+  color: inherit; cursor: pointer; padding: 13px; display: flex; align-items: center; gap: 12px;
+  width: 100%; text-align: left; }
+.tess .su svg { width: 64px; height: 64px; flex: 0 0 auto; position: relative; z-index: 1; }
+.tess .testi { position: relative; z-index: 1; flex: 1; min-width: 0; min-height: 64px;
+  display: flex; flex-direction: column; justify-content: center; gap: 6px; }
 .tess .pr { font-family: 'Fredoka', sans-serif; font-size: 23px; font-weight: 700;
   color: #C9CDD6; line-height: 1.05; }
-/* 18px e bianco: a 19 "Acqua frizzante" va a capo, la card cresce e
-   torna l'ascensore. Provate tutte e ventitre' le scritte. */
 .tess .nm { font-size: 18px; font-weight: 700; line-height: 1.2; color: var(--txt); }
 .tess.preso { background: #14243A; box-shadow: 0 0 0 3px var(--sel) inset, 0 6px 18px rgba(59,140,255,.3); }
 .tess.preso .pr { color: #9CC6FF; }
-/* ══ LE DUE FASCE DEI TASTI ══
-   Erano due flex con la casella di mezzo larga diversa (34 contro 62),
-   quindi il − e il + di sopra non stavano sopra il − e il + di sotto e
-   si vedeva. Adesso sono la STESSA griglia con le stesse colonne, cosi'
-   i quattro tasti fanno due colonne dritte. Il filo da 1px fra le
-   caselle serve a farli leggere come tasti separati. */
-.tess .conta, .tess .pag { display: grid; grid-template-columns: 1fr 66px 1fr; gap: 1px;
-  overflow: visible; }
-/* altezza fissa: se no la bolla, che è più alta della fascia, la
-   ALLARGA invece di uscirne — e i tasti di sopra diventano più alti di
-   quelli di sotto, che è proprio quello che non deve succedere */
-.tess .conta { background: rgba(0,0,0,.5); height: 48px; grid-template-rows: 48px; }
-/* I QUATTRO TASTI SONO LA STESSA COSA: stessa griglia, stessa altezza,
-   stesso corpo, stesso modo di centrare il segno. L'unica differenza e'
-   il colore, che dice a quale delle due file appartengono. */
-.tess .conta button, .tess .pag button {
-  border: none; min-height: 48px; cursor: pointer;
-  font-family: 'Fredoka', sans-serif; font-size: 27px; font-weight: 700; line-height: 1;
-  display: flex; align-items: center; justify-content: center; }
-.tess .conta button { background: rgba(255,255,255,.06); color: var(--txt); }
-.tess .conta button:active { background: rgba(255,255,255,.15); }
-/* LA BOLLA della quantita': tonda, al centro, e se esce dalla fascia va
-   benissimo — anzi, e' proprio quello che la fa notare. L'anello del
-   colore della card la stacca dal fondo come se galleggiasse. */
+
+/* IL NUMERO FANTASMA
+   Sta sotto a tutto, dentro la testa della card: centrato in altezza
+   sulla riga di prezzo e nome, e allineato a destra allo stesso margine
+   del testo, non appiccicato al bordo. Grande abbastanza da leggersi in
+   piedi davanti al tablet, chiaro abbastanza da non coprire niente. */
+.tess .fantasma { position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  z-index: 0; font-family: 'Fredoka', sans-serif; font-size: 84px; font-weight: 700;
+  height: 74px; line-height: 74px; overflow: hidden;
+  color: rgba(255,255,255,.07); pointer-events: none; user-select: none; }
+.tess.preso .fantasma { color: rgba(59,140,255,.26); }
+.tess.saldata .fantasma { color: rgba(25,192,138,.26); }
+
+/* ══ I COMANDI: MEZZA CARD IL MENO, MEZZA IL PIU' ══
+   Niente tastini: due bersagli enormi per fila, divisi da un filo, e la
+   pasticca del numero che galleggia sulla cucitura in mezzo. Sopra
+   quello che hanno preso, sotto in verde quello che hanno pagato.
+   L'anello attorno alla pasticca e' del colore della card, cosi' sembra
+   ritagliata dentro la fascia. */
 .tess { --fondocard: var(--carta); }
 .tess.preso { --fondocard: #14243A; }
 .tess.saldata { --fondocard: #10241D; }
-.tess .conta .n { justify-self: center; align-self: center; position: relative; z-index: 2;
-  width: 58px; height: 58px; border-radius: 50%; background: #3A4054;
-  box-shadow: 0 0 0 4px var(--fondocard), 0 3px 10px rgba(0,0,0,.45);
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Fredoka', sans-serif; font-size: 27px; font-weight: 700; color: var(--txt); }
-.tess.preso .conta .n { background: var(--sel); color: #06162E; }
+.tess .zone { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 2px;
+  background: rgba(0,0,0,.5); }
+.tess .zone button { border: none; background: rgba(255,255,255,.055); min-height: 48px;
+  color: var(--txt); font-family: 'Fredoka', sans-serif; font-size: 30px; font-weight: 700;
+  line-height: 1; cursor: pointer; transition: background .12s;
+  display: flex; align-items: center; justify-content: center; }
+.tess .zone button:active { background: rgba(255,255,255,.18); }
+.tess .zone.v { background: rgba(25,192,138,.3); }
+.tess .zone.v button { background: rgba(25,192,138,.13); color: var(--soldi); font-size: 27px; }
+.tess .zone.v button:active { background: rgba(25,192,138,.32); }
+.tess .zone.v button:disabled { opacity: .25; cursor: default; }
+.tess .chip { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); z-index: 2;
+  min-width: 58px; height: 38px; padding: 0 11px; border-radius: 12px; background: #333A4D;
+  box-shadow: 0 0 0 3px var(--fondocard), 0 3px 9px rgba(0,0,0,.55);
+  display: flex; align-items: center; justify-content: center; pointer-events: none;
+  font-family: 'Fredoka', sans-serif; font-size: 23px; font-weight: 700; color: var(--txt); }
+.tess.preso .chip { background: var(--sel); color: #06162E; }
+.tess.saldata .chip { background: var(--soldi); color: #06251A; }
+.tess .zone.v .chip { background: #10402F; color: #7FE8C1; font-size: 18px; }
+.tess.saldata .zone.v .chip { background: var(--soldi); color: #06251A; }
+.tess.saldata { background: #10241D; box-shadow: 0 0 0 3px var(--soldi) inset, 0 6px 18px rgba(25,192,138,.24); }
+.tess.saldata .pr { color: #7FE8C1; }
+.fondo .parti .voce .paga.tutta { background: rgba(25,192,138,.18); color: #7FE8C1; }
 
 /* la classe .fisso non serve più: adesso è tessera() a decidere se
    mostrare il contatore o il tasto largo «+ aggiungi» */
@@ -194,28 +200,6 @@ h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 10px; }
 .resto .v.grigio { color: var(--txt2); }
 .resto .tasti { display: flex; gap: 10px; margin-top: auto; }
 .resto .tasti .bt { flex: 1; }
-
-/* ══ PAGATO A QUANTITA' ══
-   Sotto il contatore delle cose prese sta quello delle cose gia'
-   pagate: gli stessi due tasti, ma verdi. Cosi' "una Coca l'ha pagata e
-   una no" si dice sulla card, senza aprire niente e senza scegliere
-   nessun modo. Quando i due numeri pareggiano la card diventa verde:
-   quella voce non deve piu' niente. */
-.tess .pag { background: rgba(25,192,138,.32); }
-.tess .pag button { background: rgba(25,192,138,.12); color: var(--soldi); }
-.tess .pag button:active { background: rgba(25,192,138,.26); }
-.tess .pag button:disabled { opacity: .25; cursor: default; }
-/* qui niente bolla: e' un'etichetta (1 / 2), non un numero solo, e la
-   bolla di sopra le passa sopra di quattro pixel */
-.tess .pag .n { background: rgba(25,192,138,.12); display: flex; flex-direction: column;
-  align-items: center; justify-content: flex-end; padding-bottom: 5px; color: var(--soldi);
-  font-family: 'Fredoka', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.05; }
-.tess .pag .n small { font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 700;
-  letter-spacing: .08em; text-transform: uppercase; opacity: .85; }
-.tess.saldata { background: #10241D; box-shadow: 0 0 0 3px var(--soldi) inset, 0 6px 18px rgba(25,192,138,.24); }
-.tess.saldata .pr { color: #7FE8C1; }
-.tess.saldata .pag { background: rgba(25,192,138,.22); }
-.fondo .parti .voce .paga.tutta { background: rgba(25,192,138,.18); color: #7FE8C1; }
 
 .fondo .gia { display: block; font-size: 13px; font-weight: 700; color: var(--soldi); margin-top: 3px; }
 
@@ -301,12 +285,13 @@ h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 10px; }
       <b>Icona 64px, prezzo 23px, nome 18px</b> (erano 46, 15 e 15). Non di più: a 76 di icona la
       testa cresce, e a 19px di nome «Acqua frizzante» va a capo — in tutti e due i casi, nel caso
       limite di dodici bevande sul conto insieme, l'ascensore tornerebbe.<br>
-      <b>La quantità è una bolla</b> tonda al centro della fascia, e <b>esce</b> di cinque pixel
-      sopra e sotto: è il numero che guardi più spesso, quindi galleggia sopra tutto invece di
-      stare in fila coi tasti. L'anello attorno è del colore della card, così sembra ritagliata.<br>
-      <b>I quattro tasti sono identici</b>: 89×48 px tutti e quattro, stesso corpo, incolonnati a
-      due a due. Perché restino uguali la fascia ha l'altezza bloccata, se no la bolla la
-      allargherebbe e i tasti di sopra diventerebbero più alti di quelli di sotto.
+      <b>La quantità è scritta gigante dietro la card</b>, come una filigrana: 84px, centrata
+      sulla testa e allineata al margine del testo. Si legge stando in piedi davanti al tablet e
+      non ruba spazio a niente, perché sta sotto.<br>
+      <b>Mezza card è il meno e mezza è il più</b>, in due file: sopra quello che hanno preso,
+      sotto in verde quello che hanno pagato. Bersagli da <b>122×48 px</b> — niente tastini da
+      centrare col pollice — e sulla cucitura in mezzo galleggia la pasticca col numero, con
+      l'anello del colore della card così sembra ritagliata dentro la fascia.
     </div>
   </div>
 </div>
@@ -639,24 +624,24 @@ function voce(nome, ico, tot, pag, ids) {
 
 /* La card. Il prezzo mostrato e' quello VIVO: per i bambini dipende dal
    tempo, quindi cambia insieme all'orologio.
-   Le fasce dei tasti compaiono solo se servono: una cosa che non e' sul
-   conto resta ALTA 90px invece di 180, e la griglia ci guadagna. */
+   I comandi compaiono solo se quella cosa e' sul conto: una card spenta
+   resta alta 90px invece di 174, e la griglia ci guadagna. */
 function tessera(p) {
   const n = S.q[p.id] || 0, eff = qEff(p.id), pg = pagQ(p.id);
   const saldata = eff > 0 && pg >= eff, attiva = n > 0 || p.fisso;
   return '<div class="tess' + (saldata ? ' saldata' : n ? ' preso' : '') + '">' +
-    '<button class="su" data-add="' + p.id + '">' + icona(p) +
+    '<button class="su" data-add="' + p.id + '">' +
+      (n > 0 ? '<span class="fantasma">' + n + '</span>' : '') + icona(p) +
       '<span class="testi"><span class="pr">' + eur(pzUn(p.id)) + '</span>' +
       '<span class="nm">' + p.nm + '</span></span></button>' +
     (attiva
-      ? '<div class="conta"><button data-meno="' + p.id + '">−</button>' +
-        '<span class="n">' + n + '</span>' +
+      ? '<div class="zone"><span class="chip">' + n + '</span>' +
+        '<button data-meno="' + p.id + '">−</button>' +
         '<button data-add="' + p.id + '">+</button></div>'
       : '') +
     (eff > 0
-      ? '<div class="pag">' +
+      ? '<div class="zone v"><span class="chip">' + pg + '/' + eff + '</span>' +
         '<button data-pmeno="' + p.id + '"' + (pg <= 0 ? ' disabled' : '') + '>−</button>' +
-        '<span class="n">' + pg + ' / ' + eff + '<small>pagate</small></span>' +
         '<button data-ppiu="' + p.id + '"' + (pg >= eff ? ' disabled' : '') + '>+</button></div>'
       : '') +
     '</div>';
@@ -768,7 +753,12 @@ function misura() {
   const tab = document.querySelector('.tablet[data-p="X"]');
   const pan = tab.querySelector('.pan');
   let strisce = 0;
-  tab.querySelectorAll('*').forEach(e => { if (e.scrollHeight - e.clientHeight > 2 && e.clientHeight > 60) strisce++; });
+  /* conta solo quello che PUO' davvero scorrere: un elemento con
+     overflow:hidden non scorre, e il numero fantasma finiva contato */
+  tab.querySelectorAll('*').forEach(e => {
+    const ov = getComputedStyle(e).overflowY;
+    if ((ov === 'auto' || ov === 'scroll') && e.scrollHeight - e.clientHeight > 2 && e.clientHeight > 60) strisce++;
+  });
   const fuori = pan.scrollHeight - pan.clientHeight;
   const b = tab.querySelector('.misura');
   b.textContent = fuori > 2 ? ('sborda ' + fuori + 'px') : (strisce ? strisce + ' fascia scorre' : 'ci sta tutto');
