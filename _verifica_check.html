@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="dark">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>check impaginazione collega (temporanea)</title>
+<link rel="stylesheet" href="./css/fonts.css">
+<link rel="stylesheet" href="./css/app.css?v=202">
+<style>
+  html, body { overflow: auto !important; height: auto !important; overscroll-behavior: auto !important; }
+  body { margin: 0; background: #0B0B10; color: #E9E9F2; padding: 24px 18px 90px;
+    font-family: 'Inter', system-ui, sans-serif; }
+  .telaio { border-radius: 20px; overflow: hidden; width: 742px; max-width: 100%;
+    border: 1px solid rgba(255,255,255,.1); background: var(--bg); }
+  .ruoli { display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; }
+  .ruoli button { border: none; border-radius: 12px; padding: 5px 2px; min-width: 0;
+    background: rgba(0,0,0,.22); color: rgba(255,255,255,.86); font: inherit; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 1px; }
+  .ruoli button .em { font-size: 21px; line-height: 1.15; }
+  .ruoli button .nm { font-size: 10px; font-weight: 700; line-height: 1.1; }
+  .ruoli button.on { background: #fff; color: #221944; }
+  .capi { display: grid; gap: 5px; }
+  .capo { border: none; border-radius: 12px; background: rgba(0,0,0,.24); min-width: 0;
+    color: rgba(255,255,255,.9); padding: 3px 1px 4px; cursor: pointer; font: inherit;
+    display: flex; flex-direction: column; align-items: center; gap: 1px; }
+  .capo svg { display: block; width: 100%; height: auto; max-width: 46px; }
+  .capo .nm { font-size: 10px; font-weight: 700; line-height: 1.05; text-align: center; letter-spacing: -.02em; }
+  .et { font-size: 10px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
+    color: rgba(255,255,255,.62); display: block; margin-bottom: 3px; }
+  .tinte { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; }
+  .tinte button { height: 32px; border-radius: 9px; border: 3px solid transparent; padding: 0; min-width: 0; }
+  .fant { display: grid; grid-template-columns: repeat(14, 1fr); gap: 4px; }
+  .fant button { border: none; border-radius: 8px; padding: 2px 1px 3px; min-width: 0;
+    background: rgba(0,0,0,.24); color: rgba(255,255,255,.86); font: inherit;
+    display: flex; flex-direction: column; align-items: center; gap: 1px; }
+  .fant .sw { width: 100%; max-width: 30px; height: 20px; border-radius: 5px;
+    box-shadow: 0 0 0 1px rgba(0,0,0,.4) inset; font-size: 12px; line-height: 20px;
+    text-align: center; font-weight: 700; }
+  .fant .nm { font-size: 8.5px; font-weight: 700; line-height: 1; letter-spacing: -.03em; }
+  .libero { width: 100%; box-sizing: border-box; border: 1px solid rgba(255,255,255,.18);
+    border-radius: 11px; background: rgba(0,0,0,.25); color: #fff; font: inherit; font-size: 13px;
+    padding: 7px 11px; min-height: 36px; }
+  .figura { background: rgba(0,0,0,.24); border-radius: 14px; padding: 6px; height: 100%;
+    box-sizing: border-box; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 4px; }
+  .figura svg { display: block; }
+  #esito { font-size: 15px; margin: 14px 0; color: #7FE8C1; white-space: pre-line; }
+</style>
+
+<div id="esito">…</div>
+<div id="proposte"></div>
+
+<script src="./js/icone.js?v=202"></script>
+<script src="./js/avatar.js?v=202"></script>
+<script src="./js/capi.js?v=202"></script>
+<script>
+let ruolo = 'mamma';
+let av = AV.baseFor(ruolo);
+let nota = '';
+
+const griglia = (lista, campo, colonne, mis) =>
+  '<div class="capi" style="grid-template-columns:repeat(' + colonne + ',1fr)">' + lista.map(t =>
+    '<button class="capo' + (av[campo].style === t.key ? ' on' : '') + '" data-set="' + campo + '|' + t.key + '">' +
+    CAPI.capo(t.key, av[campo].color, av[campo].pattern, mis || 46) +
+    '<span class="nm">' + t.label + '</span></button>').join('') + '</div>';
+const sopra = (colonne, mis) => griglia(AV.TOP, 'top', colonne || 9, mis);
+const sotto = (colonne, mis) => griglia(AV.PANTS, 'pants', colonne || 6, mis);
+const et = (t) => '<span class="et">' + t + '</span>';
+const col = (dentro, extra) => '<div style="display:flex;flex-direction:column;gap:6px;min-width:0;' +
+  (extra || '') + '">' + dentro + '</div>';
+const riga = (dentro, extra) => '<div style="display:flex;gap:9px;' + (extra || '') + '">' + dentro + '</div>';
+const elastico = (dentro) => '<div style="flex:1;min-width:0">' + dentro + '</div>';
+const fisso = (larg, dentro) => '<div style="flex:0 0 ' + larg + 'px">' + dentro + '</div>';
+const tinte = (campo) => '<div class="tinte">' + AV.COLORS.slice(0, 10).map(c =>
+  '<button data-col="' + campo + '|' + c.c + '" style="background:' + c.c + '"' +
+  (av[campo].color === c.c ? ' class="on"' : '') + '></button>').join('') + '</div>';
+function pezza(pat) {
+  const c1 = av.top.color, c2 = AV.coloreFantasia(c1);
+  return '<span class="sw" style="background:' + c1 + ';color:' + c2 + '">' +
+    ({ fiori: '✿', cuori: '♥', stars: '★', logo: '◉' }[pat] || '') + '</span>';
+}
+const fantasie = () => '<div class="fant">' + AV.PATTERNS.map(f =>
+  '<button class="' + (av.top.pattern === f.key ? 'on' : '') + '" data-pat="' + f.key + '">' +
+  pezza(f.key) + '<span class="nm">' +
+  f.n.replace('Tinta unita', 'Unita').replace('Righe vert.', 'Vert.').replace('Animalier', 'Anim.') +
+  '</span></button>').join('') + '</div>';
+const dueColori = () => riga(
+  elastico(et('Colore capo') + tinte('top')) + elastico(et('Colore sotto') + tinte('pants')), 'gap:8px');
+const figura = (h) => '<div class="figura">' +
+  AV.build(av).replace('<svg', '<svg width="' + Math.round(h * 100 / 150) + '" height="' + h + '"') +
+  '<input class="libero" style="text-align:center;min-height:26px;padding:2px 6px;font-size:12px" ' +
+  'placeholder="' + AV.ROLES.find(r => r.key === ruolo).label + '"></div>';
+const riferimento = () => '<div><span class="et">Qualcosa che salta all’occhio</span>' +
+  '<input class="libero" value="' + nota + '" data-nota placeholder="«zaino giallo», «gamba ingessata»…"></div>';
+const barraRuoli = () => '<div class="ruoli">' + AV.ROLES.map(r =>
+  '<button data-ruolo="' + r.key + '"' + (ruolo === r.key ? ' class="on"' : '') + '>' +
+  '<span class="em">' + r.em + '</span><span class="nm">' + r.label + '</span></button>').join('') + '</div>';
+
+const P = [
+  { l: 'COLLEGA', html: () => col(
+      riga(
+        fisso(216, col(figura(190) + riferimento())) +
+        elastico(col(
+          col(et('Sopra') + sopra(9, 38) + tinte('top'),
+            'gap:5px;background:rgba(0,0,0,.16);border-radius:14px;padding:6px 8px') +
+          col(et('Sotto') + sotto(6, 42) + tinte('pants'),
+            'gap:5px;background:rgba(0,0,0,.16);border-radius:14px;padding:6px 8px'))),
+        'align-items:stretch;gap:12px') +
+      col(et('Fantasia') + fantasie(), 'gap:2px')
+    ) },
+  { l: 'FIXA', html: () => col(
+      riga(
+        fisso(224, col(figura(196) + riferimento(), 'gap:5px')) +
+        elastico(col(
+          col(et('Sopra') + sopra(9, 38) + tinte('top'),
+            'gap:3px;background:rgba(0,0,0,.16);border-radius:14px;padding:4px 8px') +
+          col(et('Sotto') + sotto(6, 38) + tinte('pants'),
+            'gap:3px;background:rgba(0,0,0,.16);border-radius:14px;padding:4px 8px'),
+          'gap:6px')),
+        'align-items:stretch;gap:12px') +
+      col(et('Fantasia') + fantasie(), 'gap:2px'),
+      'gap:6px'
+    ) },
+  { l: 'FIXC', html: () => col(
+      riga(
+        fisso(248, col(figura(190) + riferimento())) +
+        elastico(col(
+          col(et('Sopra') + sopra(9, 38) + tinte('top'),
+            'gap:5px;background:rgba(0,0,0,.16);border-radius:14px;padding:6px 8px') +
+          col(et('Sotto') + sotto(6, 42) + tinte('pants'),
+            'gap:5px;background:rgba(0,0,0,.16);border-radius:14px;padding:6px 8px'))),
+        'align-items:stretch;gap:12px') +
+      col(et('Fantasia') + fantasie(), 'gap:2px')
+    ) },
+  { l: 'FIXB', html: () => col(
+      riga(
+        fisso(224, col(figura(206) + riferimento(), 'gap:5px')) +
+        elastico(col(
+          col(et('Sopra') + sopra(9, 38) + tinte('top'),
+            'gap:3px;background:rgba(0,0,0,.16);border-radius:14px;padding:4px 8px') +
+          col(et('Sotto') + sotto(6, 38) + tinte('pants'),
+            'gap:3px;background:rgba(0,0,0,.16);border-radius:14px;padding:4px 8px'),
+          'gap:6px;height:100%;justify-content:space-between')),
+        'align-items:stretch;gap:12px') +
+      col(et('Fantasia') + fantasie(), 'gap:2px'),
+      'gap:6px'
+    ) }
+];
+
+function disegna() {
+  document.getElementById('proposte').innerHTML = P.map(p =>
+    '<h3 style="font-size:14px;color:#E8B44C">' + p.l + '</h3>' +
+    '<div class="telaio"><div class="card blk c-viola sec-people" style="margin:0">' +
+      '<h2><span class="em">🧑‍🤝‍🧑</span> Chi accompagna</h2>' +
+      '<div class="blk-in" id="blk' + p.l + '">' + barraRuoli() +
+      '<div style="margin-top:7px">' + p.html() + '</div></div>' +
+    '</div></div>').join('');
+
+  const out = [];
+  P.forEach(p => {
+    const blk = document.getElementById('blk' + p.l);
+    const card = blk.closest('.card');
+    const h = Math.round(card.getBoundingClientRect().height);
+    const fig = card.querySelector('.figura');
+    const svg = fig.querySelector('svg');
+    const capo = card.querySelector('.capo');
+    const capoR = capo.getBoundingClientRect();
+    const tint = card.querySelector('.tinte button').getBoundingClientRect();
+    const fant = card.querySelector('.fant button').getBoundingClientRect();
+    const nota = card.querySelector('input[data-nota]').getBoundingClientRect();
+    out.push(p.l + ': card=' + h + 'px (budget 484 -> ' + (h <= 484 ? 'ci sta, avanzano ' + (484 - h) : 'SFORA di ' + (h - 484)) + ')' +
+      ' | blk-in=' + Math.round(blk.getBoundingClientRect().width) +
+      ' | figura box=' + Math.round(fig.getBoundingClientRect().width) + 'x' + Math.round(fig.getBoundingClientRect().height) +
+      ' svg=' + Math.round(svg.getBoundingClientRect().width) + 'x' + Math.round(svg.getBoundingClientRect().height) +
+      ' | capo=' + capoR.width.toFixed(1) + 'x' + capoR.height.toFixed(1) +
+      ' | pastiglia=' + tint.width.toFixed(1) + 'x' + tint.height.toFixed(1) +
+      ' | fantasia=' + fant.width.toFixed(1) + 'x' + fant.height.toFixed(1) +
+      ' | nota=' + nota.width.toFixed(0) +
+      ' | overflowX card=' + (card.scrollWidth - card.clientWidth));
+  });
+  document.getElementById('esito').textContent = out.join('\n');
+  window.__ESITO = out.join('\n');
+}
+disegna();
+</script>
+</html>

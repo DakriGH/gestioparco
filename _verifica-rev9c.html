@@ -4,7 +4,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Chi accompagna — proposte</title>
 <link rel="stylesheet" href="./css/fonts.css">
-<link rel="stylesheet" href="./css/app.css?v=203">
+<link rel="stylesheet" href="./css/app.css?v=202">
 <style>
   /* app.css blocca lo scorrimento (body overflow:hidden), perche' l'app
      e' un guscio a tutto schermo. Questa e' una PAGINA, e deve scorrere:
@@ -91,7 +91,7 @@
 
 <div class="foglio">
   <p class="occhiello">Chi accompagna</p>
-  <h1 class="tit">Dodici impaginazioni, figura grande a sinistra</h1>
+  <h1 class="tit">I capi ridisegnati, e la figura sempre grande a sinistra</h1>
   <p class="intro">I capi sono <b>disegnati da soli</b>, col loro colore e la loro fantasia addosso.
   Devono bastare loro: se per capire che è una polo tocca leggere il nome, l'icona non ha fatto il
   suo mestiere. Guardali qui grandi, prima delle impaginazioni — cambiano colore e fantasia insieme
@@ -112,9 +112,9 @@
   </div>
 </div>
 
-<script src="./js/icone.js?v=203"></script>
-<script src="./js/avatar.js?v=203"></script>
-<script src="./js/capi.js?v=203"></script>
+<script src="./js/icone.js?v=202"></script>
+<script src="./js/avatar.js?v=202"></script>
+<script src="./js/capi.js?v=202"></script>
 <script>
 let ruolo = 'mamma';
 let av = AV.baseFor(ruolo);
@@ -192,166 +192,59 @@ const barraRuoli = () => '<div class="ruoli">' + AV.ROLES.map(r =>
    E' la regola: la figura e' quello che poi riconosci all'uscita, e sta
    grande, ferma, a sinistra. Cambia solo come si organizza il resto. */
 const P = [
-  { l: 'A', t: 'Figura a tutta altezza, le tre griglie tutte a destra',
-    p: 'Le tre griglie (9 sopra, 6 sotto, 14 fantasie) stanno tutte accanto alla figura da 214px, così la vestizione si fa in un solo sguardo e la figura resta comunque il pezzo più alto della riga (258px contro 251); i due colori scendono a tutta larghezza, dove le pastiglie tengono 32px invece dei 24 che avrebbero in colonna. Costa che il lato destro è fitto — tre griglie diverse una sull’altra, con le fantasie a 37px di bersaglio — e le pastiglie restano comunque il bersaglio più piccolo del blocco.',
-    html: () => riga(fisso(152, figura(200)) + elastico(col(et('Sopra') + sopra(9, 40) + riga(fisso(188, col(et('Sotto') + sotto(3, 40))) + elastico(col(et('Colore sopra') + tinte('top') + et('Colore sotto') + tinte('pants'))), 'align-items:flex-start; gap:10px;'))), 'align-items:stretch; gap:12px;') + riga(elastico(col(et('Fantasia') + fantasie())) + fisso(240, riferimento()), 'align-items:flex-end; gap:12px; margin-top:6px;') },
+  { l: 'L', t: 'Figura alta, scelte in quattro righe',
+    p: 'La figura tiene tutta l’altezza del blocco. A destra quattro righe sempre nello stesso ordine: capi, sotto, i due colori affiancati, fantasia. Non si sposta mai niente.',
+    html: () => '<div style="display:flex;gap:11px;align-items:stretch">' +
+      '<div style="flex:0 0 130px">' + figura(196) + '</div>' +
+      '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">' +
+        '<div><span class="et">Che cosa indossa</span>' + capi(AV.TOP, 'top', 'sopra', 40) + '</div>' +
+        '<div><span class="et">Sotto</span>' + capi(AV.PANTS, 'pants', 'sotto', 40) + '</div>' +
+        '<div style="display:flex;gap:8px">' +
+          '<div style="flex:1;min-width:0"><span class="et">Colore capo</span>' + tinte('top') + '</div>' +
+          '<div style="flex:1;min-width:0"><span class="et">Colore sotto</span>' + tinte('pants') + '</div></div>' +
+        '<div><span class="et">Fantasia</span>' + fantasie() + '</div>' +
+      '</div></div>' +
+      '<div style="margin-top:6px">' + riferimento() + '</div>' },
 
-  { l: 'B', t: 'Figura a sinistra, tre zone, due binari in fondo',
-    p: 'A destra restano tre sole zone (sopra, sotto, fantasia) spaziate a respiro pieno contro l’altezza della figura, e le due cose che vogliono larghezza — i colori e la riga libera — corrono a tutta card come binari da 740px, così le pastiglie stanno a 32px e il testo si legge intero. Costa il fatto che il colore è lontano dal capo che colora: la cassiera tocca la maglietta in alto e poi deve scendere in fondo alla card per tingerla.',
-    html: () => riga(
-        fisso(206, col(figura(230) + riferimento(), 'gap:8px;height:100%;justify-content:space-between;')) +
-        elastico(col(
-          col(et('Sopra — capo e colore') + sopra(9, 40) + tinte('top'), 'gap:4px;') +
-          col(et('Sotto — capo e colore') + sotto(6, 40) + tinte('pants'), 'gap:4px;') +
-          col(et('Fantasia') + fantasie(), 'gap:4px;'),
-          'height:100%;justify-content:space-between;gap:6px;'
-        )),
-        'align-items:stretch;gap:12px;'
-      ) },
+  { l: 'M', t: 'Figura enorme, capi accanto, il resto sotto',
+    p: 'La figura più grande possibile — larga quanto due capi — con accanto solo quello che si cambia guardandola: capi e sotto. Colori, fantasia e riferimento corrono a tutta larghezza sotto.',
+    html: () => '<div style="display:flex;gap:12px;align-items:stretch">' +
+      '<div style="flex:0 0 156px">' + figura(212) + '</div>' +
+      '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;justify-content:center">' +
+        '<div><span class="et">Che cosa indossa</span>' +
+          '<div class="capi" style="grid-template-columns:repeat(5,1fr)">' + AV.TOP.map(t =>
+            '<button class="capo' + (av.top.style === t.key ? ' on' : '') + '" data-set="top|' + t.key + '">' +
+            CAPI.capo(t.key, av.top.color, av.top.pattern, 44) + '<span class="nm">' + t.label + '</span></button>').join('') + '</div></div>' +
+        '<div><span class="et">Sotto</span>' +
+          '<div class="capi" style="grid-template-columns:repeat(6,1fr)">' + AV.PANTS.map(t =>
+            '<button class="capo' + (av.pants.style === t.key ? ' on' : '') + '" data-set="pants|' + t.key + '">' +
+            CAPI.capo(t.key, av.pants.color, av.pants.pattern, 40) + '<span class="nm">' + t.label + '</span></button>').join('') + '</div></div>' +
+      '</div></div>' +
+      '<div style="display:flex;gap:8px;margin-top:7px">' +
+        '<div style="flex:1;min-width:0"><span class="et">Colore capo</span>' + tinte('top') + '</div>' +
+        '<div style="flex:1;min-width:0"><span class="et">Colore sotto</span>' + tinte('pants') + '</div></div>' +
+      '<div style="margin-top:6px"><span class="et">Fantasia</span>' + fantasie() + '</div>' +
+      '<div style="margin-top:6px">' + riferimento() + '</div>' },
 
-  { l: 'C', t: 'Rotaia di etichette, quattro bande gemelle',
-    p: 'Ogni fila di tinte sta appiccicata sotto il suo capo e una rotaia di etichette larga 58px a sinistra dà lo stesso ritmo a tutte le bande (SOPRA, COLORE, SOTTO, COLORE, FANTASIA): si scende sempre nello stesso ordine e non ci si chiede mai a quale capo appartenga una fila di colori. Costa 58px di larghezza rubati alle griglie — i capi di sopra scendono a 53px per cella, coi nomi lunghi su due righe — e ripete due volte la parola COLORE, che va letta come intestazione di riga e non come titolo di sezione.',
-    html: () => col(
-        riga(
-          fisso(152, figura(206)) +
-          elastico(col(
-            riga(fisso(62, et('Sopra')) + elastico(sopra(9, 38)), 'align-items:center;gap:8px') +
-            riga(fisso(62, et('Colore')) + elastico(tinte('top')), 'align-items:center;gap:8px') +
-            riga(fisso(62, et('Sotto')) + elastico(sotto(6, 38)), 'align-items:center;gap:8px') +
-            riga(fisso(62, et('Colore')) + elastico(tinte('pants')), 'align-items:center;gap:8px'),
-            'height:100%;justify-content:space-between')),
-          'align-items:stretch;gap:11px') +
-        riga(fisso(62, et('Fantasia')) + elastico(fantasie()), 'align-items:center;gap:8px') +
-        riferimento()
-      ) },
-
-  { l: 'D', t: 'Capo e sotto, ognuno col suo nastro di colori',
-    p: 'Le due cose che si cambiano sempre stanno in alto a destra, ciascuna chiusa in un riquadro suo con SOTTO il proprio nastro di colori: la cassiera tocca il capo e subito sotto il suo colore, senza spostare gli occhi né cercare quale delle due file di tinte sia quella giusta. Costa che i nove capi stanno su una riga sola di nove colonne, quindi i nomi sono stretti e "Maniche lunghe" va a capo, e che in fondo fantasia e nota devono dividersi la stessa riga per stare nel budget.',
-    html: () => col(
-        riga(
-          fisso(156, figura(214)) +
-          elastico(col(
-            col(et('Capo — che cosa indossa') + sopra(9, 46) + tinte('top'),
-              'gap:4px;background:rgba(0,0,0,.16);border-radius:14px;padding:6px 9px;') +
-            col(et('Sotto') + sotto(6, 46) + tinte('pants'),
-              'gap:4px;background:rgba(0,0,0,.16);border-radius:14px;padding:6px 9px;'),
-            'gap:8px;justify-content:center;'
-          )),
-          'align-items:stretch;'
-        ) +
-        riga(
-          elastico(col(et('Fantasia') + fantasie(), 'gap:3px;')) +
-          fisso(212, riferimento()),
-          'gap:9px;'
-        ),
-        'gap:8px;'
-      ) },
-
-  { l: 'E', t: 'Due cassetti gemelli, identikit a sinistra',
-    p: 'Sopra e sotto diventano due cassetti identici — riquadro scuro, etichetta, capi, tinte dentro lo stesso bordo — così l’appartenenza di una fila di colori si vede prima ancora di leggerla, e a sinistra la colonna dell’identikit tiene insieme figura, nome e segno particolare. Costa una colonna sinistra da 216px (serve a far stare per intero l’etichetta del testo libero) che tiene la figura a 190px invece che oltre 200, più i 12px di padding dei due riquadri.',
-    html: () => col(
-        riga(
-          fisso(140, figura(190)) +
-          elastico(riga(
-            elastico(col(et('Capo — che cosa indossa') + sopra(3, 46),
-              'gap:3px;background:rgba(0,0,0,.16);border-radius:14px;padding:5px 8px;')) +
-            fisso(231, col(et('Sotto') + sotto(2, 46),
-              'gap:3px;background:rgba(0,0,0,.16);border-radius:14px;padding:5px 8px;')),
-            'gap:10px;'
-          )),
-          'align-items:stretch;'
-        ) +
-        dueColori() +
-        riga(
-          elastico(col(et('Fantasia') + fantasie(), 'gap:3px;')) +
-          fisso(212, riferimento()),
-          'gap:9px;'
-        ),
-        'gap:8px;'
-      ) },
-
-  { l: 'F', t: 'Due tastierini: capo 3×3, sotto 2×3, affiancati',
-    p: 'Capo e sotto diventano due tastierini quadrati appoggiati uno accanto all’altro in alto a destra, con celle larghe più del doppio (circa 110px contro 55): di fretta la mano colpisce a colpo sicuro e i nomi ci stanno tutti su una riga, senza andare a capo. Costa 24px di figura (190 invece di 214) e obbliga i due colori a scendere in una fascia unica a tutta larghezza sotto i tastierini, dove le pastiglie calano a 31px — sopra la soglia, ma il minimo sindacale.',
-    html: () => col(
-        riga(
-          fisso(140, figura(190)) +
-          elastico(riga(
-            elastico(col(et('Capo — che cosa indossa') + sopra(3, 46),
-              'gap:3px;background:rgba(0,0,0,.16);border-radius:14px;padding:5px 8px;')) +
-            fisso(231, col(et('Sotto') + sotto(2, 46),
-              'gap:3px;background:rgba(0,0,0,.16);border-radius:14px;padding:5px 8px;')),
-            'gap:10px;'
-          )),
-          'align-items:stretch;'
-        ) +
-        dueColori() +
-        riga(
-          elastico(col(et('Fantasia') + fantasie(), 'gap:3px;')) +
-          fisso(212, riferimento()),
-          'gap:9px;'
-        ),
-        'gap:8px;'
-      ) },
-
-  { l: 'G', t: 'Capi a sinistra, colori a destra: due blocchi in uno',
-    p: 'Sotto la fila dei nove capi di sopra si apre un blocco a due ante: a sinistra i sei capi di sotto in 3x2, a destra le due file di colori impilate, così tre cose stanno nell’altezza di due e tutto entra accanto alla figura, mentre in fondo fantasie e nota si dividono l’ultima riga. Il costo è che le pastiglie dei colori scendono a circa 31px, appena sopra il minimo, e il colore di sopra finisce a fianco dei capi di sotto invece che sotto i suoi.',
-    html: () => riga(fisso(155, figura(205)) + elastico(col(et('Che cosa indossa') + sopra(9, 40) + sotto(6, 40) + et('Fantasia') + fantasie())), 'align-items:stretch;margin-bottom:8px') + dueColori() + riferimento() },
-
-  { l: 'H', t: 'Figura nel pannello largo, capo e colore appaiati',
-    p: 'Ogni capo ha subito sotto la sua fila di colori, così non c’è da ricordare quale striscia comanda quale pezzo, e la colonna stretta fa salire le pastiglie a 44px e le fantasie a 49px a tutta larghezza: i bersagli più grandi di tutte le versioni. Costa che il pannello della figura si prende 244px di larghezza (figura da 212 con un campo nome finalmente largo) e che le fantasie scendono sotto la figura invece di starle accanto.',
-    html: () => riga(fisso(180, figura(206)) + elastico(col(et('Che cosa indossa sopra') + sopra(9, 40) + et('E sotto') + sotto(6, 42) + et('Fantasia') + fantasie() + riferimento())), 'align-items:stretch; gap:12px;') + dueColori() },
-
-  { l: 'I', t: 'Nota e fantasia in cima, i due colori in fondo',
-    p: 'Ribalta l’ordine solito: la riga libera sta in alto appoggiata alla figura (è la cosa che si scrive di getto quando il gruppo è ancora davanti) e la fantasia viene subito dopo, perché è il segno che si riconosce da lontano in coda all’uscita; i due colori chiudono in fondo a piena larghezza, dove le pastiglie stanno larghe 32px e si prendono col pollice senza sbagliare. Costa che il colore, che è il dato più usato, finisce nel punto più lontano dalla figura, e la fantasia occupa la posizione d’onore anche quando il gruppo è tutto in tinta unita.',
-    html: () => col(
-        riga(
-          fisso(168, figura(196)) +
-          elastico(col(
-            col(et('Che cosa indossa') + sopra(9, 42), 'gap:4px;') +
-            col(et('Sotto') + sotto(6, 42), 'gap:4px;') +
-            col(et('Fantasia') + fantasie(), 'gap:4px;'),
-            'min-height:100%;justify-content:space-between;'
-          )),
-          'align-items:stretch;gap:12px;'
-        ) +
-        dueColori() +
-        riferimento(),
-        'gap:8px;'
-      ) },
-
-  { l: 'L', t: 'Prima il colore, poi il capo — tutto in una colonna',
-    p: 'All’uscita la cassiera ricorda «la maglietta rossa», non «la polo»: qui la fila di tinte viene prima della fila dei capi, così sceglie il colore mentre lo sta ancora guardando e il capo lo conferma già colorato addosso alla figura. Costa il fatto che chi arriva da altre casse cerca il capo per primo e per due o tre giri deve ricordarsi che la pastiglia sta sopra, e la riga libera sotto la figura è larga solo 206px, quindi le note lunghe si leggono a pezzi mentre si scrivono.',
-    html: () => col(
-        riga(
-          fisso(158, figura(214)) +
-          elastico(col(
-            col(et('Che cosa ha sopra') + sopra(9, 46), 'gap:2px;') +
-            col(et('E sotto') + sotto(6, 46), 'gap:2px;') +
-            col(et('Fantasia') + fantasie(), 'gap:2px;')
-          , 'gap:8px;')),
-          'align-items:stretch;gap:11px;'
-        ) +
-        dueColori() +
-        riferimento()
-      , 'gap:7px;') },
-
-  { l: 'M', t: 'Due colonne: figura gigante, ogni capo col suo colore',
-    p: 'Niente binari in fondo: la card è due sole colonne, a sinistra la figura portata a 240px con sotto il suo cartellino, a destra tre blocchi chiusi in sé dove le pastiglie stanno appiccicate al capo che tingono e, avendo tutta la colonna per dieci, vengono larghe 46px — si sceglie capo e colore senza spostare la mano. Costa la riga libera, che stretta nella colonna della figura mostra poche parole alla volta.',
-    html: () => col(
-        riga(
-          fisso(156, figura(214)) +
-          elastico(col(
-            et('Che cosa indossa sopra') + sopra(9, 44) +
-            et('Sotto') + sotto(6, 44) +
-            riga(fisso(84, et('Fantasia')) + elastico(fantasie()), 'align-items:center;gap:6px;'),
-            'gap:5px;justify-content:space-between;'
-          )),
-          'align-items:stretch;gap:10px;'
-        ) +
-        dueColori() +
-        riferimento(),
-        'gap:8px;'
-      ) },
+  { l: 'N', t: 'Figura a sinistra col nome, scelte a blocchi',
+    p: 'Come la L ma i capi stanno su due righe più larghe invece che su una sola stretta: le icone si vedono meglio e la figura resta comunque alta quanto tutto il blocco.',
+    html: () => '<div style="display:flex;gap:11px;align-items:stretch">' +
+      '<div style="flex:0 0 142px">' + figura(206) + '</div>' +
+      '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:7px">' +
+        '<div><span class="et">Che cosa indossa</span>' +
+          '<div class="capi" style="grid-template-columns:repeat(5,1fr)">' + AV.TOP.map(t =>
+            '<button class="capo' + (av.top.style === t.key ? ' on' : '') + '" data-set="top|' + t.key + '">' +
+            CAPI.capo(t.key, av.top.color, av.top.pattern, 46) + '<span class="nm">' + t.label + '</span></button>').join('') + '</div></div>' +
+        '<div><span class="et">Sotto</span>' +
+          '<div class="capi" style="grid-template-columns:repeat(6,1fr)">' + AV.PANTS.map(t =>
+            '<button class="capo' + (av.pants.style === t.key ? ' on' : '') + '" data-set="pants|' + t.key + '">' +
+            CAPI.capo(t.key, av.pants.color, av.pants.pattern, 42) + '<span class="nm">' + t.label + '</span></button>').join('') + '</div></div>' +
+      '</div></div>' +
+      '<div style="display:flex;gap:8px;margin-top:7px">' +
+        '<div style="flex:1;min-width:0"><span class="et">Colore capo</span>' + tinte('top') + '</div>' +
+        '<div style="flex:1;min-width:0"><span class="et">Colore sotto</span>' + tinte('pants') + '</div></div>' +
+      '<div style="margin-top:6px"><span class="et">Fantasia</span>' + fantasie() + '</div>' +
+      '<div style="margin-top:6px">' + riferimento() + '</div>' }
 ];
 
 function disegna() {
@@ -393,3 +286,86 @@ document.addEventListener('input', (ev) => { if (ev.target.hasAttribute('data-no
 disegna();
 </script>
 </html>
+
+<div id="controllo" style="max-width:900px;margin:46px auto 0"></div>
+<script>
+(function () {
+  const CAND = [
+    { l: 'A · ORIGINALE del collega', f: function () { return col(
+        riga(
+          fisso(244, figura(212)) +
+          elastico(col(
+            et('Come è vestito') +
+            col(sopra(9, 46) + tinte('top'), 'gap:5px;') +
+            col(sotto(6, 46) + tinte('pants'), 'gap:5px;')
+          , 'gap:6px;')),
+          'align-items:stretch;gap:12px;'
+        ) +
+        col(et('Fantasia') + fantasie(), 'gap:2px;') +
+        riferimento()
+      , 'gap:7px;'); } },
+
+    { l: 'B · CORRETTA (figura 212, fantasia con etichetta a lato)', f: function () { return col(
+        riga(
+          fisso(160, figura(212)) +
+          elastico(col(
+            et('Che cosa indossa') + sopra(9, 46) + tinte('top') +
+            et('Sotto') + sotto(6, 46) + tinte('pants')
+          , 'gap:5px;')),
+          'align-items:stretch;gap:12px;'
+        ) +
+        riga(fisso(104, et('Fantasia')) + elastico(fantasie()), 'align-items:center;gap:8px;') +
+        riferimento()
+      , 'gap:6px;'); } },
+
+    { l: 'C · variante figura 196 con etichetta fantasia sopra', f: function () { return col(
+        riga(
+          fisso(160, figura(196)) +
+          elastico(col(
+            et('Che cosa indossa') + sopra(9, 46) + tinte('top') +
+            et('Sotto') + sotto(6, 46) + tinte('pants')
+          , 'gap:5px;')),
+          'align-items:stretch;gap:12px;'
+        ) +
+        col(et('Fantasia') + fantasie(), 'gap:2px;') +
+        riferimento()
+      , 'gap:6px;'); } }
+  ];
+
+  document.getElementById('controllo').innerHTML = CAND.map((c, i) =>
+    '<h3 style="font-family:Fredoka,sans-serif;margin:26px 0 6px">' + c.l + '</h3>' +
+    '<p class="perche" id="mm' + i + '">…</p>' +
+    '<div class="telaio"><div class="card blk c-viola sec-people" style="margin:0">' +
+    '<h2><span class="em">&#129489;&#8205;&#129309;&#8205;&#129489;</span> Chi accompagna</h2>' +
+    '<div class="blk-in" id="bb' + i + '">' + barraRuoli() +
+    '<div style="margin-top:7px">' + c.f() + '</div></div></div></div>').join('');
+
+  function misura() {
+    window.__ris = CAND.map((c, i) => {
+      const inner = document.getElementById('bb' + i);
+      const card = inner.closest('.card');
+      const h = Math.round(card.getBoundingClientRect().height);
+      const pil = card.querySelector('.tinte button');
+      const ico = card.querySelector('.capo svg');
+      const fan = card.querySelector('.fant button');
+      const fig = card.querySelector('.figura svg');
+      const r = {
+        nome: c.l,
+        altezzaTotale: h,
+        avanzo: 484 - h,
+        larghezzaUtile: Math.round(inner.getBoundingClientRect().width),
+        scrollOrizzontale: inner.scrollWidth > inner.clientWidth + 1,
+        pastigliaColore: Math.round(pil.getBoundingClientRect().width * 10) / 10,
+        pastigliaAltezza: Math.round(pil.getBoundingClientRect().height),
+        iconaCapo: Math.round(ico.getBoundingClientRect().width),
+        cellaFantasia: Math.round(fan.getBoundingClientRect().width * 10) / 10,
+        figuraAltezza: Math.round(fig.getBoundingClientRect().height)
+      };
+      document.getElementById('mm' + i).textContent = JSON.stringify(r);
+      return r;
+    });
+  }
+  misura();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => setTimeout(misura, 60));
+})();
+</script>
