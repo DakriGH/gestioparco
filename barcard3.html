@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="it">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Le card del Bar — altre dieci</title>
+<link rel="stylesheet" href="./css/fonts.css">
+<style>
+  :root { --sfondo:#14141B; --carta:#1E1E28; --carta2:#262633;
+          --txt:#E9E9F2; --txt2:#9A9AB0; --sel:#3B8CFF; --soldi:#19C08A; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  body { margin: 0; background: #0B0B10; color: var(--txt); padding: 26px 18px 80px;
+    font-family: 'Inter', system-ui, sans-serif; }
+  .foglio { max-width: 900px; margin: 0 auto; }
+  .occhiello { color: #FFD166; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; margin: 0 0 8px; }
+  h1 { font-family: 'Fredoka', sans-serif; font-size: 28px; margin: 0 0 10px; }
+  .intro { color: #A8A8BD; font-size: 15px; line-height: 1.6; max-width: 70ch; margin: 0 0 6px; }
+  .intro b { color: #FFD166; font-weight: 600; }
+
+  .caso { padding: 32px 0 6px; border-top: 1px solid rgba(255,255,255,.08); margin-top: 28px; }
+  .caso:first-of-type { border-top: 0; }
+  .testa { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .lett { font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 700; background: #23232F;
+    color: #FFD166; border-radius: 20px; padding: 4px 12px; }
+  .testa h2 { font-family: 'Fredoka', sans-serif; font-size: 21px; margin: 0; }
+  .mis { margin-left: auto; font-size: 11.5px; font-weight: 800; letter-spacing: .04em;
+    text-transform: uppercase; border-radius: 20px; padding: 4px 11px; background: rgba(0,0,0,.5); }
+  .idea { color: #9A9AB0; font-size: 14.5px; line-height: 1.6; margin: 8px 0 14px; max-width: 72ch; }
+  .idea b { color: #C9CDD6; font-weight: 600; }
+
+  .telaio { background: var(--sfondo); border-radius: 22px; padding: 16px;
+    border: 1px solid rgba(255,255,255,.08); overflow: hidden; }
+  .telaio > .dentro { width: 768px; transform-origin: top left; }
+  .grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; align-content: start; }
+
+  /* ————— base comune ————— */
+  .c { position: relative; background: var(--carta); border-radius: 22px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.3); display: flex; flex-direction: column; overflow: hidden; }
+  .c.preso { background: #14243A; box-shadow: 0 0 0 3px var(--sel) inset, 0 6px 18px rgba(59,140,255,.3); }
+  .c.saldo { background: #10241D; box-shadow: 0 0 0 3px var(--soldi) inset, 0 6px 18px rgba(25,192,138,.24); }
+  .c .su { border: none; background: none; font: inherit; color: inherit; cursor: pointer;
+    padding: 13px; display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; }
+  .c .su svg { width: 64px; height: 64px; flex: 0 0 auto; }
+  .c .testi { flex: 1; min-width: 0; min-height: 64px; display: flex; flex-direction: column;
+    justify-content: center; gap: 6px; }
+  .c .pr { font-family: 'Fredoka', sans-serif; font-size: 23px; font-weight: 700; color: #C9CDD6; line-height: 1.05; }
+  .c.preso .pr { color: #9CC6FF; } .c.saldo .pr { color: #7FE8C1; }
+  .c .nm { font-size: 18px; font-weight: 700; line-height: 1.2; color: var(--txt); }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .num { font-family: 'Fredoka', sans-serif; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  /* ══ I · quantità nella testa ══ */
+  .s-I .bollo { flex: 0 0 auto; min-width: 40px; height: 40px; padding: 0 8px; border-radius: 13px;
+    background: var(--sel); color: #06162E; font-family: 'Fredoka', sans-serif; font-size: 22px;
+    font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .s-I .c.saldo .bollo { background: var(--soldi); color: #06251A; }
+  .s-I .fila { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 1px; background: rgba(0,0,0,.5); }
+  .s-I .fila button { border: none; background: rgba(255,255,255,.06); min-height: 52px;
+    font-family: 'Fredoka', sans-serif; font-size: 24px; font-weight: 700; color: var(--txt); }
+  .s-I .fila button.v { background: rgba(25,192,138,.18); color: var(--soldi); font-size: 17px; }
+
+  /* ══ J · quattro tasti in quadrato ══ */
+  .s-J .quad { display: grid; grid-template-columns: 1fr 78px 1fr; gap: 1px; background: rgba(0,0,0,.5); }
+  .s-J .quad button { border: none; background: rgba(255,255,255,.06); min-height: 48px;
+    font-family: 'Fredoka', sans-serif; font-size: 24px; font-weight: 700; color: var(--txt); }
+  .s-J .quad button.v { background: rgba(25,192,138,.14); color: var(--soldi); }
+  .s-J .quad button:disabled { opacity: .25; }
+  .s-J .quad .mez { grid-row: span 2; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 2px; background: rgba(255,255,255,.03); }
+  .s-J .quad .mez .a { font-family: 'Fredoka', sans-serif; font-size: 27px; font-weight: 700; }
+  .s-J .quad .mez .b { font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 700; color: var(--soldi); }
+
+  /* ══ K · segmenti ══ */
+  .s-K .riga { display: grid; grid-template-columns: 1fr 70px 1fr; background: rgba(0,0,0,.4); }
+  .s-K .riga button { border: none; background: none; min-height: 50px; font-family: 'Fredoka', sans-serif;
+    font-size: 25px; font-weight: 700; color: var(--txt); }
+  .s-K .riga .n { align-self: center; text-align: center; font-family: 'Fredoka', sans-serif;
+    font-size: 27px; font-weight: 700; }
+  .s-K .segm { display: flex; gap: 3px; padding: 8px 10px 10px; background: rgba(25,192,138,.08); }
+  .s-K .segm button { flex: 1; height: 30px; border: 2px solid rgba(25,192,138,.45); border-radius: 8px;
+    background: none; padding: 0; }
+  .s-K .segm button.ok { background: var(--soldi); border-color: var(--soldi); }
+  .s-K .segm .et { font-size: 10.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--soldi); align-self: center; padding-right: 4px; }
+
+  /* ══ L · la card si riempie di verde ══ */
+  .s-L .livello { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(25,192,138,.22);
+    transition: height .2s ease; pointer-events: none; }
+  .s-L .riga { position: relative; display: grid; grid-template-columns: 1fr 70px 1fr; background: rgba(0,0,0,.35); }
+  .s-L .riga button { border: none; background: none; min-height: 52px; font-family: 'Fredoka', sans-serif;
+    font-size: 25px; font-weight: 700; color: var(--txt); }
+  .s-L .riga .n { align-self: center; text-align: center; font-family: 'Fredoka', sans-serif;
+    font-size: 28px; font-weight: 700; }
+  .s-L .tocca { position: relative; border: none; background: rgba(25,192,138,.16); width: 100%;
+    min-height: 44px; color: var(--soldi); font-size: 13.5px; font-weight: 700; }
+
+  /* ══ M · il prezzo diventa il residuo ══ */
+  .s-M .testi { gap: 3px; }
+  .s-M .resta { font-family: 'Fredoka', sans-serif; font-size: 23px; font-weight: 700; color: #C9CDD6; line-height: 1.05; }
+  .s-M .resta.ok { color: var(--soldi); }
+  .s-M .via { font-size: 12.5px; font-weight: 700; color: var(--txt2); }
+  .s-M .riga { display: grid; grid-template-columns: 1fr 70px 1fr; background: rgba(0,0,0,.4); }
+  .s-M .riga button { border: none; background: none; min-height: 48px; font-family: 'Fredoka', sans-serif;
+    font-size: 25px; font-weight: 700; color: var(--txt); }
+  .s-M .riga .n { align-self: center; text-align: center; font-family: 'Fredoka', sans-serif;
+    font-size: 27px; font-weight: 700; }
+  .s-M .paga { border: none; background: rgba(25,192,138,.2); color: #7FE8C1; width: 100%;
+    min-height: 44px; font-size: 14px; font-weight: 700; }
+  .s-M .paga:disabled { opacity: .35; }
+
+  /* ══ N · tasti agli angoli ══ */
+  .s-N .ang { display: grid; grid-template-columns: 60px 1fr 60px; grid-template-rows: 48px 48px;
+    gap: 1px; background: rgba(0,0,0,.5); }
+  .s-N .ang button { border: none; background: rgba(255,255,255,.06); font-family: 'Fredoka', sans-serif;
+    font-size: 24px; font-weight: 700; color: var(--txt); }
+  .s-N .ang button.v { background: rgba(25,192,138,.16); color: var(--soldi); }
+  .s-N .ang button:disabled { opacity: .25; }
+  .s-N .ang .mez { grid-row: span 2; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; background: rgba(255,255,255,.03); }
+  .s-N .ang .mez .a { font-family: 'Fredoka', sans-serif; font-size: 30px; font-weight: 700; }
+  .s-N .ang .mez .b { font-size: 11px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; color: var(--soldi); }
+
+  /* ══ O · testa e piede ══ */
+  .s-O .st { display: flex; align-items: center; background: rgba(0,0,0,.35); border-radius: 13px;
+    overflow: hidden; flex: 0 0 auto; }
+  .s-O .st button { border: none; background: none; width: 38px; min-height: 44px;
+    font-family: 'Fredoka', sans-serif; font-size: 21px; font-weight: 700; color: var(--txt); }
+  .s-O .st .n { min-width: 28px; text-align: center; font-family: 'Fredoka', sans-serif;
+    font-size: 21px; font-weight: 700; }
+  .s-O .piede { display: flex; align-items: center; gap: 10px; padding: 9px 13px 12px;
+    background: rgba(25,192,138,.1); }
+  .s-O .piede b { flex: 1; font-size: 13px; font-weight: 700; color: var(--soldi); }
+  .s-O .piede .st { background: rgba(25,192,138,.18); }
+  .s-O .piede .st button, .s-O .piede .st .n { color: var(--soldi); }
+  .s-O .piede .st button:disabled { opacity: .25; }
+
+  /* ══ P · un tasto grande ══ */
+  .s-P .grande { border: none; background: rgba(59,140,255,.18); color: #9CC6FF; width: 100%;
+    min-height: 52px; font-family: 'Fredoka', sans-serif; font-size: 22px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .s-P .c.preso .grande, .s-P .c.saldo .grande { background: rgba(255,255,255,.07); color: var(--txt); }
+  .s-P .sotto { display: grid; grid-template-columns: 62px 1fr; gap: 1px; background: rgba(0,0,0,.5); }
+  .s-P .sotto button { border: none; min-height: 46px; font-family: 'Fredoka', sans-serif;
+    font-size: 22px; font-weight: 700; background: rgba(255,255,255,.06); color: var(--txt); }
+  .s-P .sotto button.v { background: rgba(25,192,138,.18); color: var(--soldi); font-size: 15px; }
+
+  /* ══ Q · numero fantasma ══ */
+  .s-Q .fantasma { position: absolute; right: 10px; top: 2px; font-family: 'Fredoka', sans-serif;
+    font-size: 92px; font-weight: 700; line-height: 1; color: rgba(255,255,255,.07); pointer-events: none; }
+  .s-Q .c.preso .fantasma { color: rgba(59,140,255,.25); }
+  .s-Q .c.saldo .fantasma { color: rgba(25,192,138,.25); }
+  .s-Q .fila { display: grid; grid-template-columns: repeat(4,1fr); gap: 1px; background: rgba(0,0,0,.5); }
+  .s-Q .fila button { border: none; background: rgba(255,255,255,.06); min-height: 50px;
+    font-family: 'Fredoka', sans-serif; font-size: 22px; font-weight: 700; color: var(--txt); }
+  .s-Q .fila button.v { background: rgba(25,192,138,.16); color: var(--soldi); }
+  .s-Q .fila button:disabled { opacity: .25; }
+  .s-Q .conta { padding: 0 13px 10px; font-size: 12.5px; font-weight: 700; color: var(--soldi); }
+
+  /* ══ R · con le etichette ══ */
+  .s-R .riga { display: grid; grid-template-columns: 1fr 42px 44px 42px; align-items: center;
+    gap: 1px; background: rgba(0,0,0,.45); }
+  .s-R .riga .et { padding-left: 13px; font-size: 12px; font-weight: 800; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--txt2); background: rgba(255,255,255,.03); align-self: stretch;
+    display: flex; align-items: center; }
+  .s-R .riga button { border: none; background: rgba(255,255,255,.06); min-height: 48px;
+    font-family: 'Fredoka', sans-serif; font-size: 22px; font-weight: 700; color: var(--txt); }
+  .s-R .riga .n { text-align: center; align-self: stretch; background: rgba(255,255,255,.03);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Fredoka', sans-serif; font-size: 22px; font-weight: 700; }
+  .s-R .v .et, .s-R .v .n, .s-R .v button { color: var(--soldi); }
+  .s-R .v .et, .s-R .v .n { background: rgba(25,192,138,.08); }
+  .s-R .v button { background: rgba(25,192,138,.14); }
+  .s-R .v button:disabled { opacity: .25; }
+
+  .nota { background: #181A22; border: 1px solid rgba(255,255,255,.08); border-left: 3px solid #FFD166;
+    border-radius: 0 14px 14px 0; padding: 14px 16px; margin-top: 34px; color: #B9BFC9;
+    font-size: 14.5px; line-height: 1.65; }
+  .nota b { color: var(--txt); }
+</style>
+
+<div class="foglio">
+  <p class="occhiello">Bar &amp; Conto · le card, secondo giro</p>
+  <h1>Altre dieci card</h1>
+  <p class="intro">Stessa disposizione di adesso — categorie in alto, <b>griglia a tre colonne</b>,
+  totali in fondo. Cambia solo la card. Dieci strade nuove, diverse dalle otto di prima.</p>
+  <p class="intro">Il cartellino dice quanto è alta la card e <b>quanti prodotti ci stanno</b> in una
+  schermata senza ascensore: le bevande sono dodici, quindi da dodici in su è verde.</p>
+
+  <div id="casi"></div>
+
+  <div class="nota">
+    <b>Toccale, non guardarle.</b> Se una ti piace ma ha un pezzo che non va, dimmelo così: «la N ma
+    col verde della R». Sono pezzi, si mescolano.
+  </div>
+</div>
+
+<script>
+/* ---------- le icone, disegnate sui prodotti veri ----------
+   Ogni forma e' fatta di pezzi che si colorano: corpo, fascia
+   dell'etichetta, onda, tappo, stella. Cosi' una Coca e' rossa con
+   l'onda bianca, la Zero e' nera con l'onda rossa, e l'acqua
+   frizzante e' la stessa bottiglia col TAPPO ROSSO. */
+function svg(d) {
+  return '<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">' + d + '</svg>';
+}
+const STELLA = (cx, cy, r, c) => {
+  let p = '';
+  for (let k = 0; k < 5; k++) {
+    const a1 = -Math.PI/2 + k * 2*Math.PI/5, a2 = a1 + Math.PI/5;
+    p += (k ? 'L' : 'M') + (cx + r*Math.cos(a1)).toFixed(1) + ' ' + (cy + r*Math.sin(a1)).toFixed(1) +
+         'L' + (cx + r*0.42*Math.cos(a2)).toFixed(1) + ' ' + (cy + r*0.42*Math.sin(a2)).toFixed(1);
+  }
+  return '<path d="' + p + 'Z" fill="' + c + '"/>';
+};
+
+/* LATTINA: corpo, fascia, onda, e volendo un frutto sull'etichetta */
+function lattina(o) {
+  return svg(
+    '<rect x="11" y="5.5" width="18" height="29" rx="4.5" fill="' + o.corpo + '"/>' +
+    '<rect x="11" y="5.5" width="5" height="29" rx="4.5" fill="#fff" opacity=".13"/>' +
+    (o.fascia ? '<rect x="11" y="14" width="18" height="11" fill="' + o.fascia + '"/>' : '') +
+    (o.onda ? '<path d="M11 21.5c3.5-4 6-1 9 .5s5 .5 9-2.5v4.5c-4 2.6-6.4 4-9 2.6s-5.4-4-9-.6Z" fill="' + o.onda + '"/>' : '') +
+    (o.frutto ? '<circle cx="20" cy="19.6" r="4.4" fill="' + o.frutto + '"/>' +
+                '<circle cx="20" cy="19.6" r="4.4" stroke="#fff" stroke-width=".9" opacity=".7"/>' +
+                (o.foglia ? '<path d="M20 15.4c1.6-1.7 3.6-1.5 3.6-1.5s.2 2-1.5 3.6c-.9.8-2.1-1.2-2.1-2.1Z" fill="#3AA655"/>' : '') : '') +
+    (o.scritta ? '<rect x="14.5" y="17.5" width="11" height="3.4" rx="1.7" fill="' + o.scritta + '"/>' : '') +
+    '<rect x="12.6" y="3.4" width="14.8" height="3" rx="1.5" fill="#D5D9E0"/>' +
+    '<rect x="12.6" y="33" width="14.8" height="2.6" rx="1.3" fill="#B9BFC9"/>'
+  );
+}
+/* BOTTIGLIA costruita dal CENTRO: ogni misura e' 20 +/- qualcosa,
+   cosi' la simmetria non dipende dall'occhio ma dal conto.
+   o.larga  -> forma tozza (Ichnusa)
+   o.piccola-> bottiglietta di vetro (Brasilena) */
+function bottiglia(o) {
+  const larga = !!o.larga, mini = !!o.piccola;
+  const bw = larga ? 22 : (mini ? 16 : 15);      /* larghezza del corpo */
+  const nw = larga ? 6.4 : (mini ? 6 : 6);       /* larghezza del collo */
+  const yTappo = larga ? 8.2 : (mini ? 8.6 : 3.4);
+  const hTappo = 4.2;
+  const ySpalla = larga ? 16.4 : (mini ? 16.8 : 11.6);   /* fine collo */
+  const yCorpo = larga ? 21.6 : (mini ? 22 : 18.6);      /* inizio corpo dritto */
+  const yFondo = 35.6, r = 2.8;
+  const bx = 20 - bw / 2, bx2 = 20 + bw / 2;
+  const nx = 20 - nw / 2, nx2 = 20 + nw / 2;
+  const d =
+    'M' + nx + ' ' + (yTappo + hTappo) +
+    'L' + nx + ' ' + ySpalla +
+    'C' + nx + ' ' + (ySpalla + 2) + ' ' + bx + ' ' + (yCorpo - 2.4) + ' ' + bx + ' ' + yCorpo +
+    'L' + bx + ' ' + (yFondo - r) +
+    'a' + r + ' ' + r + ' 0 0 0 ' + r + ' ' + r +
+    'h' + (bw - 2 * r) +
+    'a' + r + ' ' + r + ' 0 0 0 ' + r + ' ' + (-r) +
+    'L' + bx2 + ' ' + yCorpo +
+    'C' + bx2 + ' ' + (yCorpo - 2.4) + ' ' + nx2 + ' ' + (ySpalla + 2) + ' ' + nx2 + ' ' + ySpalla +
+    'L' + nx2 + ' ' + (yTappo + hTappo) + 'Z';
+  const yEt = yCorpo + 2.2, hEt = Math.min(9.4, yFondo - yEt - 2.4);
+  return svg(
+    '<path d="' + d + '" fill="' + (o.vetro || '#BFE6F2') + '"/>' +
+    '<rect x="' + (bx + 1.4) + '" y="' + (yCorpo + 0.6) + '" width="2.6" height="' + (yFondo - yCorpo - 3) + '" rx="1.3" fill="#fff" opacity=".22"/>' +
+    (o.etichetta ? '<rect x="' + bx + '" y="' + yEt + '" width="' + bw + '" height="' + hEt + '" rx="1.6" fill="' + o.etichetta + '"/>' : '') +
+    (o.stella ? STELLA(20, yEt + hEt / 2, Math.min(3.4, hEt / 2.6), o.stella) : '') +
+    (o.riga ? '<rect x="' + (bx + 1.6) + '" y="' + (yEt + hEt / 2 - 1.3) + '" width="' + (bw - 3.2) + '" height="2.6" rx="1.3" fill="' + o.riga + '"/>' : '') +
+    '<rect x="' + (nx - 0.5) + '" y="' + yTappo + '" width="' + (nw + 1) + '" height="' + hTappo + '" rx="1.3" fill="' + (o.tappo || '#2F6FBF') + '"/>' +
+    '<rect x="' + (nx - 0.5) + '" y="' + (yTappo + hTappo - 0.6) + '" width="' + (nw + 1) + '" height="1.6" fill="#000" opacity=".18"/>'
+  );
+}
+/* BUSTA di patatine: sacchetto con la saldatura sopra e sotto */
+function busta(o) {
+  return svg(
+    '<path d="M12 9h16l2 3.4v20.2L28 36H12l-2-3.4V12.4L12 9Z" fill="' + o.corpo + '"/>' +
+    '<path d="M10 12.4h20v2.2H10zM10 30.4h20v2.2H10z" fill="#000" opacity=".16"/>' +
+    '<path d="M12 9h16v1.2H12zM12 34.8h16V36H12z" fill="#fff" opacity=".35"/>' +
+    '<ellipse cx="20" cy="22.6" rx="6.6" ry="5.2" fill="#FBF7EC"/>' +
+    '<path d="M15.6 23.6c.8-2.6 2.4-4 4.4-4s3.6 1.4 4.4 4c-1.6 1.4-3 2-4.4 2s-2.8-.6-4.4-2Z" fill="' + (o.chip || '#E8A33D') + '"/>' +
+    '<path d="M16.8 22.4c1-1.2 2-1.8 3.2-1.8s2.2.6 3.2 1.8" stroke="#C97C22" stroke-width=".9" fill="none" opacity=".8"/>'
+  );
+}
+/* SPRITZ con l'aperitivo attorno: olive, tarallini, patatine */
+function spritz() {
+  return svg(
+    /* ciotoline dietro */
+    '<ellipse cx="8.6" cy="31.4" rx="6.4" ry="4.2" fill="#2B2F3A"/>' +
+    '<circle cx="6.4" cy="30" r="2.1" fill="#7BA83C"/><circle cx="10.4" cy="30.6" r="2.1" fill="#5F8C2E"/>' +
+    '<circle cx="8.4" cy="32.8" r="2.1" fill="#7BA83C"/>' +
+    '<ellipse cx="31.6" cy="31.8" rx="6.4" ry="4.2" fill="#2B2F3A"/>' +
+    '<circle cx="29.6" cy="30.6" r="2.4" stroke="#D8A85A" stroke-width="1.5" fill="none"/>' +
+    '<circle cx="33.4" cy="31.4" r="2.4" stroke="#C79647" stroke-width="1.5" fill="none"/>' +
+    '<path d="M28.4 34.4c1.2-1.4 2.6-2 4-2s2.8.6 4 2c-1.6 1-3 1.4-4 1.4s-2.4-.4-4-1.4Z" fill="#E8A33D"/>' +
+    /* il calice */
+    '<path d="M11.4 6.6h17.2L22.6 17.8a2 2 0 0 0-.24 1V28h-2.6v-9.2a2 2 0 0 0-.24-1L11.4 6.6Z" fill="#FF7A29"/>' +
+    '<path d="M13.8 8.6h12.4L23.2 14h-6.4L13.8 8.6Z" fill="#fff" opacity=".3"/>' +
+    '<rect x="16.6" y="28" width="6.8" height="2.4" rx="1.2" fill="#D5D9E0"/>' +
+    '<rect x="12.4" y="30.6" width="15.2" height="2.8" rx="1.4" fill="#D5D9E0"/>' +
+    '<circle cx="27.6" cy="9.4" r="4.4" fill="#FFA53D"/>' +
+    '<circle cx="27.6" cy="9.4" r="4.4" stroke="#fff" stroke-width="1" opacity=".85"/>' +
+    '<path d="M27.6 5v8.8M23.2 9.4h8.8" stroke="#fff" stroke-width=".9" opacity=".8"/>'
+  );
+}
+/* TAZZINA da caffe' */
+function tazzina() {
+  return svg(
+    '<path d="M8.6 14h18.8v9.4a9.4 9.4 0 0 1-18.8 0V14Z" fill="#F2F3F7"/>' +
+    '<path d="M10.6 16h14.8v7.4a7.4 7.4 0 0 1-14.8 0V16Z" fill="#5B3A22"/>' +
+    '<path d="M27.4 16.6h3.4a3.6 3.6 0 0 1 0 7.2h-3.4" stroke="#F2F3F7" stroke-width="2.8" stroke-linecap="round"/>' +
+    '<rect x="5.6" y="32.6" width="24.8" height="3.2" rx="1.6" fill="#D5D9E0"/>' +
+    '<path d="M15 9.6c0-1.6 1.6-1.6 1.6-3.2M19.2 9.6c0-1.6 1.6-1.6 1.6-3.2" stroke="#B9BFC9" stroke-width="1.4" stroke-linecap="round" opacity=".8"/>'
+  );
+}
+/* BICCHIERINO da liquore */
+function bicchierino(o) {
+  return svg(
+    '<path d="M12.6 12.6h14.8l-1.7 13.2a3.2 3.2 0 0 1-3.2 2.8h-4.8a3.2 3.2 0 0 1-3.2-2.8L12.6 12.6Z" fill="' + o.liquore + '"/>' +
+    '<path d="M13.2 12.6h13.6l-.6 4.4H13.8l-.6-4.4Z" fill="#fff" opacity=".3"/>' +
+    '<rect x="18.4" y="28" width="3.2" height="5.4" fill="#D5D9E0"/>' +
+    '<rect x="13" y="32.8" width="14" height="3.2" rx="1.6" fill="#D5D9E0"/>'
+  );
+}
+/* BAMBINI: bambino col palloncino - si capisce anche da solo */
+function bimbo(c) {
+  return svg(
+    '<path d="M29.6 4.6c0 3-2.4 5.4-5.4 5.4S18.8 7.6 18.8 4.6 21.2-.8 24.2-.8s5.4 2.4 5.4 5.4Z" fill="' + c + '"/>' +
+    '<circle cx="28" cy="8.6" r="5.6" fill="#E24B5A"/>' +
+    '<path d="M28 14.2c-.6 1.4-.2 2.4.6 3.2" stroke="#E9E9F2" stroke-width="1.2" fill="none" stroke-linecap="round"/>' +
+    '<path d="M28 14.2 16.6 22" stroke="#C9CDD6" stroke-width="1.1" stroke-linecap="round"/>' +
+    '<circle cx="14.4" cy="14.6" r="5.6" fill="#F2C79C"/>' +
+    '<path d="M9 14.2c0-3.6 2.4-6 5.4-6s5.4 2.4 5.4 6c-1.6-1.2-3.4-1.8-5.4-1.8S10.6 13 9 14.2Z" fill="' + c + '"/>' +
+    '<path d="M8.4 36v-8.4c0-3.6 2.6-6.4 6-6.4s6 2.8 6 6.4V36H8.4Z" fill="' + c + '"/>' +
+    '<rect x="10.6" y="30" width="3.2" height="6" rx="1.6" fill="#3A4152"/>' +
+    '<rect x="15.4" y="30" width="3.2" height="6" rx="1.6" fill="#3A4152"/>' +
+    '<circle cx="12.6" cy="14.8" r="1" fill="#0F1116"/><circle cx="16.4" cy="14.8" r="1" fill="#0F1116"/>'
+  );
+}
+/* CRAZY JUMPING: trampolino con qualcuno per aria */
+function saltatore(c) {
+  return svg(
+    /* il tappeto */
+    '<ellipse cx="20" cy="29.4" rx="14.4" ry="4.6" fill="#2B2F3A"/>' +
+    '<ellipse cx="20" cy="28.4" rx="14.4" ry="4.6" fill="' + c + '" opacity=".55"/>' +
+    '<ellipse cx="20" cy="28.4" rx="10.6" ry="3.2" fill="#14141B"/>' +
+    /* gambe del trampolino */
+    '<path d="M7.6 30.4 4.4 36M32.4 30.4 35.6 36" stroke="#8C93A6" stroke-width="2.2" stroke-linecap="round"/>' +
+    /* chi salta */
+    '<circle cx="20" cy="6.2" r="3.6" fill="' + c + '"/>' +
+    '<path d="M20 10.4c2.6 0 4.6 1.7 4.6 4v2.6l3.6 4.4-2.2 1.8-3-3.6v4.6h-6v-4.6l-3 3.6-2.2-1.8 3.6-4.4v-2.6c0-2.3 2-4 4.6-4Z" fill="' + c + '"/>' +
+    /* le righe del rimbalzo */
+    '<path d="M11.6 12.6c-1.2-1.2-1.8-2.6-1.8-4M28.4 12.6c1.2-1.2 1.8-2.6 1.8-4" stroke="' + c + '" stroke-width="1.8" stroke-linecap="round" opacity=".55"/>'
+  );
+}
+const ICONE = {
+  /* --- parco --- */
+  bimbi:  () => bimbo('#3B8CFF'),
+  crazy:  () => saltatore('#B072FF'),
+  /* --- bevande --- */
+  /* identiche: cambia SOLO il tappo, come al banco */
+  acqua:     () => bottiglia({ vetro:'#BFE6F2', tappo:'#2F6FBF', etichetta:'#2F6FBF', riga:'#EAF6FB' }),
+  acquafriz: () => bottiglia({ vetro:'#BFE6F2', tappo:'#D93B3B', etichetta:'#2F6FBF', riga:'#EAF6FB' }),
+  caffe:     () => tazzina(),
+  coca:      () => lattina({ corpo:'#D2172F', onda:'#ffffff' }),
+  cocaz:     () => lattina({ corpo:'#17181C', onda:'#D2172F' }),
+  fanta:     () => lattina({ corpo:'#FF7A1E', onda:'#ffffff' }),
+  sprite:    () => lattina({ corpo:'#1FA85C', onda:'#EAF6D8' }),
+  schw:      () => bottiglia({ vetro:'#D8C77A', tappo:'#C9A227', etichetta:'#C9A227', riga:'#FBF7EC' }),
+  gazz:      () => bottiglia({ vetro:'#E4EEF2', tappo:'#8FB8C9', etichetta:'#8FB8C9', riga:'#ffffff' }),
+  estalim:   () => lattina({ corpo:'#E8B923', fascia:'#FBF7EC', frutto:'#FFE24A', foglia:true }),
+  estapes:   () => lattina({ corpo:'#E8834F', fascia:'#FBF7EC', frutto:'#FFB58A', foglia:true }),
+  bras:      () => bottiglia({ piccola:true, vetro:'#6B4226', tappo:'#C9A227', etichetta:'#C9A227', riga:'#5B3A22' }),
+  /* --- snack --- */
+  pata:      () => busta({ corpo:'#F2C230', chip:'#E8873D' }),
+  /* --- birre --- */
+  heine:     () => bottiglia({ vetro:'#1B7A3E', tappo:'#D2172F', etichetta:'#0F6431', stella:'#D2172F' }),
+  nastro:    () => bottiglia({ vetro:'#C9A46A', tappo:'#1F4E9C', etichetta:'#1F4E9C', riga:'#FBF7EC' }),
+  /* l'Ichnusa ha la bottiglia larga e bassa: e' la sua forma */
+  ichnu:     () => bottiglia({ larga:true, vetro:'#8C5A28', tappo:'#D2172F', etichetta:'#D2172F', stella:'#FBF7EC' }),
+  tenn:      () => bottiglia({ vetro:'#9C6B2F', tappo:'#D2172F', etichetta:'#D2172F', riga:'#FBF7EC' }),
+  /* --- alcolici --- */
+  limon:     () => bicchierino({ liquore:'#F5E04A' }),
+  amari:     () => bicchierino({ liquore:'#5B3A22' }),
+  grappa:    () => bicchierino({ liquore:'#EDE7DA' }),
+  spritz:    () => spritz()
+};
+const icona = p => (ICONE[p.id] || ICONE.acqua)();
+
+const LISTINO = [
+  { id:'bimbi',     nm:'Bambini',         pz:1200, cat:'Parco',    fisso:true },
+  { id:'crazy',     nm:'Crazy Jumping',   pz:400,  cat:'Parco',    fisso:true },
+  { id:'acqua',     nm:'Acqua',           pz:100,  cat:'Bevande' },
+  { id:'acquafriz', nm:'Acqua frizzante', pz:100,  cat:'Bevande' },
+  { id:'caffe',     nm:'Caffè',           pz:120,  cat:'Bevande' },
+  { id:'coca',      nm:'Coca Cola',       pz:250,  cat:'Bevande' },
+  { id:'cocaz',     nm:'Coca Cola Zero',  pz:250,  cat:'Bevande' },
+  { id:'fanta',     nm:'Fanta',           pz:250,  cat:'Bevande' },
+  { id:'sprite',    nm:'Sprite',          pz:250,  cat:'Bevande' },
+  { id:'schw',      nm:'Schweppes',       pz:200,  cat:'Bevande' },
+  { id:'gazz',      nm:'Gazzosa',         pz:200,  cat:'Bevande' },
+  { id:'estalim',   nm:'Estathè limone',  pz:250,  cat:'Bevande' },
+  { id:'estapes',   nm:'Estathè pesca',   pz:250,  cat:'Bevande' },
+  { id:'bras',      nm:'Brasilena',       pz:200,  cat:'Bevande' },
+  { id:'pata',      nm:'Patatine',        pz:150,  cat:'Snack' },
+  { id:'heine',     nm:'Heineken',        pz:300,  cat:'Birre' },
+  { id:'nastro',    nm:'Nastro Azzurro',  pz:300,  cat:'Birre' },
+  { id:'ichnu',     nm:'Ichnusa',         pz:300,  cat:'Birre' },
+  { id:'tenn',      nm:"Tennent's",       pz:350,  cat:'Birre' },
+  { id:'limon',     nm:'Limoncello',      pz:300,  cat:'Alcolici' },
+  { id:'amari',     nm:'Amari',           pz:300,  cat:'Alcolici' },
+  { id:'grappa',    nm:'Grappa',          pz:400,  cat:'Alcolici' },
+  { id:'spritz',    nm:'Spritz',          pz:600,  cat:'Alcolici' }
+];
+const CAT = ['Parco', 'Bevande', 'Birre', 'Snack', 'Alcolici'];
+const CATIC = { Parco:'bimbi', Bevande:'coca', Birre:'heine', Snack:'pata', Alcolici:'spritz' };
+const iconaCat = c => ICONE[CATIC[c]]();
+const prod = id => LISTINO.find(p => p.id === id);
+const eur = c => (c / 100).toFixed(2).replace('.', ',') + ' €';
+
+const PRODOTTI = ['acqua', 'coca', 'fanta', 'pata', 'heine', 'caffe'];
+const INIZIO = { coca:{q:2,p:1}, pata:{q:3,p:3}, caffe:{q:1,p:0} };
+const cls = (q,p) => q === 0 ? '' : (p >= q ? ' saldo' : ' preso');
+const testa = (p, extra) =>
+  '<button class="su" data-a="add" data-v="' + p.id + '">' + icona(p) +
+  '<span class="testi"><span class="pr">' + eur(p.pz) + '</span>' +
+  '<span class="nm">' + p.nm + '</span></span>' + (extra || '') + '</button>';
+
+/* ══ I · quantità nella testa ══ */
+function I(p, q, pg) {
+  return '<div class="c' + cls(q,pg) + '">' +
+    testa(p, q > 0 ? '<span class="bollo num">' + q + '</span>' : '') +
+    (q > 0 ? '<div class="fila">' +
+      '<button data-a="meno" data-v="' + p.id + '">−</button>' +
+      '<button data-a="add" data-v="' + p.id + '">+</button>' +
+      '<button class="v" data-a="ppiu" data-v="' + p.id + '">' +
+        (pg >= q ? '✓ pagate' : 'paga ' + pg + '/' + q) + '</button></div>' : '') + '</div>';
+}
+
+/* ══ J · quattro tasti in quadrato ══ */
+function J(p, q, pg) {
+  if (q === 0) return '<div class="c">' + testa(p) + '</div>';
+  return '<div class="c' + cls(q,pg) + '"><div>' + testa(p) + '</div>' +
+    '<div class="quad">' +
+      '<button data-a="meno" data-v="' + p.id + '">−</button>' +
+      '<div class="mez"><span class="a">' + q + '</span><span class="b">' + pg + ' pag.</span></div>' +
+      '<button data-a="add" data-v="' + p.id + '">+</button>' +
+      '<button class="v" data-a="pmeno" data-v="' + p.id + '"' + (pg<=0?' disabled':'') + '>−</button>' +
+      '<button class="v" data-a="ppiu" data-v="' + p.id + '"' + (pg>=q?' disabled':'') + '>+</button>' +
+    '</div></div>';
+}
+
+/* ══ K · segmenti ══ */
+function K(p, q, pg) {
+  if (q === 0) return '<div class="c">' + testa(p) + '</div>';
+  return '<div class="c' + cls(q,pg) + '">' + testa(p) +
+    '<div class="riga"><button data-a="meno" data-v="' + p.id + '">−</button>' +
+      '<span class="n">' + q + '</span>' +
+      '<button data-a="add" data-v="' + p.id + '">+</button></div>' +
+    '<div class="segm"><span class="et">pagate</span>' +
+      Array.from({length:q}, (_,i) =>
+        '<button class="' + (i < pg ? 'ok' : '') + '" data-a="pset" data-v="' + p.id + ':' + (i+1) + '"></button>').join('') +
+    '</div></div>';
+}
+
+/* ══ L · la card si riempie di verde ══ */
+function L(p, q, pg) {
+  if (q === 0) return '<div class="c">' + testa(p) + '</div>';
+  return '<div class="c' + cls(q,pg) + '">' +
+    '<span class="livello" style="height:' + Math.round(pg/q*100) + '%"></span>' + testa(p) +
+    '<div class="riga"><button data-a="meno" data-v="' + p.id + '">−</button>' +
+      '<span class="n">' + q + '</span>' +
+      '<button data-a="add" data-v="' + p.id + '">+</button></div>' +
+    '<button class="tocca" data-a="' + (pg >= q ? 'pzero' : 'ppiu') + '" data-v="' + p.id + '">' +
+      (pg >= q ? 'tutte pagate — tocca per disfare' : 'tocca per pagarne una · ' + pg + ' di ' + q) +
+    '</button></div>';
+}
+
+/* ══ M · il prezzo diventa il residuo ══ */
+function M(p, q, pg) {
+  const resta = (q - pg) * p.pz;
+  return '<div class="c' + cls(q,pg) + '">' +
+    '<button class="su" data-a="add" data-v="' + p.id + '">' + icona(p) +
+      '<span class="testi">' +
+      (q === 0
+        ? '<span class="resta">' + eur(p.pz) + '</span>'
+        : '<span class="resta' + (resta <= 0 ? ' ok' : '') + '">' +
+          (resta <= 0 ? '✓ saldata' : eur(resta)) + '</span>' +
+          '<span class="via">' + q + ' × ' + eur(p.pz) + (pg ? ' · ' + pg + ' pagate' : '') + '</span>') +
+      '<span class="nm">' + p.nm + '</span></span></button>' +
+    (q > 0 ?
+      '<div class="riga"><button data-a="meno" data-v="' + p.id + '">−</button>' +
+        '<span class="n">' + q + '</span>' +
+        '<button data-a="add" data-v="' + p.id + '">+</button></div>' +
+      '<button class="paga" data-a="' + (pg >= q ? 'pzero' : 'ppiu') + '" data-v="' + p.id + '">' +
+        (pg >= q ? '↺ non è pagata' : 'ne ha pagata una · ' + eur(p.pz)) + '</button>'
+      : '') + '</div>';
+}
+
+/* ══ N · tasti agli angoli ══ */
+function N(p, q, pg) {
+  if (q === 0) return '<div class="c">' + testa(p) + '</div>';
+  return '<div class="c' + cls(q,pg) + '">' + testa(p) +
+    '<div class="ang">' +
+      '<button data-a="meno" data-v="' + p.id + '">−</button>' +
+      '<div class="mez"><span class="a num">' + q + '</span>' +
+        '<span class="b">' + pg + ' pagate</span></div>' +
+      '<button data-a="add" data-v="' + p.id + '">+</button>' +
+      '<button class="v" data-a="pmeno" data-v="' + p.id + '"' + (pg<=0?' disabled':'') + '>−</button>' +
+      '<button class="v" data-a="ppiu" data-v="' + p.id + '"' + (pg>=q?' disabled':'') + '>+</button>' +
+    '</div></div>';
+}
+
+/* ══ O · testa e piede ══ */
+function O(p, q, pg) {
+  return '<div class="c' + cls(q,pg) + '">' +
+    '<button class="su" data-a="add" data-v="' + p.id + '">' + icona(p) +
+      '<span class="testi"><span class="pr">' + eur(p.pz) + '</span>' +
+      '<span class="nm">' + p.nm + '</span></span>' +
+      (q > 0 ? '<span class="st" onclick="event.stopPropagation()">' +
+        '<button data-a="meno" data-v="' + p.id + '">−</button>' +
+        '<span class="n">' + q + '</span>' +
+        '<button data-a="add" data-v="' + p.id + '">+</button></span>' : '') +
+    '</button>' +
+    (q > 0 ? '<div class="piede"><b>' + (pg >= q ? 'tutte pagate' : pg + ' pagate su ' + q) + '</b>' +
+      '<span class="st"><button data-a="pmeno" data-v="' + p.id + '"' + (pg<=0?' disabled':'') + '>−</button>' +
+      '<span class="n">' + pg + '</span>' +
+      '<button data-a="ppiu" data-v="' + p.id + '"' + (pg>=q?' disabled':'') + '>+</button></span></div>' : '') +
+  '</div>';
+}
+
+/* ══ P · un tasto grande ══ */
+function P(p, q, pg) {
+  return '<div class="c' + cls(q,pg) + '">' + testa(p) +
+    (q === 0
+      ? '<button class="grande" data-a="add" data-v="' + p.id + '">+ mettila sul conto</button>'
+      : '<button class="grande" data-a="add" data-v="' + p.id + '">' +
+          '<span class="num" style="font-size:30px">' + q + '</span> sul conto · +1</button>' +
+        '<div class="sotto">' +
+          '<button data-a="meno" data-v="' + p.id + '">−</button>' +
+          '<button class="v" data-a="' + (pg >= q ? 'pzero' : 'ppiu') + '" data-v="' + p.id + '">' +
+            (pg >= q ? '✓ tutte pagate' : 'pagane una · ' + pg + '/' + q) + '</button>' +
+        '</div>') + '</div>';
+}
+
+/* ══ Q · numero fantasma ══ */
+function Q(p, q, pg) {
+  return '<div class="c' + cls(q,pg) + '">' +
+    (q > 0 ? '<span class="fantasma">' + q + '</span>' : '') + testa(p) +
+    (q > 0 ? '<div class="conta">' + (pg >= q ? '✓ tutte pagate' : pg > 0 ? pg + ' pagate su ' + q : 'nessuna pagata') + '</div>' +
+      '<div class="fila">' +
+        '<button data-a="meno" data-v="' + p.id + '">−</button>' +
+        '<button data-a="add" data-v="' + p.id + '">+</button>' +
+        '<button class="v" data-a="pmeno" data-v="' + p.id + '"' + (pg<=0?' disabled':'') + '>−</button>' +
+        '<button class="v" data-a="ppiu" data-v="' + p.id + '"' + (pg>=q?' disabled':'') + '>+</button>' +
+      '</div>' : '') + '</div>';
+}
+
+/* ══ R · con le etichette ══ */
+function R(p, q, pg) {
+  if (q === 0) return '<div class="c">' + testa(p) + '</div>';
+  return '<div class="c' + cls(q,pg) + '">' + testa(p) +
+    '<div class="riga"><span class="et">prese</span>' +
+      '<button data-a="meno" data-v="' + p.id + '">−</button>' +
+      '<span class="n">' + q + '</span>' +
+      '<button data-a="add" data-v="' + p.id + '">+</button></div>' +
+    '<div class="riga v"><span class="et">pagate</span>' +
+      '<button data-a="pmeno" data-v="' + p.id + '"' + (pg<=0?' disabled':'') + '>−</button>' +
+      '<span class="n">' + pg + '</span>' +
+      '<button data-a="ppiu" data-v="' + p.id + '"' + (pg>=q?' disabled':'') + '>+</button></div></div>';
+}
+
+/* ————— montaggio ————— */
+const CASI = [
+  ['I', 'Quantità nella testa', 'Il numero <b>sale nella riga del nome</b>, come un bollo accanto al prezzo, e sotto resta una fascia sola: −, +, e un tasto verde largo che dice «paga 1/2». Card bassa e niente numeri in mezzo ai segni.', I],
+  ['J', 'Quattro tasti in quadrato', 'I quattro tasti fanno <b>un quadrato</b> attorno ai due numeri: sopra le prese, sotto le pagate, e in mezzo una colonna con la quantità grande e le pagate sotto in piccolo.', J],
+  ['K', 'Segmenti', 'Sopra il contatore normale, sotto <b>una tacca per ogni pezzo</b>: tocchi la tacca e diventa verde. Come i pallini, ma le tacche riempiono la riga e restano grandi anche in tanti.', K],
+  ['L', 'La card si riempie', 'Niente seconda fila: <b>è la card stessa che si riempie di verde</b> dal basso man mano che paghi, e sotto c\'è una striscia che si tocca per pagarne una.', L],
+  ['M', 'Il prezzo diventa il residuo', 'Il numero grande della testa <b>non è più il prezzo ma quanto manca su quella riga</b>: 2 × 2,50 con una pagata fa 2,50. Quando è saldata diventa «✓ saldata».', M],
+  ['N', 'Tasti agli angoli', 'I quattro tasti stanno <b>ai quattro angoli</b> della fascia e i numeri al centro: le due colonne sono lontane fra loro, quindi non puoi sbagliare quale stai toccando.', N],
+  ['O', 'Testa e piede', 'Le prese si cambiano <b>nella riga del nome</b>, le pagate <b>nel piede verde</b>: le due cose stanno il più lontano possibile e non si confondono mai.', O],
+  ['P', 'Un tasto grande', 'Un <b>tastone</b> largo tutta la card per aggiungere — il gesto che fai cento volte al giorno — e sotto, piccoli, il meno e il verde per le pagate.', P],
+  ['Q', 'Numero fantasma', 'La quantità è <b>gigante e trasparente dietro la card</b>: si legge da lontano senza rubare spazio a niente, e i quattro tasti stanno in fila in fondo.', Q],
+  ['R', 'Con le etichette', 'Ogni fila ha <b>scritto cosa è</b>: «prese» e «pagate», in chiaro, a sinistra. Nessun colore da imparare, nessun simbolo da indovinare.', R]
+];
+
+const box = document.getElementById('casi');
+CASI.forEach(([lett, nome, idea, ren]) => {
+  const S = { q: {}, p: {} };
+  PRODOTTI.forEach(id => { const i = INIZIO[id]; S.q[id] = i ? i.q : 0; S.p[id] = i ? i.p : 0; });
+
+  const sez = document.createElement('div');
+  sez.className = 'caso s-' + lett;
+  sez.innerHTML = '<div class="testa"><span class="lett">' + lett + '</span><h2>' + nome + '</h2>' +
+    '<span class="mis"></span></div><p class="idea">' + idea + '</p>' +
+    '<div class="telaio"><div class="dentro"><div class="grid"></div></div></div>';
+  box.appendChild(sez);
+
+  const grid = sez.querySelector('.grid'), mis = sez.querySelector('.mis');
+  const dis = () => {
+    grid.innerHTML = PRODOTTI.map(id => ren(prod(id), S.q[id], S.p[id])).join('');
+    const h = Math.max(...[...grid.children].map(c => c.offsetHeight));
+    const righe = Math.floor((800 + 14) / (h + 14));
+    const quanti = righe * 3;
+    let sborda = 0;
+    grid.querySelectorAll('*').forEach(e => {
+      if (e.scrollWidth - e.clientWidth > 2 && e.clientWidth > 30) sborda++;
+    });
+    mis.textContent = sborda ? sborda + ' cose sbordano' : 'card ' + h + 'px · ce ne stanno ' + quanti;
+    mis.style.color = sborda ? '#FF9AA2' : quanti >= 12 ? '#7FE8C1' : '#FFD166';
+  };
+  sez.addEventListener('click', e => {
+    const b = e.target.closest('[data-a]');
+    if (!b) return;
+    const a = b.dataset.a, v = b.dataset.v;
+    if (a === 'add')   S.q[v] = (S.q[v]||0) + 1;
+    if (a === 'meno') { S.q[v] = Math.max(0,(S.q[v]||0)-1); S.p[v] = Math.min(S.p[v], S.q[v]); }
+    if (a === 'ppiu')  S.p[v] = Math.min(S.q[v]||0, (S.p[v]||0)+1);
+    if (a === 'pmeno') S.p[v] = Math.max(0,(S.p[v]||0)-1);
+    if (a === 'pzero') S.p[v] = 0;
+    if (a === 'pset') { const [id,n] = v.split(':'); S.p[id] = (S.p[id] === +n ? +n-1 : +n); }
+    dis();
+  });
+  dis();
+});
+
+function adatta() {
+  document.querySelectorAll('.telaio').forEach(t => {
+    const d = t.querySelector('.dentro');
+    const s = Math.min(1, (t.clientWidth - 32) / 768);
+    d.style.transform = 'scale(' + s + ')';
+    t.style.height = (d.scrollHeight * s + 32) + 'px';
+  });
+}
+addEventListener('resize', adatta);
+adatta();
+</script>
