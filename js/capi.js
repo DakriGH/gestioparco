@@ -1,135 +1,183 @@
 /* ============================================================
    GESTIOPARCO — le icone dei capi
-   Ogni capo disegnato DA SOLO, steso come in vetrina: la maglietta è
-   una maglietta, i jeans sono jeans. Prima l'icona era la figura
-   intera con quel pezzo cambiato: onesta, ma occupava un sacco di
-   spazio e a colpo d'occhio erano tutte la stessa persona.
+   Ogni capo disegnato DA SOLO, steso come in vetrina. Deve bastare
+   l'icona: se devo leggere il nome sotto per capire che è una polo,
+   l'icona non ha fatto il suo mestiere.
 
    Il colore e la FANTASIA sono quelli veri — la trama arriva da
    AV.tessuto(), lo stesso posto da cui la prende la figura, così
    l'icona e l'avatar non possono raccontare due cose diverse.
 
-   Griglia di riferimento: viewBox 0 0 44 44.
+   Griglia: viewBox 0 0 48 48. Le spalle stanno a y 10, l'orlo a y 39;
+   i capi di sotto partono dalla cintura a y 8. Tenere queste quote fa
+   sì che una fila di icone sembri una fila di vestiti appesi, e non
+   una raccolta di forme di misure diverse.
    ============================================================ */
 (function (global) {
   'use strict';
 
   let seq = 0;
+  const sc = (c, q) => (global.AV && AV.shade ? AV.shade(c, q) : c);
 
-  const scuro = (c, q) => (global.AV && AV.shade ? AV.shade(c, q) : c);
+  /* Il capo si costruisce in tre strati:
+       sagoma  — la stoffa, che porta colore e fantasia
+       ombra   — una piega sola, sul lato sinistro, per dare volume
+       segni   — colletto, bottoni, cuciture, tasche: è QUI che il capo
+                 si riconosce, e vanno pochi e netti */
+  function tee(c, maniche) {
+    const lungo = maniche === 'lunghe';
+    const corpo = lungo
+      ? 'M17 10 L20 7.5 Q24 11 28 7.5 L31 10 L41 15 L38 34 L33 33 L33 39 Q24 41 15 39 L15 33 L10 34 L7 15 Z'
+      : 'M17 10 L20 7.5 Q24 11 28 7.5 L31 10 L41 16 L36.5 22.5 L33 20.5 L33 39 Q24 41 15 39 L15 20.5 L11.5 22.5 L7 16 Z';
+    return {
+      sagoma: corpo,
+      ombra: lungo ? 'M15 33 L10 34 L7 15 L17 10 L15 20 Z' : 'M15 20.5 L11.5 22.5 L7 16 L17 10 L15 14 Z',
+      segni: `<path d="M20 7.5 Q24 12 28 7.5" fill="none" stroke="${sc(c, -40)}" stroke-width="1.3"/>` +
+        (lungo
+          ? `<path d="M8.6 30 L14.4 31 M39.4 30 L33.6 31" stroke="${sc(c, -32)}" stroke-width="1.5"/>`
+          : `<path d="M12.4 20.6 L15 21 M35.6 20.6 L33 21" stroke="${sc(c, -32)}" stroke-width="1.4"/>`) +
+        `<path d="M15 37.4 Q24 39.2 33 37.4" fill="none" stroke="${sc(c, -28)}" stroke-width="1.1" opacity=".8"/>`
+    };
+  }
 
-  /* Il capo si disegna in due strati: la SAGOMA piena color stoffa (che
-     porta la fantasia) e sopra i DETTAGLI — colletto, cuciture, bottoni,
-     tasche — che sono quelli a far riconoscere il capo. */
   const CAPI = {
     /* ---------- sopra ---------- */
-    maglietta: (c) => ({
-      sagoma: 'M14 8 L18 6 Q22 9 26 6 L30 8 L38 13 L34 19 L31 17 L31 37 Q22 39 13 37 L13 17 L10 19 L6 13 Z',
-      extra: `<path d="M18 6 Q22 10 26 6" fill="none" stroke="${scuro(c, -34)}" stroke-width="1.2"/>`
-    }),
-    manicalunga: (c) => ({
-      sagoma: 'M14 8 L18 6 Q22 9 26 6 L30 8 L39 13 L36 31 L31 30 L31 37 Q22 39 13 37 L13 30 L8 31 L5 13 Z',
-      extra: `<path d="M18 6 Q22 10 26 6" fill="none" stroke="${scuro(c, -34)}" stroke-width="1.2"/>
-              <path d="M6.4 27.5 L11.6 28.6 M37.6 27.5 L32.4 28.6" stroke="${scuro(c, -30)}" stroke-width="1.4"/>`
-    }),
+    maglietta: (c) => tee(c, 'corte'),
+    manicalunga: (c) => tee(c, 'lunghe'),
+
     polo: (c) => ({
-      sagoma: 'M14 8 L18 6 L26 6 L30 8 L38 13 L34 19 L31 17 L31 37 Q22 39 13 37 L13 17 L10 19 L6 13 Z',
-      extra: `<path d="M18 6 L22 12 L26 6 L28 7 L22 15 L16 7 Z" fill="${scuro(c, 30)}"/>
-              <path d="M20.6 12 L20.6 20 M23.4 12 L23.4 20" stroke="${scuro(c, -30)}" stroke-width="0.9"/>
-              <circle cx="22" cy="15" r="0.9" fill="${scuro(c, -46)}"/>
-              <circle cx="22" cy="19" r="0.9" fill="${scuro(c, -46)}"/>`
+      sagoma: 'M17 10 L20 8 L28 8 L31 10 L41 16 L36.5 22.5 L33 20.5 L33 39 Q24 41 15 39 L15 20.5 L11.5 22.5 L7 16 Z',
+      ombra: 'M15 20.5 L11.5 22.5 L7 16 L17 10 L15 14 Z',
+      segni: `<path d="M20 8 L24 14.5 L28 8 L30.5 9.4 L24 18 L17.5 9.4 Z" fill="${sc(c, 34)}" stroke="${sc(c, -30)}" stroke-width="0.7"/>
+              <path d="M22.4 14 L22.4 22.5 M25.6 14 L25.6 22.5" stroke="${sc(c, -34)}" stroke-width="0.9"/>
+              <circle cx="24" cy="16.6" r="1" fill="${sc(c, -52)}"/>
+              <circle cx="24" cy="20.8" r="1" fill="${sc(c, -52)}"/>
+              <path d="M12.4 20.6 L15 21 M35.6 20.6 L33 21" stroke="${sc(c, -32)}" stroke-width="1.4"/>`
     }),
+
     camicia: (c) => ({
-      sagoma: 'M14 8 L18 6 L26 6 L30 8 L38 13 L35 30 L31 29 L31 37 Q22 39 13 37 L13 29 L9 30 L6 13 Z',
-      extra: `<path d="M18 6 L22 13 L26 6 L29 8 L22 17 L15 8 Z" fill="${scuro(c, 34)}"/>
-              <path d="M22 13 L22 37" stroke="${scuro(c, -34)}" stroke-width="1.4"/>
-              <circle cx="22" cy="21" r="0.9" fill="${scuro(c, -50)}"/>
-              <circle cx="22" cy="27" r="0.9" fill="${scuro(c, -50)}"/>
-              <circle cx="22" cy="33" r="0.9" fill="${scuro(c, -50)}"/>
-              <path d="M7.6 26.5 L12 27.4 M36.4 26.5 L32 27.4" stroke="${scuro(c, -30)}" stroke-width="1.3"/>`
+      sagoma: 'M17 10 L20 8 L28 8 L31 10 L41 16 L38 33 L33 32 L33 39 Q24 41 15 39 L15 32 L10 33 L7 16 Z',
+      ombra: 'M15 32 L10 33 L7 16 L17 10 L15 20 Z',
+      segni: `<path d="M20 8 L24 15.5 L28 8 L31 10.4 L24 20 L17 10.4 Z" fill="${sc(c, 38)}" stroke="${sc(c, -30)}" stroke-width="0.7"/>
+              <path d="M24 15.5 L24 39" stroke="${sc(c, -38)}" stroke-width="1.5"/>
+              <circle cx="24" cy="23" r="0.95" fill="${sc(c, -54)}"/>
+              <circle cx="24" cy="29" r="0.95" fill="${sc(c, -54)}"/>
+              <circle cx="24" cy="35" r="0.95" fill="${sc(c, -54)}"/>
+              <path d="M17 22 L21 22 L21 27 L17 27 Z" fill="none" stroke="${sc(c, -30)}" stroke-width="0.9"/>
+              <path d="M9.4 29.4 L14 30.4 M38.6 29.4 L34 30.4" stroke="${sc(c, -32)}" stroke-width="1.5"/>`
     }),
+
     canotta: (c) => ({
-      sagoma: 'M15 7 L18 6 Q22 12 26 6 L29 7 L30 14 L31 37 Q22 39 13 37 L14 14 Z',
-      extra: `<path d="M18 6 Q22 12 26 6" fill="none" stroke="${scuro(c, -34)}" stroke-width="1.2"/>
-              <path d="M15 7 L14.5 13 M29 7 L29.5 13" stroke="${scuro(c, -26)}" stroke-width="1.6"/>`
+      sagoma: 'M18 8 L20.5 7.5 Q24 14 27.5 7.5 L30 8 L31.5 17 L33 39 Q24 41 15 39 L16.5 17 Z',
+      ombra: 'M16.5 17 L18 8 L20.5 7.5 L19 16 L18 38 L15 39 Z',
+      segni: `<path d="M20.5 7.5 Q24 14 27.5 7.5" fill="none" stroke="${sc(c, -40)}" stroke-width="1.3"/>
+              <path d="M18 8 L16.8 15 M30 8 L31.2 15" stroke="${sc(c, -26)}" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M15 37.4 Q24 39.2 33 37.4" fill="none" stroke="${sc(c, -28)}" stroke-width="1.1" opacity=".8"/>`
     }),
+
     felpa: (c) => ({
-      sagoma: 'M13 9 L18 6 Q22 9 26 6 L31 9 L39 14 L35 20 L32 18 L32 37 Q22 39 12 37 L12 18 L9 20 L5 14 Z',
-      extra: `<path d="M16 6 Q22 15 28 6 Q30 9 28 12 Q22 18 16 12 Q14 9 16 6 Z" fill="${scuro(c, 22)}"/>
-              <path d="M20 13 L19.4 20 M24 13 L24.6 20" stroke="${scuro(c, -40)}" stroke-width="1.1" stroke-linecap="round"/>
-              <path d="M15 27 L29 27 L29 33 L15 33 Z" fill="none" stroke="${scuro(c, -30)}" stroke-width="1.2"/>`
+      sagoma: 'M16 11 L20 8 Q24 11 28 8 L32 11 L42 17 L37.5 23.5 L34 21.5 L34 39 Q24 41.5 14 39 L14 21.5 L10.5 23.5 L6 17 Z',
+      ombra: 'M14 21.5 L10.5 23.5 L6 17 L16 11 L14 16 Z',
+      segni: `<path d="M18 8 Q24 18 30 8 Q33 11 31 15 Q24 21 17 15 Q15 11 18 8 Z" fill="${sc(c, 26)}" stroke="${sc(c, -30)}" stroke-width="0.8"/>
+              <path d="M21.5 15.5 L20.6 23 M26.5 15.5 L27.4 23" stroke="${sc(c, -44)}" stroke-width="1.2" stroke-linecap="round"/>
+              <circle cx="21.5" cy="15.4" r="0.8" fill="${sc(c, -50)}"/>
+              <circle cx="26.5" cy="15.4" r="0.8" fill="${sc(c, -50)}"/>
+              <path d="M17 27.5 L31 27.5 L29.5 34 L18.5 34 Z" fill="none" stroke="${sc(c, -34)}" stroke-width="1.1"/>
+              <path d="M14 36.5 L34 36.5" stroke="${sc(c, -34)}" stroke-width="2.4"/>`
     }),
+
     giacca: (c) => ({
-      sagoma: 'M13 8 L19 6 L22 12 L25 6 L31 8 L39 14 L36 31 L32 30 L32 37 Q22 39 12 37 L12 30 L8 31 L5 14 Z',
-      extra: `<path d="M19 6 L22 12 L18 14 Z M25 6 L22 12 L26 14 Z" fill="${scuro(c, -32)}"/>
-              <path d="M22 12 L22 37" stroke="${scuro(c, -40)}" stroke-width="1.6"/>
-              <path d="M14 24 L18 24 M30 24 L26 24" stroke="${scuro(c, -34)}" stroke-width="1.2"/>
-              <circle cx="24.5" cy="24" r="1" fill="${scuro(c, -50)}"/>`
+      sagoma: 'M16 10 L21 8 L24 15 L27 8 L32 10 L42 16 L39 34 L34 33 L34 39 Q24 41 14 39 L14 33 L9 34 L6 16 Z',
+      ombra: 'M14 33 L9 34 L6 16 L16 10 L14 20 Z',
+      segni: `<path d="M21 8 L24 15 L19 18 L18 10 Z M27 8 L24 15 L29 18 L30 10 Z" fill="${sc(c, -34)}" stroke="${sc(c, -46)}" stroke-width="0.6"/>
+              <path d="M24 15 L24 39" stroke="${sc(c, -46)}" stroke-width="1.7"/>
+              <path d="M16 27 L21 27 M32 27 L27 27" stroke="${sc(c, -36)}" stroke-width="1.3"/>
+              <circle cx="26.4" cy="26" r="1.1" fill="${sc(c, -54)}"/>
+              <circle cx="26.4" cy="31" r="1.1" fill="${sc(c, -54)}"/>
+              <path d="M9.4 30.4 L14 31.4 M38.6 30.4 L34 31.4" stroke="${sc(c, -34)}" stroke-width="1.5"/>`
     }),
+
     gilet: (c) => ({
-      sagoma: 'M15 7 L19 6 L22 13 L25 6 L29 7 L31 14 L31 37 Q22 39 13 37 L13 14 Z',
-      extra: `<path d="M19 6 L22 13 L25 6 L26.5 7 L22 16 L17.5 7 Z" fill="${scuro(c, 26)}"/>
-              <path d="M22 16 L22 37" stroke="${scuro(c, -34)}" stroke-width="1.2"/>
-              <circle cx="22" cy="22" r="1" fill="${scuro(c, -50)}"/>
-              <circle cx="22" cy="28" r="1" fill="${scuro(c, -50)}"/>
-              <circle cx="22" cy="34" r="1" fill="${scuro(c, -50)}"/>`
+      sagoma: 'M18 8 L21.5 7.5 L24 15 L26.5 7.5 L30 8 L32 17 L32.5 36 L24 39.5 L15.5 36 L16 17 Z',
+      ombra: 'M16 17 L18 8 L21.5 7.5 L19.5 16 L18.5 35 L15.5 36 Z',
+      segni: `<path d="M21.5 7.5 L24 15 L26.5 7.5 L28.4 8.4 L24 18.5 L19.6 8.4 Z" fill="${sc(c, 30)}" stroke="${sc(c, -30)}" stroke-width="0.7"/>
+              <path d="M24 18.5 L24 38.6" stroke="${sc(c, -38)}" stroke-width="1.3"/>
+              <circle cx="24" cy="23" r="1.05" fill="${sc(c, -54)}"/>
+              <circle cx="24" cy="28.5" r="1.05" fill="${sc(c, -54)}"/>
+              <circle cx="24" cy="34" r="1.05" fill="${sc(c, -54)}"/>
+              <path d="M17 30 L20.5 30 M31 30 L27.5 30" stroke="${sc(c, -32)}" stroke-width="1.1"/>`
     }),
+
     vestito: (c) => ({
-      sagoma: 'M15 7 L18 6 Q22 11 26 6 L29 7 L30 15 L34 37 Q22 40 10 37 L14 15 Z',
-      extra: `<path d="M18 6 Q22 11 26 6" fill="none" stroke="${scuro(c, -34)}" stroke-width="1.2"/>
-              <path d="M13.6 22 Q22 25 30.4 22" fill="none" stroke="${scuro(c, -30)}" stroke-width="1.4"/>`
+      sagoma: 'M18 8 L20.5 7.5 Q24 13 27.5 7.5 L30 8 L31.5 16 L30.5 23 L36 39.5 Q24 42.5 12 39.5 L17.5 23 L16.5 16 Z',
+      ombra: 'M16.5 16 L18 8 L20.5 7.5 L19 15 L19.5 23 L14 39 L12 39.5 L17.5 23 Z',
+      segni: `<path d="M20.5 7.5 Q24 13 27.5 7.5" fill="none" stroke="${sc(c, -40)}" stroke-width="1.3"/>
+              <path d="M17.6 22.6 Q24 25 30.4 22.6" fill="none" stroke="${sc(c, -36)}" stroke-width="1.6"/>
+              <path d="M22 26 L20 38 M26 26 L28 38" stroke="${sc(c, -24)}" stroke-width="0.8" opacity=".6"/>`
     }),
 
     /* ---------- sotto ---------- */
     pantaloni: (c) => ({
-      sagoma: 'M12 7 L32 7 L31 39 L24 39 L22 20 L20 39 L13 39 Z',
-      extra: `<path d="M12 10.5 L32 10.5" stroke="${scuro(c, -40)}" stroke-width="1.8"/>
-              <path d="M17 13 L16.5 37 M27 13 L27.5 37" stroke="${scuro(c, -26)}" stroke-width="0.9" opacity=".7"/>`
+      sagoma: 'M14 8 L34 8 L33 42 L26 42 L24 22 L22 42 L15 42 Z',
+      ombra: 'M14 8 L20 8 L19 42 L15 42 Z',
+      segni: `<path d="M14 11.6 L34 11.6" stroke="${sc(c, -42)}" stroke-width="2"/>
+              <path d="M19 14 L18.4 40 M29 14 L29.6 40" stroke="${sc(c, -26)}" stroke-width="0.9" opacity=".75"/>
+              <path d="M24 12 L24 22" stroke="${sc(c, -30)}" stroke-width="0.9" opacity=".6"/>`
     }),
     pantaloncini: (c) => ({
-      sagoma: 'M12 7 L32 7 L31 26 L24 26 L22 17 L20 26 L13 26 Z',
-      extra: `<path d="M12 10.5 L32 10.5" stroke="${scuro(c, -40)}" stroke-width="1.8"/>
-              <path d="M13 23.5 L20 23.5 M24 23.5 L31 23.5" stroke="${scuro(c, -30)}" stroke-width="1.6"/>`
+      sagoma: 'M14 8 L34 8 L33 28 L26 28 L24 19 L22 28 L15 28 Z',
+      ombra: 'M14 8 L20 8 L19 28 L15 28 Z',
+      segni: `<path d="M14 11.6 L34 11.6" stroke="${sc(c, -42)}" stroke-width="2"/>
+              <path d="M15 25.4 L22 25.4 M26 25.4 L33 25.4" stroke="${sc(c, -34)}" stroke-width="1.9"/>
+              <path d="M24 12 L24 19" stroke="${sc(c, -30)}" stroke-width="0.9" opacity=".6"/>`
     }),
     jeans: (c) => ({
-      sagoma: 'M12 7 L32 7 L31 39 L24 39 L22 20 L20 39 L13 39 Z',
-      extra: filo(c, 39, false)
+      sagoma: 'M14 8 L34 8 L33 42 L26 42 L24 22 L22 42 L15 42 Z',
+      ombra: 'M14 8 L20 8 L19 42 L15 42 Z',
+      segni: denim(c, 42, false)
     }),
     jeanscorti: (c) => ({
-      sagoma: 'M12 7 L32 7 L31 26 L24 26 L22 17 L20 26 L13 26 Z',
-      extra: filo(c, 26, true)
+      sagoma: 'M14 8 L34 8 L33 28 L26 28 L24 19 L22 28 L15 28 Z',
+      ombra: 'M14 8 L20 8 L19 28 L15 28 Z',
+      segni: denim(c, 28, true)
     }),
     gonna: (c) => ({
-      sagoma: 'M13 7 L31 7 L36 33 Q22 37 8 33 Z',
-      extra: `<path d="M13 10.5 L31 10.5" stroke="${scuro(c, -40)}" stroke-width="1.8"/>
-              <path d="M19 13 L16 32 M25 13 L28 32" stroke="${scuro(c, -24)}" stroke-width="0.9" opacity=".65"/>`
+      sagoma: 'M15 8 L33 8 L38 36 Q24 40 10 36 Z',
+      ombra: 'M15 8 L21 8 L16 37 L10 36 Z',
+      segni: `<path d="M15 11.8 L33 11.8" stroke="${sc(c, -42)}" stroke-width="2.1"/>
+              <path d="M20 14 L17 35 M24 14 L24 37 M28 14 L31 35" stroke="${sc(c, -26)}" stroke-width="0.9" opacity=".7"/>
+              <path d="M10.6 35.6 Q24 39.4 37.4 35.6" fill="none" stroke="${sc(c, -30)}" stroke-width="1.2"/>`
     }),
     tuta: (c) => ({
-      sagoma: 'M11 7 L33 7 L32 39 L24 39 L22 20 L20 39 L12 39 Z',
-      extra: `<path d="M11 10.5 L33 10.5" stroke="${scuro(c, -40)}" stroke-width="2"/>
-              <path d="M13.5 12 L14.5 37 M30.5 12 L29.5 37" stroke="${scuro(c, 58)}" stroke-width="2.2"/>
-              <path d="M12 36 L20 36 M24 36 L32 36" stroke="${scuro(c, -34)}" stroke-width="2.6"/>`
+      sagoma: 'M13 8 L35 8 L34 42 L26 42 L24 22 L22 42 L14 42 Z',
+      ombra: 'M13 8 L19 8 L18 42 L14 42 Z',
+      segni: `<path d="M13 12 L35 12" stroke="${sc(c, -42)}" stroke-width="2.6"/>
+              <path d="M22.4 12 L21.6 16 M25.6 12 L26.4 16" stroke="${sc(c, -50)}" stroke-width="1.1" stroke-linecap="round"/>
+              <path d="M15.6 14 L16.6 39 M32.4 14 L31.4 39" stroke="${sc(c, 62)}" stroke-width="2.4"/>
+              <path d="M14 38.6 L22 38.6 M26 38.6 L34 38.6" stroke="${sc(c, -36)}" stroke-width="2.8"/>`
     })
   };
 
-  /* la cucitura color miele e i rivetti: sono LORO a dire "jeans",
-     non il blu — uno può averli neri e restano jeans */
-  function filo(c, giu, corti) {
+  /* La cucitura color miele, i rivetti e le cinque tasche: sono LORO a
+     dire "jeans", non il blu — uno può averli neri e restano jeans. */
+  function denim(c, giu, corti) {
     const f = '#E3B04B';
-    return `<path d="M12 10.5 L32 10.5" stroke="${scuro(c, -42)}" stroke-width="2.2"/>
-            <path d="M12 8.8 L32 8.8 M12 12.4 L32 12.4" stroke="${f}" stroke-width="0.7" opacity=".9"/>
-            <path d="M15 14.5 Q18.5 14.5 20 18" fill="none" stroke="${f}" stroke-width="0.8" opacity=".85"/>
-            <path d="M29 14.5 Q25.5 14.5 24 18" fill="none" stroke="${f}" stroke-width="0.8" opacity=".85"/>
-            <circle cx="14.6" cy="13.6" r="0.75" fill="${f}"/>
-            <circle cx="29.4" cy="13.6" r="0.75" fill="${f}"/>` +
+    return `<path d="M14 12 L34 12" stroke="${sc(c, -46)}" stroke-width="2.4"/>
+            <path d="M14 10.1 L34 10.1 M14 13.9 L34 13.9" stroke="${f}" stroke-width="0.7" opacity=".9"/>
+            <path d="M17 8.4 L17 12 M24 8.4 L24 12 M31 8.4 L31 12" stroke="${sc(c, -40)}" stroke-width="1.6"/>
+            <path d="M16.6 16 Q20.6 16 22.2 20" fill="none" stroke="${f}" stroke-width="0.85" opacity=".9"/>
+            <path d="M31.4 16 Q27.4 16 25.8 20" fill="none" stroke="${f}" stroke-width="0.85" opacity=".9"/>
+            <circle cx="16.2" cy="15.1" r="0.8" fill="${f}"/>
+            <circle cx="31.8" cy="15.1" r="0.8" fill="${f}"/>
+            <path d="M24 14 L24 ${corti ? 19 : 22}" stroke="${sc(c, -32)}" stroke-width="0.9" opacity=".6"/>` +
       (corti
-        ? `<path d="M13 ${giu - 2.5} L20 ${giu - 2.5} M24 ${giu - 2.5} L31 ${giu - 2.5}" stroke="${scuro(c, -34)}" stroke-width="2.4"/>`
-        : `<path d="M14 ${giu - 2} L20 ${giu - 2} M24 ${giu - 2} L30 ${giu - 2}" stroke="${f}" stroke-width="0.7" opacity=".75"/>
-           <path d="M17 14 L16.6 ${giu - 3} M27 14 L27.4 ${giu - 3}" stroke="${f}" stroke-width="0.6" opacity=".5"/>`);
+        ? `<path d="M15 25 L22 25 M26 25 L33 25" stroke="${sc(c, -38)}" stroke-width="2.6"/>
+           <path d="M15 23.6 L22 23.6 M26 23.6 L33 23.6" stroke="${f}" stroke-width="0.7" opacity=".8"/>`
+        : `<path d="M19 16 L18.4 ${giu - 2} M29 16 L29.6 ${giu - 2}" stroke="${f}" stroke-width="0.65" opacity=".55"/>
+           <path d="M15.4 ${giu - 1.6} L22 ${giu - 1.6} M26 ${giu - 1.6} L32.6 ${giu - 1.6}" stroke="${f}" stroke-width="0.7" opacity=".8"/>`);
   }
 
-  /* Disegna un capo con il suo colore e la sua fantasia.
-     chiave: 'maglietta', 'jeans', 'gonna'...  */
+  /* Disegna un capo col suo colore e la sua fantasia. */
   function capo(chiave, colore, fantasia, misura) {
     const fn = CAPI[chiave];
     if (!fn) return '';
@@ -137,11 +185,12 @@
     const id = 'k' + (++seq);
     const t = (global.AV && AV.tessuto) ? AV.tessuto(c, fantasia, id) : { fill: c, def: '' };
     const d = fn(c);
-    const m = misura || 44;
-    return `<svg viewBox="0 0 44 44" width="${m}" height="${m}" aria-hidden="true">` +
+    const m = misura || 48;
+    return `<svg viewBox="0 0 48 48" width="${m}" height="${m}" aria-hidden="true">` +
       (t.def ? `<defs>${t.def}</defs>` : '') +
-      `<path d="${d.sagoma}" fill="${t.fill}" stroke="rgba(0,0,0,.45)" stroke-width="1" stroke-linejoin="round"/>` +
-      d.extra + '</svg>';
+      `<path d="${d.sagoma}" fill="${t.fill}" stroke="rgba(0,0,0,.5)" stroke-width="1.1" stroke-linejoin="round"/>` +
+      (d.ombra ? `<path d="${d.ombra}" fill="rgba(0,0,0,.14)"/>` : '') +
+      d.segni + '</svg>';
   }
 
   global.CAPI = { capo, elenco: Object.keys(CAPI) };
