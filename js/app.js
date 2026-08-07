@@ -717,7 +717,11 @@ function aggiornaPannello(opz) {
      alzata: cambiando linguetta il contenuto cambia, e senza questo il
      pannello nuovo restava tagliato dentro il vecchio tetto */
   if (volante && volante.card.contains(p)) {
-    volante.card.style.maxHeight = Math.min(volante.card.scrollHeight + 2, window.innerHeight - 20) + 'px';
+    /* L'altezza vera va misurata SENZA il tetto di prima, se no si
+       misura quello e la scheda resta corta di qualche pixel a ogni
+       giro -- e quei pixel sono l'ultima riga tagliata. */
+    const card = volante.card;
+    card.style.maxHeight = Math.min(altezzaVera(card), window.innerHeight - 20) + 'px';
   }
 
   if (opz.entra && anima()) {
@@ -2023,29 +2027,33 @@ function entryCard(entry) {
   const avBox = el('div', 'e-av' + (people.length > 1 ? ' multi' : ''));
   /* Senza riferimento il posto della figura DIVENTA il tasto per
      metterlo: si tocca li', dove l'occhio guarda gia'. */
+  /* Toccare la figura apre il Parco dentro Bar & Conto: e' li' che si
+     veste chi accompagna. Prima si apriva un foglio volante tutto suo,
+     cioe' una seconda strada per la stessa cosa -- diversa da quella
+     del pannello e destinata a divergere. */
+  const apriParco = (ev) => {
+    ev.stopPropagation();
+    if (!card.classList.contains('aperto')) card.classList.add('aperto');
+    /* se il conto e' gia' aperto basta cambiare linguetta */
+    if (!payPanel.classList.contains('hidden') && PAN.ingresso === entry) {
+      PAN.cat = 'Parco';
+      aggiornaPannello({ entra: true });
+      return;
+    }
+    apriConto('Parco');
+  };
   if (!people.length) {
     avBox.classList.add('manca');
     avBox.title = 'Nessun riferimento \u2014 tocca per metterlo';
     avBox.appendChild(el('div', 'segno', '\u2795'));
     avBox.appendChild(el('div', 'dillo', 'metti chi \u00e8'));
-    avBox.onclick = (ev) => {
-      ev.stopPropagation();
-      pickRole(p => {
-        entry.people = entry.people || [];
-        entry.people.push(p);
-        saveEntries();
-        openCustomizer(p, () => { saveEntries(); redrawCard(entry); });
-      });
-    };
+    avBox.onclick = apriParco;
   } else {
     people.slice(0, 2).forEach(p => {
       const a = el('div', 'av');
       a.innerHTML = AV.build(p.avatar);
-      a.title = 'Modifica ' + nameOf(p);
-      a.onclick = (ev) => {
-        ev.stopPropagation();
-        openCustomizer(p, () => { saveEntries(); redrawCard(entry); });
-      };
+      a.title = 'Com\u2019\u00e8 vestito ' + nameOf(p);
+      a.onclick = apriParco;
       avBox.appendChild(a);
     });
   }
@@ -2177,8 +2185,9 @@ function entryCard(entry) {
   const payPanel = el('div', 'e-panel e-guscio hidden');
   dentro.appendChild(payPanel);
 
-  const payBtn = mkAct('\ud83e\uddfe Bar & Conto', 'conto', (ev) => {
-    ev.stopPropagation();
+  /* Apre (o chiude) il conto. Ci passano sia il tasto sia la figura:
+     una strada sola, cosi' non possono comportarsi in modo diverso. */
+  const apriConto = (cat) => {
     /* la misura va presa ADESSO, prima che il pannello si apra: se la
        prendo dopo, il buco lasciato nella lista e' troppo corto e tutte
        le schede sotto saltano su */
@@ -2188,15 +2197,19 @@ function entryCard(entry) {
     payPanel.classList.toggle('hidden', !chiuso);
     payBtn.classList.toggle('on', chiuso);
     if (chiuso) {
-      /* si apre sulle bibite: da qui quasi sempre si sta segnando da
-         bere. Il Parco resta a una linguetta di distanza. */
-      montaPannello(payPanel, entry, { ingresso: entry, cat: primaCategoriaBar() });
+      /* di suo si apre sulle bibite: dal tasto quasi sempre si sta
+         segnando da bere. Dalla figura invece si va dritti al Parco. */
+      montaPannello(payPanel, entry, { ingresso: entry, cat: cat || primaCategoriaBar() });
       /* la scheda si stacca e vola: cosi' il conto ci sta tutto senza
          scorrere mezza pagina, e il resto della lista si sfoca */
       alza(card, misura);
     } else {
       posa(card);
     }
+  };
+  const payBtn = mkAct('\ud83e\uddfe Bar & Conto', 'conto', (ev) => {
+    ev.stopPropagation();
+    apriConto();
   });
   payBtn.title = 'Conto, bar, orario, bracciale, persone';
 
@@ -2522,10 +2535,33 @@ function alza(card, misura) {
     /* Punta all'altezza del CONTENUTO, non a quella dello schermo: se
        punta al massimo, a meta' strada incontra il contenuto e si ferma
        di colpo. Sopra lo schermo si ferma allo schermo e scorre dentro. */
-    const tetto = window.innerHeight - 20;
-    const suo = card.scrollHeight + 2;
-    card.style.maxHeight = Math.min(suo, tetto) + 'px';
+    card.style.maxHeight = Math.min(altezzaVera(card), window.innerHeight - 20) + 'px';
+    /* Una seconda misura a sipario fermo: la scheda si sta ancora
+       aprendo (l'apertura e' una transizione di 360ms sulle righe della
+       griglia), quindi la prima misura prende un'altezza di passaggio e
+       lascia due o tre pixel tagliati in fondo. */
+    setTimeout(() => {
+      if (volante && volante.card === card) {
+        card.style.maxHeight = Math.min(altezzaVera(card), window.innerHeight - 20) + 'px';
+      }
+    }, 420);
   }));
+}
+
+/* Quanto e' alta davvero una scheda, senza il tetto che le abbiamo
+   messo addosso. scrollHeight e' un intero arrotondato per difetto: usato
+   come tetto tagliava l'ultima riga di qualche pixel, e quei pixel erano
+   la nota o il bordo del conto. Il riquadro invece da' anche i decimali. */
+function altezzaVera(card) {
+  const era = card.style.maxHeight;
+  card.style.maxHeight = 'none';
+  /* con un dito di margine: fra bordi, decimali e arrotondamenti del
+     browser restavano due o tre pixel tagliati in fondo. Il tetto e'
+     solo un limite -- superarlo di qualche pixel non si vede, perche'
+     la scheda resta alta quanto il suo contenuto. */
+  const h = Math.ceil(card.getBoundingClientRect().height) + 14;
+  card.style.maxHeight = era;
+  return h;
 }
 
 function posa(card) {

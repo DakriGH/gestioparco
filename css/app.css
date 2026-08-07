@@ -2402,7 +2402,13 @@ html:not(.anima) .view.entra-dx { animation: none; }
 .resto-tagli button svg { width: 62px; height: 48px; }
 
 /* l'ultimo inserito: si trova a colpo d'occhio per mezzo minuto */
-.entry.appena { position: relative; }
+/* MA non mentre vola. .entry.vola vale `position: fixed` e sta piu'
+   in alto nel foglio: con la stessa specificita' vinceva questa, e una
+   scheda appena inserita -- cioe' proprio quella che stai guardando
+   dopo aver registrato -- restava incollata in mezzo alla lista invece
+   di staccarsi. Il volo sembrava rotto: mezza schermata fuori posto e
+   il conto nascosto sotto. */
+.entry.appena:not(.vola) { position: relative; }
 .entry.appena::before {
   content: "";
   position: absolute;
