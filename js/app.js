@@ -521,13 +521,10 @@ function costruisciPannello() {
     }
     if (d.a === 'dopo') { c.payLater = !c.payLater; pcSalva(); aggiornaPannello(); return; }
     if (d.a === 'butta') {
-      const box = pcRif('.pc-people'), ap = box.dataset.apri;
-      if (ap) {
-        const k = (c.people || []).findIndex(x => x.id === ap);
-        if (k > -1) c.people.splice(k, 1);
-        box.dataset.apri = '';
-      } else c.people = [];
-      box.dataset.sig = '';
+      /* il riferimento e' uno solo: il cestino lo toglie e basta */
+      const box = pcRif('.pc-people');
+      c.people = [];
+      box.dataset.apri = ''; box.dataset.sig = '';
       pcSalva(); aggiornaPannello(); return;
     }
 
@@ -827,9 +824,10 @@ function syncPeople(container, people, onChange) {
   people.forEach(p => { p.avatar = AV.normalize(p.avatar, p.role); });
   const chi = people.find(p => p.id === container.dataset.apri) || null;
 
+  const uno = people[0] || null;
   const ruoli = '<div class="ruoli">' + AV.ROLES.map(r => {
-    const ce = people.find(p => p.role === r.key);
-    const cls = !ce ? '' : (chi && ce.id === chi.id ? ' class="on"' : ' class="messo"');
+    const suo = uno && uno.role === r.key;
+    const cls = !suo ? '' : (chi ? ' class="on"' : ' class="messo"');
     return '<button data-ruolo="' + r.key + '"' + cls + '>' +
       '<span class="em">' + r.em + '</span><span class="nm">' + esc(r.label) + '</span></button>';
   }).join('') + '</div>';
@@ -844,8 +842,8 @@ function syncPeople(container, people, onChange) {
   const via = container.closest('.pan-conto') &&
     container.closest('.pan-conto').querySelector('.pc-butta');
   if (via) {
-    via.classList.toggle('hidden', people.length === 0);
-    via.innerHTML = '\ud83d\uddd1\ufe0f ' + (chi ? 'Togli ' + esc(roleOf(chi.role).label) : 'Togli tutti');
+    via.classList.toggle('hidden', !uno);
+    via.innerHTML = '\ud83d\uddd1\ufe0f ' + (uno ? 'Togli ' + esc(roleOf(uno.role).label) : 'Togli');
   }
 
   /* I comandi si agganciano UNA volta sola, quindi non possono tenersi
@@ -877,22 +875,44 @@ function syncPeople(container, people, onChange) {
       const people = elenco();
       const p = people.find(x => x.id === container.dataset.apri);
       if (d.ruolo !== undefined) {
-        const ce = people.find(x => x.role === d.ruolo);
-        if (!ce) {
+        /* IL RIFERIMENTO E' UNO SOLO. Serve a riconoscere il gruppo
+           all'uscita, e otto figurine non aiutano a riconoscere
+           nessuno. Toccare un altro ruolo non aggiunge una persona:
+           cambia quella che c'e'. */
+        const gia = people[0];
+        if (!gia) {
           /* chi arriva parte NEUTRO: caratteristiche del ruolo, tinte da
              cambiare al volo, niente ancora "scelto" */
           const nato = AV.baseFor(d.ruolo);
           nato.scelti = {};
-          const nuovo = { id: uid(), role: d.ruolo, name: '', avatar: nato, note: '' };
+          const nuovo = { id: uid(), role: d.ruolo, name: '', avatar: nato, note: '', tocco: false };
+          people.length = 0;
           people.push(nuovo);
           container.dataset.apri = nuovo.id;
-        } else container.dataset.apri = (container.dataset.apri === ce.id) ? '' : ce.id;
-      } else if (p && d.top !== undefined)   p.avatar.top.style = d.top;
-      else if (p && d.pat !== undefined)     p.avatar.top.pattern = d.pat;
-      else if (p && d.pants !== undefined)   p.avatar.pants.style = d.pants;
+        } else if (gia.role === d.ruolo) {
+          /* lo stesso ruolo: apre e chiude l'armadio */
+          container.dataset.apri = (container.dataset.apri === gia.id) ? '' : gia.id;
+        } else {
+          gia.role = d.ruolo;
+          /* Se il vestito non lo hai ancora toccato, riparte da quello
+             di serie del ruolo nuovo -- e' quello che ci si aspetta
+             passando da Mamma a Papa'. Se invece lo avevi gia' vestito,
+             i vestiti restano: sono la parte che costa fatica. */
+          if (!gia.tocco) {
+            gia.avatar = AV.baseFor(d.ruolo);
+            gia.avatar.scelti = {};
+          } else {
+            gia.avatar = AV.normalize(gia.avatar, d.ruolo);
+          }
+          container.dataset.apri = gia.id;
+        }
+      } else if (p && d.top !== undefined)   { p.avatar.top.style = d.top; p.tocco = true; }
+      else if (p && d.pat !== undefined)     { p.avatar.top.pattern = d.pat; p.tocco = true; }
+      else if (p && d.pants !== undefined)   { p.avatar.pants.style = d.pants; p.tocco = true; }
       else if (p && d.col !== undefined) {
         const parti = d.col.split('|');
         p.avatar[parti[0]][parti[1]] = parti[2];
+        p.tocco = true;
       } else return;
       container.dataset.sig = '';
       avvisa();
@@ -904,7 +924,8 @@ function syncPeople(container, people, onChange) {
 /* l'armadio di chi si sta vestendo: figura a sinistra, scelte a destra */
 function armadioDi(p) {
   if (!p) return '<div class="invito">Tocca chi \u00e8 venuto \u2014 Mamma, Pap\u00e0, Nonna\u2026 \u2014 ' +
-    'e qui sotto compare come vestirlo, senza aprire nient\u2019altro.</div>';
+    'e qui sotto compare come vestirlo. Ne basta <b>uno</b>: serve a ' +
+    'riconoscere il gruppo all\u2019uscita.</div>';
   const av = p.avatar, vestito = av.top.style === 'vestito';
   /* un colore solo: quello della fantasia se lo ricava da se', schiarendo
      o scurendo il capo. Sceglierlo era una domanda in piu' al banco per

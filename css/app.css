@@ -2188,7 +2188,7 @@ html:not(.anima) .view.entra-dx { animation: none; }
 /* Il pannello e la colonna: e lui ad avere il gap e il flex, non la
    vista, perche il pannello si sposta e se lo lasciassi alla vista
    dentro la scheda che vola non avrebbe piu niente sotto. */
-.pan-conto { display: flex; flex-direction: column; gap: 12px; flex: 1; min-height: 0; }
+.pan-conto { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; }
 .pan-conto .bc-griglia { flex: 0 0 auto; }
 
 .bc-cat { position: sticky; top: 0; z-index: 6; display: flex; gap: 8px; flex-wrap: wrap;
@@ -2492,7 +2492,13 @@ html:not(.anima) .entry.appena::before { animation: none; opacity: 1; }
    La vista si allunga fino in fondo con flex e NON con min-height:100%:
    sopra di lei, dentro lo stesso main, ci puo' stare l'avviso dei dati
    al riparo, e col 100% quei 74px finivano fuori dallo schermo. */
-main.conto-in-fondo { padding-bottom: 0; display: flex; flex-direction: column; }
+/* Il respiro sotto la barra sta QUI, non sulla barra. Messo sulla
+   barra restava fuori dal riquadro -- il contenuto arrivava fino al
+   bordo e quei dieci pixel diventavano dieci pixel di scorrimento. Sul
+   contenitore invece accorciano lo spazio disponibile, e lo sticky si
+   ferma esattamente li': stesso posto sia che la pagina scorra sia che
+   no. */
+main.conto-in-fondo { padding-bottom: max(10px, var(--safe-b)); display: flex; flex-direction: column; }
 /* La larghezza va detta a mano. .view ha `margin: 0 auto` (riga 309):
    in un contenitore flex un margine automatico SPEGNE lo stiramento, e
    la vista si stringeva al contenuto perdendo una novantina di pixel --
@@ -2502,7 +2508,7 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
 /* un dito di respiro sotto, lo stesso che tiene lo sticky quando invece
    la schermata scorre: cosi' il pannello sta allo stesso posto nei due
    casi, e non sembra incollato al vetro */
-.pc-fondo { margin-top: auto; padding-bottom: max(10px, var(--safe-b)); }
+.pc-fondo { margin-top: auto; }
 /* i quattro tasti stanno in fila accanto alla cifra: coi 150px di
    minimo che hanno di serie andavano a capo e il pannello cresceva di
    74px, mangiandosi il respiro di tutta la schermata */
@@ -2640,10 +2646,10 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
   padding: 8px 10px 10px;
   gap: 9px;
 }
-/* Il conto va IN ALTO qui dentro: e la prima cosa che serve quando
-   apri la scheda di chi e gia dentro, e in fondo a una scheda lunga
-   finirebbe fuori dallo schermo. */
-.entry .pc-fondo { order: -1; margin-top: 0; padding-bottom: 0; }
+/* Il conto sta IN FONDO anche qui, come in "+ Nuovo": e' il posto dove
+   la cassiera lo cerca, e averlo in alto in un posto e in basso
+   nell'altro voleva dire due abitudini diverse per la stessa cosa. */
+.entry .pc-fondo { margin-top: 0; padding-bottom: 0; }
 .entry .pan-conto .bc-cat { position: static; background: none; padding: 0 0 2px; }
 .entry .pan-conto .bc-fondo { position: static; box-shadow: none; background: rgba(0, 0, 0, 0.3); }
 /* dentro la scheda i tasti del conto sono quattro o meno: possono
