@@ -110,8 +110,6 @@
   --speed: 150ms;
 }
 
-
-
 /* ---------- base ---------- */
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; }
@@ -259,42 +257,8 @@ h2 .ic, .e-panel-k .ic { width: 1.25em; height: 1.25em; }
   flex-shrink: 0;
   transition: transform var(--speed);
 }
-.icon-btn:active { transform: scale(0.9); }
-
-.actionbar {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-  padding: 9px 14px 11px;
-  background: var(--barra);
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
-  border-bottom: none;
-  border-radius: 0 0 20px 20px;
-  flex-shrink: 0;
-  z-index: 29;
-  color: var(--barra-txt);
-}
-.actionbar .ab-k {
-  color: rgba(255, 255, 255, 0.62) !important;
-  font-size: 10px;
-  font-weight: 800;
-  color: var(--txt-3);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-.ab-time { display: flex; align-items: baseline; gap: 6px; }
-.ab-time .num { font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 600; color: rgba(255,255,255,0.82); }
-.ab-time .num.strong { color: #fff; font-size: 21px; }
-.ab-arrow { color: rgba(255,255,255,0.55); display: inline-flex; align-items: center; }
-.ab-arrow .ic { width: 16px; height: 16px; }
-
-.ab-voci { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
-.ab-voce { display: flex; align-items: baseline; gap: 5px; }
-.ab-voce .num { font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.86); }
-
-.ab-tot { display: flex; align-items: baseline; gap: 7px; margin-left: auto; }
-/* la barra e' scura in tutti e due i temi, quindi qui il giallo va bene
+.icon-btn:active { transform: scale(0.9); }.ab-time .num { font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 600; color: rgba(255,255,255,0.82); }
+.ab-time .num.strong { color: #fff; font-size: 21px; }.ab-arrow .ic { width: 16px; height: 16px; }.ab-voce .num { font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.86); }/* la barra e' scura in tutti e due i temi, quindi qui il giallo va bene
    e resta la stessa convenzione del resto dell'app */
 .ab-tot .num { font-family: 'Fredoka', sans-serif; font-size: 23px; font-weight: 700; color: var(--sel); }
 .actionbar .btn { min-width: 150px; min-height: 44px; font-size: 15px; border-radius: 14px; }
@@ -306,27 +270,7 @@ main {
   padding: 12px 14px;
   padding-bottom: calc(24px + var(--safe-b));
 }
-.view { max-width: 980px; margin: 0 auto; }
-
-/* si sta modificando un ingresso già registrato: deve saltare all'occhio */
-.edit-banner {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--warn-soft);
-  border: 2px solid var(--warn);
-  color: var(--warn);
-  border-radius: var(--r);
-  padding: 13px 16px;
-  margin-bottom: 12px;
-  font-size: 16px;
-  font-weight: 700;
-}
-.edit-banner .em { font-size: 20px; }
-.edit-banner b { color: var(--txt); }
-#app.in-modifica .actionbar { background: var(--warn-soft); border-bottom-color: var(--warn); }
-
-/* le scelte del bracciale, accanto al pallino */
+.view { max-width: 980px; margin: 0 auto; }.edit-banner .em { font-size: 20px; }/* le scelte del bracciale, accanto al pallino */
 /* il menu volante del bracciale: dentro c'e' la STESSA riga di tondi
    che sta in "Nuovo", non un elenco diverso */
 .wrist-menu {
@@ -352,7 +296,6 @@ main {
   white-space: nowrap;
 }
 .wrist-menu .wrist-row { margin-top: 4px; }
-
 
 /* ============================================================
    BLOCCHI DI COLORE
@@ -435,14 +378,7 @@ main {
   gap: 10px;
 }
 .card > h2 .em { font-size: 15px; }
-.hint { font-size: 13px; color: var(--txt-3); margin: -4px 0 10px; }
-.sect-head {
-  display: flex; align-items: center; gap: 9px;
-  padding: 7px 15px;
-  min-height: 44px;
-}
-.sect-head h2 { margin: 0; flex: 1; font-family: 'Fredoka', sans-serif; font-size: 15.5px; letter-spacing: 0; text-transform: none; color: #fff; font-weight: 600; }
-.sect-head h2 .em { font-size: 15px; }
+.hint { font-size: 13px; color: var(--txt-3); margin: -4px 0 10px; }.sect-head h2 .em { font-size: 15px; }
 
 /* riepilogo in cima alla schermata Nuovo */
 .hero {
@@ -560,32 +496,7 @@ main {
   font-weight: 600;
   transition: transform var(--speed);
 }
-.now-btn:active { transform: scale(0.96); }
-
-/* contatori grandi */
-.counters { display: flex; gap: 14px; flex-wrap: wrap; }
-.counter {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  background: var(--surface-2);
-  border-radius: var(--r);
-  padding: 10px 16px;
-  flex: 1 1 300px;
-}
-.counter .c-lab { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; flex: 1; }
-.counter .c-lab .em { font-size: 24px; }
-.counter .c-val { font-family: 'Fredoka', sans-serif; font-size: 32px; font-weight: 700; min-width: 46px; text-align: center; }
-
-/* chi accompagna */
-.p-blocco {
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  overflow: hidden;
-}
-.p-blocco .person-row { background: none; border: none; border-radius: 0; }
-/* chi si sta vestendo prende tutta la riga: le scelte hanno bisogno di spazio */
+.now-btn:active { transform: scale(0.96); }.counter .c-lab .em { font-size: 24px; }/* chi accompagna *//* chi si sta vestendo prende tutta la riga: le scelte hanno bisogno di spazio */
 .p-blocco.aperto {
   grid-column: 1 / -1;
   overflow: visible;
@@ -601,17 +512,7 @@ main {
   border-bottom: 1px solid var(--line);
 }
 /* senza overflow:hidden gli angoli in fondo li arrotonda l'editor */
-.p-blocco.aperto .p-editor { border-radius: 0 0 var(--r) var(--r); }
-.p-blocco .pnote {
-  margin-top: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--txt-3);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.person-row .pname-in {
+.p-blocco.aperto .p-editor { border-radius: 0 0 var(--r) var(--r); }.person-row .pname-in {
   width: 100%;
   max-width: 260px;
   margin: 3px 0 5px;
@@ -622,29 +523,7 @@ main {
   font-size: 15px;
   font-weight: 600;
 }
-.person-row .prole { font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 600; color: var(--txt); }
-
-.p-scelta { margin-top: 4px; grid-column: 1 / -1; }
-.p-scelta-k {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--txt-3);
-  text-transform: uppercase;
-  letter-spacing: .05em;
-  margin-bottom: 9px;
-}
-.p-scelta-k > span { flex: 1; }
-.add-person { width: 100%; }
-
-.who-pick {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
-  gap: 9px;
-}
-.wp {
+.person-row .prole { font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 600; color: var(--txt); }.wp {
   border-radius: var(--r);
   background: var(--surface-2);
   border: 2px solid var(--line);
@@ -671,26 +550,7 @@ main {
   justify-content: center;
 }
 .who-pick.ruoli { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
-.wp .wp-n { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-.wp-preset { background: var(--accent-soft); border-color: var(--accent); }
-
-/* gli avatar già pronti stanno in secondo piano */
-.p-preset { margin-top: 12px; }
-.p-preset > summary {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  font-size: 13.5px;
-  font-weight: 700;
-  color: var(--txt-3);
-  padding: 9px 2px;
-  list-style: none;
-}
-.p-preset > summary::-webkit-details-marker { display: none; }
-.p-preset[open] > summary { color: var(--txt-2); margin-bottom: 8px; }
-
-/* editor avatar, aperto sotto la persona */
+.wp .wp-n { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }/* gli avatar già pronti stanno in secondo piano *//* editor avatar, aperto sotto la persona */
 .p-editor {
   border-top: 1px solid var(--line);
   padding: 9px 12px 11px;
@@ -896,18 +756,7 @@ main {
 /* Una colonna sola: dentro non c'e' piu' un elenco di schede ma i ruoli
    su una riga e l'armadio di chi si sta vestendo. A due colonne l'armadio
    restava largo 243px e le fantasie andavano a capo cinque volte. */
-.person-list { display: block; }
-.person-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 13px;
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  padding: 12px 14px;
-}
-/* i tratti: una fascia larga quanto il riquadro, non una colonna stretta */
+.person-list { display: block; }/* i tratti: una fascia larga quanto il riquadro, non una colonna stretta */
 .person-row .pfoot { flex: 1 0 100%; }
 .person-row .pv {
   width: 68px;
@@ -991,41 +840,7 @@ main {
   color: var(--warn);
   font-size: 15px;
   font-weight: 700;
-}
-
-/* ---------- bar ---------- */
-/* griglia: ogni voce occupa la stessa larghezza, nessun bottone lungo */
-.bar-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(232px, 1fr));
-  gap: 10px;
-}
-.bar-row {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  background: var(--surface-2);
-  border: 2px solid transparent;
-  border-radius: var(--r);
-  padding: 8px 9px 8px 12px;
-  min-width: 0;
-  transition: background var(--speed), border-color var(--speed);
-}
-.e-panel .bar-row { background: var(--c-bg); }
-.bar-row.has-qty { border-color: var(--accent); background: var(--accent-soft); }
-.bar-row .bname {
-  flex: 1;
-  min-width: 0;
-  font-size: 15px;
-  font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.bar-row .bprice { font-size: 13px; color: var(--txt-3); font-weight: 700; white-space: nowrap; }
-.bar-row .bqty { min-width: 26px; text-align: center; font-family: 'Fredoka', sans-serif; font-size: 20px; font-weight: 700; }
-
-/* ---------- bottoni ---------- */
+}.e-panel .bar-row { background: var(--c-bg); }/* ---------- bottoni ---------- */
 .btn {
   min-height: 62px;
   padding: 0 26px;
@@ -1392,89 +1207,8 @@ main {
   border-radius: var(--r-sm);
   margin-top: 11px;
   padding: 12px 13px 13px;
-}
-.e-panel-k {
-  font-size: 13px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--txt-3);
-  margin-bottom: 10px;
-}
-
-/* bar per categorie, tutte aperte */
-.bar-cat { margin-bottom: 14px; }
-.bar-cat:last-child { margin-bottom: 0; }
-.bar-cat-k {
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--txt-2);
-  margin-bottom: 7px;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-.bar-cat-k::after { content: ""; flex: 1; height: 1px; background: var(--line); }
-
-/* pannello conto dentro la scheda */
-.pay-cats { display: flex; flex-direction: column; gap: 14px; margin-bottom: 12px; }
-.pay-cat-k {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--txt-2);
-  margin-bottom: 8px;
-}
-.pay-cat-k > span:first-child { white-space: nowrap; }
-.pay-cat-k::before { content: ""; order: 2; flex: 1; height: 1px; background: var(--line); }
-.pay-all {
-  order: 3;
-  min-height: 38px;
-  padding: 0 14px;
-  border-radius: 19px;
-  background: var(--ok-soft);
-  color: var(--ok);
-  border: 2px solid var(--ok);
-  font-size: 13px;
-  font-weight: 800;
-  white-space: nowrap;
-  transition: transform var(--speed);
-}
-.pay-all:active { transform: scale(0.95); }
-.pay-all.done { background: none; border-color: var(--line-2); color: var(--txt-3); }
-
-.pay-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(186px, 1fr)); gap: 8px; }
-.pay-chip {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 48px;
-  padding: 8px 12px;
-  border-radius: var(--r);
-  background: var(--c-bg, var(--surface));
-  border: 2px solid var(--line-2);
-  color: var(--txt);
-  text-align: left;
-  transition: background var(--speed), border-color var(--speed), transform var(--speed);
-}
-.pay-chip:active { transform: scale(0.96); }
-.pay-chip .pc-lab { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pay-chip .pc-val { font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 700; white-space: nowrap; }
-.pay-chip.done { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); }
-.pay-chip.done .pc-lab { text-decoration: line-through; opacity: 0.75; }
-
-.pay-tot {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 11px 14px;
-  border-radius: var(--r-sm);
-  background: var(--c-bg, var(--surface));
-  margin-bottom: 12px;
-}
-.pay-tot .tot-row { display: flex; justify-content: space-between; gap: 12px; font-size: 14.5px; font-weight: 700; color: var(--txt-2); }
+}/* bar per categorie, tutte aperte *//* pannello conto dentro la scheda */.pay-all.done { background: none; border-color: var(--line-2); color: var(--txt-3); }.pay-chip.done { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); }
+.pay-chip.done .pc-lab { text-decoration: line-through; opacity: 0.75; }.pay-tot .tot-row { display: flex; justify-content: space-between; gap: 12px; font-size: 14.5px; font-weight: 700; color: var(--txt-2); }
 .pay-tot .tot-row.ok { color: var(--ok); }
 .pay-tot .tot-row.big {
   font-family: 'Fredoka', sans-serif;
@@ -1484,10 +1218,7 @@ main {
   border-top: 1px solid var(--line);
   padding-top: 8px;
   margin-top: 2px;
-}
-.pay-acts { display: flex; gap: 10px; flex-wrap: wrap; }
-.pay-acts .btn { flex: 1; min-width: 200px; }
-
+}.pay-acts .btn { flex: 1; min-width: 200px; }
 
 /* archivio *//* archivio */
 .arch {
@@ -1611,20 +1342,7 @@ main {
 .sw-b.pat { border-radius: var(--r-sm); overflow: hidden; }
 .sw-b.pat svg { width: 100%; height: 100%; display: block; border-radius: 5px; }
 
-.cz-row.off { opacity: 0.3; pointer-events: none; }
-
-/* ---------- pagamenti ---------- */
-.pay-line {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 15px 6px;
-  border-bottom: 1px solid var(--line);
-  transition: background var(--speed);
-}
-.pay-line:last-child { border-bottom: none; }
-.pay-line:active { background: var(--surface-2); }
-.pay-line .chk {
+.cz-row.off { opacity: 0.3; pointer-events: none; }.pay-line .chk {
   width: 36px;
   height: 36px;
   border-radius: 11px;
@@ -1841,12 +1559,8 @@ main {
 /* ---------- tablet più stretti: si stringe, non si spezza ---------- */
 @media (max-width: 1000px) {
   /* scontrino: via le parole, restano i numeri */
-  .actionbar { gap: 14px; padding: 10px 14px; }
-  .actionbar .ab-time .ab-k { display: none; }
-  .ab-time .num { font-size: 19px; }
-  .ab-time .num.strong { font-size: 23px; }
-  .ab-voci { gap: 12px; }
-  .ab-voce .num { font-size: 15px; }
+  .actionbar { gap: 14px; padding: 10px 14px; }.ab-time .num { font-size: 19px; }
+  .ab-time .num.strong { font-size: 23px; }.ab-voce .num { font-size: 15px; }
   .ab-tot .num { font-size: 24px; }
   .actionbar .btn { min-width: 140px; min-height: 52px; font-size: 16px; }
 
@@ -1878,12 +1592,7 @@ main {
   .e-act { font-size: 14px; min-height: 50px; padding: 10px 6px; gap: 6px; }
   .e-act .em { font-size: 17px; }
   .e-role { font-size: 19px; padding-right: 42px; }
-  .e-wrist .dot { width: 36px; height: 36px; }
-
-  /* contatori e chip */
-  .counter { padding: 9px 13px; gap: 11px; flex: 1 1 240px; }
-  .counter .c-val { font-size: 28px; min-width: 40px; }
-  .chip { min-height: 54px; font-size: 18px; min-width: 84px; }
+  .e-wrist .dot { width: 36px; height: 36px; }.chip { min-height: 54px; font-size: 18px; min-width: 84px; }
   .step-b { width: 46px; height: 46px; font-size: 21px; }
 }
 
@@ -1900,9 +1609,7 @@ main {
   .brand-txt { display: none; }
   .tabs { order: 3; width: 100%; }
   .tabs button { flex: 1; padding: 0 12px; justify-content: center; font-size: 16px; }
-  .tab-txt { display: none; }
-  .actionbar { flex-wrap: wrap; }
-  .actionbar .btn { min-width: 100%; }
+  .tab-txt { display: none; }.actionbar .btn { min-width: 100%; }
   main { padding: 12px; }
 
   .entry { flex-direction: column-reverse; }
@@ -1927,9 +1634,13 @@ main {
    il contrario: e' lei che sa quali movimenti servono a capire dove sono
    finite le schede. L'interruttore sta in Impostazioni > Aspetto. */
 @media (prefers-reduced-motion: reduce) {
-  html:not(.anima) * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  /* Anche i RITARDI: con le animazioni spente restava il ritardo a
+     cascata dei blocchi (fino a 120ms) e, con animation-fill-mode:both,
+     in quei millisecondi il blocco stava a opacita' zero -- cioe' un
+     lampo di roba invisibile proprio a chi le animazioni le ha tolte. */
+  html:not(.anima) * { animation-duration: 0.01ms !important; animation-delay: 0s !important;
+    transition-duration: 0.01ms !important; transition-delay: 0s !important; }
 }
-
 
 /* ---------- editor avatar: si sceglie il PEZZO (stile Mii) ---------- */
 .ed-parti {
@@ -1960,7 +1671,6 @@ main {
   padding: 12px 13px 14px;
 }
 .ed-pannello .ed-cols { margin-top: 4px; }
-
 
 /* ============================================================
    I COMANDI DENTRO I BLOCCHI
@@ -2007,10 +1717,7 @@ main {
   color: #1A1626;
   border-color: transparent;
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.30);
-}
-.bar-row.has-qty .bname, .bar-row.has-qty .bqty { color: #1A1626; }
-.bar-row.has-qty .bprice { color: #5A5368; }
-.bar-row.has-qty .step-b { background: rgba(0, 0, 0, 0.10); color: #1A1626; border-color: transparent; }
+}.bar-row.has-qty .step-b { background: rgba(0, 0, 0, 0.10); color: #1A1626; border-color: transparent; }
 .bar-row.has-qty .step-b:active { background: rgba(0, 0, 0, 0.20); }
 .blk .wp-preset { background: rgba(255,255,255,0.24); border-color: rgba(255,255,255,0.4); }
 
@@ -2275,40 +1982,14 @@ main {
   align-items: center;
   gap: 9px;
   margin-bottom: 11px;
-}
-/* il nome vive nella barra dell'editor: prima stava nel banner
-   compatto che e' sparito */
-.ed-nome {
-  flex: 1;
-  min-width: 90px;
-  height: 40px;
-  padding: 0 12px;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.26);
-  border: 1px solid var(--line);
-  color: var(--txt);
-  font: inherit;
-  font-size: 14.5px;
-  font-weight: 700;
-}
-.ed-nome::placeholder { color: var(--txt-3); font-weight: 600; }
-.ed-tit {
-  flex: 0 1 auto;
-  font-family: 'Fredoka', sans-serif;
-  font-size: 15.5px;
-  font-weight: 600;
-  color: #fff;
-}
-.ed-via, .ed-fatto {
+}.ed-via, .ed-fatto {
   min-height: 42px;
   padding: 0 16px;
   border-radius: 14px;
   font-size: 15px;
   font-weight: 700;
   border: none;
-}
-.ed-via { background: rgba(0, 0, 0, 0.32); color: #fff; padding: 0 15px; }
-.ed-fatto { background: #fff; color: #1A1626; }
+}.ed-fatto { background: #fff; color: #1A1626; }
 .ed-via:active, .ed-fatto:active { transform: scale(0.95); }
 
 /* ============================================================
@@ -2418,48 +2099,7 @@ main {
 }
 
 /* =============== BAR & CONTO: tendina, spazi, resto =============== */
-.e-panel { display: flex; flex-direction: column; gap: 11px; }
-
-/* il bar chiuso: una riga sola che dice quanto han preso */
-.bar-tendina {
-  background: rgba(0, 0, 0, 0.26);
-  border-radius: 13px;
-  overflow: hidden;
-}
-.bar-tendina > summary {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  min-height: 46px;
-  padding: 0 13px;
-  cursor: pointer;
-  list-style: none;
-  user-select: none;
-}
-.bar-tendina > summary::-webkit-details-marker { display: none; }
-.bar-tendina .bt-k { font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 600; }
-.bar-tendina .bt-hint { font-size: 12px; color: rgba(255, 255, 255, 0.6); }
-.bar-tendina .bt-tot { margin-left: auto; font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 700; }
-.bar-tendina .bt-frec { font-size: 12px; opacity: 0.7; transition: transform 160ms; }
-.bar-tendina[open] .bt-frec { transform: rotate(180deg); }
-.bar-tendina[open] .bt-hint { display: none; }
-.bar-dentro { padding: 2px 11px 11px; display: flex; flex-direction: column; gap: 9px; }
-
-/* il conto: via lo spazio sprecato, le categorie non si attaccano */
-.pay-cats { display: flex; flex-direction: column; gap: 10px; }
-.pay-cat { background: rgba(0, 0, 0, 0.26); border-radius: 13px; padding: 9px 11px 11px; }
-.pay-cat-k {
-  display: flex; align-items: center; gap: 9px;
-  font-family: 'Fredoka', sans-serif; font-size: 14.5px; font-weight: 600;
-  margin-bottom: 8px;
-}
-.pay-all { margin-left: auto; }
-.pay-grid { display: flex; flex-wrap: wrap; gap: 7px; }
-.pay-tot { display: flex; flex-direction: column; gap: 3px; padding: 2px 2px 0; }
-.pay-acts { display: flex; gap: 8px; flex-wrap: wrap; }
-.pay-acts .btn { flex: 1 1 auto; }
-.btn-resto { background: rgba(255, 255, 255, 0.16); color: #fff; flex: 0 1 auto; }
-.btn-resto.on { background: #fff; color: #123A2C; }
+.e-panel { display: flex; flex-direction: column; gap: 11px; }/* il conto: via lo spazio sprecato, le categorie non si attaccano */.pay-acts .btn { flex: 1 1 auto; }.btn-resto.on { background: #fff; color: #123A2C; }
 
 /* il calcolo del resto */
 .resto-box {
@@ -2556,23 +2196,8 @@ html:not(.anima) .view.entra-dx { animation: none; }
 .bc-cat button { border: none; border-radius: 15px; padding: 10px 15px; min-height: 46px;
   background: var(--surface); color: var(--txt-3); font: inherit; font-size: 14.5px;
   font-weight: 700; cursor: pointer; }
-.bc-cat button.on { background: var(--txt); color: var(--bg); }
-
-.bc-tempo { background: var(--surface); border-radius: 18px; padding: 12px 14px; margin-bottom: 12px; }
-.bc-tempo-k { font-size: 13px; font-weight: 700; color: var(--txt-3); margin-bottom: 9px; }
-.bc-tempo-k b { font-family: 'Fredoka', sans-serif; font-size: 17px; color: var(--txt); }
-.bc-tempo-k b.q { color: var(--warn); }
-.bc-chips { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
-.bc-chips button { border: none; border-radius: 13px; min-height: 44px; padding: 0 14px;
-  background: var(--surface-2); color: var(--txt); font: inherit; font-size: 14.5px;
-  font-weight: 700; cursor: pointer; }
-.bc-chips button.on { background: var(--accent); color: var(--accent-ink); }
-.bc-allunga { margin-top: 8px; }
-.bc-allunga .et { font-size: 12px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase;
-  color: var(--txt-3); }
-.bc-allunga button { min-height: 40px; padding: 0 12px; font-size: 13.5px;
-  background: var(--accent-soft); color: var(--accent); }
-.bc-allunga button.solo { margin-left: auto; background: var(--surface-2); color: var(--txt-3); }
+.bc-cat button.on { background: var(--txt); color: var(--bg); }.bc-tempo-k b.q { color: var(--warn); }.bc-chips button.on { background: var(--accent); color: var(--accent-ink); }.bc-allunga .et { font-size: 12px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--txt-3); }.bc-allunga button.solo { margin-left: auto; background: var(--surface-2); color: var(--txt-3); }
 
 .bc-griglia { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
   gap: 12px; align-items: stretch; }
@@ -2690,10 +2315,7 @@ html:not(.anima) .view.entra-dx { animation: none; }
   line-height: 1; }
 .bc-conto .gia { display: block; font-size: 12.5px; font-weight: 700; color: var(--ok);
   margin-top: 2px; min-height: 16px; line-height: 16px; }
-.bc-tasti { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
-.bc-resto { margin-top: 12px; }
-
-/* ══ LE ANIMAZIONI ══
+.bc-tasti { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }/* ══ LE ANIMAZIONI ══
    Tutte spente da sole quando l'utente toglie le animazioni: c'e' gia'
    una regola che azzera le durate su html:not(.anima). */
 @keyframes bcPop   { 0% { transform: scale(1) } 42% { transform: scale(1.22) } 100% { transform: scale(1) } }
@@ -2812,8 +2434,6 @@ html:not(.anima) .view.entra-dx { animation: none; }
 
 /* il volo: piu' morbido, e il browser lo prepara prima di partire */
 
-
-
 /* La regola generale azzera tutto quando il sistema chiede meno
    animazioni. Per la scheda che vola pero' il movimento SERVE a capire
    dove e' finita: la teniamo, corta. */
@@ -2847,21 +2467,7 @@ html:not(.anima) .entry.appena::before { animation: none; opacity: 1; }
   font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-}
-.e-inmod {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  background: rgba(176, 114, 255, 0.18);
-  border: 1px solid rgba(176, 114, 255, 0.5);
-  border-radius: 13px;
-  padding: 9px 12px;
-  margin-bottom: 11px;
-  font-size: 13.5px;
-  font-weight: 700;
-}
-.e-inmod .btn { margin-left: auto; }
+}.e-inmod .btn { margin-left: auto; }
 .e-cella.spento { opacity: 0.45; }
 
 /* ══════════════════════════════════════════════════════════
@@ -2887,7 +2493,11 @@ html:not(.anima) .entry.appena::before { animation: none; opacity: 1; }
    sopra di lei, dentro lo stesso main, ci puo' stare l'avviso dei dati
    al riparo, e col 100% quei 74px finivano fuori dallo schermo. */
 main.conto-in-fondo { padding-bottom: 0; display: flex; flex-direction: column; }
-main.conto-in-fondo > #view-new { flex: 1; min-height: 0; }
+/* La larghezza va detta a mano. .view ha `margin: 0 auto` (riga 309):
+   in un contenitore flex un margine automatico SPEGNE lo stiramento, e
+   la vista si stringeva al contenuto perdendo una novantina di pixel --
+   quanto basta a far scendere la griglia del bar da tre colonne a due. */
+main.conto-in-fondo > #view-new { flex: 1; min-height: 0; width: 100%; }
 main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
 /* un dito di respiro sotto, lo stesso che tiene lo sticky quando invece
    la schermata scorre: cosi' il pannello sta allo stesso posto nei due
@@ -2907,6 +2517,10 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
 .bc-cat button .bc-em { font-size: 18px; line-height: 1; }
 /* la vista che arriva entra da sotto, appena */
 .pc-parco.entra > .card, .pc-parco.entra > .bc-griglia, .bc-griglia.entra > .bc-card { animation: bcEntra .3s ease both; }
+/* il pannello che arriva dentro la scheda che vola: sale piano, cosi'
+   si capisce che e' la stessa cosa che stava in "+ Nuovo" e non una
+   schermata comparsa dal nulla */
+.pan-conto.arriva { animation: bcEntra .28s cubic-bezier(.22,.9,.3,1) both; }
 .pc-parco.entra > .card:nth-child(2) { animation-delay: .04s; }
 .pc-parco.entra > .card:nth-child(3) { animation-delay: .08s; }
 .pc-parco.entra > .card:nth-child(4) { animation-delay: .12s; }
@@ -2923,18 +2537,7 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
    esatti e il "paga dopo" devono stare tutti su una riga, quindi si
    stringono al testo */
 .riga-dur .chip { padding: 0 11px; min-width: 0; font-size: 15px; }
-.riga-dur .chip.later { flex: 0 0 auto; margin-left: auto; font-size: 14.5px; }
-
-/* "Solo bar": l'unica uscita dalla regola che si paga sempre per almeno
-   un bambino. Si dice apposta che nessuno entra. */
-.solobar { border: none; border-radius: 14px; padding: 8px 14px; min-height: 62px;
-  background: var(--surface-2); color: var(--txt-2); font: inherit; font-size: 14px;
-  font-weight: 700; cursor: pointer; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 1px;
-  transition: background .14s ease, color .14s ease, transform .08s ease; }
-.solobar small { font-size: 10.5px; font-weight: 600; opacity: .7; }
-.solobar:active { transform: scale(.96); }
-.solobar.on { background: var(--ok); color: #08301F; }
+.riga-dur .chip.later { flex: 0 0 auto; margin-left: auto; font-size: 14.5px; }.solobar.on { background: var(--ok); color: #08301F; }
 .solobar.on small { opacity: .85; }
 
 /* ── CHI ACCOMPAGNA ──
@@ -2999,25 +2602,8 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
   font-weight: 700; min-height: 32px; padding: 5px 8px; }
 .armadio .libero::placeholder { color: rgba(255,255,255,.5); }
 .person-list .invito { color: rgba(255,255,255,.65); font-size: 14.5px; line-height: 1.6;
-  padding: 14px 4px 4px; }
-
-/* ── la barra del prezzo: le tre voci si toccano per segnarle pagate ── */
-.ab-voci { display: flex; gap: 7px; flex-wrap: wrap; }
-button.ab-voce { border: none; border-radius: 13px; padding: 5px 11px; min-height: 46px;
-  background: rgba(0,0,0,.14); font: inherit; cursor: pointer; color: inherit;
-  display: flex; flex-direction: column; justify-content: center; text-align: left;
-  transition: background .14s ease, transform .08s ease; }
-button.ab-voce:active { transform: scale(.96); }
-button.ab-voce:disabled { opacity: .45; cursor: default; }
-.ab-voce .ab-seg { font-size: 9.5px; font-weight: 700; color: var(--txt-3);
-  min-height: 12px; line-height: 12px; }
-.ab-voce.pagata { background: var(--ok-soft); }
-.ab-voce.pagata .ab-seg { color: var(--ok); }
-/* la riga sotto il totale c'e' sempre, anche vuota: se comparisse solo
-   quando serve, la cifra grande saltellerebbe a ogni incasso */
-.ab-gia { display: block; font-size: 11px; font-weight: 700; color: var(--ok);
-  min-height: 14px; line-height: 14px; }
-.ab-gia.vuota { visibility: hidden; }
+  padding: 14px 4px 4px; }.ab-voce.pagata { background: var(--ok-soft); }
+.ab-voce.pagata .ab-seg { color: var(--ok); }.ab-gia.vuota { visibility: hidden; }
 
 @media (max-width: 900px) {
   .armadio { grid-template-columns: 116px 1fr; }
@@ -3105,10 +2691,7 @@ button.ab-voce:disabled { opacity: .45; cursor: default; }
 .bar-tendina > .bar-dentro {
   display: grid;
   grid-template-rows: minmax(0, 1fr);
-}
-.bar-tendina .bar-dentro > * { min-height: 0; }
-
-html:not(.anima) .entry,
+}html:not(.anima) .entry,
 html:not(.anima) .view.entra-sx,
 html:not(.anima) .view.entra-dx { animation: none; }
 html:not(.anima) .entry.esce { transition: none; }

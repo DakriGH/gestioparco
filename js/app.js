@@ -555,13 +555,9 @@ function costruisciPannello() {
       if (dovuto <= 0) return;
       /* sovrapposto a tutto: se lo infilassi nella pagina, la pagina si
          ridimensionerebbe sotto le dita proprio mentre conti i soldi */
-      apriVelo(pannelloResto(PAN.ingresso, dovuto, (preso) => {
-        chiudiVelo();
-        incassa(preso);
-        pcSalva();
-        aggiornaPannello();
-        toast('Incassati ' + eur(preso));
-      }));
+      /* solo il conto del resto: non muove niente. I soldi si segnano
+         dopo, con "Paga tutto" o registrando. */
+      apriVelo(pannelloResto(null, dovuto, null), 'Quanto ridare - restano ' + eur(dovuto));
       return;
     }
   });
@@ -615,7 +611,15 @@ function montaPannello(host, conto, opz) {
      i tasti restano agganciati al gruppo di prima */
   const box = p.querySelector('.pc-people');
   box.dataset.sig = ''; box.dataset.apri = '';
-  if (p.parentNode !== host) host.appendChild(p);
+  if (p.parentNode !== host) {
+    host.appendChild(p);
+    if (anima()) {
+      p.classList.remove('arriva');
+      void p.offsetWidth;
+      p.classList.add('arriva');
+      setTimeout(() => p.classList.remove('arriva'), 320);
+    }
+  }
   aggiornaPannello();
   return p;
 }
@@ -1935,8 +1939,12 @@ function buildActiveView() {
 
   const box = el('div', 'entries');
   list.forEach(entry => box.appendChild(showArchive ? archiveCard(entry) : entryCard(entry)));
-  scivolaAlPosto(dovErano);
+  /* PRIMA si attaccano alla pagina, POI si misura dove sono finite:
+     chiamata prima dell'appendChild, scivolaAlPosto interrogava schede
+     che nel DOM non c'erano ancora, quindi l'animazione del riordino
+     non e' mai partita da quando esiste. */
   root.appendChild(box);
+  scivolaAlPosto(dovErano);
   if (!showArchive) tick();
 }
 
@@ -2244,6 +2252,15 @@ function bcVoce(id) {
   return (C().barItems || []).find(x => x.id === id) || null;
 }
 function prezzoUnita(id) {
+  if (id !== 'bimbi' && id !== 'crazy') {
+    /* Per il bar comanda il prezzo SCRITTO SUL CONTO, non quello del
+       listino: e' quello che somma barTotal() ed e' quello che il
+       cliente ha visto quando ha ordinato. Prendendolo dal listino,
+       bastava ritoccare un prezzo in Impostazioni perche' i conti gia'
+       aperti non si chiudessero piu' (pagati troppo o troppo poco). */
+    const bi = (C().barItems || []).find(x => x.id === id);
+    if (bi) return num(bi.price, 0);
+  }
   const v = bcVoce(id);
   return v ? num(v.price, 0) : 0;
 }
@@ -2289,7 +2306,10 @@ function segnaPagate(id, n) {
   const c = C();
   c.paidLines = c.paidLines || {};
   const prima = bcPagGrezzo(id);
-  n = Math.max(0, Math.round(num(n, 0)));
+  /* non si puo' aver pagato piu' roba di quanta ce n'e' sul conto: il
+     pannello lo impedisce spegnendo il "+", ma la regola vale sempre,
+     anche per i dati che arrivano da fuori */
+  n = clamp(Math.round(num(n, 0)), 0, bcQ(id));
   if (n === prima) return;
   c.paidLines[id] = n;
   if (n > prima) {
@@ -2338,8 +2358,6 @@ const contoPagatoParco = () => Math.min(importoRiga('bimbi'), contoParco());
 const contoPagatoCrazy = () => Math.min(importoRiga('crazy'), contoCrazy());
 const contoPagatoBar = () =>
   Math.min(r2((C().barItems || []).reduce((a, bi) => a + importoRiga(bi.id), 0)), contoBar());
-/* la cifra grande invece viene da dueOf(): li' comanda l'IMPORTO */
-const contoPagato = () => { const d = dueOf(C()); return r2(d.paidPark + d.paidBar); };
 const contoResta = () => dueOf(C()).total;
 
 /* Segna (o dissegna) tutta una sezione. Il "paga" non risomma le
@@ -2369,31 +2387,6 @@ function pagaTutto() {
     const primo = (c.barItems || [])[0];
     if (primo) muoviSoldi(primo.id, d.barDue);
   }
-}
-
-/* Il contante che il cliente mette in mano. Si copre nell'ordine --
-   bambini, Crazy, poi il bar -- e le spunte SEGUONO i soldi: prima il
-   contante entrava senza toccare le righe, e il tocco successivo su
-   "paga" lo sommava una seconda volta. */
-function incassa(preso) {
-  const c = C();
-  let resta = r2(preso);
-  if (resta <= 0) return;
-  const ordine = ['bimbi', 'crazy'].concat((c.barItems || []).map(x => x.id));
-  ordine.forEach(id => {
-    if (resta <= 0) return;
-    const q = bcQ(id), u = prezzoUnita(id);
-    if (q <= 0 || u <= 0) return;
-    const manca = Math.max(0, r2(totaleRiga(id) - importoRiga(id)));
-    const quota = Math.min(resta, manca);
-    if (quota <= 0) return;
-    muoviSoldi(id, quota);
-    resta = r2(resta - quota);
-    c.paidLines = c.paidLines || {};
-    c.paidLines[id] = Math.min(q, Math.floor((importoRiga(id) + 0.005) / u));
-  });
-  /* ha dato piu' del dovuto: resta come avanzo, e il pannello lo dice */
-  if (resta > 0) muoviSoldi('bimbi', resta);
 }
 
 /* le categorie: il Parco davanti/* le categorie: il Parco davanti, poi quelle vere del menu */
@@ -2797,17 +2790,25 @@ function pannelloResto(entry, dovuto, onIncassa) {
       disegna();
     };
     azioni.appendChild(zero);
-    /* anche il tasto dell'incasso c'e' sempre: spento finch\u00e9 non ti
-       hanno dato niente, ma il suo posto resta occupato e la riga non
-       cresce di colpo al primo taglio toccato */
-    const ok = el('button', 'btn btn-ok');
-    const preso = Math.min(dato, cent) / 100;
-    ok.textContent = dato > 0
-      ? 'Incassa ' + eurNum(Math.min(dato, cent)) + (avanza > 0 ? ' \u00b7 rendi ' + eurNum(avanza) : '')
-      : 'Incassa';
-    ok.disabled = dato <= 0;
-    ok.onclick = () => { if (dato > 0) { box.remove(); onIncassa(preso); } };
-    azioni.appendChild(ok);
+    /* Il Resto e' un CALCOLO, non una cassa: dice quanto ridare e
+       basta. Chiudendolo non succede niente al conto -- si torna alla
+       schermata di prima e li' si decide, con "Paga tutto" o con
+       Registra. Prima aveva un tasto "Incassa" che muoveva i soldi da
+       qui dentro, e questo non e' il posto giusto per farlo. */
+    if (typeof onIncassa === 'function') {
+      const ok = el('button', 'btn btn-ok');
+      const preso = Math.min(dato, cent) / 100;
+      ok.textContent = dato > 0
+        ? 'Incassa ' + eurNum(Math.min(dato, cent)) + (avanza > 0 ? ' · rendi ' + eurNum(avanza) : '')
+        : 'Incassa';
+      ok.disabled = dato <= 0;
+      ok.onclick = () => { if (dato > 0) { box.remove(); onIncassa(preso); } };
+      azioni.appendChild(ok);
+    } else {
+      const via = el('button', 'btn btn-ok', 'Ho capito');
+      via.onclick = () => chiudiVelo();
+      azioni.appendChild(via);
+    }
     box.appendChild(azioni);
   }
   disegna();
@@ -3445,6 +3446,62 @@ function traduciImporti(o) {
   return a;
 }
 
+/* ---------- LA RIPARAZIONE ----------
+   Passa di qui OGNI ingresso che entra in memoria: da localStorage,
+   dal cloud, da una copia ripristinata, da una versione futura
+   dell'app. Non si fida di niente e rimette a posto quello che trova.
+   E' la rete che tiene: un conto sbagliato al banco vuol dire soldi. */
+function riparaConto(o) {
+  const int = (v, max) => {
+    const n = Math.round(num(v, 0));
+    return Number.isFinite(n) ? Math.max(0, Math.min(max, n)) : 0;
+  };
+  const sold = v => {
+    const n = Math.round(num(v, 0) * 100) / 100;
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  };
+
+  o.children = int(o.children, 9999);
+  o.crazyJumping = int(o.crazyJumping, 9999);
+  o.durationMinutes = Math.max(1, int(o.durationMinutes, 99999) || 60);
+  o.baseMinutes = Math.max(1, int(o.baseMinutes, 99999) || o.durationMinutes);
+  o.barItems = (Array.isArray(o.barItems) ? o.barItems : [])
+    .filter(b => b && b.id)
+    .map(b => ({ id: String(b.id), name: String(b.name || 'Voce'), price: sold(b.price), qty: int(b.qty, 9999) }))
+    .filter(b => b.qty > 0);
+
+  /* le spunte non possono superare quello che c'e' sul conto, e le
+     chiavi che non corrispondono a niente se ne vanno */
+  const quante = { bimbi: o.children, crazy: o.crazyJumping };
+  o.barItems.forEach(b => { quante[b.id] = b.qty; });
+  const righe = {}, importi = {};
+  Object.keys(o.paidLines || {}).forEach(k => {
+    if (!(k in quante)) return;
+    const n = Math.min(int((o.paidLines || {})[k], 9999), quante[k]);
+    if (n > 0) righe[k] = n;
+  });
+  Object.keys(o.paidAmt || {}).forEach(k => {
+    if (!(k in quante)) return;
+    const v = sold((o.paidAmt || {})[k]);
+    if (v > 0) importi[k] = v;
+  });
+  o.paidLines = righe;
+  o.paidAmt = importi;
+
+  /* i due totali di sezione sono la verita' dei soldi: se gli importi
+     per riga non li rispecchiano piu', si rifanno da loro invece di
+     lasciare in giro due versioni diverse dello stesso conto */
+  o.paidPark = sold(o.paidPark);
+  o.paidBar = sold(o.paidBar);
+  const somma = (chiavi) => Math.round(chiavi.reduce((a, k) => a + num(importi[k], 0), 0) * 100) / 100;
+  const idBar = o.barItems.map(b => b.id);
+  if (Math.abs(somma(['bimbi', 'crazy']) - o.paidPark) > 0.005 ||
+      Math.abs(somma(idBar) - o.paidBar) > 0.005) {
+    o.paidAmt = traduciImporti(Object.assign({}, o, { paidAmt: null }));
+  }
+  return o;
+}
+
 function normalizeEntries(list) {
   return (list || []).map(e => {
     const o = Object.assign({
@@ -3458,6 +3515,7 @@ function normalizeEntries(list) {
     if (o.baseMinutes == null) o.baseMinutes = o.durationMinutes;
     o.paidLines = traduciPagate(o.paidLines);
     o.paidAmt = traduciImporti(o);
+    riparaConto(o);
     // vecchio formato: flag "tutto pagato" -> importo incassato
     if (o.paidPark == null) {
       const c = costOf(o);
