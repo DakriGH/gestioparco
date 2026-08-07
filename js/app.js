@@ -2154,26 +2154,26 @@ function bcCard(v) {
 
 function bcFondo() {
   const tot = cassaTot(), pag = cassaPagato(), resta = cassaResta();
-  const parte = (nome, id, im) => {
+  /* come nel modello: icona, l'etichetta sopra la cifra, e il tasto
+     "paga" a destra. Tre blocchi attaccati sopra il totale. */
+  const parte = (nome, ico, id, im) => {
     const p = id === 'bar' ? bcPagatoBar() : (bcQ(id) > 0 ? bcPag(id) * num(bcVoce(id).price, 0) : 0);
     const fatto = im > 0 && p >= im - 0.005;
-    return '<div class="bc-parte' + (fatto ? ' fatta' : '') + '">' +
-      '<span class="k">' + nome + '</span><span class="v num">' + eur(im) + '</span>' +
-      /* il tasto PRIMA della scritta "pagato X": quella prende tutta la
-         riga, e se stesse in mezzo spingerebbe il tasto su una terza
-         riga facendo diventare il blocco alto il doppio */
+    return '<div class="bc-parte' + (fatto ? ' fatta' : '') + '">' + ICONE[ico]() +
+      '<div class="bc-pk"><span class="k">' + nome + '</span>' +
+      '<span class="v num">' + eur(im) + '</span>' +
+      (p > 0 && !fatto ? '<span class="q">pagato ' + eur(p) + '</span>' : '') + '</div>' +
       (im > 0
         ? (fatto
           ? '<button class="paga ok" data-desez="' + id + '">\u2713</button>'
           : '<button class="paga" data-sez="' + id + '">paga</button>')
-        : '') +
-      (p > 0 && !fatto ? '<span class="q">pagato ' + eur(p) + '</span>' : '') + '</div>';
+        : '') + '</div>';
   };
   return '<div class="bc-fondo">' +
     '<div class="bc-parti">' +
-      parte('Totale Parco', 'bimbi', cassaParcoTot()) +
-      parte('Totale Crazy', 'crazy', cassaCrazyTot()) +
-      parte('Totale Bar', 'bar', cassaBarTot()) +
+      parte('Totale Parco', 'bimbi', 'bimbi', cassaParcoTot()) +
+      parte('Totale Crazy', 'crazy', 'crazy', cassaCrazyTot()) +
+      parte('Totale Bar', 'coca', 'bar', cassaBarTot()) +
     '</div>' +
     '<div class="bc-conto"><div>' +
       '<span class="k">' + (tot <= 0 ? 'niente sul conto' : resta > 0 ? (pag > 0 ? 'restano' : 'da incassare') : 'tutto pagato') + '</span>' +
@@ -2181,6 +2181,7 @@ function bcFondo() {
       (pag > 0 && resta > 0 ? '<span class="gia">gi\u00e0 presi ' + eur(pag) + '</span>' : '') +
     '</div><div class="bc-tasti">' +
       (pag > 0 && resta > 0 ? '<button class="btn" data-azzera>\u21ba Azzera</button>' : '') +
+      '<button class="btn" data-svuota>\ud83e\uddf9 Svuota</button>' +
       (resta > 0 ? '<button class="btn" data-resto>\ud83e\uddee Resto</button>' +
         '<button class="btn btn-ok" data-tutto>Paga tutto</button>' : '') +
       (tot > 0 && resta <= 0 ? '<button class="btn btn-ok" data-chiudi>\u2705 Incassa e chiudi</button>' : '') +
@@ -2213,12 +2214,7 @@ function buildCassaView() {
       (cassa.cat === 'Parco' ? bcTempoBlocco() : '') +
       '<div class="bc-griglia">' + bcVociDi(cassa.cat).map(bcCard).join('') + '</div>' +
       '<div class="bc-resto"></div>' +
-      bcFondo() +
-      '<div class="cassa-fondo">' +
-        '<button class="btn" data-svuota>\ud83e\uddf9 Svuota</button>' +
-        '<button class="btn btn-primary" data-ingresso>\u27a1\ufe0f Fanne un ingresso' +
-          (cassa.children > 0 ? '' : ' da 1') + '</button>' +
-      '</div>';
+      bcFondo();
   };
 
   const registra = (preso) => {
@@ -2279,24 +2275,6 @@ function buildCassaView() {
         registra(cassaTot());
       }));
       qui.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      return;
-    }
-    if (d.ingresso !== undefined) {
-      /* Qui si fa un ingresso NUOVO: se restava acceso "sto modificando
-         quell'altro", premere Registra lo avrebbe sovrascritto. */
-      editingId = null;
-      draft.children = Math.max(1, cassa.children);
-      draft.crazyJumping = cassa.crazy;
-      draft.durationMinutes = cassa.minutes || settings.defaultMinutes || 60;
-      draft.barItems = JSON.parse(JSON.stringify(cassa.bar));
-      draft.startTime = roundTo5(new Date()).getTime();
-      draft.payLater = false;
-      draft.people = [];
-      draft.braceletColor = null;
-      draft.braceletCustom = false;
-      draft.touched = true;
-      cassa.bar = []; cassa.children = 0; cassa.crazy = 0; cassa.minutes = 0; cassa.pagate = {};
-      switchTab('new');
       return;
     }
   };

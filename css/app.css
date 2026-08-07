@@ -2585,9 +2585,13 @@ html:not(.anima) .view.entra-dx { animation: none; }
 /* la testa prende lo spazio in piu' quando su una riga c'e' una card
    piu' alta: cosi' i tasti restano incollati al fondo e non resta mai
    una striscia morta sotto, dove premi e non succede niente */
+/* align-items: flex-start -- l'icona e il prezzo restano INCHIODATI in
+   alto. Prima erano centrati nella testa, e siccome la testa si allunga
+   quando sulla stessa riga c'e' una card piu' alta, si spostavano in
+   giu' da soli appena selezionavi qualcos'altro di fianco. */
 .bc-su { flex: 1; position: relative; overflow: hidden; border: none; background: none;
   font: inherit; color: inherit; cursor: pointer; padding: 12px; display: flex;
-  align-items: center; gap: 11px; width: 100%; text-align: left; }
+  align-items: flex-start; gap: 11px; width: 100%; text-align: left; }
 .bc-su svg { width: 58px; height: 58px; flex: 0 0 auto; position: relative; z-index: 1; }
 .bc-em { font-size: 40px; line-height: 1; width: 58px; text-align: center; flex: 0 0 auto;
   position: relative; z-index: 1; }
@@ -2602,7 +2606,7 @@ html:not(.anima) .view.entra-dx { animation: none; }
 /* il numero fantasma: sotto a tutto, centrato sulla testa e allineato
    al margine del testo. Altezza e riga bloccate perche' la cifra ci
    stia dentro intera senza farsi tagliare. */
-.bc-fant { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); z-index: 0;
+.bc-fant { position: absolute; right: 12px; top: 8px; z-index: 0;
   font-family: 'Fredoka', sans-serif; font-size: 76px; font-weight: 700;
   height: 66px; line-height: 66px; overflow: hidden; pointer-events: none; user-select: none;
   color: rgba(255,255,255,.07); }
@@ -2638,19 +2642,20 @@ html:not(.anima) .view.entra-dx { animation: none; }
   background: var(--surface); border-radius: 20px; padding: 12px 14px 13px;
   box-shadow: 0 -6px 22px rgba(0,0,0,.45); display: flex; flex-direction: column; gap: 11px; }
 .bc-parti { display: flex; gap: 8px; flex-wrap: wrap; }
-/* una riga sola per parte: con l'etichetta sopra il valore il fondo
-   diventava alto quasi quattrocento pixel su schermo stretto e si
-   mangiava mezza schermata */
-.bc-parte { flex: 1 1 160px; background: rgba(0,0,0,.24); border-radius: 14px; padding: 7px 10px;
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.bc-parte .k { font-size: 11.5px; font-weight: 700; color: var(--txt-3); }
-.bc-parte .v { margin-left: auto; font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 700; }
-.bc-parte .q { flex: 1 1 100%; }
-.bc-parte .q { font-size: 11px; font-weight: 700; color: var(--ok); }
+/* icona, poi l'etichetta SOPRA la cifra, poi il tasto: sta in una riga
+   sola da una quarantina di pixel, come nel modello */
+.bc-parte { flex: 1 1 170px; background: rgba(0,0,0,.24); border-radius: 14px; padding: 7px 10px;
+  display: flex; align-items: center; gap: 9px; }
+.bc-parte svg { width: 22px; height: 22px; flex: 0 0 auto; }
+.bc-pk { flex: 1; min-width: 0; }
+.bc-parte .k { display: block; font-size: 11px; font-weight: 700; color: var(--txt-3); }
+.bc-parte .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 700;
+  line-height: 1.15; }
+.bc-parte .q { display: block; font-size: 11px; font-weight: 700; color: var(--ok); }
 /* sul telefono (o col tablet in mano stretto) il numerone e i tasti
    stanno larghi uguale ma senza far crescere il fondo */
 @media (max-width: 560px) {
-  .bc-conto .v { font-size: 30px; }
+  .bc-conto .v { font-size: 32px; }
   .bc-tasti { margin-left: 0; width: 100%; }
   .bc-tasti .btn { flex: 1 1 110px; }
 }
@@ -2661,7 +2666,7 @@ html:not(.anima) .view.entra-dx { animation: none; }
 .bc-parte .paga.ok { background: rgba(106,220,175,.18); color: var(--ok); }
 .bc-conto { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
 .bc-conto .k { display: block; font-size: 12px; font-weight: 700; color: var(--txt-3); }
-.bc-conto .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 36px; font-weight: 700;
+.bc-conto .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 42px; font-weight: 700;
   line-height: 1; }
 .bc-conto .gia { display: block; font-size: 12.5px; font-weight: 700; color: var(--ok); margin-top: 2px; }
 .bc-tasti { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
