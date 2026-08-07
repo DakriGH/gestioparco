@@ -71,18 +71,32 @@ h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 10px; }
 .tess .su { border: none; background: none; font: inherit; color: inherit; cursor: pointer;
   padding: 13px; display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; }
 .tess .su svg { width: 64px; height: 64px; flex: 0 0 auto; }
-/* le due righe alte quanto l'icona: nome in cima, prezzo in fondo */
+/* Le due righe stanno INSIEME al centro, non spalmate agli angoli: lo
+   space-between apriva un buco di quaranta pixel fra prezzo e nome e
+   sembravano due cose scollegate. Prezzo sopra, grosso, perche' e' il
+   dato che serve; il nome sotto, che tanto lo riconosci dall'icona. */
 .tess .testi { flex: 1; min-width: 0; min-height: 64px; display: flex; flex-direction: column;
-  justify-content: space-between; gap: 4px; }
-.tess .nm { font-size: 17px; font-weight: 700; line-height: 1.2; }
-.tess .pr { font-family: 'Fredoka', sans-serif; font-size: 21px; font-weight: 700; color: var(--txt2); }
+  justify-content: center; gap: 1px; }
+.tess .pr { font-family: 'Fredoka', sans-serif; font-size: 23px; font-weight: 700;
+  color: #C9CDD6; line-height: 1.1; }
+.tess .nm { font-size: 16.5px; font-weight: 700; line-height: 1.2; color: var(--txt2); }
+.tess.preso .nm, .tess.saldata .nm { color: var(--txt); }
 .tess.preso { background: #14243A; box-shadow: 0 0 0 3px var(--sel) inset, 0 6px 18px rgba(59,140,255,.3); }
 .tess.preso .pr { color: #9CC6FF; }
-.tess .conta { display: flex; background: rgba(0,0,0,.3); }
-.tess .conta button { flex: 1; min-height: 46px; border: none; background: none; color: var(--txt);
-  font-family: 'Fredoka', sans-serif; font-size: 22px; font-weight: 700; cursor: pointer; }
-.tess .conta .n { font-family: 'Fredoka', sans-serif; font-size: 20px; font-weight: 700;
-  min-width: 34px; text-align: center; align-self: center; }
+/* ══ LE DUE FASCE DEI TASTI ══
+   Erano due flex con la casella di mezzo larga diversa (34 contro 62),
+   quindi il − e il + di sopra non stavano sopra il − e il + di sotto e
+   si vedeva. Adesso sono la STESSA griglia con le stesse colonne, cosi'
+   i quattro tasti fanno due colonne dritte. Il filo da 1px fra le
+   caselle serve a farli leggere come tasti separati. */
+.tess .conta, .tess .pag { display: grid; grid-template-columns: 1fr 74px 1fr; gap: 1px; }
+.tess .conta { background: rgba(0,0,0,.5); }
+.tess .conta button { border: none; background: rgba(255,255,255,.06); color: var(--txt);
+  min-height: 48px; font-family: 'Fredoka', sans-serif; font-size: 26px; font-weight: 700; cursor: pointer; }
+.tess .conta button:active { background: rgba(255,255,255,.15); }
+/* il numero grande: prima era 20px e spariva fra i due segni */
+.tess .conta .n { background: rgba(0,0,0,.22); display: flex; align-items: center; justify-content: center;
+  font-family: 'Fredoka', sans-serif; font-size: 28px; font-weight: 700; color: var(--txt); }
 
 /* la classe .fisso non serve più: adesso è tessera() a decidere se
    mostrare il contatore o il tasto largo «+ aggiungi» */
@@ -167,153 +181,23 @@ h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 10px; }
    una no" si dice sulla card, senza aprire niente e senza scegliere
    nessun modo. Quando i due numeri pareggiano la card diventa verde:
    quella voce non deve piu' niente. */
-.tess .pag { display: flex; align-items: center; background: rgba(25,192,138,.14);
-  border-top: 1px solid rgba(25,192,138,.26); }
-.tess .pag button { flex: 1; min-height: 46px; border: none; background: none; color: var(--soldi);
-  font-family: 'Fredoka', sans-serif; font-size: 22px; font-weight: 700; cursor: pointer; }
-.tess .pag button:disabled { opacity: .22; cursor: default; }
-.tess .pag .n { min-width: 62px; text-align: center; align-self: center; color: var(--soldi);
-  font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 700; line-height: 1.1; }
-.tess .pag .n small { display: block; font-family: 'Inter', sans-serif; font-size: 9.5px;
-  font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .8; }
+.tess .pag { background: rgba(25,192,138,.32); }
+.tess .pag button { border: none; background: rgba(25,192,138,.12); color: var(--soldi);
+  min-height: 48px; font-family: 'Fredoka', sans-serif; font-size: 26px; font-weight: 700; cursor: pointer; }
+.tess .pag button:active { background: rgba(25,192,138,.26); }
+.tess .pag button:disabled { opacity: .25; cursor: default; }
+.tess .pag .n { background: rgba(25,192,138,.12); display: flex; flex-direction: column;
+  align-items: center; justify-content: center; color: var(--soldi);
+  font-family: 'Fredoka', sans-serif; font-size: 21px; font-weight: 700; line-height: 1.05; }
+.tess .pag .n small { font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase; opacity: .85; }
 .tess.saldata { background: #10241D; box-shadow: 0 0 0 3px var(--soldi) inset, 0 6px 18px rgba(25,192,138,.24); }
 .tess.saldata .pr { color: #7FE8C1; }
 .tess.saldata .pag { background: rgba(25,192,138,.22); }
 .fondo .parti .voce .paga.tutta { background: rgba(25,192,138,.18); color: #7FE8C1; }
 
-/* il tempo, in cima alla sezione Parco */
-.tempo { background: var(--carta); border-radius: 20px; padding: 14px 16px; box-shadow: 0 2px 8px rgba(0,0,0,.28); flex-shrink: 0; }
-.tempo-cap { display: flex; align-items: baseline; gap: 8px 20px; flex-wrap: wrap; margin-bottom: 12px; }
-.tempo-k { font-size: 13px; font-weight: 700; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-.tempo-k b { font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 700; color: var(--txt); }
-.tempo-v { font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 700; color: var(--txt); }
-.tempo-chip { display: flex; gap: 8px; flex-wrap: wrap; }
-.tempo-chip button { border: none; border-radius: 14px; min-height: 46px; padding: 0 16px; background: var(--carta2);
-  color: var(--txt); font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
-.tempo-chip button.on { background: var(--parco); color: #06162E; }
-/* i due modi del tempo: uno slot deciso, oppure quanto sono stati davvero */
-.modo2 { display: flex; gap: 8px; margin-bottom: 12px; }
-.modo2 button { flex: 1; border: none; border-radius: 14px; min-height: 48px; background: var(--carta2);
-  color: var(--txt2); font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
-.modo2 button.on { background: var(--parco); color: #06162E; }
-/* allunga: non cambia lo scaglione, lo sposta piu' avanti */
-.allunga { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-.allunga .et { font-size: 12.5px; font-weight: 700; color: var(--txt2); }
-.allunga button { border: none; border-radius: 13px; min-height: 42px; padding: 0 14px;
-  background: rgba(59,140,255,.16); color: #9CC6FF; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
-/* "paga fin qui": il tempo scorre da solo e il prezzo lo segue */
-.vivo { background: rgba(59,140,255,.12); border-radius: 16px; padding: 12px 14px;
-  display: flex; align-items: baseline; gap: 8px 16px; flex-wrap: wrap; }
-.vivo .pt { width: 9px; height: 9px; border-radius: 50%; background: var(--parco); align-self: center;
-  animation: batte 2s ease-in-out infinite; }
-@keyframes batte { 0%,100% { opacity: 1 } 50% { opacity: .25 } }
-.vivo small { font-size: 11.5px; color: var(--txt2); font-weight: 700; }
-
-/* ══ LA SCHERMATA DEL RESTO ══
-   Prende tutto il corpo del pannello: mentre conti i soldi non devi
-   avere altro sotto le dita. Due cifre grandi, i tagli veri, e via. */
-.resto { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
-.resto .box { background: var(--carta); border-radius: 22px; padding: 16px 20px;
-  box-shadow: 0 3px 12px rgba(0,0,0,.3); }
-.resto .due { display: flex; gap: 14px; flex-wrap: wrap; }
-.resto .due > .box { flex: 1 1 200px; }
-.resto .k { display: block; font-size: 13px; font-weight: 700; color: var(--txt2); }
-.resto .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 40px; font-weight: 700;
-  line-height: 1.08; font-variant-numeric: tabular-nums; }
-.resto .v.giallo { color: #FFD166; }
-.resto .v.verde { color: var(--soldi); }
-.resto .v.grigio { color: var(--txt2); }
-.resto .tasti { display: flex; gap: 10px; margin-top: auto; }
-.resto .tasti .bt { flex: 1; }
-
-/* ══ PAGATO A QUANTITA' ══
-   Accanto al contatore delle cose prese sta quello delle cose gia'
-   pagate: gli stessi due tasti, ma verdi. Cosi' "una Coca l'ha pagata e
-   una no" si dice sulla riga, senza aprire niente e senza scegliere
-   nessun modo. Quando i due numeri pareggiano la tessera diventa verde:
-   quella voce non deve piu' niente. */
-.tess .pag { flex: 1.15; display: flex; align-items: center; background: rgba(25,192,138,.14);
-  border: 1px solid rgba(25,192,138,.26); border-radius: 13px; overflow: hidden; }
-.tess .pag button { flex: 1; min-height: 42px; border: none; background: none; color: var(--soldi);
-  font-family: 'Fredoka', sans-serif; font-size: 21px; font-weight: 700; cursor: pointer; }
-.tess .pag button:disabled { opacity: .22; cursor: default; }
-.tess .pag .n { min-width: 44px; text-align: center; align-self: center; color: var(--soldi);
-  font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 700; line-height: 1.1; }
-.tess .pag .n small { display: block; font-family: 'Inter', sans-serif; font-size: 9px;
-  font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .8; }
-.tess.saldata { background: #10241D; box-shadow: 0 0 0 3px var(--soldi) inset, 0 6px 18px rgba(25,192,138,.24); }
-.tess.saldata .pr { color: #7FE8C1; }
-.tess.saldata .pag { background: rgba(25,192,138,.22); }
-.fondo .parti .voce .paga.tutta { background: rgba(25,192,138,.18); color: #7FE8C1; }
-
-/* il tempo, in cima alla sezione Parco */
-.tempo { background: var(--carta); border-radius: 20px; padding: 14px 16px; box-shadow: 0 2px 8px rgba(0,0,0,.28); flex-shrink: 0; }
-.tempo-cap { display: flex; align-items: baseline; gap: 8px 20px; flex-wrap: wrap; margin-bottom: 12px; }
-.tempo-k { font-size: 13px; font-weight: 700; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-.tempo-k b { font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 700; color: var(--txt); }
-.tempo-v { font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 700; color: var(--txt); }
-.tempo-chip { display: flex; gap: 8px; flex-wrap: wrap; }
-.tempo-chip button { border: none; border-radius: 14px; min-height: 46px; padding: 0 16px; background: var(--carta2);
-  color: var(--txt); font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
-.tempo-chip button.on { background: var(--parco); color: #06162E; }
-/* i due modi del tempo: uno slot deciso, oppure quanto sono stati davvero */
-.modo2 { display: flex; gap: 8px; margin-bottom: 12px; }
-.modo2 button { flex: 1; border: none; border-radius: 14px; min-height: 48px; background: var(--carta2);
-  color: var(--txt2); font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
-.modo2 button.on { background: var(--parco); color: #06162E; }
-/* allunga: non cambia lo scaglione, lo sposta piu' avanti */
-.allunga { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-.allunga .et { font-size: 12.5px; font-weight: 700; color: var(--txt2); }
-.allunga button { border: none; border-radius: 13px; min-height: 42px; padding: 0 14px;
-  background: rgba(59,140,255,.16); color: #9CC6FF; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
-/* "paga fin qui": il tempo scorre da solo e il prezzo lo segue */
-.vivo { background: rgba(59,140,255,.12); border-radius: 16px; padding: 12px 14px;
-  display: flex; align-items: baseline; gap: 8px 16px; flex-wrap: wrap; }
-.vivo .pt { width: 9px; height: 9px; border-radius: 50%; background: var(--parco); align-self: center;
-  animation: batte 2s ease-in-out infinite; }
-@keyframes batte { 0%,100% { opacity: 1 } 50% { opacity: .25 } }
-.vivo small { font-size: 11.5px; color: var(--txt2); font-weight: 700; }
-
-/* ══ LA SCHERMATA DEL RESTO ══
-   Prende tutto il corpo del pannello: mentre conti i soldi non devi
-   avere altro sotto le dita. Due cifre grandi, i tagli veri, e via. */
-.resto { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
-.resto .box { background: var(--carta); border-radius: 22px; padding: 16px 20px;
-  box-shadow: 0 3px 12px rgba(0,0,0,.3); }
-.resto .due { display: flex; gap: 14px; flex-wrap: wrap; }
-.resto .due > .box { flex: 1 1 200px; }
-.resto .k { display: block; font-size: 13px; font-weight: 700; color: var(--txt2); }
-.resto .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 40px; font-weight: 700;
-  line-height: 1.08; font-variant-numeric: tabular-nums; }
-.resto .v.giallo { color: #FFD166; }
-.resto .v.verde { color: var(--soldi); }
-.resto .v.grigio { color: var(--txt2); }
-.resto .tasti { display: flex; gap: 10px; margin-top: auto; }
-.resto .tasti .bt { flex: 1; }
-
-/* ══ PAGATO A QUANTITA' ══
-   Sotto il contatore delle cose prese sta quello delle cose gia'
-   pagate: gli stessi due tasti, ma verdi. Cosi' "una Coca l'ha pagata
-   e una no" si dice sulla riga, senza aprire niente e senza scegliere
-   nessun modo. Quando i due numeri pareggiano la tessera diventa verde:
-   quella voce non deve piu' niente. */
-.tess .pag { display: flex; align-items: center; background: rgba(25,192,138,.13);
-  border-top: 1px solid rgba(25,192,138,.26); }
-.tess .pag button { flex: 1; min-height: 46px; border: none; background: none; color: var(--soldi);
-  font-family: 'Fredoka', sans-serif; font-size: 21px; font-weight: 700; cursor: pointer; }
-.tess .pag button:disabled { opacity: .22; cursor: default; }
-.tess .pag .n { min-width: 64px; text-align: center; align-self: center; color: var(--soldi);
-  font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 700; line-height: 1.15; }
-.tess .pag .n small { display: block; font-family: 'Inter', sans-serif; font-size: 9.5px;
-  font-weight: 700; letter-spacing: .09em; text-transform: uppercase; opacity: .8; }
-.tess.saldata { background: #10241D; box-shadow: 0 0 0 3px var(--soldi) inset, 0 6px 18px rgba(25,192,138,.24); }
-.tess.saldata .pr { color: #7FE8C1; }
-.tess.saldata .pag { background: rgba(25,192,138,.22); }
-.riep .voce .q { display: block; font-size: 11.5px; font-weight: 700; color: var(--soldi); }
-.riep .voce .paga.tutta { background: rgba(25,192,138,.18); color: #7FE8C1; }
 .fondo .gia { display: block; font-size: 13px; font-weight: 700; color: var(--soldi); margin-top: 3px; }
-.registro button { margin-left: auto; border: none; border-radius: 10px; min-height: 40px; padding: 0 14px;
-  background: rgba(255,255,255,.1); color: var(--txt); font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+
 </style>
 </head>
 <body>
@@ -735,8 +619,8 @@ function tessera(p) {
   const saldata = eff > 0 && pg >= eff, attiva = n > 0 || p.fisso;
   return '<div class="tess' + (saldata ? ' saldata' : n ? ' preso' : '') + '">' +
     '<button class="su" data-add="' + p.id + '">' + icona(p) +
-      '<span class="testi"><span class="nm">' + p.nm + '</span>' +
-      '<span class="pr">' + eur(pzUn(p.id)) + '</span></span></button>' +
+      '<span class="testi"><span class="pr">' + eur(pzUn(p.id)) + '</span>' +
+      '<span class="nm">' + p.nm + '</span></span></button>' +
     (attiva
       ? '<div class="conta"><button data-meno="' + p.id + '">−</button>' +
         '<span class="n">' + n + '</span>' +
