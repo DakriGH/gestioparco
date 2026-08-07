@@ -2479,6 +2479,10 @@ main {
 }
 .resto-alto .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 27px; font-weight: 700; line-height: 1.05; }
 .resto-alto .da { margin-left: auto; text-align: right; color: #FFD166; }
+/* c'e' ma non si vede finche' non ti danno qualcosa: tiene il posto e
+   il pannello non si allarga al primo taglio toccato */
+.resto-alto .da.vuota { visibility: hidden; }
+.resto-azioni .btn-ok:disabled { opacity: .4; }
 .resto-tagli { display: grid; grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); gap: 7px; }
 .resto-tagli button, .resto-pad button {
   min-height: 44px; border: none; border-radius: 12px;
@@ -2650,9 +2654,9 @@ main.bc-attivo { padding-bottom: 0; }
 /* margin-top:auto lo spinge in fondo quando c'e' spazio; sticky lo
    tiene incollato al bordo basso quando invece la lista e' lunga e
    scorre */
-.bc-fondo { position: sticky; bottom: 0; z-index: 5; margin-top: auto;
-  background: var(--surface); border-radius: 20px 20px 0 0;
-  padding: 12px 14px calc(13px + var(--safe-b));
+.bc-fondo { position: sticky; bottom: max(10px, var(--safe-b)); z-index: 5; margin-top: auto;
+  background: var(--surface); border-radius: 20px;
+  padding: 12px 14px 13px;
   box-shadow: 0 -6px 22px rgba(0,0,0,.45); display: flex; flex-direction: column; gap: 11px; }
 .bc-parti { display: flex; gap: 8px; flex-wrap: wrap; }
 /* icona, poi l'etichetta SOPRA la cifra, poi il tasto: sta in una riga
@@ -2694,6 +2698,12 @@ main.bc-attivo { padding-bottom: 0; }
    Tutte spente da sole quando l'utente toglie le animazioni: c'e' gia'
    una regola che azzera le durate su html:not(.anima). */
 @keyframes bcPop   { 0% { transform: scale(1) } 42% { transform: scale(1.22) } 100% { transform: scale(1) } }
+/* la pasticca sta al centro grazie a un translate: se l'animazione
+   scrivesse solo "scale" lo cancellerebbe, e il numero salterebbe di
+   lato per tutta la durata. Qui il translate se lo porta dietro. */
+@keyframes bcPopChip { 0%   { transform: translate(-50%,-50%) scale(1) }
+                       42%  { transform: translate(-50%,-50%) scale(1.22) }
+                       100% { transform: translate(-50%,-50%) scale(1) } }
 @keyframes bcSu    { from { opacity: 0; transform: translateY(7px) } to { opacity: 1; transform: none } }
 @keyframes bcEntra { from { opacity: 0; transform: translateY(9px) } to { opacity: 1; transform: none } }
 @keyframes bcVelo  { from { opacity: 0 } to { opacity: 1 } }
@@ -2707,7 +2717,8 @@ main.bc-attivo { padding-bottom: 0; }
 .bc-card.nato .bc-zone { animation: bcSu .18s ease both; }
 /* la pasticca e il numero fantasma fanno un saltino: solo sulla card
    che hai appena toccato */
-.bc-card.tocca .bc-chip, .bc-card.tocca .bc-fant { animation: bcPop .26s ease; }
+.bc-card.tocca .bc-chip { animation: bcPopChip .26s ease; }
+.bc-card.tocca .bc-fant { animation: bcPop .26s ease; }
 /* e il totale in fondo pulsa quando cambia */
 .bc-conto .v.tocca { animation: bcPop .24s ease; }
 /* i tasti affondano sotto il dito */
@@ -2756,8 +2767,10 @@ main.bc-attivo { padding-bottom: 0; }
 /* Sul tablet la barra di sistema copre la parte bassa: finche' l'app
    non gira a tutto schermo, il conto si tiene un dito di margine.
    A tutto schermo quel margine non serve e sparisce. */
+/* Fuori dal tutto schermo la barra di sistema del tablet mangia la
+   parte bassa: li' il margine sotto diventa un dito abbondante. */
 @media (display-mode: standalone) {
-  .bc-fondo { padding-bottom: max(26px, calc(13px + var(--safe-b))); }
+  .bc-fondo { bottom: max(26px, var(--safe-b)); }
   .bc-foglio { padding-bottom: max(28px, calc(16px + var(--safe-b))); }
 }
 

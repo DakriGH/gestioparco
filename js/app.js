@@ -2734,12 +2734,13 @@ function pannelloResto(entry, dovuto, onIncassa) {
     a1.appendChild(el('span', 'k', 'ti ha dato'));
     a1.appendChild(el('span', 'v num', eurNum(dato)));
     alto.appendChild(a1);
-    if (dato > 0) {
-      const a2 = el('div', 'da');
-      a2.appendChild(el('span', 'k', avanza >= 0 ? 'resto da dare' : 'mancano ancora'));
-      a2.appendChild(el('span', 'v num', eurNum(Math.abs(avanza))));
-      alto.appendChild(a2);
-    }
+    /* la seconda colonna c'e' SEMPRE, anche vuota: se comparisse al
+       primo taglio toccato, il pannello si allargherebbe sotto le dita
+       proprio mentre conti i soldi */
+    const a2 = el('div', 'da' + (dato > 0 ? '' : ' vuota'));
+    a2.appendChild(el('span', 'k', avanza >= 0 ? 'resto da dare' : 'mancano ancora'));
+    a2.appendChild(el('span', 'v num', eurNum(Math.abs(avanza))));
+    alto.appendChild(a2);
     box.appendChild(alto);
 
     if (!tastierino) {
@@ -2801,14 +2802,17 @@ function pannelloResto(entry, dovuto, onIncassa) {
       disegna();
     };
     azioni.appendChild(zero);
-    if (dato > 0) {
-      const ok = el('button', 'btn btn-ok');
-      const preso = Math.min(dato, cent) / 100;
-      ok.textContent = 'Incassa ' + eurNum(Math.min(dato, cent)) +
-        (avanza > 0 ? ' \u00b7 rendi ' + eurNum(avanza) : '');
-      ok.onclick = () => { box.remove(); onIncassa(preso); };
-      azioni.appendChild(ok);
-    }
+    /* anche il tasto dell'incasso c'e' sempre: spento finch\u00e9 non ti
+       hanno dato niente, ma il suo posto resta occupato e la riga non
+       cresce di colpo al primo taglio toccato */
+    const ok = el('button', 'btn btn-ok');
+    const preso = Math.min(dato, cent) / 100;
+    ok.textContent = dato > 0
+      ? 'Incassa ' + eurNum(Math.min(dato, cent)) + (avanza > 0 ? ' \u00b7 rendi ' + eurNum(avanza) : '')
+      : 'Incassa';
+    ok.disabled = dato <= 0;
+    ok.onclick = () => { if (dato > 0) { box.remove(); onIncassa(preso); } };
+    azioni.appendChild(ok);
     box.appendChild(azioni);
   }
   disegna();
