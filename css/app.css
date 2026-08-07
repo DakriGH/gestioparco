@@ -2752,6 +2752,25 @@ main.bc-attivo { padding-bottom: 0; }
   background: var(--surface-2); color: var(--txt); font-size: 17px; cursor: pointer; }
 .bc-velo .resto-box { background: none; padding: 0; }
 
+/* la banconota scelta si accende e porta il numero di quante ne ha
+   date: il numero si tocca per toglierne una */
+.resto-tagli button { position: relative; }
+.resto-tagli button.preso { background: rgba(255,255,255,.28);
+  box-shadow: 0 0 0 2px rgba(255,255,255,.55) inset; }
+.resto-tagli .quanti { position: absolute; top: -6px; right: -6px; min-width: 26px; height: 26px;
+  padding: 0 6px; border-radius: 9px; background: var(--txt); color: #14141B;
+  font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,.5); animation: bcPop .24s ease; }
+
+/* Sul tablet la barra di sistema copre la parte bassa: finche' l'app
+   non gira a tutto schermo, il conto si tiene un dito di margine.
+   A tutto schermo quel margine non serve e sparisce. */
+@media (display-mode: standalone) {
+  .bc-fondo { padding-bottom: max(26px, calc(13px + var(--safe-b))); }
+  .bc-foglio { padding-bottom: max(28px, calc(16px + var(--safe-b))); }
+}
+
 /* le banconote nei tasti dei tagli: il disegno E' il tasto */
 .resto-tagli { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); }
 .resto-tagli button { display: flex; align-items: center; justify-content: center;

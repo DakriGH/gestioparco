@@ -178,6 +178,7 @@ function defaultSettings() {
       { id: 'b19', name: 'Spritz',          price: 6,    em: '\ud83c\udf79', cat: 'Alcolici' }
     ],
     animazioni: true,
+    schermoIntero: false,
     braceletSlots: [
       { start: '09:00', end: '12:00', color: '#22C55E', label: 'Verde' },
       { start: '12:00', end: '15:00', color: '#FBBF24', label: 'Giallo' },
@@ -2436,6 +2437,31 @@ function anima() {
   return settings.animazioni !== false;
 }
 
+/* ---------- schermo intero ----------
+   Sul tablet la barra di sistema copriva la parte bassa dell'app, e
+   proprio li' adesso c'e' il conto. A schermo intero quella barra
+   sparisce. Il browser lo concede solo dopo un tocco, quindi se
+   l'interruttore e' acceso ci si prova al primo tocco utile. */
+function schermoIntero(acceso) {
+  try {
+    if (acceso && !document.fullscreenElement && document.documentElement.requestFullscreen) {
+      const p = document.documentElement.requestFullscreen();
+      if (p && p.catch) p.catch(() => {});
+    } else if (!acceso && document.fullscreenElement && document.exitFullscreen) {
+      const p = document.exitFullscreen();
+      if (p && p.catch) p.catch(() => {});
+    }
+  } catch (e) { /* qualche browser non lo permette: pazienza */ }
+}
+function preparaSchermoIntero() {
+  if (!settings.schermoIntero || document.fullscreenElement) return;
+  const alPrimoTocco = () => {
+    document.removeEventListener('pointerdown', alPrimoTocco);
+    schermoIntero(true);
+  };
+  document.addEventListener('pointerdown', alPrimoTocco, { once: true });
+}
+
 function vaiAModifica(entry) {
   if (volante) posa(volante.card);
   const vista = $('#view-active');
@@ -2659,6 +2685,9 @@ function buildPaymentPanel(panel, entry, onChange) {
 function pannelloResto(entry, dovuto, onIncassa) {
   const box = el('div', 'resto-box');
   let dato = 0;
+  /* quanti pezzi per ogni taglio: due da venti, uno da cinque... Serve
+     a vedere COSA ti ha messo in mano, non solo quanto fa. */
+  const conta = {};
   let tastierino = false;
   let digitato = '';
 
@@ -2687,13 +2716,24 @@ function pannelloResto(entry, dovuto, onIncassa) {
     if (!tastierino) {
       const g = el('div', 'resto-tagli');
       TAGLI.forEach(t => {
-        const b = el('button', t[0] < 500 ? 'mon' : '');
+        const n = conta[t[0]] || 0;
+        const b = el('button', (t[0] < 500 ? 'mon' : '') + (n ? ' preso' : ''));
         /* la banconota disegnata coi colori veri: al banco si riconosce
            il taglio dal colore prima che dal numero. Il valore sta gia'
            scritto sopra, quindi niente didascalia che lo ripeta. */
         const dis = (typeof iconaSoldi === 'function' ? iconaSoldi(t[0]) : '');
-        if (dis) b.innerHTML = dis; else b.textContent = t[1];
-        b.onclick = () => { dato += t[0]; disegna(); };
+        b.innerHTML = (dis || '<span>' + t[1] + '</span>') +
+          (n ? '<span class="quanti">' + n + '</span>' : '');
+        b.onclick = (ev) => {
+          /* il numero in alto toglie, il resto del tasto aggiunge */
+          if (ev.target.closest('.quanti')) {
+            if (n <= 0) return;
+            conta[t[0]] = n - 1; dato = Math.max(0, dato - t[0]);
+          } else {
+            conta[t[0]] = n + 1; dato += t[0];
+          }
+          disegna();
+        };
         g.appendChild(b);
       });
       box.appendChild(g);
@@ -2717,10 +2757,20 @@ function pannelloResto(entry, dovuto, onIncassa) {
     const azioni = el('div', 'resto-azioni');
     const cambia = el('button', 'btn btn-sm');
     cambia.innerHTML = tastierino ? '\ud83d\udcb6 Tagli' : '\u2328\ufe0f Cifra esatta';
-    cambia.onclick = () => { tastierino = !tastierino; digitato = ''; disegna(); };
+    cambia.onclick = () => {
+      /* col tastierino la cifra la scrivi tu: il conto dei pezzi non
+         avrebbe piu' senso, quindi si azzera */
+      tastierino = !tastierino; digitato = ''; dato = 0;
+      Object.keys(conta).forEach(k => delete conta[k]);
+      disegna();
+    };
     azioni.appendChild(cambia);
     const zero = el('button', 'btn btn-sm', '\u21ba Azzera');
-    zero.onclick = () => { dato = 0; digitato = ''; disegna(); };
+    zero.onclick = () => {
+      dato = 0; digitato = '';
+      Object.keys(conta).forEach(k => delete conta[k]);
+      disegna();
+    };
     azioni.appendChild(zero);
     if (dato > 0) {
       const ok = el('button', 'btn btn-ok');
@@ -2895,6 +2945,10 @@ function buildSettingsView() {
         <span class="sw-txt"><b>Animazioni</b><span>La scheda che si apre e quella che vola sopra le altre. Spento: tutto istantaneo, come chiede il risparmio animazioni del sistema.</span></span>
         <span class="switch"></span>
       </button>
+      <button class="switch-row" id="setPieno" role="switch" style="margin-top:10px;">
+        <span class="sw-txt"><b>Schermo intero</b><span>Toglie la barra di sistema del tablet, che copriva la parte bassa dell'app. Se l'app &egrave; installata, il tutto schermo parte al primo tocco.</span></span>
+        <span class="switch"></span>
+      </button>
       <button class="switch-row" id="setTinte" role="switch" style="margin-top:10px;">
         <span class="sw-txt"><b>Tinte più leggibili</b><span>Gli stessi colori, un po' più scuri. Le scritte piccole passano da 2,6 a 6 di contrasto: al sole si legge molto meglio. Spento = tinte accese come nel disegno.</span></span>
         <span class="switch"></span>
@@ -3004,6 +3058,20 @@ function buildSettingsView() {
     settings.animazioni = settings.animazioni === false;
     applyTheme();
     paintAnima();
+    saveSettings();
+  };
+
+  const sp = $('#setPieno');
+  const paintPieno = () => {
+    const on = !!settings.schermoIntero;
+    $('.switch', sp).classList.toggle('on', on);
+    sp.setAttribute('aria-checked', on ? 'true' : 'false');
+  };
+  paintPieno();
+  sp.onclick = () => {
+    settings.schermoIntero = !settings.schermoIntero;
+    schermoIntero(settings.schermoIntero);
+    paintPieno();
     saveSettings();
   };
 
@@ -3302,6 +3370,7 @@ function applyTheme() {
   /* L'app decide da se' se animare: il risparmio animazioni del sistema
      spegneva tutto e non si capiva piu' dove finivano le schede. */
   document.documentElement.classList.toggle('anima', settings.animazioni !== false);
+  preparaSchermoIntero();
   const meta = document.querySelector('meta[name="theme-color"]');
   // la barra di sistema del tablet deve intonarsi all'app, non restare
   // del blu di due versioni fa
