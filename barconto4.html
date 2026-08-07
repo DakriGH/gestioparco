@@ -57,40 +57,32 @@ h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 10px; }
 .cat button.on.parco { background: var(--parco); color: #06162E; }
 .cat button svg { width: 20px; height: 20px; }
 
-/* Due colonne larghe invece di tre strette: cosi' la tessera puo'
-   stare SDRAIATA e l'icona diventa grande davvero. */
-.griglia { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; overflow-y: auto;
+/* Tre colonne come prima: la card torna quadrata. */
+.griglia { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; overflow-y: auto;
   min-height: 0; align-content: start; padding-bottom: 4px; grid-auto-rows: max-content; }
 
-/* ══ LA TESSERA SDRAIATA ══
-   In piedi era alta 216px e dodici bibite non ci stavano: spuntava
-   l'ascensore proprio mentre batti. Sdraiata e' 100px — icona grande a
-   sinistra, nome e prezzo sopra, i due contatori affiancati sotto — e
-   tutto il listino di una categoria ci sta in una schermata sola. */
-.tess { background: var(--carta); border-radius: 20px; box-shadow: 0 4px 14px rgba(0,0,0,.3);
-  overflow: hidden; display: flex; flex-direction: row; align-items: center; gap: 12px; padding: 12px; }
-.tess .su { border: none; background: none; padding: 0; flex: 0 0 auto; cursor: pointer;
-  display: flex; align-items: center; }
-/* 80px e non 64: la colonna di destra (nome + contatori) è alta 80, quindi
-   questi 16px in più l'icona se li prende GRATIS, senza allungare la riga */
-.tess .su svg { width: 80px; height: 80px; display: block; }
-.tess .lato { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
-.tess .nomi { border: none; background: none; padding: 0; width: 100%; cursor: pointer;
-  font: inherit; color: inherit; display: flex; align-items: baseline; gap: 10px; text-align: left; }
-.tess .nm { font-size: 17px; font-weight: 700; line-height: 1.15; flex: 1; min-width: 0; }
-.tess .pr { font-family: 'Fredoka', sans-serif; font-size: 20px; font-weight: 700;
-  color: var(--txt2); flex-shrink: 0; }
+/* ══ LA CARD ══
+   Quadrata come prima ma schiacciata: la TESTA e' sdraiata — icona
+   grande a sinistra, nome e prezzo su due righe a destra, alte quanto
+   l'icona — e sotto restano le due fasce dei tasti a tutta larghezza.
+   Cosi' l'altezza scende da 216 a 180 e le dodici bevande ci stanno. */
+.tess { background: var(--carta); border-radius: 22px; box-shadow: 0 4px 14px rgba(0,0,0,.3);
+  overflow: hidden; display: flex; flex-direction: column; }
+.tess .su { border: none; background: none; font: inherit; color: inherit; cursor: pointer;
+  padding: 13px; display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; }
+.tess .su svg { width: 64px; height: 64px; flex: 0 0 auto; }
+/* le due righe alte quanto l'icona: nome in cima, prezzo in fondo */
+.tess .testi { flex: 1; min-width: 0; min-height: 64px; display: flex; flex-direction: column;
+  justify-content: space-between; gap: 4px; }
+.tess .nm { font-size: 17px; font-weight: 700; line-height: 1.2; }
+.tess .pr { font-family: 'Fredoka', sans-serif; font-size: 21px; font-weight: 700; color: var(--txt2); }
 .tess.preso { background: #14243A; box-shadow: 0 0 0 3px var(--sel) inset, 0 6px 18px rgba(59,140,255,.3); }
 .tess.preso .pr { color: #9CC6FF; }
-.tess .conte { display: flex; gap: 8px; }
-.tess .conta { flex: 1; display: flex; background: rgba(0,0,0,.3); border-radius: 13px; overflow: hidden; }
-.tess .conta button { flex: 1; min-height: 44px; border: none; background: none; color: var(--txt);
-  font-family: 'Fredoka', sans-serif; font-size: 21px; font-weight: 700; cursor: pointer; }
-.tess .conta .n { font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 700;
-  min-width: 30px; text-align: center; align-self: center; }
-/* il tasto largo di quando quella cosa non e' ancora sul conto */
-.tess .agg { flex: 1; min-height: 44px; border: none; border-radius: 13px; background: rgba(0,0,0,.3);
-  color: var(--txt2); font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
+.tess .conta { display: flex; background: rgba(0,0,0,.3); }
+.tess .conta button { flex: 1; min-height: 46px; border: none; background: none; color: var(--txt);
+  font-family: 'Fredoka', sans-serif; font-size: 22px; font-weight: 700; cursor: pointer; }
+.tess .conta .n { font-family: 'Fredoka', sans-serif; font-size: 20px; font-weight: 700;
+  min-width: 34px; text-align: center; align-self: center; }
 
 /* la classe .fisso non serve più: adesso è tessera() a decidere se
    mostrare il contatore o il tasto largo «+ aggiungi» */
@@ -123,6 +115,71 @@ h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 10px; }
 .tagli button { min-height: 58px; border: none; border-radius: 16px; background: var(--carta2); color: var(--txt);
   font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 700; cursor: pointer; }
 .tagli button.mon { background: rgba(255,255,255,.06); font-size: 15px; }
+
+/* il tempo, in cima alla sezione Parco */
+.tempo { background: var(--carta); border-radius: 20px; padding: 14px 16px; box-shadow: 0 2px 8px rgba(0,0,0,.28); flex-shrink: 0; }
+.tempo-cap { display: flex; align-items: baseline; gap: 8px 20px; flex-wrap: wrap; margin-bottom: 12px; }
+.tempo-k { font-size: 13px; font-weight: 700; color: var(--txt2); display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.tempo-k b { font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 700; color: var(--txt); }
+.tempo-v { font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 700; color: var(--txt); }
+.tempo-chip { display: flex; gap: 8px; flex-wrap: wrap; }
+.tempo-chip button { border: none; border-radius: 14px; min-height: 46px; padding: 0 16px; background: var(--carta2);
+  color: var(--txt); font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
+.tempo-chip button.on { background: var(--parco); color: #06162E; }
+/* i due modi del tempo: uno slot deciso, oppure quanto sono stati davvero */
+.modo2 { display: flex; gap: 8px; margin-bottom: 12px; }
+.modo2 button { flex: 1; border: none; border-radius: 14px; min-height: 48px; background: var(--carta2);
+  color: var(--txt2); font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
+.modo2 button.on { background: var(--parco); color: #06162E; }
+/* allunga: non cambia lo scaglione, lo sposta piu' avanti */
+.allunga { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.allunga .et { font-size: 12.5px; font-weight: 700; color: var(--txt2); }
+.allunga button { border: none; border-radius: 13px; min-height: 42px; padding: 0 14px;
+  background: rgba(59,140,255,.16); color: #9CC6FF; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+/* "paga fin qui": il tempo scorre da solo e il prezzo lo segue */
+.vivo { background: rgba(59,140,255,.12); border-radius: 16px; padding: 12px 14px;
+  display: flex; align-items: baseline; gap: 8px 16px; flex-wrap: wrap; }
+.vivo .pt { width: 9px; height: 9px; border-radius: 50%; background: var(--parco); align-self: center;
+  animation: batte 2s ease-in-out infinite; }
+@keyframes batte { 0%,100% { opacity: 1 } 50% { opacity: .25 } }
+.vivo small { font-size: 11.5px; color: var(--txt2); font-weight: 700; }
+
+/* ══ LA SCHERMATA DEL RESTO ══
+   Prende tutto il corpo del pannello: mentre conti i soldi non devi
+   avere altro sotto le dita. Due cifre grandi, i tagli veri, e via. */
+.resto { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
+.resto .box { background: var(--carta); border-radius: 22px; padding: 16px 20px;
+  box-shadow: 0 3px 12px rgba(0,0,0,.3); }
+.resto .due { display: flex; gap: 14px; flex-wrap: wrap; }
+.resto .due > .box { flex: 1 1 200px; }
+.resto .k { display: block; font-size: 13px; font-weight: 700; color: var(--txt2); }
+.resto .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 40px; font-weight: 700;
+  line-height: 1.08; font-variant-numeric: tabular-nums; }
+.resto .v.giallo { color: #FFD166; }
+.resto .v.verde { color: var(--soldi); }
+.resto .v.grigio { color: var(--txt2); }
+.resto .tasti { display: flex; gap: 10px; margin-top: auto; }
+.resto .tasti .bt { flex: 1; }
+
+/* ══ PAGATO A QUANTITA' ══
+   Sotto il contatore delle cose prese sta quello delle cose gia'
+   pagate: gli stessi due tasti, ma verdi. Cosi' "una Coca l'ha pagata e
+   una no" si dice sulla card, senza aprire niente e senza scegliere
+   nessun modo. Quando i due numeri pareggiano la card diventa verde:
+   quella voce non deve piu' niente. */
+.tess .pag { display: flex; align-items: center; background: rgba(25,192,138,.14);
+  border-top: 1px solid rgba(25,192,138,.26); }
+.tess .pag button { flex: 1; min-height: 46px; border: none; background: none; color: var(--soldi);
+  font-family: 'Fredoka', sans-serif; font-size: 22px; font-weight: 700; cursor: pointer; }
+.tess .pag button:disabled { opacity: .22; cursor: default; }
+.tess .pag .n { min-width: 62px; text-align: center; align-self: center; color: var(--soldi);
+  font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 700; line-height: 1.1; }
+.tess .pag .n small { display: block; font-family: 'Inter', sans-serif; font-size: 9.5px;
+  font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .8; }
+.tess.saldata { background: #10241D; box-shadow: 0 0 0 3px var(--soldi) inset, 0 6px 18px rgba(25,192,138,.24); }
+.tess.saldata .pr { color: #7FE8C1; }
+.tess.saldata .pag { background: rgba(25,192,138,.22); }
+.fondo .parti .voce .paga.tutta { background: rgba(25,192,138,.18); color: #7FE8C1; }
 
 /* il tempo, in cima alla sezione Parco */
 .tempo { background: var(--carta); border-radius: 20px; padding: 14px 16px; box-shadow: 0 2px 8px rgba(0,0,0,.28); flex-shrink: 0; }
@@ -331,13 +388,14 @@ h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 10px; }
       <b>Icone disegnate</b>: niente emoji, niente sorprese da un tablet all'altro.<br>
       <b>Il pagamento</b> non è più una cifra a parte: è una quantità sulla riga, quindi non
       c'è nessun modo da scegliere prima di cominciare.<br>
-      <b>Le tessere sono sdraiate</b>: erano alte 216px e dodici bibite non ci stavano, così
-      spuntava l'ascensore proprio mentre batti. Adesso sono 104px — icona grande a sinistra,
-      nome e prezzo sopra, i due contatori affiancati sotto — su <b>due colonne larghe</b>
-      invece di tre strette. In una schermata sola ci stanno <b>quattordici prodotti</b>
-      per categoria: le bevande, che sono le più numerose, sono dodici.<br>
-      <b>Icona 80px e prezzo 20px</b> (erano 46 e 15). Gli 80 dell'icona non costano niente:
-      la colonna di destra è alta 80 lo stesso, quindi quello spazio c'era già.
+      <b>La card resta quadrata, ma con la testa sdraiata</b>: icona grande a sinistra, nome e
+      prezzo su due righe a destra alte quanto l'icona, e sotto le due fasce dei tasti a tutta
+      larghezza. Prima era alta 216px e le dodici bevande non ci stavano: spuntava l'ascensore
+      proprio mentre batti. Adesso una card accesa è 184px e una spenta <b>90px</b>, perché le
+      fasce dei tasti compaiono solo quando quella cosa è davvero sul conto.<br>
+      <b>Icona 64px e prezzo 21px</b> (erano 46 e 15). Non di più: a 76 la testa cresce di 12px,
+      e nel caso limite — tutte e dodici le bevande sul conto insieme — l'ascensore tornerebbe.
+      Così invece il caso peggiore misura 780px in uno spazio da 800.
     </div>
   </div>
 </div>
@@ -668,30 +726,29 @@ function voce(nome, ico, tot, pag, ids) {
     '</div>';
 }
 
-/* La tessera sdraiata. Il prezzo mostrato e' quello VIVO: per i bambini
-   dipende dal tempo, quindi cambia insieme all'orologio. */
+/* La card. Il prezzo mostrato e' quello VIVO: per i bambini dipende dal
+   tempo, quindi cambia insieme all'orologio.
+   Le fasce dei tasti compaiono solo se servono: una cosa che non e' sul
+   conto resta ALTA 90px invece di 180, e la griglia ci guadagna. */
 function tessera(p) {
   const n = S.q[p.id] || 0, eff = qEff(p.id), pg = pagQ(p.id);
   const saldata = eff > 0 && pg >= eff, attiva = n > 0 || p.fisso;
   return '<div class="tess' + (saldata ? ' saldata' : n ? ' preso' : '') + '">' +
-    '<button class="su" data-add="' + p.id + '">' + icona(p) + '</button>' +
-    '<div class="lato">' +
-      '<button class="nomi" data-add="' + p.id + '">' +
-        '<span class="nm">' + p.nm + '</span>' +
-        '<span class="pr">' + eur(pzUn(p.id)) + '</span></button>' +
-      '<div class="conte">' +
-        (attiva
-          ? '<div class="conta"><button data-meno="' + p.id + '">−</button>' +
-            '<span class="n">' + n + '</span>' +
-            '<button data-add="' + p.id + '">+</button></div>' +
-            (eff > 0
-              ? '<div class="pag">' +
-                '<button data-pmeno="' + p.id + '"' + (pg <= 0 ? ' disabled' : '') + '>−</button>' +
-                '<span class="n">' + pg + ' / ' + eff + '<small>pagate</small></span>' +
-                '<button data-ppiu="' + p.id + '"' + (pg >= eff ? ' disabled' : '') + '>+</button></div>'
-              : '')
-          : '<button class="agg" data-add="' + p.id + '">+ aggiungi</button>') +
-      '</div></div></div>';
+    '<button class="su" data-add="' + p.id + '">' + icona(p) +
+      '<span class="testi"><span class="nm">' + p.nm + '</span>' +
+      '<span class="pr">' + eur(pzUn(p.id)) + '</span></span></button>' +
+    (attiva
+      ? '<div class="conta"><button data-meno="' + p.id + '">−</button>' +
+        '<span class="n">' + n + '</span>' +
+        '<button data-add="' + p.id + '">+</button></div>'
+      : '') +
+    (eff > 0
+      ? '<div class="pag">' +
+        '<button data-pmeno="' + p.id + '"' + (pg <= 0 ? ' disabled' : '') + '>−</button>' +
+        '<span class="n">' + pg + ' / ' + eff + '<small>pagate</small></span>' +
+        '<button data-ppiu="' + p.id + '"' + (pg >= eff ? ' disabled' : '') + '>+</button></div>'
+      : '') +
+    '</div>';
 }
 
 function disegna() {
