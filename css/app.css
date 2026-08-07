@@ -2550,6 +2550,16 @@ html:not(.anima) .view.entra-dx { animation: none; }
    dito, niente tastini da centrare. La quantita' NON sta in mezzo ai
    segni, e' scritta gigante dietro la card come una filigrana.
    ══════════════════════════════════════════════════════════ */
+/* la vista si allunga fino in fondo allo schermo anche quando il
+   listino e' corto: cosi' il conto sta SEMPRE in basso e non ballonzola
+   a mezz'aria sotto l'ultima card */
+/* Chrome ferma lo sticky al bordo INTERNO di main, cioe' sopra il suo
+   padding: col respiro di main sotto, il conto restava 24px a mezz'aria.
+   In questa linguetta il respiro lo mette la barra stessa. */
+main.bc-attivo { padding-bottom: 0; }
+#view-cassa { display: flex; flex-direction: column; min-height: 100%; }
+#view-cassa .bc-griglia { flex: 0 0 auto; }
+
 .bc-cat { position: sticky; top: 0; z-index: 6; display: flex; gap: 8px; flex-wrap: wrap;
   padding: 8px 0 10px; background: var(--bg); }
 .bc-cat button { border: none; border-radius: 15px; padding: 10px 15px; min-height: 46px;
@@ -2638,8 +2648,12 @@ html:not(.anima) .view.entra-dx { animation: none; }
 .bc-card.saldata .bc-zone.v .bc-chip { background: var(--ok); color: #08301F; }
 
 /* il fondo: le tre parti attaccate sopra la cifra da incassare */
-.bc-fondo { position: sticky; bottom: 0; z-index: 5; margin-top: 12px;
-  background: var(--surface); border-radius: 20px; padding: 12px 14px 13px;
+/* margin-top:auto lo spinge in fondo quando c'e' spazio; sticky lo
+   tiene incollato al bordo basso quando invece la lista e' lunga e
+   scorre */
+.bc-fondo { position: sticky; bottom: 0; z-index: 5; margin-top: auto;
+  background: var(--surface); border-radius: 20px 20px 0 0;
+  padding: 12px 14px calc(13px + var(--safe-b));
   box-shadow: 0 -6px 22px rgba(0,0,0,.45); display: flex; flex-direction: column; gap: 11px; }
 .bc-parti { display: flex; gap: 8px; flex-wrap: wrap; }
 /* icona, poi l'etichetta SOPRA la cifra, poi il tasto: sta in una riga

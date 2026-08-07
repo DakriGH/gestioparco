@@ -2181,7 +2181,9 @@ function bcFondo() {
       (pag > 0 && resta > 0 ? '<span class="gia">gi\u00e0 presi ' + eur(pag) + '</span>' : '') +
     '</div><div class="bc-tasti">' +
       (pag > 0 && resta > 0 ? '<button class="btn" data-azzera>\u21ba Azzera</button>' : '') +
-      '<button class="btn" data-svuota>\ud83e\uddf9 Svuota</button>' +
+      /* Svuota compare solo se c'\u00e8 qualcosa da svuotare: un tasto che
+         non pu\u00f2 fare niente \u00e8 solo un ostacolo in mezzo agli altri */
+      (tot > 0 ? '<button class="btn" data-svuota>\ud83e\uddf9 Svuota</button>' : '') +
       (resta > 0 ? '<button class="btn" data-resto>\ud83e\uddee Resto</button>' +
         '<button class="btn btn-ok" data-tutto>Paga tutto</button>' : '') +
       (tot > 0 && resta <= 0 ? '<button class="btn btn-ok" data-chiudi>\u2705 Incassa e chiudi</button>' : '') +
@@ -3264,6 +3266,10 @@ function switchTab(t) {
   $('#view-active').classList.toggle('hidden', t !== 'active');
   $('#view-cassa').classList.toggle('hidden', t !== 'cassa');
   $('#view-settings').classList.toggle('hidden', t !== 'settings');
+  /* nel Bar & Conto la barra del totale tocca il bordo basso dello
+     schermo: il respiro che main tiene sotto lo mette lei, se no lo
+     sticky si ferma 24px prima e il conto resta a mezz'aria */
+  document.querySelector('main').classList.toggle('bc-attivo', t === 'cassa');
   /* La vista che arriva entra dal lato da cui si veniva: dice da dove
      sei arrivato invece di comparire e basta. */
   if (anima() && primaEra && primaEra !== t) {
