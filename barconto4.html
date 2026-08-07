@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bar &amp; Conto — D3 nel tema dell'app</title>
+<link rel="stylesheet" href="./css/fonts.css">
+<style>
+/* ============================================================
+   D3 com'era: angoli larghi, ombre morbide, tanto respiro, lo
+   scelto che si accende. Ma nel TEMA DELL'APP, non chiaro.
+   In piu': la sezione Parco (bambini e Crazy), il riepilogo
+   Parco/Crazy/Bar sopra il totale, e icone disegnate a mano
+   invece delle emoji.
+   ============================================================ */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #0B0B10; color: #E9E9F2; padding: 0 0 70px; }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 22px 18px; }
+h1 { font-family: 'Fredoka', sans-serif; font-size: 26px; margin: 0 0 10px; }
+.intro { color: #A8A8BD; font-size: 15px; line-height: 1.55; margin: 0 0 8px; max-width: 72ch; }
+.intro b { color: #FFD166; font-weight: 600; }
+.strada { padding: 30px 0 4px; }
+.strada > header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.strada > header .n { font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 700; background: #23232F; color: #FFD166; border-radius: 20px; padding: 4px 12px; }
+.strada > header h2 { font-family: 'Fredoka', sans-serif; font-size: 22px; margin: 0; }
+.perche { color: #9A9AB0; font-size: 14.5px; line-height: 1.6; margin: 9px 0 12px; max-width: 72ch; }
+.perche b { color: #FFD166; font-weight: 600; }
+.tablet { position: relative; width: 410px; height: 590px; border-radius: 20px; overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 22px 50px rgba(0,0,0,0.55); }
+.tablet > .dentro { width: 820px; height: 1180px; transform: scale(0.5); transform-origin: top left; }
+.misura { position: absolute; top: 9px; right: 9px; z-index: 9; font-size: 11px; font-weight: 800;
+  letter-spacing: .04em; text-transform: uppercase; border-radius: 20px; padding: 4px 10px;
+  background: rgba(0,0,0,0.55); color: #7FE8C1; }
+.elenco { color: #9A9AB0; font-size: 14.5px; line-height: 1.75; border-radius: 20px; padding: 14px 16px; background: #16161F; border: 1px solid rgba(255,255,255,0.08); }
+.elenco b { color: #FFD166; font-weight: 600; }
+.griglia-icone { display: grid; grid-template-columns: repeat(auto-fill,minmax(96px,1fr)); gap: 10px; margin-top: 10px; }
+.ic-demo { background: #16161F; border-radius: 16px; padding: 12px 6px 9px; text-align: center; }
+.ic-demo svg { width: 44px; height: 44px; display: block; margin: 0 auto 6px; }
+.ic-demo span { font-size: 12px; font-weight: 700; color: #A8A8BD; }
+
+/* ══════════ IL PANNELLO ══════════ */
+:root { --sfondo:#14141B; --carta:#1E1E28; --carta2:#262633;
+        --txt:#E9E9F2; --txt2:#9A9AB0; --sel:#3B8CFF; --soldi:#19C08A; --parco:#3B8CFF; --bar:#F5A63F; }
+.pan { width: 820px; height: 1180px; display: flex; flex-direction: column; background: var(--sfondo); color: var(--txt); overflow: hidden; }
+.cap { display: flex; align-items: center; gap: 14px; padding: 24px 26px 14px; flex-shrink: 0; }
+.cap h3 { margin: 0; font-family: 'Fredoka', sans-serif; font-size: 26px; font-weight: 600; }
+.cap .via { margin-left: auto; width: 52px; height: 52px; border-radius: 18px; background: var(--carta);
+  border: none; color: var(--txt); font-size: 20px; cursor: pointer; box-shadow: 0 3px 10px rgba(0,0,0,.35); }
+
+.corpo { flex: 1; min-height: 0; padding: 0 26px; display: flex; flex-direction: column; gap: 16px; }
+.cat { display: flex; gap: 10px; flex-wrap: wrap; flex-shrink: 0; }
+.cat button { border: none; border-radius: 18px; padding: 12px 18px; background: var(--carta); color: var(--txt2);
+  font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; min-height: 48px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.28); display: flex; align-items: center; gap: 8px; }
+.cat button.on { background: var(--txt); color: #14141B; }
+.cat button.on.parco { background: var(--parco); color: #06162E; }
+.cat button svg { width: 20px; height: 20px; }
+
+.griglia { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; overflow-y: auto;
+  min-height: 0; align-content: start; padding-bottom: 4px; }
+.tess { background: var(--carta); border-radius: 22px; box-shadow: 0 4px 14px rgba(0,0,0,.3);
+  overflow: hidden; display: flex; flex-direction: column; }
+.tess .su { border: none; background: none; font: inherit; color: inherit; cursor: pointer;
+  padding: 16px 10px 12px; display: flex; flex-direction: column; align-items: center; gap: 7px; }
+.tess .su svg { width: 46px; height: 46px; }
+.tess .nm { font-size: 15px; font-weight: 700; line-height: 1.2; text-align: center; }
+.tess .pr { font-family: 'Fredoka', sans-serif; font-size: 15px; color: var(--txt2); }
+.tess.preso { background: #14243A; box-shadow: 0 0 0 3px var(--sel) inset, 0 6px 18px rgba(59,140,255,.3); }
+.tess.preso .pr { color: #9CC6FF; }
+.tess .conta { display: flex; background: rgba(0,0,0,.28); }
+.tess .conta.spenta { display: none; }
+.tess .conta button { flex: 1; min-height: 46px; border: none; background: none; color: var(--txt);
+  font-family: 'Fredoka', sans-serif; font-size: 21px; font-weight: 700; cursor: pointer; }
+.tess .conta .n { font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 700; min-width: 34px; text-align: center; align-self: center; }
+
+/* la sezione parco usa le stesse tessere, ma sempre col contatore */
+.tess.fisso .conta { display: flex; background: rgba(59,140,255,.16); }
+
+/* riepilogo sopra il totale */
+.riep { display: flex; gap: 10px; flex-wrap: wrap; flex-shrink: 0; }
+.riep .voce { flex: 1 1 150px; background: var(--carta); border-radius: 18px; padding: 12px 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.28); display: flex; align-items: center; gap: 10px; }
+.riep .voce svg { width: 24px; height: 24px; flex-shrink: 0; }
+.riep .voce .k { display: block; font-size: 12.5px; font-weight: 700; color: var(--txt2); }
+.riep .voce .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.riep .voce.pagata { opacity: .5; }
+.riep .voce .paga { margin-left: auto; border: none; border-radius: 12px; padding: 8px 12px;
+  background: rgba(255,255,255,.1); color: var(--txt); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; min-height: 40px; }
+
+.fondo { margin: 14px 26px 24px; background: var(--carta); border-radius: 26px;
+  box-shadow: 0 8px 26px rgba(0,0,0,.45); padding: 18px 22px; display: flex; align-items: flex-end;
+  gap: 16px; flex-wrap: wrap; flex-shrink: 0; }
+.fondo .k { display: block; font-size: 13px; font-weight: 700; color: var(--txt2); }
+.fondo .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 44px; font-weight: 700;
+  line-height: 1; font-variant-numeric: tabular-nums; }
+.fondo .tasti { margin-left: auto; display: flex; gap: 10px; }
+.bt { border: none; border-radius: 18px; padding: 15px 22px; background: var(--carta2); color: var(--txt);
+  font: inherit; font-size: 16px; font-weight: 700; cursor: pointer; min-height: 58px; }
+.bt.pieno { background: var(--soldi); color: #062A20; font-family: 'Fredoka', sans-serif; font-size: 18px; }
+.tagli { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+.tagli button { min-height: 58px; border: none; border-radius: 16px; background: var(--carta2); color: var(--txt);
+  font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 700; cursor: pointer; }
+.tagli button.mon { background: rgba(255,255,255,.06); font-size: 15px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>D3, ma nel tema dell'app</h1>
+  <p class="intro">Stessa mano di D3 — angoli larghi, ombre morbide, tanto respiro, la tessera scelta
+  che si accende — ma <b>coi colori dell'app</b> invece che chiara. In più le tre cose che hai
+  chiesto: la sezione <b>Parco</b> con bambini e Crazy, il riepilogo <b>Parco / Crazy / Bar sopra
+  il totale</b>, e <b>icone disegnate</b> al posto delle emoji.</p>
+
+  <div class="strada">
+    <header><span class="n">1</span><h2>Le icone, disegnate una per una</h2></header>
+    <p class="perche">Le emoji cambiano faccia da un tablet all'altro e per «Schweppes» o
+    «Brasilena» non ne esiste una giusta. Queste sono disegnate: <b>bottiglia, lattina, tazzina,
+    bicchiere, brik, busta, boccale, bicchierino, spritz</b>, e ognuna prende il colore del suo
+    prodotto. Ci vuole un attimo a riconoscerle anche piccole.</p>
+    <div class="griglia-icone" id="vetrina"></div>
+  </div>
+
+  <div class="strada">
+    <header><span class="n">2</span><h2>Il pannello intero</h2></header>
+    <p class="perche">Sotto la griglia c'è il <b>riepilogo</b>: Parco, Crazy e Bar con il loro
+    importo e il tasto per pagarne uno solo. Sotto ancora, il <b>da incassare</b> col tasto grosso.
+    La sezione Parco è la prima categoria: bambini e Crazy si contano con le stesse tessere del bar,
+    quindi non c'è niente di nuovo da imparare.</p>
+    <div class="tablet" data-p="X"></div>
+  </div>
+
+  <div class="strada">
+    <header><span class="n">≡</span><h2>Cosa è cambiato da D3</h2></header>
+    <div class="elenco">
+      <b>Il tema</b>: fondo #14141B, carte #1E1E28, testo chiaro — la stessa famiglia dell'app.<br>
+      <b>Lo scelto</b> resta blu ma su fondo scuro: anello #3B8CFF e carta blu notte.<br>
+      <b>La sezione Parco</b> come prima categoria, con le stesse tessere e lo stesso contatore.<br>
+      <b>Il riepilogo</b> Parco / Crazy / Bar sta sopra il totale, con «paga solo questo».<br>
+      <b>Icone disegnate</b>: niente emoji, niente sorprese da un tablet all'altro.
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- le icone, disegnate ---------- */
+function ic(tipo, c1, c2) {
+  const s = (d) => '<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">' + d + '</svg>';
+  const V = {
+    bottiglia: '<path d="M17 4h6v5.2c0 1.2.4 2.3 1.2 3.2l1.4 1.6c.9 1 1.4 2.3 1.4 3.7V33a3 3 0 0 1-3 3H16a3 3 0 0 1-3-3V17.7c0-1.4.5-2.7 1.4-3.7l1.4-1.6c.8-.9 1.2-2 1.2-3.2V4Z" fill="' + c1 + '"/>' +
+      '<path d="M13 22h14v11a3 3 0 0 1-3 3H16a3 3 0 0 1-3-3V22Z" fill="' + (c2 || '#ffffff') + '" opacity=".35"/>' +
+      '<rect x="16" y="2" width="8" height="3.4" rx="1.2" fill="#0F1116" opacity=".55"/>',
+    lattina: '<rect x="11" y="6" width="18" height="28" rx="4" fill="' + c1 + '"/>' +
+      '<rect x="11" y="16" width="18" height="7" fill="' + (c2 || '#ffffff') + '" opacity=".45"/>' +
+      '<rect x="13" y="4" width="14" height="3" rx="1.4" fill="#C9CDD6"/>' +
+      '<ellipse cx="20" cy="34" rx="9" ry="2.2" fill="#000" opacity=".18"/>',
+    tazzina: '<path d="M9 14h18v9a9 9 0 0 1-9 9 9 9 0 0 1-9-9v-9Z" fill="#F2F3F7"/>' +
+      '<path d="M11 16h14v7a7 7 0 0 1-14 0v-7Z" fill="' + c1 + '"/>' +
+      '<path d="M27 17h3.5a3.5 3.5 0 0 1 0 7H27" stroke="#F2F3F7" stroke-width="2.6" stroke-linecap="round"/>' +
+      '<rect x="6" y="33" width="24" height="3" rx="1.5" fill="#C9CDD6"/>',
+    bicchiere: '<path d="M12 12h16l-2 21a3 3 0 0 1-3 2.6h-6A3 3 0 0 1 14 33L12 12Z" fill="' + c1 + '" opacity=".9"/>' +
+      '<path d="M12.6 18h14.8l-1.6 15a3 3 0 0 1-3 2.6h-5.6a3 3 0 0 1-3-2.6L12.6 18Z" fill="' + (c2 || '#ffffff') + '" opacity=".3"/>' +
+      '<rect x="24" y="3" width="3" height="14" rx="1.5" transform="rotate(12 24 3)" fill="#F2F3F7"/>',
+    brik: '<path d="M11 12h18v22a2 2 0 0 1-2 2H13a2 2 0 0 1-2-2V12Z" fill="' + c1 + '"/>' +
+      '<path d="M11 12 20 6l9 6H11Z" fill="' + c1 + '" opacity=".7"/>' +
+      '<rect x="14" y="20" width="12" height="8" rx="2" fill="' + (c2 || '#ffffff') + '" opacity=".45"/>' +
+      '<rect x="25" y="2" width="2.6" height="11" rx="1.3" fill="#F2F3F7"/>',
+    busta: '<path d="M10 10h20l-1.6 24.2A2 2 0 0 1 26.4 36H13.6a2 2 0 0 1-2-1.8L10 10Z" fill="' + c1 + '"/>' +
+      '<path d="M10 10l2-4 3 2 2.5-2.6L20 8l2.5-2.6L25 8l3-2 2 4H10Z" fill="' + c1 + '" opacity=".65"/>' +
+      '<rect x="14" y="18" width="12" height="9" rx="2.5" fill="' + (c2 || '#ffffff') + '" opacity=".4"/>',
+    boccale: '<path d="M10 10h17v22a3 3 0 0 1-3 3H13a3 3 0 0 1-3-3V10Z" fill="' + c1 + '"/>' +
+      '<path d="M27 15h3.6a3.4 3.4 0 0 1 0 7H27" stroke="' + c1 + '" stroke-width="3" stroke-linecap="round"/>' +
+      '<path d="M10 10c0-3 3.8-5 9-5s8 2 8 5H10Z" fill="#F7F3E6"/>' +
+      '<rect x="13" y="16" width="4" height="14" rx="2" fill="#fff" opacity=".28"/>',
+    bicchierino: '<path d="M13 13h14l-1.6 12.6A3 3 0 0 1 22.4 28h-4.8a3 3 0 0 1-3-2.4L13 13Z" fill="' + c1 + '"/>' +
+      '<rect x="18.4" y="27" width="3.2" height="6" fill="#C9CDD6"/>' +
+      '<rect x="13" y="32" width="14" height="3.2" rx="1.6" fill="#C9CDD6"/>' +
+      '<path d="M13.6 13h12.8l-.5 4H14.1l-.5-4Z" fill="#fff" opacity=".3"/>',
+    spritz: '<path d="M11 8h18l-6.4 11.4a2 2 0 0 0-.26 1V30h-2.7v-9.6a2 2 0 0 0-.26-1L11 8Z" fill="' + c1 + '"/>' +
+      '<path d="M13.4 10h13.2l-3.2 5.6h-6.8L13.4 10Z" fill="#fff" opacity=".3"/>' +
+      '<rect x="16.5" y="30" width="7" height="2.6" rx="1.3" fill="#C9CDD6"/>' +
+      '<rect x="12" y="33" width="16" height="3" rx="1.5" fill="#C9CDD6"/>' +
+      '<circle cx="28" cy="11" r="4.4" fill="#FF8A1E"/><path d="M28 6.6v8.8M23.6 11h8.8" stroke="#fff" stroke-width="1.2" opacity=".8"/>',
+    bimbo: '<circle cx="20" cy="11" r="6" fill="' + c1 + '"/>' +
+      '<path d="M11 34c0-6 4-10 9-10s9 4 9 10v2H11v-2Z" fill="' + c1 + '"/>' +
+      '<circle cx="17.6" cy="10.4" r="1.2" fill="#0F1116"/><circle cx="22.4" cy="10.4" r="1.2" fill="#0F1116"/>',
+    crazy: '<circle cx="20" cy="8" r="4.2" fill="' + c1 + '"/>' +
+      '<path d="M20 13c3.4 0 6 2 6 5v4l4 6-2.6 1.8L23.6 25v9h-7.2v-9l-3.8 5.8L10 29l4-6v-4c0-3 2.6-5 6-5Z" fill="' + c1 + '"/>' +
+      '<path d="M7 33c4 3 9 4.4 13 4.4S29 36 33 33" stroke="' + (c2 || '#ffffff') + '" stroke-width="2" stroke-linecap="round" opacity=".5"/>'
+  };
+  return s(V[tipo] || V.bottiglia);
+}
+
+const LISTINO = [
+  { id:'bimbi',  nm:'Bambini',        pz:1200, cat:'Parco',    ic:['bimbo','#3B8CFF'], fisso:true },
+  { id:'crazy',  nm:'Crazy Jumping',  pz:400,  cat:'Parco',    ic:['crazy','#B072FF'], fisso:true },
+  { id:'acqua',  nm:'Acqua',          pz:100,  cat:'Bevande',  ic:['bottiglia','#7FD8FF'] },
+  { id:'caffe',  nm:'Caffè',          pz:120,  cat:'Bevande',  ic:['tazzina','#6B4226'] },
+  { id:'coca',   nm:'Coca Cola',      pz:250,  cat:'Bevande',  ic:['lattina','#C8102E','#3A0A12'] },
+  { id:'cocaz',  nm:'Coca Cola Zero', pz:250,  cat:'Bevande',  ic:['lattina','#1F1F24','#C8102E'] },
+  { id:'fanta',  nm:'Fanta',          pz:250,  cat:'Bevande',  ic:['lattina','#FF8A1E'] },
+  { id:'sprite', nm:'Sprite',         pz:250,  cat:'Bevande',  ic:['lattina','#2BB673'] },
+  { id:'schw',   nm:'Schweppes',      pz:200,  cat:'Bevande',  ic:['bottiglia','#E8C547'] },
+  { id:'gazz',   nm:'Gazzosa',        pz:200,  cat:'Bevande',  ic:['bottiglia','#DCE6EA'] },
+  { id:'esta',   nm:'Estathè',        pz:250,  cat:'Bevande',  ic:['brik','#E8A33D'] },
+  { id:'bras',   nm:'Brasilena',      pz:200,  cat:'Bevande',  ic:['lattina','#6B4226','#C9A227'] },
+  { id:'pata',   nm:'Patatine',       pz:150,  cat:'Snack',    ic:['busta','#F2C230'] },
+  { id:'heine',  nm:'Heineken',       pz:300,  cat:'Birre',    ic:['bottiglia','#1E7A3C'] },
+  { id:'nastro', nm:'Nastro Azzurro', pz:300,  cat:'Birre',    ic:['bottiglia','#2F6FBF'] },
+  { id:'ichnu',  nm:'Ichnusa',        pz:300,  cat:'Birre',    ic:['bottiglia','#C8102E'] },
+  { id:'tenn',   nm:"Tennent's",      pz:350,  cat:'Birre',    ic:['boccale','#E8A33D'] },
+  { id:'limon',  nm:'Limoncello',     pz:300,  cat:'Alcolici', ic:['bicchierino','#F5E04A'] },
+  { id:'amari',  nm:'Amari',          pz:300,  cat:'Alcolici', ic:['bicchierino','#6B3A1E'] },
+  { id:'grappa', nm:'Grappa',         pz:400,  cat:'Alcolici', ic:['bicchierino','#EDE7DA'] },
+  { id:'spritz', nm:'Spritz',         pz:600,  cat:'Alcolici', ic:['spritz','#FF7A29'] }
+];
+const CAT = ['Parco', 'Bevande', 'Birre', 'Snack', 'Alcolici'];
+const CATIC = { Parco:['bimbo','#3B8CFF'], Bevande:['lattina','#C8102E'], Birre:['bottiglia','#1E7A3C'],
+                Snack:['busta','#F2C230'], Alcolici:['spritz','#FF7A29'] };
+const prod = id => LISTINO.find(p => p.id === id);
+const eur = c => (c / 100).toFixed(2).replace('.', ',') + ' €';
+const icona = p => ic(p.ic[0], p.ic[1], p.ic[2]);
+
+/* la vetrina delle icone */
+document.getElementById('vetrina').innerHTML = LISTINO.map(p =>
+  '<div class="ic-demo">' + icona(p) + '<span>' + p.nm + '</span></div>').join('');
+
+/* ---------- il pannello ---------- */
+const S = { q: { bimbi:2, crazy:1, coca:2, pata:1 }, pag: { Parco:0, Bar:0 }, cat:'Bevande', resto:null };
+const cost = id => (S.q[id] || 0) * prod(id).pz;
+const tParco = () => cost('bimbi') + cost('crazy');
+const tBar = () => LISTINO.filter(p => p.cat !== 'Parco').reduce((a,p) => a + cost(p.id), 0);
+const rParco = () => Math.max(0, tParco() - S.pag.Parco);
+const rBar = () => Math.max(0, tBar() - S.pag.Bar);
+const totale = () => rParco() + rBar();
+
+function tessera(p) {
+  const n = S.q[p.id] || 0;
+  return '<div class="tess' + (n ? ' preso' : '') + (p.fisso ? ' fisso' : '') + '">' +
+    '<button class="su" data-add="' + p.id + '">' + icona(p) +
+    '<span class="nm">' + p.nm + '</span><span class="pr">' + eur(p.pz) + '</span></button>' +
+    '<div class="conta' + (n || p.fisso ? '' : ' spenta') + '">' +
+      '<button data-meno="' + p.id + '">−</button><span class="n">' + n + '</span>' +
+      '<button data-add="' + p.id + '">+</button></div></div>';
+}
+function voce(nome, tipo, importo, resto, chiave) {
+  const p = { ic: CATIC[tipo] || CATIC.Parco };
+  return '<div class="voce' + (resto <= 0 ? ' pagata' : '') + '">' + ic(p.ic[0], p.ic[1]) +
+    '<div><span class="k">' + nome + '</span><span class="v">' + eur(importo) + '</span></div>' +
+    (resto > 0 ? '<button class="paga" data-paga="' + chiave + '">paga</button>' : '<span class="paga" style="background:none">✓</span>') +
+    '</div>';
+}
+function disegna() {
+  const box = document.querySelector('.tablet[data-p="X"] .dentro');
+  const q = LISTINO.filter(p => p.cat === S.cat);
+  box.innerHTML = '<div class="pan">' +
+    '<div class="cap"><h3>Bar &amp; Conto</h3><button class="via">✕</button></div>' +
+    '<div class="corpo">' +
+      '<div class="cat">' + CAT.map(c => '<button data-cat="' + c + '"' +
+        (S.cat === c ? ' class="on' + (c === 'Parco' ? ' parco' : '') + '"' : '') + '>' +
+        ic(CATIC[c][0], S.cat === c ? (c === 'Parco' ? '#06162E' : '#14141B') : CATIC[c][1]) + c + '</button>').join('') + '</div>' +
+      '<div class="griglia">' + q.map(tessera).join('') + '</div>' +
+      (S.resto ? pannelloResto() :
+        '<div class="riep">' +
+          voce('Parco', 'Parco', tParco(), rParco(), 'Parco') +
+          voce('Bar', 'Bevande', tBar(), rBar(), 'Bar') +
+        '</div>') +
+    '</div>' +
+    '<div class="fondo"><div><span class="k">' + (totale() > 0 ? 'da incassare' : 'tutto pagato') + '</span>' +
+      '<span class="v">' + (totale() > 0 ? eur(totale()) : '✓') + '</span></div>' +
+      '<div class="tasti">' + (totale() > 0 ?
+        '<button class="bt" data-resto>🧮 Resto</button><button class="bt pieno" data-tutto>Incassa</button>' : '') +
+      '</div></div></div>';
+  aggancia(box);
+  misura();
+}
+function pannelloResto() {
+  const R = totale(), d = S.resto.dato, av = d - R;
+  return '<div class="riep" style="flex-direction:column"><div class="voce" style="flex-direction:column;align-items:stretch;gap:12px">' +
+    '<div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap">' +
+      '<div><span class="k">ti ha dato</span><span class="v" style="font-size:30px">' + eur(d) + '</span></div>' +
+      (d > 0 ? '<div style="margin-left:auto;text-align:right;color:#FFD166"><span class="k" style="color:#FFD166">' +
+        (av >= 0 ? 'resto da dare' : 'mancano') + '</span><span class="v" style="font-size:30px">' + eur(Math.abs(av)) + '</span></div>' : '') +
+    '</div>' +
+    '<div class="tagli">' + [[5000,'50 €'],[2000,'20 €'],[1000,'10 €'],[500,'5 €']].map(t => '<button data-tag="' + t[0] + '">' + t[1] + '</button>').join('') +
+      [[200,'2 €'],[100,'1 €'],[50,'50c'],[20,'20c']].map(t => '<button class="mon" data-tag="' + t[0] + '">' + t[1] + '</button>').join('') + '</div>' +
+    '<div style="display:flex;gap:10px"><button class="bt" data-rzero>↺</button>' +
+      '<button class="bt" data-rchiudi>Chiudi</button>' +
+      (d > 0 ? '<button class="bt pieno" style="flex:1" data-rok>Incassa ' + eur(Math.min(d,R)) +
+        (av > 0 ? ' · rendi ' + eur(av) : '') + '</button>' : '') + '</div>' +
+  '</div></div>';
+}
+function aggancia(box) {
+  box.querySelectorAll('[data-add]').forEach(b => b.onclick = () => { S.q[b.dataset.add] = (S.q[b.dataset.add]||0) + 1; disegna(); });
+  box.querySelectorAll('[data-meno]').forEach(b => b.onclick = () => {
+    const id = b.dataset.meno, n = (S.q[id]||0) - 1;
+    if (n > 0) S.q[id] = n; else delete S.q[id];
+    disegna();
+  });
+  box.querySelectorAll('[data-cat]').forEach(b => b.onclick = () => { S.cat = b.dataset.cat; S.resto = null; disegna(); });
+  box.querySelectorAll('[data-paga]').forEach(b => b.onclick = () => {
+    const k = b.dataset.paga;
+    S.pag[k] = k === 'Parco' ? tParco() : tBar();
+    disegna();
+  });
+  const t = box.querySelector('[data-tutto]'); if (t) t.onclick = () => { S.pag.Parco = tParco(); S.pag.Bar = tBar(); disegna(); };
+  const r = box.querySelector('[data-resto]'); if (r) r.onclick = () => { S.resto = { dato: 0 }; disegna(); };
+  box.querySelectorAll('[data-tag]').forEach(b => b.onclick = () => { S.resto.dato += (+b.dataset.tag); disegna(); });
+  const z = box.querySelector('[data-rzero]'); if (z) z.onclick = () => { S.resto.dato = 0; disegna(); };
+  const c = box.querySelector('[data-rchiudi]'); if (c) c.onclick = () => { S.resto = null; disegna(); };
+  const o = box.querySelector('[data-rok]'); if (o) o.onclick = () => { S.pag.Parco = tParco(); S.pag.Bar = tBar(); S.resto = null; disegna(); };
+}
+function misura() {
+  const tab = document.querySelector('.tablet[data-p="X"]');
+  const pan = tab.querySelector('.pan');
+  let strisce = 0;
+  tab.querySelectorAll('*').forEach(e => { if (e.scrollHeight - e.clientHeight > 2 && e.clientHeight > 60) strisce++; });
+  const fuori = pan.scrollHeight - pan.clientHeight;
+  const b = tab.querySelector('.misura');
+  b.textContent = fuori > 2 ? ('sborda ' + fuori + 'px') : (strisce ? strisce + ' fascia scorre' : 'ci sta tutto');
+  b.style.color = fuori > 2 ? '#FF9AA2' : '#7FE8C1';
+}
+document.querySelector('.tablet[data-p="X"]').innerHTML = '<div class="dentro"></div><span class="misura"></span>';
+disegna();
+</script>
+</body>
+</html>
