@@ -2891,12 +2891,22 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
 .armadio .tinte { display: grid; gap: 4px; }
 .armadio .tinte button { height: 21px; border-radius: 7px; border: 3px solid transparent;
   padding: 0; cursor: pointer; min-width: 0; position: relative; }
-/* Il bersaglio per il dito e' piu' largo del quadratino, ma non sposta
-   niente: la scala rimpicciolisce anche i bersagli, e una pastiglia di
-   colore alta ventisette pixel al banco ne diventa sedici -- che col
-   pollice si sbaglia. Meta' del gap per lato: si allarga fino a
-   toccare la vicina, mai a coprirla. */
-.armadio .tinte button::after { content: ""; position: absolute; inset: -2px; }
+/* IL BERSAGLIO E' PIU' GRANDE DEL QUADRATINO, e non sposta niente.
+   Le pastiglie sono alte ventitre pixel -- e' il prezzo di far stare
+   il guardaroba aperto dentro la scheda senza barre di scorrimento --
+   ma il dito non deve pagarlo: il rettangolo sensibile si allarga di
+   meta' gap per lato, cosi' arriva a toccare il vicino senza mai
+   coprirlo. Quello che si vede resta piccolo, quello che si preme no. */
+/* -5 e non -3: la pastiglia ha tre pixel di bordo trasparente, e
+   l'inset parte da DENTRO il bordo -- con -3 il bersaglio finiva
+   esattamente sul bordo visibile e non allargava un bel niente. */
+.armadio .tinte button::after { content: ""; position: absolute; inset: -5px; }
+.armadio .fant button { position: relative; }
+.armadio .fant button::after { content: ""; position: absolute; inset: -3px; }
+/* I CAPI NON SE LO PRENDONO: sono alti settantasette pixel, il dito li
+   trova gia'. Allargarli anche a loro voleva dire rubare la striscia
+   sopra le pastiglie del colore -- che sono le piccole -- e a quel
+   punto toccando il bordo alto di un colore si sceglieva un vestito. */
 
 /* Stessa cura per i comandi piu' battuti del pannello: il piu' e il
    meno dell'orario, le pastiglie dei tagli di tempo e le pastiglie del

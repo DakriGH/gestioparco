@@ -57,9 +57,23 @@ function fmtMin(m) {
   return r === 0 ? h + 'h' : h + 'h' + pad2(r);
 }
 
+/* UNA LISTA E' UNA LISTA, tutto il resto e' vuoto.
+   `x || []` non basta: da un salvataggio vecchio o da una copia
+   ripristinata male puo' arrivare `barItems: "niente"`, che e' vero e
+   quindi passa il controllo -- e poi `.reduce` non esiste e salta il
+   conto di TUTTA la lista, non solo di quell'ingresso. Con una riga
+   sola si perde al massimo un dato, mai una schermata. */
+function lista(x) { return Array.isArray(x) ? x : []; }
+
 let toastT = null;
 function toast(msg) {
   const t = $('#toast');
+  /* Se la targhetta non c'e' ancora, si tace e si va avanti.
+     Non e' pignoleria: toast() viene chiamata anche DENTRO il recupero
+     di "memoria piena" in save(), e li' un'esplosione trasformerebbe un
+     avviso in un salvataggio interrotto a meta'. Chi avvisa non deve
+     mai poter fare piu' danni di quello di cui avvisa. */
+  if (!t) return;
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(toastT);
@@ -257,7 +271,7 @@ function stateOf(e, now) {
   return 'ok';
 }
 function barTotal(e) {
-  return (e.barItems || []).reduce((s, i) => s + num(i.price, 0) * num(i.qty, 0), 0);
+  return lista(e.barItems).reduce((s, i) => s + num(i.price, 0) * num(i.qty, 0), 0);
 }
 function costOf(entry) {
   /* Zero bambini vuol dire ZERO, non uno. Da quando i bambini sono una
@@ -946,7 +960,7 @@ function aggiornaPannello(opz) {
         'title="Resta senza un orario di fine: si conta il tempo davvero passato">' +
         '\u23f3 Tempo aperto</button>';
     }
-    c.people = c.people || [];
+    c.people = lista(c.people);
     syncPeople(p.querySelector('.pc-people'), c.people, () => { pcSalva(); });
   } else {
     pcGriglia();
@@ -1863,7 +1877,7 @@ function aggiornaCartaSicurezza() {
 function ripristinaCopia(giorno) {
   DATI.copia(giorno).then(d => {
     if (!d) { toast('Copia non trovata'); return; }
-    entries = normalizeEntries(d.gp_entries || []);
+    entries = normalizeEntries(d.gp_entries);
     if (d.gp_settings) settings = Object.assign(defaultSettings(), d.gp_settings);
     if (Array.isArray(d.gp_presets)) presets = d.gp_presets.map(p => (p.avatar = AV.normalize(p.avatar, p.role), p));
     saveEntries(); saveSettings(); savePresets();
@@ -2368,7 +2382,7 @@ function commitEntry() {
     id: uid(), createdAt: Date.now(),
     startTime: draft.startTime, durationMinutes: draft.durationMinutes, payLater: draft.payLater,
     children: draft.children, crazyJumping: draft.crazyJumping,
-    people: draft.people, barItems: draft.barItems || [],
+    people: draft.people, barItems: lista(draft.barItems),
     braceletColor: draft.braceletColor, braceletCustom: draft.braceletCustom,
     status: 'active',
     /* quello che e' gia' stato incassato al banco entra subito nei conti
@@ -2474,7 +2488,7 @@ function buildActiveView() {
 function archiveCard(entry) {
   const d = el('div', 'arch');
   const info = el('div', 'ainfo');
-  const who = (entry.people || []).map(nameOf).join(', ') || 'Nessun riferimento';
+  const who = lista(entry.people).map(nameOf).join(', ') || 'Nessun riferimento';
   info.innerHTML = `<b>${entry.status === 'cancelled' ? '🗑️ Annullato' : '✅ Chiuso'}</b> · ${fmtDate(entry.startTime)} ${fmtTime(entry.startTime)}<br>${esc(who)} · 🧒 ${clamp(entry.children, 0, 1e6)}`;
   d.appendChild(info);
   const rest = el('button', 'btn btn-sm', '\u21a9\ufe0e');
@@ -2514,7 +2528,7 @@ function entryCard(entry) {
     setTimeout(() => card.classList.remove('appena'), APPENA - eta);
   }
 
-  const people = (entry.people || []).map(p => (p.avatar = AV.normalize(p.avatar, p.role), p));
+  const people = lista(entry.people).map(p => (p.avatar = AV.normalize(p.avatar, p.role), p));
 
   /* ================= LA RIGA (modello R1-a) =================
      figura | chi e' + tratti + orari | bracciale | countdown | soldi */
@@ -2798,7 +2812,7 @@ function bcVoce(id) {
   /* la voce e' stata tolta dal listino ma sta ancora su un conto
      aperto: si tiene quella scritta li', se no non si poteva piu'
      nemmeno cancellarla dal conto */
-  return (C().barItems || []).find(x => x.id === id) || null;
+  return lista(C().barItems).find(x => x.id === id) || null;
 }
 function prezzoUnita(id) {
   if (id !== 'bimbi' && id !== 'crazy') {
@@ -2807,7 +2821,7 @@ function prezzoUnita(id) {
        cliente ha visto quando ha ordinato. Prendendolo dal listino,
        bastava ritoccare un prezzo in Impostazioni perche' i conti gia'
        aperti non si chiudessero piu' (pagati troppo o troppo poco). */
-    const bi = (C().barItems || []).find(x => x.id === id);
+    const bi = lista(C().barItems).find(x => x.id === id);
     if (bi) return num(bi.price, 0);
   }
   const v = bcVoce(id);
@@ -2817,7 +2831,7 @@ function bcQ(id) {
   const c = C();
   if (id === 'bimbi') return clamp(c.children, 0, 9999);
   if (id === 'crazy') return clamp(c.crazyJumping, 0, 9999);
-  const bi = (c.barItems || []).find(x => x.id === id);
+  const bi = lista(c.barItems).find(x => x.id === id);
   return bi ? clamp(bi.qty, 0, 9999) : 0;
 }
 /* quante ne ha gia' pagate, come sta scritto (senza tagliare): serve a
@@ -2879,7 +2893,7 @@ function bcSetQ(id, n) {
   else if (id === 'crazy') c.crazyJumping = n;
   else {
     const v = bcVoce(id); if (!v) return;
-    c.barItems = c.barItems || [];
+    c.barItems = lista(c.barItems);
     let bi = c.barItems.find(x => x.id === id);
     if (!bi) { bi = { id: id, name: v.name, price: v.price, qty: 0 }; c.barItems.push(bi); }
     bi.qty = n; bi.price = v.price; bi.name = v.name;
@@ -2906,7 +2920,7 @@ const contoBar = () => r2(barTotal(C()));
 const contoPagatoParco = () => Math.min(importoRiga('bimbi'), contoParco());
 const contoPagatoCrazy = () => Math.min(importoRiga('crazy'), contoCrazy());
 const contoPagatoBar = () =>
-  Math.min(r2((C().barItems || []).reduce((a, bi) => a + importoRiga(bi.id), 0)), contoBar());
+  Math.min(r2(lista(C().barItems).reduce((a, bi) => a + importoRiga(bi.id), 0)), contoBar());
 const contoResta = () => dueOf(C()).total;
 
 /* Segna (o dissegna) tutta una sezione. Il "paga" non risomma le
@@ -2915,7 +2929,7 @@ const contoResta = () => dueOf(C()).total;
    sommava una seconda volta. */
 function bcSegna(quali, pieno) {
   const c = C();
-  const voci = quali === 'bar' ? (c.barItems || []).map(x => x.id) : [quali];
+  const voci = quali === 'bar' ? lista(c.barItems).map(x => x.id) : [quali];
   voci.forEach(id => {
     if (!pieno) { segnaPagate(id, 0); return; }
     c.paidLines = c.paidLines || {};
@@ -2933,7 +2947,7 @@ function pagaTutto() {
   const c = C(), d = dueOf(c);
   if (d.parkDue > 0) muoviSoldi('bimbi', d.parkDue);
   if (d.barDue > 0) {
-    const primo = (c.barItems || [])[0];
+    const primo = lista(c.barItems)[0];
     if (primo) muoviSoldi(primo.id, d.barDue);
   }
 }
@@ -3104,9 +3118,6 @@ function adattaPannello(p, limiteSotto, cimaVoluta, largaVoluta) {
      rimisura da solo quando la vista torna a galla. */
   if (!p.offsetParent && getComputedStyle(p).position !== 'fixed') return 1;
   const su = p.querySelector('.pc-scala');
-  if (su) su.style.zoom = '';
-  const giu = p.querySelector('.pc-fondo');
-  if (giu) giu.style.zoom = '';
   /* `flex: 1` ha flex-basis 0, che ignora l'altezza scritta a mano:
      va spento, se no il valore qui sotto non conta niente */
   p.style.flex = '0 0 auto';
@@ -3325,9 +3336,16 @@ function posa(card) {
   if (PAN.root && card.contains(PAN.root)) {
     PAN.root.style.height = ''; PAN.root.style.flex = ''; PAN.root.style.width = '';
     const su = PAN.root.querySelector('.pc-scala');
-    if (su) { su.style.zoom = ''; su.classList.remove('scorre'); }
-    const fo = PAN.root.querySelector('.pc-fondo');
-    if (fo) fo.style.zoom = '';
+    if (su) {
+      su.classList.remove('scorre', 'dasu', 'dagiu');
+      /* MENTRE SCENDE, IL VANO SI ACCORCIA FINO A ZERO e il contenuto
+         resta lungo com'era: senza questo, a OGNI chiusura compariva
+         la barra di scorrimento per mezzo secondo, e il contenuto si
+         accartocciava invece di scivolare via sotto il bordo. Torna
+         com'era quando il pannello si rimette a posto. */
+      su.style.overflow = 'hidden';
+      su.scrollTop = 0;
+    }
   }
   const fine = () => {
     /* il pannello si chiude SOLO adesso: chiudendolo alla partenza
@@ -3340,6 +3358,8 @@ function posa(card) {
     card.style.left = card.style.top = card.style.width = card.style.height = card.style.maxHeight = '';
     if (v.buco.parentNode) v.buco.remove();
     if (v.velo.parentNode) v.velo.remove();
+    const su = PAN.root && PAN.root.querySelector('.pc-scala');
+    if (su) su.style.overflow = '';     // atterrata: torna a poter scorrere
     riportaPannello(card);
   };
   const tempo = anima() ? 500 : 0;
@@ -3745,7 +3765,7 @@ function tick() {
    sempre si vuole azzerare una parte sola, non ricominciare tutto. */
 function foglioSvuota() {
   const c = draft;
-  const barPresi = (c.barItems || []).filter(x => num(x.qty, 0) > 0);
+  const barPresi = lista(c.barItems).filter(x => num(x.qty, 0) > 0);
   const soldi = r2(num(c.paidPark, 0) + num(c.paidBar, 0));
   const VOCI = [
     { k: 'numeri', t: 'Bambini e Crazy Jumping',
@@ -3756,8 +3776,8 @@ function foglioSvuota() {
       d: barPresi.length ? barPresi.map(x => x.qty + '× ' + x.name).join(', ') : 'niente segnato',
       c: barPresi.length > 0 },
     { k: 'persone', t: 'Chi accompagna',
-      d: (c.people || []).length ? (c.people || []).map(p => nameOf(p)).join(', ') : 'nessuno',
-      c: (c.people || []).length > 0 },
+      d: lista(c.people).length ? lista(c.people).map(p => nameOf(p)).join(', ') : 'nessuno',
+      c: lista(c.people).length > 0 },
     { k: 'tempo', t: 'Orario, durata e bracciale',
       d: fmtTime(c.startTime) + ' · ' + (c.payLater ? 'tempo aperto' : fmtMin(c.durationMinutes)),
       c: true },
@@ -3814,7 +3834,7 @@ function svuotaScelto(scelte) {
     const rendi = (id) => segnaPagate(id, 0);
     if (scelte.numeri) { rendi('bimbi'); rendi('crazy'); bcSetQ('bimbi', 0); bcSetQ('crazy', 0); }
     if (scelte.bar) {
-      (c.barItems || []).slice().forEach(x => { rendi(x.id); bcSetQ(x.id, 0); });
+      lista(c.barItems).slice().forEach(x => { rendi(x.id); bcSetQ(x.id, 0); });
       c.barItems = [];
     }
     if (scelte.soldi) {
@@ -3831,8 +3851,8 @@ function svuotaScelto(scelte) {
       c.payLater = false; c.braceletColor = null; c.braceletCustom = true;
       c.baseMinutes = undefined;
     }
-    if (!num(c.children, 0) && !num(c.crazyJumping, 0) && !(c.barItems || []).length &&
-        !(c.people || []).length) c.touched = false;
+    if (!num(c.children, 0) && !num(c.crazyJumping, 0) && !lista(c.barItems).length &&
+        !lista(c.people).length) c.touched = false;
   }
   const box = pcRif('.pc-people');
   if (box) { box.dataset.apri = ''; box.dataset.sig = ''; box.dataset.tav = ''; }
@@ -4366,13 +4386,13 @@ function traduciImporti(o) {
   if (park > 0) a.bimbi = r(num(a.bimbi, 0) + park);
 
   let bar = Math.max(0, num(o.paidBar, 0));
-  (o.barItems || []).forEach(bi => {
+  lista(o.barItems).forEach(bi => {
     const n = Math.min(clamp(bi.qty, 0, 9999), num(righe[bi.id], 0));
     const vuole = r(Math.max(0, n) * num(bi.price, 0));
     const dato = Math.min(bar, vuole);
     a[bi.id] = dato; bar = r(bar - dato);
   });
-  const primo = (o.barItems || [])[0];
+  const primo = lista(o.barItems)[0];
   if (bar > 0 && primo) a[primo.id] = r(num(a[primo.id], 0) + bar);
   return a;
 }
@@ -4434,14 +4454,22 @@ function riparaConto(o) {
 }
 
 function normalizeEntries(list) {
-  return (list || []).map(e => {
+  /* Qui arrivano i dati di fuori -- vecchi salvataggi, cloud, copie
+     ripristinate -- ed e' l'ultimo posto in cui una schifezza puo'
+     ancora far saltare l'elenco INTERO invece di un ingresso solo: se
+     esplode qui, al banco non compare piu' nessuno.
+     I buchi (null, undefined, un numero finito li' per sbaglio) si
+     buttano prima di guardarci dentro: un ingresso che non c'e' non e'
+     un ingresso da riparare. */
+  return lista(list).filter(e => e && typeof e === 'object').map(e => {
     const o = Object.assign({
       status: 'active', barItems: [], barPaid: 0, parkPaid: false,
       braceletColor: null, braceletCustom: false, paidLines: {},
       children: 1, crazyJumping: 0, durationMinutes: 60, people: []
     }, e, {
       paidLines: e.paidLines || {},
-      people: (e.people || []).map(p => (p.avatar = AV.normalize(p.avatar, p.role), p))
+      people: lista(e.people).filter(p => p && typeof p === 'object')
+        .map(p => (p.avatar = AV.normalize(p.avatar, p.role), p))
     });
     if (o.baseMinutes == null) o.baseMinutes = o.durationMinutes;
     o.paidLines = traduciPagate(o.paidLines);
