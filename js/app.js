@@ -80,6 +80,32 @@ function toast(msg) {
   toastT = setTimeout(() => t.classList.remove('show'), 2000);
 }
 
+/* LA GIORNATA FINISCE ALLE QUATTRO DEL MATTINO.
+   Non a mezzanotte: il parco chiude tardi, e un gruppo entrato alle
+   23:40 che esce all'una fa parte della serata di ieri, non della
+   mattina di oggi. Chi conta la cassa la conta a fine serata, e
+   vuole trovarci dentro tutta la serata.
+   Sotto le quattro si e' ancora nel giorno prima. */
+const ORA_CAMBIO_GIORNO = 4;
+
+/* Il momento in cui e' cominciata la giornata a cui appartiene `ts`.
+   E' l'unico posto in cui si decide "di che giorno e' questo
+   ingresso": tutto il resto passa di qui. */
+function giornataDi(ts) {
+  const d = new Date(num(ts, Date.now()));
+  if (d.getHours() < ORA_CAMBIO_GIORNO) d.setDate(d.getDate() - 1);
+  d.setHours(ORA_CAMBIO_GIORNO, 0, 0, 0);
+  return d.getTime();
+}
+function nomeGiornata(inizio) {
+  const oggi = giornataDi(Date.now());
+  if (inizio === oggi) return 'oggi';
+  if (inizio === giornataDi(oggi - 1)) return 'ieri';
+  const d = new Date(inizio);
+  const GIORNI = ['domenica', 'luned\u00ec', 'marted\u00ec', 'mercoled\u00ec', 'gioved\u00ec', 'venerd\u00ec', 'sabato'];
+  return GIORNI[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth() + 1);
+}
+
 /* ---------- archivio dati ---------- */
 const SK = { settings: 'gp_settings', entries: 'gp_entries', presets: 'gp_presets' };
 function load(k) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
@@ -3566,11 +3592,16 @@ function chiudiIngresso(entry) {
       });
     } else dopo();
   };
+  /* SPARIRE E' UN'ALTRA COSA DA USCIRE.
+     Uscire vuol dire "ha finito": va in archivio e resta nel registro
+     della giornata, coi suoi soldi. Eliminare vuol dire "questo non e'
+     mai esistito" -- un ingresso sbagliato, una prova, un doppione --
+     e allora deve sparire anche dai conti della giornata, se no la
+     cassa della sera non torna con quello che c'e' nel cassetto.
+     Sono due strade diverse e stanno una accanto all'altra, scritte,
+     invece che nascoste dietro un tocco ripetuto. */
   const d = dueOf(entry);
-  if (d.total > 0) {
-    confirmSheet('Restano ' + eur(d.total) + ' da incassare',
-      'Vuoi far uscire questo gruppo lo stesso? L\'ingresso finisce in archivio e puoi riaprirlo.', fine);
-  } else fine();
+  fogliUscita(entry, d, fine);
 }
 
 /* Il calcolo del resto: si toccano i tagli che la persona mette in
@@ -3896,6 +3927,190 @@ function svuotaScelto(scelte) {
   toast('Svuotato');
 }
 
+/* IL REGISTRO DELLA GIORNATA.
+   Quanto e' entrato in cassa, diviso per dove: il tempo di parco, il
+   Crazy, il bar. Piu' quello che e' rimasto fuori -- gruppi usciti
+   senza saldare -- che al banco conta quanto l'incassato, perche' e'
+   la differenza fra "ho chiuso" e "ho chiuso bene".
+   Un ingresso appartiene alla giornata in cui e' ENTRATO. */
+function contiGiornata(inizio) {
+  const fine = inizio + 24 * 3600 * 1000;
+  const dentro = lista(entries).filter(e => {
+    const t = num(e.startTime, num(e.createdAt, 0));
+    return t >= inizio && t < fine;
+  });
+  const c = {
+    inizio: inizio, gruppi: dentro.length, bambini: 0, crazy: 0,
+    parco: 0, crazyEuro: 0, bar: 0, incassato: 0, venduto: 0, resta: 0,
+    righe: []
+  };
+  dentro.forEach(e => {
+    const d = dueOf(e);
+    const amt = e.paidAmt || {};
+    /* la divisione fra tempo e Crazy si legge dalle righe; se
+       l'ingresso e' vecchio e non ce l'ha, il Crazy si ricava dal suo
+       prezzo e il resto e' tempo */
+    const crazyEuro = isFinite(num(amt.crazy, NaN))
+      ? Math.max(0, num(amt.crazy, 0))
+      : Math.min(num(e.paidPark, 0), clamp(e.crazyJumping, 0, 1e6) * num(settings.crazyJumpingPrice, 0));
+    const parco = Math.max(0, r2(num(e.paidPark, 0) - crazyEuro));
+    c.bambini += clamp(e.children, 0, 1e6);
+    c.crazy += clamp(e.crazyJumping, 0, 1e6);
+    c.parco = r2(c.parco + parco);
+    c.crazyEuro = r2(c.crazyEuro + crazyEuro);
+    c.bar = r2(c.bar + Math.max(0, num(e.paidBar, 0)));
+    c.venduto = r2(c.venduto + d.park + d.bar);
+    c.resta = r2(c.resta + d.total);
+    c.righe.push({
+      id: e.id, ora: fmtTime(e.startTime), chi: nomiDi(e),
+      bambini: clamp(e.children, 0, 1e6),
+      preso: r2(num(e.paidPark, 0) + num(e.paidBar, 0)),
+      resta: d.total, uscito: e.status !== 'active'
+    });
+  });
+  c.incassato = r2(c.parco + c.crazyEuro + c.bar);
+  c.righe.sort((a, b) => a.ora < b.ora ? -1 : 1);
+  return c;
+}
+
+function nomiDi(e) {
+  const p = lista(e.people).map(x => nameOf(x)).filter(Boolean);
+  return p.length ? p.join(', ') : 'senza riferimento';
+}
+
+/* Il foglio del registro: una giornata alla volta, con le frecce per
+   tornare indietro. Le giornate vecchie servono davvero -- "quanto
+   abbiamo fatto sabato?" e' la domanda che si fa il lunedi'. */
+function fogliRegistro(giorno) {
+  let quale = giorno === undefined ? giornataDi(Date.now()) : giorno;
+  const s = sheet('\ud83d\udcd2 Registro della giornata');
+  const dentro = el('div');
+  s.body.appendChild(dentro);
+
+  const disegna = () => {
+    const c = contiGiornata(quale);
+    dentro.innerHTML = '';
+
+    /* la barra dei giorni */
+    const barra = el('div', 'reg-giorni');
+    const indietro = el('button', 'btn btn-sm', '\u25c0');
+    indietro.title = 'giornata prima';
+    indietro.onclick = () => { quale = giornataDi(quale - 1); disegna(); };
+    const eti = el('div', 'reg-eti');
+    eti.appendChild(el('b', null, nomeGiornata(quale)));
+    eti.appendChild(el('span', null, 'dalle ' + ORA_CAMBIO_GIORNO + ':00 alle ' + ORA_CAMBIO_GIORNO + ':00'));
+    const avanti = el('button', 'btn btn-sm', '\u25b6');
+    avanti.title = 'giornata dopo';
+    avanti.disabled = quale >= giornataDi(Date.now());
+    avanti.onclick = () => { quale = giornataDi(quale + 25 * 3600 * 1000); disegna(); };
+    barra.appendChild(indietro); barra.appendChild(eti); barra.appendChild(avanti);
+    dentro.appendChild(barra);
+
+    if (!c.gruppi) {
+      dentro.appendChild(el('div', 'hint', 'Nessun ingresso in questa giornata.'));
+      return;
+    }
+
+    /* la cifra grossa: quella che si cerca per prima */
+    const testa = el('div', 'reg-testa');
+    const gr = el('div', 'reg-grossa');
+    gr.appendChild(el('span', 'k', 'INCASSATO'));
+    gr.appendChild(el('span', 'v', eur(c.incassato)));
+    testa.appendChild(gr);
+    if (c.resta > 0.005) {
+      const rs = el('div', 'reg-grossa manca');
+      rs.appendChild(el('span', 'k', 'NON INCASSATO'));
+      rs.appendChild(el('span', 'v', eur(c.resta)));
+      testa.appendChild(rs);
+    }
+    dentro.appendChild(testa);
+
+    /* da dove arriva */
+    const voci = el('div', 'reg-voci');
+    [['\u23f1\ufe0f', 'Tempo di parco', c.parco],
+     ['\ud83e\udd38', 'Crazy Jumping', c.crazyEuro],
+     ['\ud83e\udd64', 'Bar', c.bar]].forEach(([em, nome, val]) => {
+      const r = el('div', 'reg-voce');
+      r.appendChild(el('span', 'em', em));
+      r.appendChild(el('span', 'nm', nome));
+      r.appendChild(el('span', 'vl', eur(val)));
+      voci.appendChild(r);
+    });
+    dentro.appendChild(voci);
+
+    const conta = el('div', 'reg-conta');
+    conta.appendChild(el('span', null, c.gruppi + (c.gruppi === 1 ? ' gruppo' : ' gruppi')));
+    conta.appendChild(el('span', null, c.bambini + (c.bambini === 1 ? ' bambino' : ' bambini')));
+    if (c.crazy) conta.appendChild(el('span', null, c.crazy + ' Crazy'));
+    dentro.appendChild(conta);
+
+    /* uno per uno, in ordine di entrata */
+    const lst = el('div', 'reg-lista');
+    c.righe.forEach(r => {
+      const riga = el('div', 'reg-riga' + (r.resta > 0.005 ? ' deve' : ''));
+      riga.appendChild(el('span', 'ora', r.ora));
+      const chi = el('span', 'chi');
+      chi.appendChild(el('b', null, r.chi));
+      chi.appendChild(el('span', null, r.bambini + (r.bambini === 1 ? ' bambino' : ' bambini') +
+        (r.uscito ? '' : ' \u00b7 ancora dentro')));
+      riga.appendChild(chi);
+      const soldi = el('span', 'soldi');
+      soldi.appendChild(el('b', null, eur(r.preso)));
+      if (r.resta > 0.005) soldi.appendChild(el('span', 'manca', '\u2212' + eur(r.resta)));
+      riga.appendChild(soldi);
+      lst.appendChild(riga);
+    });
+    dentro.appendChild(lst);
+  };
+
+  disegna();
+  footBtn(s.foot, 'Chiudi', 'btn-ghost', s.close);
+}
+
+/* Il foglio dell'uscita: due strade scritte, non un "sei sicuro?". */
+function fogliUscita(entry, d, esci) {
+  const resta = d.total;
+  const s = sheet(resta > 0.005 ? 'Restano ' + eur(resta) + ' da incassare' : 'Esce il gruppo?');
+  s.body.appendChild(el('div', 'hint', resta > 0.005
+    ? 'Chi accompagna: ' + nomiDi(entry) + '. Puoi farlo uscire lo stesso: quello che manca resta segnato nel registro della giornata.'
+    : 'Chi accompagna: ' + nomiDi(entry) + '. Il conto e\u2019 saldato.'));
+
+  const scelta = (cls, em, titolo, sotto, fn) => {
+    const b = el('button', 'scelta-riga ' + cls);
+    b.appendChild(el('span', 'sc-em', em));
+    const t = el('span', 'sc-txt');
+    t.appendChild(el('b', null, titolo));
+    t.appendChild(el('span', null, sotto));
+    b.appendChild(t);
+    b.onclick = () => { s.close(); fn(); };
+    s.body.appendChild(b);
+    return b;
+  };
+
+  scelta('', '\ud83d\udeaa', 'Esce e va in archivio',
+    'Resta nel registro della giornata, con quello che ha pagato. Da li\u2019 puoi riaprirlo.',
+    esci);
+
+  scelta('pericolo', '\ud83d\uddd1\ufe0f', 'Elimina l\u2019ingresso',
+    'Sparisce del tutto: NON entra nel registro della giornata. Serve per gli sbagli, non per chi ha finito. Non si pu\u00f2 annullare.',
+    () => eliminaIngresso(entry));
+
+  footBtn(s.foot, 'Lascia stare', 'btn-ghost', s.close);
+}
+
+/* Toglie di mezzo un ingresso sbagliato: via dall'elenco, via dai
+   conti della giornata. I soldi che risultavano incassati se ne vanno
+   con lui -- ed e' il punto: se erano stati battuti per sbaglio, non
+   devono restare in cassa. */
+function eliminaIngresso(entry) {
+  if (volante) posaSubito(volante.card);
+  entries = lista(entries).filter(e => e.id !== entry.id);
+  saveEntries();
+  buildActiveView();
+  updateBadge();
+  toast('Ingresso eliminato \ud83d\uddd1\ufe0f');
+}
+
 function confirmSheet(title, text, onYes) {
   const s = sheet(title);
   s.body.appendChild(el('div', 'hint', text));
@@ -3920,6 +4135,16 @@ function buildSettingsView() {
         <span class="sw-txt"><b>Schermo intero</b><span>Toglie la barra di sistema del tablet, che copriva la parte bassa dell'app. Se l'app &egrave; installata, il tutto schermo parte al primo tocco.</span></span>
         <span class="switch"></span>
       </button>
+      </div>
+    </div>
+
+    <div class="card blk c-verde">
+      <h2><span class="em">📒</span> Registro della giornata</h2>
+      <div class="blk-in">
+      <div class="hint">Quanto &egrave; entrato in cassa e da dove. La giornata va dalle
+        <b>4:00 alle 4:00</b> del giorno dopo, cos&igrave; una serata lunga resta tutta insieme
+        invece di spezzarsi a mezzanotte.</div>
+      <button class="btn btn-block" id="sRegistro" style="margin-top:10px;">📒 Apri il registro</button>
       </div>
     </div>
 
@@ -4012,6 +4237,7 @@ function buildSettingsView() {
 
   aggiornaCartaCloud();
   aggiornaCartaSicurezza();
+  $('#sRegistro').onclick = () => fogliRegistro();
 
   /* tema */
   const an = $('#setAnima');

@@ -267,6 +267,64 @@ gruppo('Gli orari di confine: mezzanotte, ieri, l’anno prossimo', () => {
   ok('otto orari di confine, nessuno rompe niente', male.slice(0, 5), []);
 });
 
+gruppo('La giornata finisce alle quattro del mattino', () => {
+  /* Non a mezzanotte: il parco chiude tardi, e un gruppo entrato alle
+     23:40 che esce all'una fa parte della SERATA DI IERI. Chi conta la
+     cassa la conta a fine serata e vuole trovarci dentro tutta la
+     serata. E' la regola che decide di che giorno e' ogni euro. */
+  const g = (Y, M, D, h, m) => ctx.giornataDi(new Date(Y, M, D, h, m).getTime());
+  ok('le 23:40 e l’1:00 dopo sono la stessa giornata',
+     g(2026, 7, 10, 23, 40), g(2026, 7, 11, 1, 0));
+  ok('e anche le 3:59', g(2026, 7, 10, 23, 40), g(2026, 7, 11, 3, 59));
+  vero('ma le 4:01 no', g(2026, 7, 10, 23, 40) !== g(2026, 7, 11, 4, 1));
+  ok('le 4:01 aprono la giornata nuova',
+     g(2026, 7, 11, 4, 1), g(2026, 7, 11, 12, 0));
+  const inizio = new Date(g(2026, 7, 11, 12, 0));
+  ok('e una giornata comincia alle quattro in punto',
+     [inizio.getHours(), inizio.getMinutes(), inizio.getSeconds()], [4, 0, 0]);
+  /* due giornate di fila non si sovrappongono e non lasciano buchi */
+  const uno = g(2026, 7, 11, 12, 0), due = g(2026, 7, 12, 12, 0);
+  ok('due giornate di fila distano esattamente un giorno', due - uno, 24 * 3600 * 1000);
+});
+
+gruppo('Il registro della giornata conta quello che deve', () => {
+  const oggi = ctx.giornataDi(Date.now());
+  const dentro = oggi + 6 * 3600 * 1000;          // le dieci del mattino
+  const fuori = oggi - 3 * 3600 * 1000;           // la giornata prima
+  ctx.entries = [
+    { id: 'a', status: 'closed', startTime: dentro, children: 2, crazyJumping: 1,
+      durationMinutes: 60, barItems: [], paidLines: {}, paidAmt: { bimbi: 24, crazy: 4 },
+      paidPark: 28, paidBar: 0, people: [] },
+    { id: 'b', status: 'active', startTime: dentro, children: 1, crazyJumping: 0,
+      durationMinutes: 60, barItems: [], paidLines: {}, paidAmt: {},
+      paidPark: 0, paidBar: 0, people: [] },
+    { id: 'c', status: 'closed', startTime: fuori, children: 5, crazyJumping: 0,
+      durationMinutes: 60, barItems: [], paidLines: {}, paidAmt: { bimbi: 60 },
+      paidPark: 60, paidBar: 0, people: [] }
+  ];
+  const r = ctx.contiGiornata(oggi);
+  ok('conta solo i gruppi di oggi', r.gruppi, 2);
+  ok('e i loro bambini', r.bambini, 3);
+  ok('il tempo di parco incassato', r.parco, 24);
+  ok('il Crazy incassato a parte', r.crazyEuro, 4);
+  ok('l’incassato totale', r.incassato, 28);
+  vero('e quello che manca e’ segnato', r.resta > 0);
+  ok('una riga per gruppo', r.righe.length, 2);
+
+  /* ELIMINARE UN INGRESSO LO TOGLIE DAI CONTI: e' tutto il punto del
+     tasto elimina all'uscita. */
+  ctx.entries = ctx.entries.filter(e => e.id !== 'a');
+  const dopo = ctx.contiGiornata(oggi);
+  ok('eliminato, il gruppo sparisce dal registro', dopo.gruppi, 1);
+  ok('e i suoi soldi non ci sono piu’', dopo.incassato, 0);
+
+  /* la giornata prima resta al suo posto */
+  const ieri = ctx.contiGiornata(ctx.giornataDi(oggi - 1));
+  ok('la giornata prima ha i suoi', ieri.gruppi, 1);
+  ok('con i suoi soldi', ieri.incassato, 60);
+  ctx.entries = [];
+});
+
 gruppo('Il bracciale segue l’ora d’ingresso, non quella di adesso', () => {
   /* E' una cosa che gli sta a cuore: il colore lo si sceglie per
      l'ora in cui il bambino E' ENTRATO, se no all'uscita non torna. */
