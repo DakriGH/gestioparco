@@ -532,6 +532,20 @@ gruppo('La fascia del tempo: una sola, e dice fin quando e pagato');
   prova('e non ha piu tasti suoi, diversi da quelli del bar',
     !/\.pc-due \.bc-zone\s*\{/.test(foglio));
 
+  /* IL GUARDAROBA CI DEVE STARE SENZA SCORRERE.
+     E' alto quattrocento pixel: insieme alle due card e alla fascia
+     del tempo non ci sta, e il pannello si mette a scorrere proprio
+     quando servono le due mani. Mentre si veste, quei numeri si
+     ripiegano in una riga sola. */
+  prova('c e la riga di ripiego', ha('pc-riass'));
+  prova('ed e un tasto, cosi si torna com era',
+    /<button class="pc-riass[^>]*data-a="chiudiarmadio"/.test(modello.replace(/\s+/g, ' ')));
+  prova('ripiegando spariscono le card e la fascia, non altro',
+    /\.pc-parco\.veste > \.pc-due, \.pc-parco\.veste > \.sec-tempo \{ display: none/
+      .test(readFileSync(join(RADICE, 'css/app.css'), 'utf8')));
+  prova('il posto riservato al guardaroba non c e piu',
+    !sorg.includes('altezzaPersone') && !sorg.includes('personeMisurate'));
+
   /* La pastiglia del pagato invece e' una funzione che torna testo:
      quella si prova davvero. E' l'unica parte della fascia che parla
      di soldi, ed e' quella che deve stare zitta a tempo aperto. */
@@ -579,6 +593,17 @@ gruppo('La fascia del tempo: una sola, e dice fin quando e pagato');
   app.segnaPagate('bimbi', 1);
   h = app.pastigliaPagato(c);
   prova('col Crazy non pagato non e "tutto pagato"', !/pagato tutto/.test(h));
+
+  /* la riga di ripiego dice gli STESSI numeri delle card che nasconde:
+     chi li ha appena messi li deve ritrovare uguali */
+  c = mettiSotto(conto({ children: 3, crazyJumping: 2, durationMinutes: 90 }));
+  const riga = app.rigaRipiego(c);
+  prova('la riga ripiegata dice quanti bambini', /<b>3<\/b>/.test(riga));
+  prova('e quanti Crazy', /<b>2<\/b>/.test(riga));
+  prova('e da che ora a che ora', (riga.match(/\d\d:\d\d/g) || []).length === 2);
+  prova('e quanto resta da pagare', /da pagare/.test(riga));
+  app.segnaPagate('bimbi', 3); app.segnaPagate('crazy', 2);
+  prova('e quando e saldato lo dice', /tutto pagato/.test(app.rigaRipiego(c)));
 }
 
 gruppo('Il vuoto sopra la scheda che vola');

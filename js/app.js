@@ -438,6 +438,13 @@ function costruisciPannello() {
            quella che si fa ogni tanto.
            Il prezzo sulla card segue il tempo scelto qui sotto, e si
            aggiorna da solo: non c'e' bisogno di rileggerlo. -->
+      <!-- LA RIGA DI RIPIEGO. Mentre si veste qualcuno, le due card e
+           la fascia del tempo si ripiegano qui dentro: il guardaroba e'
+           alto quattrocento pixel e quello e' l'unico modo di farcelo
+           stare senza scorrere. Non spariscono, si accorciano -- i
+           numeri restano leggibili -- e toccando la riga si torna
+           subito com'era. -->
+      <button class="pc-riass hidden" data-a="chiudiarmadio"></button>
       <div class="bc-griglia pc-due"></div>
 
       <!-- UNA FASCIA SOLA PER IL TEMPO: "dalle ... alle ...".
@@ -577,6 +584,14 @@ function costruisciPannello() {
     }
     /* il menu del bracciale si apre e si chiude senza rifare la
        fascia: rifarla lo richiuderebbe a ogni colore provato */
+    /* la riga di ripiego riporta com'era: si richiude il guardaroba e
+       le due card e la fascia tornano al loro posto */
+    if (d.a === 'chiudiarmadio') {
+      const box = pcRif('.pc-people');
+      if (box) { box.dataset.apri = ''; box.dataset.tav = ''; }
+      aggiornaPannello();
+      return;
+    }
     if (d.a === 'bracapri') {
       const men = p.querySelector('.brc-menu');
       men.classList.toggle('hidden');
@@ -853,6 +868,38 @@ function disegnaFascia(p, c) {
 /* Fin quando ha pagato, in una pastiglia. Il verde vuol dire "pagato":
    finche' non e' entrato niente resta neutra, perche' una fascia verde
    con scritto "da pagare" dice due cose opposte nello stesso pezzo. */
+/* Mentre si veste qualcuno le due card e la fascia del tempo si
+   ripiegano nella riga qui sotto: il guardaroba e' alto quattrocento
+   pixel, e quello e' l'unico modo di farcelo stare senza scorrere.
+   Tollera di essere chiamata quando il pannello non c'e' ancora. */
+function ripiegaNumeri(veste) {
+  const p = PAN.root;
+  if (!p) return;
+  const parco = p.querySelector('.pc-parco');
+  const riass = p.querySelector('.pc-riass');
+  if (!parco || !riass) return;
+  parco.classList.toggle('veste', !!veste);
+  riass.classList.toggle('hidden', !veste);
+  if (veste) riass.innerHTML = rigaRipiego(C());
+}
+
+/* Quello che le due card e la fascia del tempo dicevano, in una riga.
+   Non e' un riassunto "carino": sono gli stessi numeri con le stesse
+   faccine, perche' chi li ha appena messi li deve ritrovare uguali. */
+function rigaRipiego(c) {
+  c = c || C();
+  const bimbi = clamp(num(c.children, 0), 0, 1e6);
+  const crazy = clamp(num(c.crazyJumping, 0), 0, 1e6);
+  const resta = r2(dueOf(c).total - num(c.paidPark, 0) - num(c.paidBar, 0));
+  return '<span class="rr">\ud83e\uddd2 <b>' + bimbi + '</b></span>' +
+    '<span class="rr">\ud83e\udd38 <b>' + crazy + '</b></span>' +
+    '<span class="rr">\ud83d\udd52 <b>' + fmtTime(c.startTime) + '</b> \u2192 <b>' +
+      (c.payLater ? 'a tempo' : fmtTime(endTimeOf(c))) + '</b></span>' +
+    '<span class="rr soldi">' + (resta > 0.005 ? 'da pagare <b>' + eur(resta) + '</b>'
+                                               : '\u2713 tutto pagato') + '</span>' +
+    '<span class="rr torna">tocca per riaprire</span>';
+}
+
 function pastigliaPagato(c) {
   c = c || C();
   const aperto = !!c.payLater;
@@ -942,7 +989,13 @@ function aggiornaPannello(opz) {
         '\u23f3 Tempo aperto</button>';
     }
     c.people = c.people || [];
-    syncPeople(p.querySelector('.pc-people'), c.people, () => { pcSalva(); });
+    const gente = p.querySelector('.pc-people');
+    syncPeople(gente, c.people, () => { pcSalva(); });
+    /* syncPeople lo fa da se' quando ridisegna, ma se la firma non e'
+       cambiata non ridisegna: qui i numeri possono essere cambiati lo
+       stesso (un bambino in piu', il tempo allungato) e la riga li deve
+       dire aggiornati */
+    ripiegaNumeri(!!gente.querySelector('.armadio'));
   } else {
     pcGriglia();
   }
@@ -1092,6 +1145,11 @@ function syncPeople(container, people, onChange) {
   }).join('') + '</div>';
 
   container.innerHTML = ruoli + armadioDi(chi, chi ? (container.dataset.tav || '') : '');
+  /* Il ripiego si accende QUI e non in aggiornaPannello: questa fila si
+     ridisegna da sola, dal proprio gestore dei tocchi, senza passare di
+     li'. Messo altrove, in "+ Nuovo" toccando un ruolo l'armadio si
+     apriva e i numeri restavano aperti -- e il pannello scorreva. */
+  ripiegaNumeri(!!chi);
   /* aprire o chiudere l'armadio cambia l'altezza di trecento pixel in
      un colpo: il pannello va rimisurato subito, se no il conto in fondo
      esce dallo schermo */
@@ -3013,66 +3071,14 @@ function spazioSopra() {
 }
 
 
-/* IL POSTO DEL GUARDAROBA SI TIENE ANCHE DA CHIUSO.
-   Aprirlo aggiunge trecento e passa pixel in un colpo: e' quello che
-   faceva rimpicciolire tutta la schermata appena si toccava un ruolo.
-   Misurandolo una volta e tenendogli il posto, aprirlo e chiuderlo non
-   muove piu' niente -- e il vuoto che resta quando non c'e' nessuno
-   accoglie l'invito a mettere qualcuno, quindi non e' vuoto sprecato.
-
-   Si misura il riquadro INTERO -- riga dei ruoli piu' guardaroba --
-   perche' e' quello il posto da tenere: riservando il solo guardaroba
-   restavano fuori i cinquanta pixel dei ruoli e la scala ballava lo
-   stesso, solo di meno.
-   La misura dipende dalla larghezza (a schermo stretto i capi vanno a
-   capo), quindi si tiene da conto insieme alla larghezza a cui vale. */
-let personeMisurate = { largo: 0, alto: 0 };
-function altezzaPersone(box) {
-  const largo = Math.round(box.clientWidth);
-  if (!largo) return 0;
-  if (box.querySelector('.armadio')) {
-    /* c'e' davvero: e' la misura buona, e da adesso vale per tutti */
-    personeMisurate = { largo: largo, alto: Math.ceil(box.scrollHeight) };
-    return personeMisurate.alto;
-  }
-  if (personeMisurate.largo === largo) return personeMisurate.alto;
-  /* mai visto a questa larghezza: se ne disegna uno in un angolo
-     invisibile, si misura e si butta. Non arriva mai a schermo --
-     nasce e muore dentro la stessa istruzione. */
-  const prova = el('div', 'person-list');
-  prova.style.cssText = 'position:absolute;left:-99999px;top:0;visibility:hidden;width:' + largo + 'px';
-  try {
-    const ruoli = box.querySelector('.ruoli');
-    if (ruoli) prova.appendChild(ruoli.cloneNode(true));
-    prova.insertAdjacentHTML('beforeend', armadioDi({
-      id: 'misura', role: 'altro', name: '', note: '',
-      avatar: AV.normalize(null, 'altro')
-    }, ''));
-    box.parentNode.appendChild(prova);
-    personeMisurate = { largo: largo, alto: Math.ceil(prova.getBoundingClientRect().height) };
-  } catch (e) {
-    personeMisurate = { largo: largo, alto: 0 };
-  }
-  prova.remove();
-  return personeMisurate.alto;
-}
-
-/* LA SCALA, MISURATA SULLO STATO PIU' PIENO E VERIFICATA.
-
-   Due regole, e sono quelle che tengono ferma la schermata:
-
-   1. non si misura quello che c'e' a video, ma lo stato PIU' ALTO
-      possibile -- linguetta Parco, guardaroba aperto -- qualunque cosa
-      sia a video. Cosi' aprire il guardaroba o cambiare linguetta non
-      cambia la scala, e non si vede piu' la schermata rimpicciolirsi
-      sotto le dita.
-
-   2. dopo aver applicato la scala si CONTROLLA che ci stia davvero, e
-      se sborda ancora di qualche pixel si scende di un filo. Un conto
-      fatto una volta sola lasciava una decina di pixel fuori -- fra
-      arrotondamenti e riserve che cambiano quando il riquadro cambia
-      misura -- e quei dieci pixel facevano comparire la barra di
-      scorrimento, che qui non ci deve essere. */
+/* QUANTO E' ALTO IL PANNELLO, e dove finisce.
+   Il conto in fondo (`pc-fondo`) e' di taglia fissa e sta incollato
+   in basso; quello che avanza va al vano (`pc-scala`), che scorre solo
+   se proprio non ci sta. Qui si fissano l'altezza e la larghezza una
+   volta sola, prima che la scheda parta: se le misure arrivassero
+   durante il volo, il contenuto si rimpaginerebbe a ogni fotogramma.
+   Si misura col Parco a vista anche quando a video c'e' il bar, cosi'
+   la misura non cambia da una linguetta all'altra. */
 function adattaPannello(p, limiteSotto, cimaVoluta, largaVoluta) {
   if (!p || !p.isConnected) return 1;
   /* Se la vista che lo ospita e' nascosta non c'e' niente da misurare:
@@ -3116,19 +3122,15 @@ function adattaPannello(p, limiteSotto, cimaVoluta, largaVoluta) {
 
   /* il riquadro delle persone tiene il posto del guardaroba anche da
      chiuso: da nascosto e' largo zero e non si potrebbe misurare */
-  /* IL POSTO DEL GUARDAROBA SI TIENE SOLO SE QUALCUNO C'E'.
-     Serve a non far ballare la scala aprendo e chiudendo l'armadio --
-     ma se nessuno e' stato messo, l'armadio non c'e' e non ci sara'
-     finche' non lo si chiede: tenergli il posto vorrebbe dire trecento
-     pixel di vuoto in una schermata usata magari solo per due birre.
-     Il salto di scala resta uno solo, quando si mette il primo
-     riferimento, ed e' un gesto voluto con un effetto visibile. */
-  const box = p.querySelector('.pc-people');
-  if (box) {
-    const gente = PAN.conto && PAN.conto.people && PAN.conto.people.length;
-    const h = gente ? altezzaPersone(box) : 0;
-    box.style.minHeight = h ? h + 'px' : '';
-  }
+  /* IL POSTO RISERVATO AL GUARDAROBA NON C'E' PIU'.
+     Serviva a non far ballare la RIMPICCIOLITURA aprendo e chiudendo
+     l'armadio: si teneva il posto anche da chiuso, cosi' la scala non
+     cambiava. Tolta la rimpicciolitura e' rimasta solo la spesa --
+     quattrocento pixel di vuoto appena si metteva un riferimento, che
+     e' esattamente cio' che faceva scorrere il pannello. Adesso il
+     riquadro e' alto quanto quello che contiene, e quando l'armadio si
+     apre gli fanno posto le due card e la fascia del tempo (vedi
+     `veste`). */
 
   /* Quando il contenuto non ci sta, il vano scorre. Va DETTO, pero' --
      un riquadro tagliato a meta' sul bordo sembra un errore, non

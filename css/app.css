@@ -2992,6 +2992,24 @@ html:not(.anima) .card.evidenzia::after { animation: none; }
    ══════════════════════════════════════════════════════════ */
 .pc-parco { display: flex; flex-direction: column; gap: 8px; }
 
+/* MENTRE SI VESTE QUALCUNO, I NUMERI SI RIPIEGANO.
+   Il guardaroba e' alto quattrocento pixel: insieme alle due card e
+   alla fascia del tempo non ci sta, e il pannello si mette a scorrere
+   -- proprio nel momento in cui servono le due mani. Quei numeri pero'
+   in quel momento sono gia' stati messi: si accorciano in una riga
+   sola, restano leggibili, e si riaprono toccandola. */
+.pc-parco.veste > .pc-due, .pc-parco.veste > .sec-tempo { display: none; }
+.pc-riass { display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  width: 100%; border: none; cursor: pointer; text-align: left;
+  background: var(--surface); border-radius: 14px; padding: 9px 12px;
+  color: var(--txt); font: inherit; font-size: 14px; }
+.pc-riass:active { background: var(--surface-2); }
+.pc-riass.hidden { display: none; }
+.pc-riass .rr { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.pc-riass .rr b { font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 700; }
+.pc-riass .soldi { color: var(--ok); }
+.pc-riass .torna { margin-left: auto; font-size: 12px; font-weight: 700; color: var(--txt-3); }
+
 .entry .pan-conto {
   --bg: #14141B;
   --surface: rgba(255, 255, 255, 0.07);
