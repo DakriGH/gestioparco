@@ -1146,12 +1146,33 @@ function syncPeople(container, people, onChange) {
      Le due card, la fascia del tempo e il conto restano quelli di
      "+ Nuovo": la schermata e' una sola, non ce n'e' una per vestire. */
   if (chi) portaAVista(container);
-  /* La tavolozza appena aperta va PORTATA A VISTA: si apre sopra la
-     fila, e se in quel momento il vano e' scorso in basso resterebbe
-     fuori dallo schermo -- toccare "Scarpe" e non veder comparire
-     niente e' peggio che non avere il tasto. */
   if (container.dataset.tav) {
     const tav = container.querySelector('.volante');
+    /* LA TAVOLOZZA SI METTE SOPRA IL SUO TASTO.
+       Stava incollata al bordo sinistro della fila: toccando "Scarpe",
+       che e' l'ultimo a destra, i colori comparivano a mezzo metro di
+       distanza e sembravano quelli di un altro pulsante. Adesso si
+       centra sul tasto che l'ha aperta, e si ferma ai bordi della fila
+       invece di sbordare. */
+    const bott = container.querySelector('[data-acc="' + container.dataset.tav + '"]');
+    if (tav && bott) {
+      const zona = tav.offsetParent || tav.parentNode;
+      const largo = tav.offsetWidth || 0;
+      const centro = bott.offsetLeft + bott.offsetWidth / 2;
+      const x = Math.max(0, Math.min(centro - largo / 2, zona.clientWidth - largo));
+      tav.style.left = Math.round(x) + 'px';
+      /* LA PUNTA INDICA IL TASTO. Capelli e Scarpe sono gli ultimi due
+         della fila: la tavolozza e' larga trecento pixel e centrata
+         sopra di loro sborderebbe, quindi si ferma al bordo e da sola
+         sembrerebbe di qualcun altro. La punta sotto sta sempre sopra
+         il tasto che l'ha aperta, dovunque la scatola abbia potuto
+         mettersi. */
+      tav.style.setProperty('--punta', Math.round(centro - x) + 'px');
+    }
+    /* e va PORTATA A VISTA: si apre sopra la fila, e se in quel momento
+       il vano e' scorso in basso resterebbe fuori dallo schermo --
+       toccare "Scarpe" e non veder comparire niente e' peggio che non
+       avere il tasto. */
     if (tav && tav.scrollIntoView) tav.scrollIntoView({ block: 'nearest' });
   }
 

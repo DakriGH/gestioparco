@@ -544,6 +544,14 @@ gruppo('La fascia del tempo: una sola, e dice fin quando e pagato');
   prova('il guardaroba si porta a vista', sorg.includes('portaAVista(container)'));
   prova('scorrendo del minimo, non incollandolo in cima',
     /function portaAVista[\s\S]{0,900}scrollTop \+= sotto \+ 22/.test(sorg));
+  /* la tavolozza dei colori si mette sopra il tasto che l'ha aperta:
+     Capelli e Scarpe sono gli ultimi della fila, e con la scatola
+     inchiodata a sinistra i colori comparivano lontanissimi da li' */
+  prova('la tavolozza si mette sopra il suo tasto',
+    /tav\.style\.left = Math\.round\(x\)/.test(sorg));
+  prova('e la punta indica il tasto anche quando la scatola non ci sta centrata',
+    sorg.includes("setProperty('--punta'") &&
+    readFileSync(join(RADICE, 'css/app.css'), 'utf8').includes('left: var(--punta'));
   prova('il posto riservato al guardaroba non c e piu',
     !sorg.includes('altezzaPersone') && !sorg.includes('personeMisurate'));
   /* e la schermata resta UNA: niente si nasconde mentre si veste */
