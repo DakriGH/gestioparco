@@ -1138,10 +1138,25 @@ main {
      era quello a far sembrare l'apertura rotta. Il respiro laterale
      invece non si tocca, se no il testo si stringe mentre scende. */
   padding: 0 13px;
-  transition: opacity 260ms ease 110ms,
+  /* IL BORDO CHE EMERGE SFUMA.
+     Aprendosi, il riquadro scopre il contenuto dall'alto: il taglio
+     passava netto in mezzo ai pulsanti, che sono arrotondati, e si
+     vedeva mezza pastiglia con la base squadrata. Quattordici pixel di
+     sfumatura sul bordo basso bastano a farlo sembrare che emerga
+     invece che essere tagliato -- e a scheda aperta non si vedono,
+     perche' quei quattordici pixel sono il respiro sotto, dove non c'e'
+     niente da sfumare. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 14px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 14px), transparent);
+  /* chiudendo il contenuto se ne va SUBITO: il ritardo serve solo in
+     apertura, per non far comparire i tasti prima che ci sia il posto */
+  transition: opacity 150ms ease,
               padding-top 360ms cubic-bezier(.4,.02,.2,1),
               padding-bottom 360ms cubic-bezier(.4,.02,.2,1);
 }
+.entry.aperto .e-dentro { transition: opacity 260ms ease 110ms,
+              padding-top 360ms cubic-bezier(.4,.02,.2,1),
+              padding-bottom 360ms cubic-bezier(.4,.02,.2,1); }
 .entry.aperto .e-dentro { opacity: 1; }
 .entry.aperto .e-aperta { grid-template-rows: minmax(0, 1fr); }
 .entry.aperto .e-dentro { padding-top: 12px; padding-bottom: 13px; }
@@ -2189,7 +2204,11 @@ main {
   margin-right: -14px; }
 .entry.vola.aperto > .e-aperta { flex: 1 1 auto; min-height: 0; }
 .entry.vola .e-dentro { display: flex; flex-direction: column; min-height: 0;
-  padding-left: 10px; padding-right: 10px; }
+  padding-left: 10px; padding-right: 10px;
+  /* niente sfumatura qui: la scheda che vola non sta scoprendo niente,
+     ha un'altezza fissa -- e la sfumatura si mangerebbe il bordo basso
+     del conto */
+  -webkit-mask-image: none; mask-image: none; }
 .entry.vola.aperto .e-dentro { padding-top: 8px; padding-bottom: 10px; }
 .entry.vola .e-note { flex: 0 0 auto; }
 /* La riga dei comandi rapidi resta anche quando la scheda vola: i

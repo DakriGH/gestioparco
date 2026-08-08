@@ -647,9 +647,44 @@ function primaCategoriaBar() {
   return cats.length ? cats[0] : 'Parco';
 }
 
+/* La firma della griglia dice solo com'e' FATTA -- quali voci, in che
+   ordine, a che prezzo -- e NON quante ne hai prese. Ci teneva dentro
+   anche le quantita', e cosi' bastava segnare una bibita perche' tutta
+   la griglia venisse buttata e rifatta: dodici card distrutte e
+   ricostruite per un numero cambiato, con le icone che ricaricavano e
+   le animazioni che ripartivano da capo -- ed e' il "si rinfresca
+   tutto" che si vede aprendo e chiudendo il pannello.
+   Adesso, quando la struttura e' la stessa, si ritocca solo la card
+   che e' cambiata davvero. */
 function firmaGriglia() {
   return PAN.cat + '\u00a7' + bcVociDi(PAN.cat).map(v =>
-    v.id + ':' + bcQ(v.id) + '/' + bcPag(v.id)).join(',');
+    v.id + ':' + v.price + ':' + v.name).join(',');
+}
+/* i numeri di UNA card: se non cambiano, la card non si tocca */
+function firmaVoce(id) { return bcQ(id) + '/' + bcPag(id); }
+
+function pcGriglia() {
+  const g = pcRif('.pc-bar');
+  if (!g) return;
+  const voci = bcVociDi(PAN.cat);
+  if (g.dataset.sig !== firmaGriglia()) {
+    g.dataset.sig = firmaGriglia();
+    g.innerHTML = voci.map(v => bcCard(v)).join('');
+    g.querySelectorAll('.bc-card').forEach(c => { c.dataset.n = firmaVoce(c.dataset.id); });
+    tocchi.id = null; tocchi.nato = null;
+    return;
+  }
+  voci.forEach(v => {
+    const card = g.querySelector('.bc-card[data-id="' + v.id + '"]');
+    if (!card) return;
+    const firma = firmaVoce(v.id);
+    if (card.dataset.n === firma) return;
+    const t = el('div');
+    t.innerHTML = bcCard(v);
+    const nuova = t.firstElementChild;
+    nuova.dataset.n = firma;
+    card.replaceWith(nuova);
+  });
 }
 /* rifa' una sola card, al posto suo: rifare tutta la griglia a ogni
    tocco faceva lampeggiare mezza schermata sotto le dita */
@@ -658,10 +693,11 @@ function pcVoce(id) {
   if (!vecchia) return;
   const t = el('div');
   t.innerHTML = bcCard(bcVoce(id), id === 'bimbi' || id === 'crazy');
-  vecchia.replaceWith(t.firstElementChild);
+  const nuova = t.firstElementChild;
+  nuova.dataset.n = firmaVoce(id);
+  vecchia.replaceWith(nuova);
   const g = pcRif('.pc-bar');
   if (g) g.dataset.sig = firmaGriglia();
-  tocchi.id = null; tocchi.nato = null;
 }
 function pcFondoDis() {
   const box = pcRif('.pc-fondo');
@@ -713,7 +749,15 @@ function aggiornaPannello(opz) {
       dur.innerHTML = tagli.map(m =>
         '<button class="chip' + (!c.payLater && c.durationMinutes === m ? ' on' : '') +
         '" data-a="min" data-v="' + m + '">' + fmtMin(m) + '</button>').join('') +
-        '<button class="chip later' + (c.payLater ? ' on' : '') + '" data-a="dopo">\ud83d\udd57 Paga dopo</button>';
+        /* "TEMPO APERTO", non "paga dopo": la domanda di questa fascia e'
+           QUANTO RESTANO, e mettere una parola sui soldi in mezzo ai
+           tagli di tempo faceva pensare a un modo di pagare invece che
+           a una durata. Il conto lo si fa lo stesso all'uscita, sul
+           tempo davvero passato: e' sempre stato cosi', cambia solo il
+           nome. */
+        '<button class="chip later' + (c.payLater ? ' on' : '') + '" data-a="dopo" ' +
+        'title="Resta senza un orario di fine: si conta il tempo davvero passato">' +
+        '\u23f3 Tempo aperto</button>';
     }
     const inp = p.querySelector('.pc-durin');
     if (!opz.tieniDurata && document.activeElement !== inp) inp.value = c.durationMinutes;
@@ -722,12 +766,7 @@ function aggiornaPannello(opz) {
     c.people = c.people || [];
     syncPeople(p.querySelector('.pc-people'), c.people, () => { pcSalva(); });
   } else {
-    const g = p.querySelector('.pc-bar');
-    if (g.dataset.sig !== firmaGriglia()) {
-      g.dataset.sig = firmaGriglia();
-      g.innerHTML = bcVociDi(PAN.cat).map(v => bcCard(v)).join('');
-      tocchi.id = null; tocchi.nato = null;
-    }
+    pcGriglia();
   }
 
   pcFondoDis();
@@ -2364,7 +2403,7 @@ function entryCard(entry) {
   const sTime = mkCella(null, 'durationMinutes', 5);
   if (entry.payLater) {
     sTime.box.classList.add('hidden');
-    fila.appendChild(el('div', 'e-later-tag', '\ud83d\udd57 Paga dopo'));
+    fila.appendChild(el('div', 'e-later-tag', '\u23f3 Tempo aperto'));
   }
 
   const azioni = el('div', 'e-azioni');
