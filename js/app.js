@@ -431,8 +431,12 @@ function costruisciPannello() {
     <div class="bc-cat pc-cat"></div>
 
     <div class="pc-parco">
-      <div class="bc-griglia pc-due"></div>
-
+      <!-- L'ORDINE E' QUELLO IN CUI SI PARLA AL BANCO: "da che ora?
+           quanto restano? quanti bambini?". E c'e' un motivo pratico
+           oltre a quello: il prezzo sulla card dei Bambini DIPENDE dal
+           tempo, quindi col tempo scelto sopra quel numero e' gia'
+           giusto quando ci arrivi. Con le card per prime lo si leggeva
+           una volta, si sceglieva la durata e lo si rileggeva. -->
       <div class="card blk c-blu">
         <h2><span class="em">\ud83d\udd52</span> Orario di inizio</h2>
         <div class="blk-in">
@@ -463,6 +467,8 @@ function costruisciPannello() {
         </div>
         </div>
       </div>
+
+      <div class="bc-griglia pc-due"></div>
 
       <div class="card blk c-viola sec-people">
         <div class="testa-viola">
@@ -524,6 +530,28 @@ function costruisciPannello() {
       if (d.v === 'ora') { c.startTime = roundTo5(new Date()).getTime(); c.braceletCustom = false; }
       else c.startTime = num(c.startTime, Date.now()) + parseInt(d.v, 10) * 60000;
       pcSalva(); aggiornaPannello(); return;
+    }
+    /* Il meno e il piu' della card del tempo saltano di SCAGLIONE, non
+       di cinque minuti: il listino e' fatto a scaglioni e fermarsi in
+       mezzo a uno vuol dire pagare il taglio dopo lo stesso. I minuti
+       esatti restano dove sono sempre stati, nella fascia "Quanto
+       restano". */
+    if (d.a === 'dur') {
+      const passi = tariffs().map(t => t.m);
+      const ora = clamp(num(c.durationMinutes, 60), 0, 1e6);
+      let nuovo;
+      if (d.v === '+') {
+        nuovo = passi.find(m => m > ora);
+        if (nuovo === undefined) nuovo = ora + (passi.length > 1 ? passi[passi.length - 1] - passi[passi.length - 2] : 10);
+      } else {
+        const giu = passi.filter(m => m < ora);
+        nuovo = giu.length ? giu[giu.length - 1] : Math.max(5, ora - 5);
+      }
+      c.payLater = false;
+      c.durationMinutes = clamp(nuovo, 5, 100000);
+      pcSalva();
+      aggiornaPannello();
+      return;
     }
     if (d.a === 'min') {
       const m = clamp(c.durationMinutes, 1, 99999);
@@ -699,6 +727,56 @@ function pcVoce(id) {
   const g = pcRif('.pc-bar');
   if (g) g.dataset.sig = firmaGriglia();
 }
+/* QUANTI MINUTI SONO GIA' PAGATI.
+   Dai soldi presi per il parco si toglie il Crazy -- che si paga a
+   parte -- si divide per i bambini, e si cerca l'ultimo scaglione del
+   listino che quella cifra copre PER INTERO. I minuti regalati dal
+   Crazy si sommano solo se il Crazy e' stato pagato: arrivano col suo
+   prezzo, non da soli.
+   Qui si legge soltanto: nessuna regola del denaro viene toccata. */
+function minutiPagati(c) {
+  c = c || C();
+  const bimbi = clamp(num(c.children, 0), 0, 1e6);
+  const crazy = clamp(num(c.crazyJumping, 0), 0, 1e6);
+  const costoCrazy = crazy * num(settings.crazyJumpingPrice, 0);
+  const presi = Math.max(0, num(c.paidPark, 0));
+  const regalati = presi >= costoCrazy - 0.005 ? crazy * num(settings.crazyExtraMinutes, 0) : 0;
+  if (!bimbi) return regalati;
+  const perBambino = Math.max(0, presi - costoCrazy) / bimbi;
+  let coperti = 0;
+  for (const t of tariffs()) if (t.p <= perBambino + 1e-9) coperti = t.m;
+  return coperti + regalati;
+}
+
+/* LA CARD DEL TEMPO.
+   Stessa faccia delle altre due -- e' il patto con le bevande: numero
+   grande in filigrana, nome sotto, il meno e il piu' in mezzo. Qui la
+   "roba" sono minuti: il meno e il piu' vanno di scaglione in
+   scaglione, e la fascia verde in fondo dice quanti minuti sono gia'
+   pagati invece di quanti pezzi.
+   La fascia verde NON ha tasti: i minuti pagati non si scelgono, si
+   ricavano dai soldi presi. Due tasti spenti sarebbero due tasti da
+   provare a premere. */
+function bcCardTempo() {
+  const c = C();
+  const min = clamp(num(c.durationMinutes, 60), 0, 1e6);
+  const pag = Math.min(min, minutiPagati(c));
+  const tutto = min > 0 && pag >= min;
+  const aperto = !!c.payLater;
+  return '<div class="bc-card presa bc-tempo' + (tutto ? ' saldata' : '') + '">' +
+    '<button class="bc-su" data-a="dur" data-v="+">' +
+      '<span class="bc-fant">' + (aperto ? '\u221e' : fmtMin(min)) + '</span>' +
+      ICONE.tempo() +
+      '<span class="bc-testi"><span class="bc-pr">' + (aperto ? 'senza fine' : fmtMin(min)) + '</span>' +
+      '<span class="bc-nm">Estendi tempo</span></span></button>' +
+    '<div class="bc-zone"><span class="bc-chip">' + (aperto ? '\u221e' : fmtMin(min)) + '</span>' +
+      '<button data-a="dur" data-v="-"' + (aperto ? ' disabled' : '') + '>\u2212</button>' +
+      '<button data-a="dur" data-v="+"' + (aperto ? ' disabled' : '') + '>+</button></div>' +
+    '<div class="bc-zone v sola"><span class="bc-chip">' +
+      (aperto ? 'a tempo' : tutto ? '\u2713 ' + fmtMin(min) : pag + '/' + min + '\u2032') +
+    '</span></div></div>';
+}
+
 function pcFondoDis() {
   const box = pcRif('.pc-fondo');
   if (!box) return;
@@ -731,10 +809,11 @@ function aggiornaPannello(opz) {
     /* le due card sopra l'orario: bambini e Crazy, sempre aperte */
     const due = p.querySelector('.pc-due');
     const firmaDue = ['bimbi', 'crazy'].map(k =>
-      k + ':' + bcQ(k) + '/' + bcPag(k) + '/' + prezzoUnita(k)).join(',');
+      k + ':' + bcQ(k) + '/' + bcPag(k) + '/' + prezzoUnita(k)).join(',') +
+      '|t:' + (c.payLater ? 'aperto' : c.durationMinutes) + '/' + minutiPagati(c);
     if (due.dataset.sig !== firmaDue) {
       due.dataset.sig = firmaDue;
-      due.innerHTML = bcCard(bcVoce('bimbi'), true) + bcCard(bcVoce('crazy'), true);
+      due.innerHTML = bcCard(bcVoce('bimbi'), true) + bcCard(bcVoce('crazy'), true) + bcCardTempo();
       tocchi.id = null; tocchi.nato = null;
     }
 

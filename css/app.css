@@ -2905,7 +2905,22 @@ html:not(.anima) .card.evidenzia::after { animation: none; }
 /* ── le due card sopra l'orario: bambini e Crazy Jumping ──
    Sono sempre in ballo, quindi tengono le due fasce SEMPRE aperte:
    vederle comparire e sparire faceva ballare mezza schermata. */
+/* TRE card adesso, non due: bambini, Crazy e il tempo. Con due sole su
+   una riga larga 786 ognuna veniva 374 pixel e il meno e il piu' si
+   stiravano fino a centottantasei -- un tasto lungo un palmo per fare
+   +1. Con tre stanno a 245 e il problema si risolve da solo. */
 .bc-griglia.pc-due { grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); }
+/* IL MENO E IL PIU' NON SI STIRANO. Restano larghi come un dito e
+   stanno in mezzo, con la pastiglia del numero fra i due: il bersaglio
+   e' lo stesso di prima, ma al centro invece che ai bordi. */
+.pc-due .bc-zone { grid-template-columns: 1fr auto auto 1fr; }
+.pc-due .bc-zone::before, .pc-due .bc-zone::after { content: ""; background: rgba(255,255,255,.04); }
+.pc-due .bc-zone button { width: 88px; }
+/* la fascia dei minuti pagati non ha tasti: quei minuti non si
+   scelgono, si ricavano dai soldi presi. Due tasti spenti sarebbero
+   due tasti da provare a premere. */
+.bc-zone.sola { grid-template-columns: 1fr; min-height: 44px; }
+.bc-tempo .bc-zone.v .bc-chip { min-width: 84px; font-size: 15px; }
 
 /* quando non e' stato ancora scelto niente */
 .ed-tr.vuoto { opacity: 0.55; font-style: italic; }

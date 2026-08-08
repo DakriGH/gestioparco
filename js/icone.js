@@ -156,10 +156,26 @@ function saltatore(c) {
     '<path d="M11.6 12.6c-1.2-1.2-1.8-2.6-1.8-4M28.4 12.6c1.2-1.2 1.8-2.6 1.8-4" stroke="' + c + '" stroke-width="1.8" stroke-linecap="round" opacity=".55"/>'
   );
 }
+/* CLESSIDRA: la voce "Estendi tempo" nella linguetta Parco. Stessa
+   fattura delle altre -- riempimento pieno, niente contorni sottili --
+   cosi' in fila con bambino e saltatore sembra della stessa famiglia. */
+function clessidra(c) {
+  return svg(
+    '<path d="M12 3h24v3.4c0 5-3.4 9.2-8 10.6v1.6c4.6 1.4 8 5.6 8 10.6V33H12v-3.8c0-5 3.4-9.2 8-10.6v-1.6c-4.6-1.4-8-5.6-8-10.6V3Z" fill="' + c + '"/>' +
+    /* la sabbia in fondo, piu' scura: e' quello che rende leggibile la forma */
+    '<path d="M15.4 30.2c.5-3.6 3.9-6.4 8.6-6.4s8.1 2.8 8.6 6.4H15.4Z" fill="rgba(0,0,0,.32)"/>' +
+    /* i due bordi, come le tavolette delle clessidre vere */
+    '<rect x="10" y="1.4" width="28" height="3.6" rx="1.8" fill="' + c + '"/>' +
+    '<rect x="10" y="31" width="28" height="3.6" rx="1.8" fill="' + c + '"/>' +
+    /* il filo di sabbia che cade */
+    '<rect x="23.2" y="16" width="1.6" height="7" rx=".8" fill="rgba(0,0,0,.3)"/>'
+  );
+}
 const ICONE = {
   /* --- parco --- */
   bimbi:  () => bimbo('#3B8CFF'),
   crazy:  () => saltatore('#B072FF'),
+  tempo:  () => clessidra('#E8B44C'),
   /* --- bevande --- */
   /* identiche: cambia SOLO il tappo, come al banco */
   acqua:     () => bottiglia({ vetro:'#BFE6F2', tappo:'#2F6FBF', etichetta:'#2F6FBF', riga:'#EAF6FB' }),
