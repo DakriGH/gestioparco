@@ -267,6 +267,36 @@ gruppo('La scheda del banco: c’è tutto e nell’ordine giusto');
   prova('la riga libera grande in fondo',
     h.indexOf('libero grosso') >= 0 && h.indexOf('data-campo="note"') >= 0);
 
+  /* OGNI FILA HA TANTE COLONNE QUANTI PULSANTI.
+     Le colonne sono scritte nello style perché sono un dato, ma il
+     numero va ricavato da quello che c'è dentro: era scritto "+ 4" da
+     quando gli accessori erano quattro, e tolti cappello e zaino la
+     fila del sotto teneva dodici colonne per dieci pulsanti. Due posti
+     vuoti in fondo, e tutti i pulsanti del sotto più stretti di quelli
+     del sopra — a occhio si vede benissimo, ma nessun test lo diceva. */
+  const colonneDi = (blocco) => {
+    const m = h.slice(h.indexOf(blocco)).match(/repeat\((\d+),1fr\)/);
+    return m ? +m[1] : 0;
+  };
+  const fila = (dopo, quali) => {
+    const pezzo = h.slice(h.indexOf(dopo));
+    const fine = pezzo.indexOf('</div>', pezzo.indexOf('</button>'));
+    return (pezzo.slice(0, pezzo.lastIndexOf('</div>')).match(quali) || []).length;
+  };
+  const sopraCol = colonneDi('<span class="et">Sopra');
+  const sottoCol = colonneDi('<span class="et">Sotto');
+  prova('il sopra: ' + SOPRA.length + ' pulsanti in ' + sopraCol + ' colonne',
+    sopraCol === SOPRA.length);
+  prova('il sotto: ' + (SOTTO.length + 2) + ' pulsanti in ' + sottoCol + ' colonne',
+    sottoCol === SOTTO.length + 2);
+  prova('e nessuna delle due fila lascia posti vuoti',
+    sopraCol === conta(h, /data-top="/g) &&
+    sottoCol === conta(h, /data-pants="/g) + conta(h, /data-acc="/g));
+  prova('le fantasie: ' + AV.PATTERNS.length + ' in altrettante colonne',
+    colonneDi('<span class="et">Fantasia') === AV.PATTERNS.length);
+  prova('le tinte: ' + AV.COLORS.length + ' più la ruota',
+    colonneDi('<span class="et">Colore del sopra') === AV.COLORS.length + 1);
+
   /* l'ordine conta: prima il sopra, poi la SUA fantasia, poi il SUO
      colore, e solo dopo il sotto. Con le tinte tutte in fondo si
      sbagliava capo un tocco su tre. */

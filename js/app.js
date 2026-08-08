@@ -1117,7 +1117,12 @@ function armadioDi(p, tavolozzaAperta) {
       '<span class="nm">' + ACC_NOME[k] + '</span></button>';
   }).join('');
   const capiSotto = '<div class="sottoblocco' + (lungo ? ' spento-capi' : '') + '">' +
-    '<div class="capi" style="' + colonne(AV.PANTS.length + 4) + '">' +
+    /* le colonne sono i capi PIU' GLI ACCESSORI CHE CI SONO DAVVERO.
+       Erano scritte "+ 4" da quando gli accessori erano quattro: tolti
+       cappello e zaino, la fila teneva dodici colonne per dieci
+       pulsanti -- due posti vuoti in fondo, e tutti i pulsanti del
+       sotto piu' stretti di quelli del sopra senza motivo. */
+    '<div class="capi" style="' + colonne(AV.PANTS.length + Object.keys(ACC_DOVE).length) + '">' +
     AV.PANTS.map(t => '<button class="capo' + (av.pants.style === t.key ? ' on' : '') +
       '" data-pants="' + t.key + '">' + CAPI.capo(t.key, av.pants.color, av.pants.pattern, 44) +
       '<span class="nm">' + esc(t.label) + '</span></button>').join('') + accessori + '</div>' +
