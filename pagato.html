@@ -2,9 +2,9 @@
 <html lang="it" data-theme="dark">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Fin quando ha pagato — il Parco intero, sei proposte</title>
+<title>Fin quando ha pagato — senza aggiungere niente</title>
 <link rel="stylesheet" href="./css/fonts.css">
-<link rel="stylesheet" href="./css/app.css?v=220">
+<link rel="stylesheet" href="./css/app.css?v=221">
 <style>
   html, body { overflow: auto !important; height: auto !important; overscroll-behavior: auto !important; }
   body { margin: 0; background: #0B0B10; color: #E9E9F2; padding: 22px 16px 90px;
@@ -16,38 +16,38 @@
   .intro b { color: #E8B44C; font-weight: 600; }
 
   .barra { position: sticky; top: 0; z-index: 50; background: rgba(11,11,16,.94);
-    backdrop-filter: blur(8px); padding: 10px 0 10px; margin: 14px 0 0;
+    backdrop-filter: blur(8px); padding: 10px 0; margin: 14px 0 0;
     border-bottom: 1px solid rgba(255,255,255,.08); display: flex; gap: 14px;
     align-items: center; flex-wrap: wrap; }
   .barra label { display: inline-flex; align-items: center; gap: 7px; font-size: 13.5px;
     font-weight: 700; color: #C9CFDA; cursor: pointer; }
-  .barra input { width: 18px; height: 18px; accent-color: #E8B44C; }
+  .barra input[type=checkbox] { width: 18px; height: 18px; accent-color: #E8B44C; }
   .barra .salta { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; }
   .barra .salta a { font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 700;
     background: #23232F; color: #E8B44C; border-radius: 20px; padding: 4px 12px; text-decoration: none; }
 
-  .testa { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 40px 0 4px;
+  .testa { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 42px 0 4px;
     scroll-margin-top: 64px; }
   .lett { font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 700; background: #23232F;
     color: #E8B44C; border-radius: 20px; padding: 4px 12px; }
   .testa h3 { font-family: 'Fredoka', sans-serif; font-size: 19px; margin: 0; }
-  .perche { color: #8F8FA6; font-size: 13.5px; margin: 0 0 10px; line-height: 1.55; max-width: 74ch; }
+  .perche { color: #8F8FA6; font-size: 13.5px; margin: 0 0 4px; line-height: 1.6; max-width: 76ch; }
   .perche b { color: #C9CFDA; }
+  .impara { display: inline-block; font-size: 12.5px; font-weight: 700; color: #7BE0A8;
+    background: rgba(106,220,175,.12); border-radius: 10px; padding: 5px 11px; margin: 6px 0 12px; }
+  .impara.no { color: #FFC49A; background: rgba(232,120,76,.14); }
   .mis { margin-left: auto; font-size: 11px; font-weight: 800; letter-spacing: .04em;
     text-transform: uppercase; border-radius: 20px; padding: 4px 10px; background: rgba(0,0,0,.55);
     color: #C9CFDA; }
-  .mis.caro { background: rgba(232,120,76,.2); color: #FFC49A; }
-  .mis.gratis { background: rgba(106,220,175,.16); color: #7BE0A8; }
 
-  /* la tavoletta finta: la larghezza vera del pannello sul tablet */
   .tavoletta { width: 786px; max-width: 100%; background: #14141B; border-radius: 18px;
     border: 1px solid rgba(255,255,255,.08); padding: 10px 12px 12px; }
   .tavoletta .pan-conto { --bg: #14141B; display: flex; flex-direction: column; gap: 9px; }
   .pc-parco { display: flex; flex-direction: column; gap: 8px; }
+  .solofondo .pc-parco, .solofondo .bc-cat { display: none; }
 
-  /* evidenziatore delle novita' */
-  body.spia .nuovo { outline: 2px dashed #E8B44C; outline-offset: 2px; border-radius: 12px; }
-  body.spia .nuovo::before { content: "nuovo"; position: absolute; top: -9px; right: 0;
+  body.spia .nuovo { outline: 2px dashed #E8B44C; outline-offset: 3px; border-radius: 12px; }
+  body.spia .nuovo::before { content: "qui"; position: absolute; top: -9px; right: 0;
     font-size: 9.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
     background: #E8B44C; color: #1B1B24; border-radius: 6px; padding: 1px 6px; z-index: 3; }
   .nuovo { position: relative; }
@@ -56,76 +56,90 @@
     border-radius: 0 14px 14px 0; padding: 14px 16px; margin: 34px 0 0; color: #B9BFC9;
     font-size: 14.5px; line-height: 1.65; }
   .nota b { color: #E9E9F2; }
-  table.conf { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13.5px; }
-  table.conf th, table.conf td { text-align: left; padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,.08); }
-  table.conf th { font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: #8F8FA6; }
-  table.conf td b { color: #E9E9F2; }
-  table.conf tr.mio td { background: rgba(232,180,76,.09); }
+  .quando { font-size: 11px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase;
+    color: #8F8FA6; margin: 14px 0 6px; }
+  .quando span { color: #C9CFDA; }
 
-  /* ══ i pezzi che le proposte aggiungono ══ */
-  .pg-inline { color: #FFD9A0; }
-  .pg-fascia { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,.26);
-    border-radius: 14px; padding: 8px 12px; }
-  .pg-fascia .et { font-size: 11px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase;
-    color: var(--txt-3); white-space: nowrap; }
-  .pg-linea { position: relative; flex: 1; height: 12px; border-radius: 7px;
-    background: rgba(255,255,255,.10); overflow: hidden; }
-  .pg-linea i { position: absolute; inset: 0 auto 0 0; border-radius: 7px; background: var(--ok); }
-  .pg-linea .adesso { position: absolute; top: -4px; bottom: -4px; width: 2px; background: #fff; border-radius: 2px; }
-  .pg-ore { display: flex; justify-content: space-between; font-size: 11px; font-weight: 800;
-    color: var(--txt-3); margin-top: 3px; }
-  .pg-ore b { color: var(--txt); }
-  .pg-sotto2 { display: block; font-size: 11.5px; font-weight: 800; color: #FFD9A0; margin-top: 1px; }
-  .pg-fino { display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-    background: rgba(0,0,0,.26); border-radius: 14px; padding: 8px 12px; }
-  .pg-fino .et { font-size: 11px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase;
-    color: var(--txt-3); }
-  .pg-fino button { border: none; border-radius: 12px; padding: 7px 12px; min-height: 42px;
-    background: var(--surface-2); color: var(--txt); font: inherit; font-size: 13.5px; font-weight: 700;
-    cursor: pointer; display: flex; flex-direction: column; align-items: center; line-height: 1.15; }
-  .pg-fino button b { font-size: 15px; }
-  .pg-fino button span { font-size: 11px; color: var(--txt-3); font-weight: 700; }
-  .pg-fino button.tutto { background: var(--txt); color: var(--bg); }
-  .pg-fino button.tutto span { color: rgba(0,0,0,.55); }
-  .bc-parte.pg-tempo { background: rgba(232,180,76,.14); }
-  .pg-bollo { margin-left: auto; display: inline-flex; align-items: center; gap: 5px;
-    border-radius: 20px; padding: 5px 10px; font-size: 12px; font-weight: 800;
-    background: rgba(0,0,0,.34); color: #FFD9A0; white-space: nowrap; }
+  .cap { font-family: 'Fredoka', sans-serif; font-size: 22px; margin: 56px 0 8px;
+    padding-top: 24px; border-top: 1px solid rgba(255,255,255,.12); }
+
+  /* la fascia del tempo ripensata */
+  .qr-testa { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 7px; }
+  .qr-testa .fin { font-size: 12.5px; font-weight: 800; color: rgba(255,255,255,.9); }
+  .qr-testa .fin b { font-family: 'Fredoka', sans-serif; font-size: 16px; }
+  .qr-testa .pag { font-size: 12px; font-weight: 800; margin-left: auto; }
+  .qr-piu { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
+  .qr-piu button { border: none; border-radius: 13px; padding: 6px 13px; min-height: 46px;
+    background: rgba(0,0,0,.26); color: var(--txt); font: inherit; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; line-height: 1.12; }
+  .qr-piu button b { font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 700; }
+  .qr-piu button span { font-size: 11px; font-weight: 700; color: rgba(255,255,255,.72); }
+  .qr-piu .sep { width: 1px; align-self: stretch; background: rgba(255,255,255,.16); margin: 0 3px; }
+  .qr-piu .esatti { display: flex; align-items: center; gap: 7px; font-size: 12.5px;
+    font-weight: 700; color: rgba(255,255,255,.72); }
+
+  .pg-parola { color: #FFC49A; }
+  .pg-ok { color: #7BE0A8; }
 </style>
 
 <div class="foglio">
   <p class="occhiello">Gestioparco · da guardare</p>
-  <h1 class="tit">Fin quando ha pagato — il Parco intero</h1>
+  <h1 class="tit">Fin quando ha pagato — senza aggiungere niente</h1>
   <p class="intro">
-    Qui sotto c'e' <b>tutta</b> la linguetta Parco col conto in fondo, sei volte, una per proposta.
-    Cosi' si giudica in mezzo alla roba che c'e' gia' — bambini, Crazy, orario, durata, chi
-    accompagna — e non su un pezzo isolato.
+    Hai ragione: il pannello ha gia' sei fasce e un conto, e attaccarci un settimo pezzo vuol dire
+    una cosa in piu' da imparare. Quindi qui <b>non si aggiunge niente</b>: ogni proposta o
+    <b>sostituisce</b> qualcosa che oggi si ripete, o <b>compare solo quando serve</b>, o
+    <b>non c'e' affatto</b>.
   </p>
   <p class="intro">
-    La situazione e' sempre la stessa, ed e' quella in cui la domanda ha senso:
-    <b>due bambini, 90 minuti, 18&nbsp;€ gia' presi su 44,50</b>. Quei diciotto euro valgono mezz'ora
-    a testa, piu' gli otto minuti regalati dal Crazy: <b>e' coperto fino alle 11:33</b>, e da li' in
-    poi no. Oggi bisogna fare questo conto a mente.
+    Il punto su cui lavorare e' uno solo, ed e' gia' li': <b>la riga sopra la cifra grande</b>.
+    Oggi dice «da incassare · 10:55 → 12:25» — ma quell'orario e' gia' scritto <b>due volte sopra</b>,
+    nella fascia dell'orario e in quella della durata, e una terza volta sulla scheda in lista.
+    E' l'unica riga del conto che <b>ripete</b> invece di dire.
+  </p>
+  <p class="intro" style="border-left:3px solid #E8B44C;padding-left:12px">
+    <b>Poi pero' e' saltata fuori una cosa piu' grossa</b>, e cambia le carte in tavola:
+    <b>da qui dentro il tempo non si allunga</b>. L'unico posto per dare mezz'ora in piu' a chi e'
+    gia' dentro e' la rigetta di comandi che compare toccando la scheda in lista — e li' si va a
+    passi di cinque minuti. Nel pannello c'e' «Quanto restano», ma quei tagli <b>sostituiscono</b>
+    la durata, non la allungano: per dare mezz'ora a chi ne ha novanta bisogna sapere che fa 120 e
+    scriverlo.<br>
+    Se quella fascia diventa il posto dove si allunga, <b>li' dentro ci sta anche il «fin quando
+    ha pagato»</b> — e il conto non deve dire niente in piu'. Il secondo capitolo e' questo.
   </p>
 
   <div class="barra">
-    <label><input type="checkbox" id="spia" checked> Evidenzia cosa cambia</label>
-    <label><input type="checkbox" id="stretto"> Come su schermo stretto (430px)</label>
+    <label><input type="checkbox" id="spia" checked> Evidenzia dove si guarda</label>
+    <label><input type="checkbox" id="stretto"> Schermo stretto (430px)</label>
+    <label>Situazione:
+      <select id="caso" style="background:#23232F;color:#E9E9F2;border:none;border-radius:10px;padding:6px 10px;font:inherit;font-weight:700">
+        <option value="1">acconto — gia' scoperto</option>
+        <option value="0">ha pagato tutto</option>
+        <option value="2">non ha pagato niente</option>
+        <option value="3">acconto, ancora coperto</option>
+      </select></label>
     <span class="salta" id="salta"></span>
   </div>
 
   <div id="proposte"></div>
 
+  <h2 class="cap">Capitolo 2 — e il tempo, come lo allunghi?</h2>
+  <p class="intro">
+    Qui la fascia <b>Quanto restano</b> cambia mestiere a seconda di dove si trova. In
+    «+ Nuovo» stai <b>scegliendo</b> quanto restano, e i tagli 15m/30m/1h vanno benissimo. Ma nel
+    conto di chi e' <b>gia' dentro</b> non stai scegliendo: stai <b>aggiungendo</b>. Ed e' un'altra
+    domanda, con un'altra risposta.
+  </p>
+
+  <div id="proposte2"></div>
+
   <div class="nota" id="scelta"></div>
 </div>
 
-<script src="./js/icone.js?v=220"></script>
-<script src="./js/avatar.js?v=220"></script>
-<script src="./js/capi.js?v=220"></script>
+<script src="./js/icone.js?v=221"></script>
+<script src="./js/avatar.js?v=221"></script>
+<script src="./js/capi.js?v=221"></script>
 <script>
-/* ══════════════════════════════════════════════════════════
-   Il conto vero, in piccolo: le stesse regole di app.js.
-   ══════════════════════════════════════════════════════════ */
 const TARIFFE = [
   { m: 10, p: 3 }, { m: 15, p: 4.5 }, { m: 20, p: 6 }, { m: 30, p: 7 },
   { m: 40, p: 10 }, { m: 50, p: 12 }, { m: 60, p: 12 }, { m: 70, p: 15 },
@@ -136,27 +150,40 @@ const up5 = m => Math.ceil(m / 5) * 5;
 const prezzoPer = m => { for (const t of TARIFFE) if (m <= t.m) return t.p; return TARIFFE[TARIFFE.length - 1].p; };
 const eur = v => (Math.round(v * 100) / 100).toFixed(2).replace('.', ',') + ' €';
 const ore = t => new Date(t).toTimeString().slice(0, 5);
-
 const OGGI = new Date(); OGGI.setSeconds(0, 0);
 const alle = (h, m) => { const d = new Date(OGGI); d.setHours(h, m, 0, 0); return d.getTime(); };
+/* l'ora finta di questa pagina: serve a far vedere gli stati "gia'
+   scoperto" e "ancora coperto" senza aspettare che passi il tempo */
+const ADESSO = alle(11, 50);
 
-const C = { inizio: alle(10, 55), durata: 90, children: 2, crazy: 1, paidPark: 18, bar: 2.5, paidBar: 0 };
-C.fine = C.inizio + C.durata * 60000;
-C.parco = prezzoPer(up5(C.durata)) * C.children + C.crazy * CRAZY_PREZZO;
-C.totale = C.parco + C.bar;
-C.resta = Math.max(0, C.totale - C.paidPark - C.paidBar);
-(function () {
-  const regalati = C.crazy * CRAZY_MINUTI;
-  const perBambino = Math.max(0, C.paidPark - C.crazy * CRAZY_PREZZO) / C.children;
+const CASI = [
+  { nome: 'ha pagato tutto',         inizio: alle(10, 55), durata: 90, children: 2, crazy: 1, paidPark: 42, bar: 2.5, paidBar: 2.5 },
+  { nome: 'acconto, gia’ scoperto',  inizio: alle(10, 55), durata: 90, children: 2, crazy: 1, paidPark: 18, bar: 2.5, paidBar: 0 },
+  { nome: 'non ha pagato niente',    inizio: alle(10, 55), durata: 90, children: 2, crazy: 1, paidPark: 0,  bar: 2.5, paidBar: 0 },
+  { nome: 'acconto, ancora coperto', inizio: alle(11, 30), durata: 90, children: 2, crazy: 1, paidPark: 24, bar: 0,   paidBar: 0 }
+];
+CASI.forEach(c => {
+  c.fine = c.inizio + c.durata * 60000;
+  c.parco = prezzoPer(up5(c.durata)) * c.children + c.crazy * CRAZY_PREZZO;
+  c.totale = c.parco + c.bar;
+  c.resta = Math.max(0, c.totale - c.paidPark - c.paidBar);
+  /* i minuti regalati dal Crazy valgono solo se il Crazy e' stato
+     pagato: arrivano insieme al suo prezzo, non da soli. Senza questo,
+     chi non ha dato un euro risultava coperto per otto minuti. */
+  const crazyPagato = c.paidPark >= c.crazy * CRAZY_PREZZO - 0.005;
+  const regalati = crazyPagato ? c.crazy * CRAZY_MINUTI : 0;
+  const perBambino = Math.max(0, c.paidPark - c.crazy * CRAZY_PREZZO) / Math.max(1, c.children);
   let m = 0; for (let x = 5; x <= 240; x += 5) if (prezzoPer(x) <= perBambino + 1e-9) m = x;
-  C.minCoperti = m + regalati;
-})();
-C.coperto = C.inizio + C.minCoperti * 60000;
-const costoFinoA = (min) => prezzoPer(up5(Math.max(0, min - C.crazy * CRAZY_MINUTI))) * C.children + C.crazy * CRAZY_PREZZO;
+  c.minCoperti = c.children ? m + regalati : regalati;
+  c.coperto = c.inizio + c.minCoperti * 60000;
+  c.pieno = c.minCoperti >= c.durata;
+  c.scoperto = !c.pieno && ADESSO > c.coperto;
+  c.daQuanto = Math.max(0, Math.round((ADESSO - c.coperto) / 60000));
+  c.ancora = Math.max(0, Math.round((c.coperto - ADESSO) / 60000));
+});
+let CASO = CASI[1];
 
-/* ══════════════════════════════════════════════════════════
-   LA LINGUETTA PARCO, pezzo per pezzo, con le classi vere.
-   ══════════════════════════════════════════════════════════ */
+/* ── il pannello, con le classi vere dell'app ── */
 function cardNum(id, ico, prezzo, nome, q, pag) {
   return '<div class="bc-card' + (q ? ' presa' : '') + '" data-id="' + id + '">' +
     '<button class="bc-su">' + (q ? '<span class="bc-fant">' + q + '</span>' : '') +
@@ -167,194 +194,253 @@ function cardNum(id, ico, prezzo, nome, q, pag) {
     '<div class="bc-zone v"><span class="bc-chip">' + pag + '/' + q + '</span>' +
     '<button>−</button><button>+</button></div></div>';
 }
-const bloccoOrario = () =>
+const bloccoOrario = (c) =>
   '<div class="card blk c-blu"><h2><span class="em">🕒</span> Orario di inizio</h2><div class="blk-in">' +
   '<div class="time-row"><button class="round-btn">−</button>' +
-  '<div class="time-display num">' + ore(C.inizio) + '</div><button class="round-btn">+</button>' +
+  '<div class="time-display num">' + ore(c.inizio) + '</div><button class="round-btn">+</button>' +
   '<button class="now-btn"><span class="em">📍</span> Adesso</button>' +
   '<div class="wrist-inline-row"><span class="wl-k"><span class="em">🎗️</span> Bracciale</span>' +
   '<div class="wrist-row">' + ['#8A8AA0', '#3ECF6B', '#E8B44C', '#4EA6FF', '#E4574F']
-    .map((c, i) => '<button class="wrist-dot' + (i === 1 ? ' on' : '') + '" style="background:' + c + '"></button>').join('') +
+    .map((x, i) => '<button class="wrist-dot' + (i === 1 ? ' on' : '') + '" style="background:' + x + '"></button>').join('') +
   '</div></div></div></div></div>';
-const bloccoDurata = () =>
+const bloccoDurata = (c) =>
   '<div class="card blk c-ambra sec-dur"><h2><span class="em">⏳</span> Quanto restano</h2><div class="blk-in">' +
   '<div class="riga-dur"><div class="chips">' +
-  [15, 30, 60, 90].map(m => '<button class="chip' + (m === 90 ? ' on' : '') + '">' +
+  [15, 30, 60, 90].map(m => '<button class="chip' + (m === c.durata ? ' on' : '') + '">' +
     (m < 60 ? m + 'm' : m === 60 ? '1h' : '1h30') + '</button>').join('') +
   '<button class="chip later">⏳ Tempo aperto</button></div>' +
   '<div class="dur-custom"><span class="lab">oppure minuti esatti</span>' +
-  '<button class="step-b sm">−</button><input type="number" class="pc-durin" value="90">' +
+  '<button class="step-b sm">−</button><input type="number" class="pc-durin" value="' + c.durata + '">' +
   '<button class="step-b sm plus">+</button></div></div></div></div>';
 function bloccoPersone() {
   const av = AV.baseFor('mamma');
   av.top.style = 'camicia'; av.top.color = '#E23D4B';
   av.pants.style = 'jeans'; av.pants.color = '#3B5C88';
-  const griglia = (n) => 'grid-template-columns:repeat(' + n + ',1fr)';
-  const capi = (lista, campo) => '<div class="capi" style="' + griglia(lista.length + (campo === 'pants' ? 2 : 0)) + '">' +
+  const g = n => 'grid-template-columns:repeat(' + n + ',1fr)';
+  const capi = (lista, campo) => '<div class="capi" style="' + g(lista.length + (campo === 'pants' ? 2 : 0)) + '">' +
     lista.map(t => '<button class="capo' + (av[campo].style === t.key ? ' on' : '') + '">' +
       CAPI.capo(t.key, av[campo].color, 'solid', 46) + '<span class="nm">' + t.label + '</span></button>').join('') +
     (campo === 'pants' ? ['capelli', 'scarpe'].map(k => '<button class="capo acc-b">' +
       CAPI.accessorio(k, '#8A8AA0', 44) + '<span class="nm">' + (k === 'capelli' ? 'Capelli' : 'Scarpe') +
       '</span></button>').join('') : '') + '</div>';
-  const tinte = (c) => '<div class="tinte" style="' + griglia(AV.COLORS.length + 1) + '">' +
-    AV.COLORS.map(x => '<button style="background:' + x.c + '"' + (x.c === c ? ' class="on"' : '') + '></button>').join('') +
+  const tinte = (col) => '<div class="tinte" style="' + g(AV.COLORS.length + 1) + '">' +
+    AV.COLORS.map(x => '<button style="background:' + x.c + '"' + (x.c === col ? ' class="on"' : '') + '></button>').join('') +
     '<span class="ruota"></span></div>';
   return '<div class="card blk c-viola sec-people">' +
     '<div class="testa-viola"><h2><span class="em">🧑‍🤝‍🧑</span> Chi accompagna</h2>' +
-    '<button class="butta">🗑️ Togli Mamma</button></div><div class="blk-in">' +
-    '<div class="person-list">' +
-      '<div class="ruoli">' + AV.ROLES.map((r, i) => '<button' + (i === 0 ? ' class="on"' : '') + '>' +
-        '<span class="em">' + r.em + '</span><span class="nm">' + r.label + '</span></button>').join('') + '</div>' +
-      '<div class="armadio"><div class="figura">' + AV.build(av, { zona: 'figura' }) +
-        '<input class="libero chi" value="Mamma"></div>' +
-      '<div class="roba">' +
-        '<span class="et">Sopra</span>' + capi(AV.TOP, 'top') +
-        '<span class="et">Fantasia</span><div class="fant" style="' + griglia(AV.PATTERNS.length) + '">' +
-          AV.PATTERNS.map((f, i) => '<button' + (i === 0 ? ' class="on"' : '') + '><span class="sw" style="background:' +
-            (i === 0 ? av.top.color : AV.shade(av.top.color, 20)) + '"></span></button>').join('') + '</div>' +
-        '<span class="et">Colore del sopra</span>' + tinte(av.top.color) +
-        '<span class="et">Sotto</span>' + capi(AV.PANTS, 'pants') +
-        '<span class="et">Colore del sotto</span>' + tinte(av.pants.color) +
-      '</div>' +
-      '<div class="largo"><input class="libero grosso" placeholder="Qualcosa che salta all’occhio: «zaino giallo», «gamba ingessata»…"></div>' +
-      '</div></div></div></div>';
+    '<button class="butta">🗑️ Togli Mamma</button></div><div class="blk-in"><div class="person-list">' +
+    '<div class="ruoli">' + AV.ROLES.map((r, i) => '<button' + (i === 0 ? ' class="on"' : '') + '>' +
+      '<span class="em">' + r.em + '</span><span class="nm">' + r.label + '</span></button>').join('') + '</div>' +
+    '<div class="armadio"><div class="figura">' + AV.build(av, { zona: 'figura' }) +
+      '<input class="libero chi" value="Mamma"></div><div class="roba">' +
+      '<span class="et">Sopra</span>' + capi(AV.TOP, 'top') +
+      '<span class="et">Fantasia</span><div class="fant" style="' + g(AV.PATTERNS.length) + '">' +
+      AV.PATTERNS.map((f, i) => '<button' + (i === 0 ? ' class="on"' : '') + '><span class="sw" style="background:' +
+        (i === 0 ? av.top.color : AV.shade(av.top.color, 20)) + '"></span></button>').join('') + '</div>' +
+      '<span class="et">Colore del sopra</span>' + tinte(av.top.color) +
+      '<span class="et">Sotto</span>' + capi(AV.PANTS, 'pants') +
+      '<span class="et">Colore del sotto</span>' + tinte(av.pants.color) + '</div>' +
+    '<div class="largo"><input class="libero grosso" placeholder="Qualcosa che salta all’occhio…"></div>' +
+    '</div></div></div>';
 }
-function parte(nome, ico, importo, extraDentro, extraFuori) {
-  return '<div class="bc-parte' + (extraFuori ? ' nuovo' : '') + '">' + (ICONE[ico] ? ICONE[ico]() : '') +
-    '<div class="bc-pk"><span class="k">' + nome + '</span>' +
-    '<span class="v num">' + eur(importo) + '</span>' + (extraDentro || '') + '</div>' +
-    (extraFuori || '') + '</div>';
-}
-function pannello(x) {
+const parte = (nome, ico, importo) =>
+  '<div class="bc-parte">' + (ICONE[ico] ? ICONE[ico]() : '') +
+  '<div class="bc-pk"><span class="k">' + nome + '</span>' +
+  '<span class="v num">' + eur(importo) + '</span></div></div>';
+
+function pannello(c, x, fasciaAlt) {
   x = x || {};
+  const gia = c.paidPark + c.paidBar;
   return '<div class="pan-conto">' +
     '<div class="bc-cat">' + ['Parco', 'Bevande', 'Snack', 'Birre', 'Alcolici']
       .map((n, i) => '<button' + (i === 0 ? ' class="on"' : '') + '>' + n + '</button>').join('') + '</div>' +
     '<div class="pc-parco">' +
-      '<div class="bc-griglia pc-due">' +
-        cardNum('bimbi', 'bimbi', 19, 'Bambini', 2, 0) +
-        cardNum('crazy', 'crazy', 4, 'Crazy Jumping', 1, 0) + '</div>' +
-      bloccoOrario() + bloccoDurata() + bloccoPersone() +
-    '</div>' +
-    (x.sopraConto || '') +
+      '<div class="bc-griglia pc-due">' + cardNum('bimbi', 'bimbi', prezzoPer(up5(c.durata)), 'Bambini', c.children, 0) +
+        cardNum('crazy', 'crazy', CRAZY_PREZZO, 'Crazy Jumping', c.crazy, 0) + '</div>' +
+      bloccoOrario(c) + (fasciaAlt || bloccoDurata(c)) + bloccoPersone() + '</div>' +
     '<div class="pc-fondo"><div class="bc-fondo" style="position:static">' +
       '<div class="bc-parti">' +
-        (x.parteParco || parte('Totale Parco', 'bimbi', C.parco - C.crazy * CRAZY_PREZZO)) +
-        parte('Totale Crazy', 'crazy', C.crazy * CRAZY_PREZZO) +
-        parte('Totale Bar', 'coca', C.bar) +
-        (x.parteTempo || '') +
-      '</div>' +
-      (x.fascia || '') +
+        parte('Totale Parco', 'bimbi', c.parco - c.crazy * CRAZY_PREZZO) +
+        parte('Totale Crazy', 'crazy', c.crazy * CRAZY_PREZZO) +
+        parte('Totale Bar', 'coca', c.bar) + '</div>' +
       '<div class="bc-conto"><div>' +
         '<span class="k' + (x.riga ? ' nuovo' : '') + '">' + (x.riga ||
-          ('da incassare · <b>' + ore(C.inizio) + ' → ' + ore(C.fine) + '</b>')) + '</span>' +
-        '<span class="v num">' + eur(C.resta) + '</span>' +
-        '<span class="gia">già presi ' + eur(C.paidPark) + '</span>' +
+          ('da incassare · <b>' + ore(c.inizio) + ' → ' + ore(c.fine) + '</b>')) + '</span>' +
+        '<span class="v num">' + (c.resta > 0 ? eur(c.resta) : '✓ ' + eur(c.totale)) + '</span>' +
+        '<span class="gia' + (x.gia ? ' nuovo' : (gia > 0 && c.resta > 0 ? '' : ' vuota')) + '">' +
+          (x.gia !== undefined ? x.gia : (gia > 0 ? 'già presi ' + eur(gia) : ' ')) + '</span>' +
       '</div><div class="bc-tasti">' +
-        '<button class="btn">🧮 Resto</button><button class="btn">Paga tutto</button>' +
+        '<button class="btn">🧮 Resto</button>' + (c.resta > 0 ? '<button class="btn">Paga tutto</button>' : '') +
         '<button class="btn btn-ok">✓ Fatto</button>' +
       '</div></div>' +
     '</div></div>' +
   '</div>';
 }
 
-/* ── le sei proposte ── */
-const fascia = () => {
-  const q = Math.min(100, C.minCoperti / C.durata * 100);
-  const adesso = Math.min(100, Math.max(0, (Date.now() - C.inizio) / (C.fine - C.inizio) * 100));
-  return '<div class="pg-fascia nuovo"><span class="et">Coperto</span>' +
-    '<div style="flex:1"><div class="pg-linea"><i style="width:' + q.toFixed(1) + '%"></i>' +
-    '<span class="adesso" style="left:calc(' + adesso.toFixed(1) + '% - 1px)"></span></div>' +
-    '<div class="pg-ore"><span>' + ore(C.inizio) + '</span>' +
-    '<span>pagato fino a <b>' + ore(C.coperto) + '</b></span><span>' + ore(C.fine) + '</span></div></div></div>';
-};
-const finoA = () => {
-  const bot = []; let ultimo = C.paidPark;
-  for (const t of TARIFFE) {
-    const min = t.m + C.crazy * CRAZY_MINUTI;
-    if (min <= C.minCoperti || min > C.durata) continue;
-    const costo = costoFinoA(min);
-    if (costo <= ultimo + 0.005) continue;
-    ultimo = costo;
-    bot.push('<button><b>fino a ' + ore(C.inizio + min * 60000) + '</b><span>+' + eur(costo - C.paidPark) + '</span></button>');
-    if (bot.length === 2) break;
-  }
-  return '<div class="pg-fino nuovo"><span class="et">Paga il tempo</span>' + bot.join('') +
-    '<button class="tutto"><b>tutto</b><span>' + eur(C.resta) + '</span></button></div>';
-};
-
+/* ══ le quattro proposte ══ */
 const P = [
-  { l: 'A', t: 'Dentro la riga che c’è già', costo: '0 px',
-    p: 'La riga sopra la cifra dice «da incassare · 10:55 → 12:25». Diventa «pagato fino a <b>11:33</b> · scoperti 52′». Non aggiunge niente al pannello: cambia solo cosa c’e’ scritto. In compenso e’ una riga piccola in mezzo a numeri grandi, e chi non la cerca non la vede.',
-    fai: () => pannello({ riga: 'pagato fino a <b class="pg-inline">' + ore(C.coperto) + '</b> · scoperti <b>' +
-      (C.durata - C.minCoperti) + '′</b> su ' + C.durata + '′' }) },
+  { l: '1', t: 'La riga smette di ripetersi', costo: 'zero · una ripetizione in meno',
+    impara: 'niente di nuovo — la riga c’era già, cambia solo cosa dice',
+    p: 'Oggi quella riga scrive «da incassare · 10:55 → 12:25», e quell’orario e’ gia’ scritto <b>due volte sopra</b> — nella fascia dell’orario e in quella della durata — piu’ una terza sulla scheda in lista. Le si fa dire l’unica cosa che non e’ scritta da nessun’altra parte.',
+    fai: c => pannello(c, { riga: c.pieno
+      ? 'pagato <b class="pg-ok">fino alla fine</b> · ' + ore(c.inizio) + ' → ' + ore(c.fine)
+      : 'pagato fino a <b class="pg-parola">' + ore(c.coperto) + '</b> · poi scoperto' }) },
 
-  { l: 'B', t: 'Una fascia sotto i totali', costo: '+57 px',
-    p: 'Una barra che va dall’ingresso all’uscita: verde quello che i soldi coprono, il filo bianco e’ <b>adesso</b>. Risponde a colpo d’occhio alla domanda vera — «siamo dentro o fuori dal pagato?» — senza leggere orari. Ma il conto e’ gia’ la parte piu’ carica del pannello, e questa gli aggiunge una fascia intera: cinquantasette pixel sono i piu&#39; cari di tutti tranne la D.',
-    fai: () => pannello({ fascia: fascia() }) },
+  { l: '2', t: 'Parla solo quando c’e’ da dire', costo: 'zero · e quasi sempre invisibile',
+    impara: 'niente — se non compare, non c’e’ niente da sapere',
+    p: 'La riga resta com’e’. Sotto la cifra ce n’e’ gia’ un’altra che a volte dice «gia’ presi 18,00 €» e a volte e’ vuota: <b>quel posto esiste ed e’ spesso inutilizzato</b>. Quando il cliente ha superato il tempo che ha pagato, li’ compare «scoperto da 17 minuti». Quando e’ tutto a posto non compare niente.',
+    fai: c => pannello(c, { gia: c.scoperto
+      ? '<span class="pg-parola">⚠ scoperto da ' + c.daQuanto + ' minuti</span>'
+      : (c.paidPark + c.paidBar > 0 && c.resta > 0 ? 'già presi ' + eur(c.paidPark + c.paidBar) : ' ') }) },
 
-  { l: 'C', t: 'Una seconda riga nel Totale Parco', costo: '+17 px',
-    p: 'Il riquadro dei soldi del parco prende una riga sotto la cifra. Sta esattamente dove quei soldi stanno, non tocca nient’altro e cresce di poco. Il rischio e’ che i tre riquadri dei totali non sono piu’ alti uguali.',
-    fai: () => pannello({ parteParco: parte('Totale Parco', 'bimbi', C.parco - C.crazy * CRAZY_PREZZO,
-      '<span class="pg-sotto2">coperto fino a ' + ore(C.coperto) + '</span>') }) },
+  { l: '3', t: 'Una parola, non un orario', costo: 'zero · due parole al posto di due parole',
+    impara: 'niente — non c’e’ un numero nuovo da interpretare',
+    p: 'Al banco la domanda non e’ «fino a che ora ha pagato», e’ <b>«e’ a posto adesso?»</b>. Un orario obbliga comunque a fare un conto — «le 11:33 sono passate?» — mentre una parola e’ gia’ la risposta. L’orario esatto resta dov’e’ sempre stato: nelle due fasce qui sopra.',
+    fai: c => pannello(c, { riga: c.pieno ? '<b class="pg-ok">✓ coperto fino alla fine</b>'
+      : c.scoperto ? '<b class="pg-parola">⚠ scoperto da ' + c.daQuanto + ' minuti</b>'
+      : '<b class="pg-ok">✓ coperto</b> ancora per <b>' + c.ancora + '′</b>' }) },
 
-  { l: 'D', t: '«Paga il tempo»: fino a un orario', costo: '+69 px',
-    p: 'L’unica che non si limita a dirlo. Al banco la frase e’ «me ne dai un’altra mezz’ora?», e qui si risponde con un tocco: ogni tasto dice <b>fino a che ora</b> e <b>quanto costa arrivarci</b>. Toglie un conto a mente, ma e’ anche l’unica che aggiunge una riga di comandi a un pannello che ne ha gia’ tre.',
-    fai: () => pannello({ sopraConto: finoA() }) },
-
-  { l: 'E', t: 'Una quarta colonna fra i totali', costo: '0 px',
-    p: 'Accanto a Parco, Crazy e Bar compare «Coperto fino a», con la stessa faccia degli altri tre: su tavoletta ci stanno in fila e non si allunga niente. Il dubbio e’ di significato — e’ un ORARIO in una fila di importi, e l’occhio li’ cerca euro. Su schermo stretto va a capo e diventa +52 px.',
-    fai: () => pannello({ parteTempo: '<div class="bc-parte pg-tempo nuovo">⏱' +
-      '<div class="bc-pk"><span class="k">Coperto fino a</span>' +
-      '<span class="v num">' + ore(C.coperto) + '</span></div></div>' }) },
-
-  { l: 'F', t: 'Un bollino sul Totale Parco', costo: '0 px',
-    p: 'Usa lo spazio a destra dentro il riquadro del parco, che oggi e’ vuoto: nessuna riga in piu’, nessun riquadro in piu’. E’ la piu’ discreta di tutte — forse troppo: e’ un orario piccolo in un angolo, e va cercato.',
-    fai: () => pannello({ parteParco: parte('Totale Parco', 'bimbi', C.parco - C.crazy * CRAZY_PREZZO, '',
-      '<span class="pg-bollo">⏱ ' + ore(C.coperto) + '</span>') }) }
+  { l: '4', t: 'Niente', costo: 'zero · ma il conto a mente resta',
+    impara: 'niente, ed e’ il punto',
+    p: 'L’opzione onesta: non farlo. Il conto dice gia’ quanto manca, e chi vuole sapere fino a che ora apre il pannello e guarda la durata. Il prezzo e’ che quel conto — «diciotto euro per due bambini, quanto tempo fanno?» — lo si fa a mente, col cliente davanti. <b>Se capita due volte al giorno non vale una riga nuova; se capita ogni volta, si’.</b>',
+    fai: c => pannello(c) }
 ];
 
 function disegna() {
-  document.getElementById('salta').innerHTML = P.map(p => '<a href="#p' + p.l + '">' + p.l + '</a>').join('');
   document.getElementById('proposte').innerHTML = P.map(p =>
     '<div class="testa" id="p' + p.l + '"><span class="lett">' + p.l + '</span><h3>' + p.t + '</h3>' +
-    '<span class="mis ' + (p.costo === '0 px' ? 'gratis' : p.costo === '+69 px' ? 'caro' : '') + '">costa ' + p.costo + '</span></div>' +
+    '<span class="mis">' + p.costo + '</span></div>' +
     '<p class="perche">' + p.p + '</p>' +
-    '<div class="tavoletta">' + p.fai() + '</div>'
+    '<span class="impara' + (p.l === '4' ? ' no' : '') + '">Da imparare: ' + p.impara + '</span>' +
+    '<div class="tavoletta">' + p.fai(CASO) + '</div>' +
+    '<p class="quando">Lo stesso conto negli altri tre casi</p>' +
+    CASI.filter(c => c !== CASO).map(c =>
+      '<div class="tavoletta solofondo" style="margin-bottom:8px">' +
+      '<p style="margin:0 0 6px;font-size:11px;font-weight:800;letter-spacing:.07em;' +
+      'text-transform:uppercase;color:#8F8FA6">' + c.nome + '</p>' + p.fai(c) + '</div>').join('')
   ).join('');
-  misura();
+  document.getElementById('salta').innerHTML = P.map(p => '<a href="#p' + p.l + '">' + p.l + '</a>').join('');
+  if (document.getElementById('stretto').checked)
+    document.querySelectorAll('.tavoletta').forEach(t => { t.style.width = '430px'; });
 }
-function misura() {
-  document.querySelectorAll('.tavoletta').forEach((t, i) => {
-    const h = Math.round(t.getBoundingClientRect().height);
-    const badge = document.querySelectorAll('.testa .mis')[i];
-    if (badge) badge.textContent = 'costa ' + P[i].costo + ' · pannello ' + h + 'px';
-  });
+/* ══════════════════════════════════════════════════════════
+   CAPITOLO 2 — la fascia del tempo che ALLUNGA
+   ══════════════════════════════════════════════════════════ */
+const costoDi = (c, minuti) => prezzoPer(up5(minuti)) * c.children + c.crazy * CRAZY_PREZZO;
+
+/* la fascia "Quanto restano" rifatta: si passa cosa mostrare in testa
+   e come sono fatti i tasti */
+function fasciaTempo(c, x) {
+  x = x || {};
+  return '<div class="card blk c-ambra sec-dur' + (x.spia ? ' nuovo' : '') + '">' +
+    '<h2><span class="em">⏳</span> ' + (x.titolo || 'Quanto restano') + '</h2><div class="blk-in">' +
+    (x.testa || '') + (x.corpo || '') + '</div></div>';
 }
+const esatti = (c) => '<span class="esatti">oppure minuti esatti' +
+  '<button class="step-b sm">−</button><input type="number" class="pc-durin" value="' + c.durata + '">' +
+  '<button class="step-b sm plus">+</button></span>';
+
+/* I tre tagli in piu', ognuno con la nuova ora di fine e quanto costa.
+   IL LISTINO SI FERMA: dopo le due ore sono ventiquattro euro e basta,
+   quindi capita spesso che due aggiunte diverse costino uguale. Non lo
+   si nasconde -- lo si DICE: «stesso prezzo» al banco vale oro, perche'
+   vuol dire che per gli stessi soldi puo' restare un'ora in piu'. */
+function tastiPiu(c, conPrezzo) {
+  const base = costoDi(c, c.durata);
+  let precedente = null;
+  return [15, 30, 60].map(m => {
+    const nuova = c.durata + m;
+    const extra = costoDi(c, nuova) - base;
+    const uguale = precedente !== null && Math.abs(extra - precedente) < 0.005;
+    precedente = extra;
+    return '<button><b>+' + (m < 60 ? m + '′' : '1h') + '</b>' +
+      '<span>fino a ' + ore(c.inizio + nuova * 60000) +
+      (conPrezzo ? (uguale ? ' · <i style="color:#7BE0A8;font-style:normal">stesso prezzo</i>'
+                           : (extra > 0 ? ' · +' + eur(extra) : ' · gratis')) : '') +
+      '</span></button>';
+  }).join('');
+}
+
+const P2 = [
+  { l: 'R1', t: 'I tagli diventano AGGIUNTE', costo: 'zero · gli stessi tre tasti',
+    impara: 'niente — sono i tasti di sempre, con scritto «+» davanti',
+    p: 'Nel conto di chi e’ gia’ dentro i tagli non sostituiscono piu’ la durata, la <b>allungano</b>: «+15′», «+30′», «+1h». Sotto ognuno c’e’ la nuova ora di fine, cosi’ non serve nemmeno fare la somma. In «+ Nuovo» restano com’erano — li’ stai scegliendo, non aggiungendo.',
+    fai: c => pannello(c, {}, fasciaTempo(c, { spia: 1,
+      testa: '<div class="qr-testa"><span class="fin">finisce alle <b>' + ore(c.fine) + '</b></span></div>',
+      corpo: '<div class="qr-piu">' + tastiPiu(c, false) +
+        '<span class="sep"></span>' + esatti(c) +
+        '<button class="chip later" style="min-height:46px">⏳ Tempo aperto</button></div>' })) },
+
+  { l: 'R2', t: 'Le aggiunte dicono anche quanto costano', costo: 'zero · una riga di testa',
+    impara: 'niente di nuovo, ma un numero in piu’ sotto ogni tasto',
+    p: 'Come la R1, e in piu’ ogni tasto dice <b>quanto costa quell’aggiunta</b>. E’ la domanda che il cliente fa subito dopo («e quanto viene?»), e cosi’ la risposta e’ gia’ li’ senza aprire il listino. E viene fuori una cosa che oggi nessuno vede: <b>dopo le due ore il listino si ferma</b>, quindi spesso mezz’ora e un’ora costano uguale — e quel «stesso prezzo» al banco vale oro. In testa alla fascia, dove oggi non c’e’ niente, l’ora di fine e <b>fin quando ha pagato</b> — che a quel punto nel conto non serve piu’.',
+    fai: c => pannello(c, {}, fasciaTempo(c, { spia: 1,
+      testa: '<div class="qr-testa"><span class="fin">finisce alle <b>' + ore(c.fine) + '</b></span>' +
+        '<span class="pag ' + (c.pieno ? 'pg-ok' : 'pg-parola') + '">' +
+        (c.pieno ? '✓ pagato fino alla fine'
+          : c.scoperto ? '⚠ pagato solo fino a ' + ore(c.coperto) + ' — scoperto da ' + c.daQuanto + '′'
+          : '✓ pagato fino a ' + ore(c.coperto)) + '</span></div>',
+      corpo: '<div class="qr-piu">' + tastiPiu(c, true) +
+        '<span class="sep"></span>' + esatti(c) +
+        '<button class="chip later" style="min-height:46px">⏳ Tempo aperto</button></div>' })) },
+
+  { l: 'R3', t: 'La fascia diventa «Fino a che ora»', costo: 'zero · cambia il titolo e i tasti',
+    impara: 'un titolo nuovo, ma toglie la domanda «restano da quando?»',
+    p: 'Il cambio piu’ netto: la fascia non chiede piu’ «quanto restano» (un <b>quanto</b>) ma «fino a che ora» (un <b>quando</b>). I tasti sono orari veri — 12:40, 12:55, 13:25 — e sotto quanto costa arrivarci. Al banco si parla per orari («fino all’una»), non per durate, e cosi’ non si traduce piu’ niente. Ma e’ anche l’unica che cambia il nome di una fascia che gia’ conoscevi.',
+    fai: c => pannello(c, {}, fasciaTempo(c, { spia: 1, titolo: 'Fino a che ora',
+      testa: '<div class="qr-testa"><span class="fin">adesso finisce alle <b>' + ore(c.fine) + '</b></span>' +
+        '<span class="pag ' + (c.pieno ? 'pg-ok' : 'pg-parola') + '">' +
+        (c.pieno ? '✓ pagato fino alla fine' : '⚠ pagato fino a ' + ore(c.coperto)) + '</span></div>',
+      corpo: '<div class="qr-piu">' + (function () {
+        const base = costoDi(c, c.durata); let prec = null;
+        return [15, 30, 60].map(m => {
+          const nuova = c.durata + m, extra = costoDi(c, nuova) - base;
+          const uguale = prec !== null && Math.abs(extra - prec) < 0.005;
+          prec = extra;
+          return '<button><b>' + ore(c.inizio + nuova * 60000) + '</b><span>' +
+            (uguale ? '<i style="color:#7BE0A8;font-style:normal">stesso prezzo</i>'
+                    : (extra > 0 ? '+' + eur(extra) : 'gratis')) + '</span></button>';
+        }).join('');
+      })() + '<span class="sep"></span>' + esatti(c) +
+        '<button class="chip later" style="min-height:46px">⏳ Tempo aperto</button></div>' })) }
+];
+
+function disegna2() {
+  document.getElementById('proposte2').innerHTML = P2.map(p =>
+    '<div class="testa" id="p' + p.l + '"><span class="lett">' + p.l + '</span><h3>' + p.t + '</h3>' +
+    '<span class="mis">' + p.costo + '</span></div>' +
+    '<p class="perche">' + p.p + '</p>' +
+    '<span class="impara">Da imparare: ' + p.impara + '</span>' +
+    '<div class="tavoletta">' + p.fai(CASO) + '</div>').join('');
+}
+
 document.getElementById('spia').onchange = e => document.body.classList.toggle('spia', e.target.checked);
-document.getElementById('stretto').onchange = e => {
+document.getElementById('stretto').onchange = e =>
   document.querySelectorAll('.tavoletta').forEach(t => { t.style.width = e.target.checked ? '430px' : ''; });
-  misura();
-};
+document.getElementById('caso').onchange = e => { CASO = CASI[+e.target.value]; disegna(); disegna2(); };
 document.body.classList.add('spia');
 disegna();
+disegna2();
 
 document.getElementById('scelta').innerHTML =
-  '<b>Se devo consigliarti.</b> Le metterei insieme <b>A + F</b>, e non una sola. ' +
-  'La A non costa niente e mette la risposta in parole nel punto in cui si legge il conto; la F la ' +
-  'ripete come orario secco nell’angolo vuoto del Totale Parco, che e’ dove l’occhio va quando si ' +
-  'parla di soldi del parco. Due volte la stessa cosa, ma nei due posti dove la si cerca — e ' +
-  'zero pixel in piu’ su un pannello che ne ha pochi da dare.' +
-  '<table class="conf"><tr><th>Proposta</th><th>Costo</th><th>Risponde a</th><th>Difetto</th></tr>' +
-  '<tr class="mio"><td><b>A</b> nella riga</td><td>0 px</td><td>fino a che ora, a parole</td><td>riga piccola, va cercata</td></tr>' +
-  '<tr><td><b>B</b> fascia</td><td>+57 px</td><td>siamo dentro o fuori, a colpo d’occhio</td><td>carica la parte gia’ piu’ carica</td></tr>' +
-  '<tr><td><b>C</b> riga nel totale</td><td>+17 px</td><td>fino a che ora</td><td>i tre totali non sono piu’ alti uguali</td></tr>' +
-  '<tr><td><b>D</b> paga il tempo</td><td>+69 px</td><td>anche: quanto costa arrivarci</td><td>quarta riga di comandi</td></tr>' +
-  '<tr><td><b>E</b> quarta colonna</td><td>0 px (52 su stretto)</td><td>fino a che ora</td><td>un orario in una fila di euro</td></tr>' +
-  '<tr class="mio"><td><b>F</b> bollino</td><td>0 px</td><td>fino a che ora, secco</td><td>discreto al punto da sparire</td></tr>' +
-  '</table>' +
-  '<b style="display:block;margin-top:12px">E la D?</b> La terrei da parte, ma non insieme alle altre: ' +
-  'e’ una cosa diversa — non dice, <i>fa</i>. Se ti serve incassare mezz’ora alla volta senza fare ' +
-  'il conto a mente, quella e’ la risposta giusta e le altre cinque diventano superflue.';
+  '<b>Il consiglio, adesso che c’e’ anche il capitolo 2: la R2, e basta.</b> ' +
+  'Sistema la mancanza vera — da qui dentro il tempo non si allunga — e nel farlo si porta ' +
+  'dietro la risposta all’altra domanda, senza aggiungere niente al conto. La testa della fascia ' +
+  'oggi e’ vuota: ci sta «finisce alle 12:25» e «pagato fino a 11:33», che sono <b>due orari nella ' +
+  'fascia degli orari</b>, cioe’ dove uno li cerca. E i tre tasti sono gli stessi di sempre, con ' +
+  'un «+» davanti.' +
+  '<br><br><b>E il capitolo 1?</b> Con la R2 non serve piu’: il «fin quando ha pagato» sta gia’ ' +
+  'nella fascia del tempo, che e’ il posto giusto — nel conto sarebbe stato un orario in mezzo ' +
+  'agli euro. Se pero’ ti piaceva l’idea di vederlo anche in fondo, la <b>3</b> del primo ' +
+  'capitolo e’ l’unica che non costa niente da imparare: sostituisce una riga che oggi ripete ' +
+  'un orario scritto altre tre volte, e non aggiunge un numero ma una parola.' +
+  '<br><br><b>Una cosa venuta fuori disegnando.</b> Con la tariffa del cartello, dopo le due ore ' +
+  'il prezzo si ferma a ventiquattro euro: mezz’ora in piu’ e un’ora in piu’ costano <b>uguale</b>. ' +
+  'Oggi quella cosa non la vede nessuno, e al banco vale oro — «per gli stessi soldi puo’ restare ' +
+  'un’ora di piu’». Nella R2 e nella R3 c’e’ scritto.' +
+  '<br><br><b>Come lo farei.</b> La fascia cambia mestiere solo dove ha senso: in «+ Nuovo» resta ' +
+  'com’e’ (li’ stai scegliendo la durata, non allungandola), nel conto di chi e’ gia’ dentro ' +
+  'diventa quella della R2. Stesso posto, stessa faccia, due mestieri — come gia’ succede al ' +
+  'pannello intero, che in «+ Nuovo» registra e nella scheda incassa.';
 </script>
 </html>
