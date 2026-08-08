@@ -217,6 +217,77 @@ gruppo('Il giro completo non perde niente', () => {
   ok('normalizzare due volte non sposta nulla', JSON.stringify(terzo), JSON.stringify(dopo));
 });
 
+gruppo('I minuti pagati: si leggono e basta', () => {
+  /* La card "Estendi tempo" dice quanti minuti sono gia' coperti dai
+     soldi presi. E' una LETTURA -- non sposta un euro -- ma se sbaglia
+     dice al banco che un cliente e' a posto quando non lo e'. */
+  const c = conto({ children: 2, crazyJumping: 0, durationMinutes: 60, barItems: [] });
+  ok('senza un euro non e coperto niente', ctx.minutiPagati(c), 0);
+
+  ctx.segnaPagate('bimbi', 1);
+  const meta = ctx.minutiPagati(c);
+  ok('mezzo pagamento copre qualcosa ma non tutto', meta > 0 && meta < 60, true);
+
+  ctx.segnaPagate('bimbi', 2);
+  ok('pagati tutti, coperta tutta la durata', ctx.minutiPagati(c) >= 60, true);
+
+  /* piu' soldi non possono voler dire meno minuti */
+  const c2 = conto({ children: 3, crazyJumping: 0, durationMinutes: 90, barItems: [] });
+  let prima = -1, sale = true;
+  for (let n = 0; n <= 3; n++) {
+    ctx.segnaPagate('bimbi', n);
+    const m = ctx.minutiPagati(c2);
+    if (m < prima) sale = false;
+    prima = m;
+  }
+  ok('pagando di piu i minuti non scendono mai', sale, true);
+
+  /* non si promette mai piu' di quello che quei soldi hanno comprato */
+  const c3 = conto({ children: 2, crazyJumping: 0, durationMinutes: 120, barItems: [] });
+  ctx.segnaPagate('bimbi', 1);
+  const perBambino = ctx.importoRiga('bimbi') / 2;
+  const coperti = ctx.minutiPagati(c3);
+  ok('i minuti coperti sono davvero pagati', ctx.priceFor(coperti) <= perBambino + 1e-9, true);
+});
+
+gruppo('Il Crazy regala minuti solo se e stato pagato', () => {
+  const c = conto({ children: 1, crazyJumping: 1, durationMinutes: 60, barItems: [] });
+  ok('Crazy non pagato, nessun minuto in regalo', ctx.minutiPagati(c), 0);
+  ctx.segnaPagate('crazy', 1);
+  ok('Crazy pagato, arrivano i suoi minuti',
+     ctx.minutiPagati(c), ctx.settings.crazyExtraMinutes);
+  /* e i soldi del Crazy non comprano tempo di parco */
+  ok('ma non comprano scaglioni di parco',
+     ctx.minutiPagati(c) < 60, true);
+});
+
+gruppo('Pagare il tempo E pagare i bambini: stessa cassa', () => {
+  /* Il piu' sulla fascia verde della card del tempo passa dallo stesso
+     punto di quello dei Bambini. Se un giorno prendesse una strada sua,
+     le spunte e i soldi ricomincerebbero a raccontare due storie
+     diverse -- che e' la radice di tutti i conti sbagliati. */
+  const c = conto({ children: 3, crazyJumping: 0, durationMinutes: 60, barItems: [] });
+  ctx.segnaPagate('bimbi', 2);
+  const dopoTeste = { soldi: c.paidPark, spunte: ctx.bcPag('bimbi'), min: ctx.minutiPagati(c) };
+
+  const d = conto({ children: 3, crazyJumping: 0, durationMinutes: 60, barItems: [] });
+  /* la stessa cosa fatta "dal tempo": due tocchi sul piu' verde */
+  ctx.pagaTempo(1);
+  ctx.pagaTempo(1);
+  ok('gli stessi euro', d.paidPark, dopoTeste.soldi);
+  ok('le stesse spunte', ctx.bcPag('bimbi'), dopoTeste.spunte);
+  ok('gli stessi minuti', ctx.minutiPagati(d), dopoTeste.min);
+
+  /* e i due conti restano allineati: se i soldi si muovessero senza le
+     spunte, la riga direbbe "incassato" e la card "non pagato" */
+  ctx.pagaTempo(-1);
+  ok('tolto uno, scende anche la spunta', ctx.bcPag('bimbi'), 1);
+  ok('e i soldi con lei', ctx.importoRiga('bimbi') > 0 && ctx.importoRiga('bimbi') < dopoTeste.soldi, true);
+  ctx.pagaTempo(-5);
+  ok('a zero spunte, zero euro sulla riga', ctx.importoRiga('bimbi'), 0);
+  ok('e zero anche in cassa', d.paidPark, 0);
+});
+
 gruppo('Bombardamento: mille tocchi a caso', () => {
   let seme = 12345;
   const caso = (n) => { seme = (seme * 1103515245 + 12345) % 2147483648; return seme % n; };
@@ -237,6 +308,8 @@ gruppo('Bombardamento: mille tocchi a caso', () => {
     }
     const d = ctx.dueOf(c);
     if (!Number.isFinite(d.total) || d.total < 0) guai.push(i + ': dovuto ' + d.total);
+    const mp = ctx.minutiPagati(c);
+    if (!Number.isFinite(mp) || mp < 0) guai.push(i + ': minuti pagati ' + mp);
     if (!Number.isFinite(c.paidPark) || c.paidPark < 0) guai.push(i + ': parco ' + c.paidPark);
     if (!Number.isFinite(c.paidBar) || c.paidBar < 0) guai.push(i + ': bar ' + c.paidBar);
     for (const k of Object.keys(c.paidLines)) {

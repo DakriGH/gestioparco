@@ -2917,16 +2917,9 @@ html:not(.anima) .card.evidenzia::after { animation: none; }
    Due file di comandi che si somigliano ma non sono identiche sono
    peggio di due file diverse: si guarda due volte per capire se e' la
    stessa cosa. */
-/* la fascia dei minuti pagati non ha tasti -- quei minuti non si
-   scelgono, si ricavano dai soldi presi -- ma e' alta come le altre e
-   dello stesso verde, cosi' la card resta della stessa famiglia */
-.bc-zone.sola { grid-template-columns: 1fr; min-height: 48px;
-  /* lo STESSO strato che hanno i tasti delle altre card sopra il verde
-     della fascia: senza, questa restava piu' scura delle sorelle e in
-     fila si vedeva che era un'altra cosa */
-  background-image: linear-gradient(rgba(106,220,175,.13), rgba(106,220,175,.13)); }
-.bc-zone.sola .bc-chip { position: static; transform: none; }
-.bc-tempo .bc-zone.v .bc-chip { min-width: 84px; font-size: 16px; }
+/* la pastiglia dei minuti e' piu' larga di quella dei numeri: ci sta
+   dentro "28/70'" invece di "2/3" */
+.bc-tempo .bc-zone.v .bc-chip { min-width: 88px; font-size: 16px; }
 
 /* quando non e' stato ancora scelto niente */
 .ed-tr.vuoto { opacity: 0.55; font-style: italic; }

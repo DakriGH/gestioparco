@@ -536,6 +536,14 @@ function costruisciPannello() {
        mezzo a uno vuol dire pagare il taglio dopo lo stesso. I minuti
        esatti restano dove sono sempre stati, nella fascia "Quanto
        restano". */
+    /* pagare il tempo E' pagare i bambini: stessa cassa, stesso punto */
+    if (d.a === 'pagatempo') {
+      tocchi.id = 'bimbi';
+      pagaTempo(num(d.v, 0));
+      pcSalva();
+      aggiornaPannello();
+      return;
+    }
     if (d.a === 'dur') {
       const passi = tariffs().map(t => t.m);
       const ora = clamp(num(c.durationMinutes, 60), 0, 1e6);
@@ -734,15 +742,42 @@ function pcVoce(id) {
    Crazy si sommano solo se il Crazy e' stato pagato: arrivano col suo
    prezzo, non da soli.
    Qui si legge soltanto: nessuna regola del denaro viene toccata. */
+/* PAGARE IL TEMPO E' PAGARE I BAMBINI.
+   Questi minuti non hanno una cassa loro: li comprano gli stessi euro
+   che la card dei Bambini conta a teste. Quindi si passa di li' e non
+   si apre una seconda strada per muovere i soldi -- due strade sulla
+   stessa cassa sono la radice dei conti storti, ed e' il motivo per cui
+   muoviSoldi() e' l'unico posto da cui il denaro si sposta.
+   Sta in una funzione con un nome suo, e non dentro il gestore dei
+   tocchi, perche' cosi' si puo' provare senza uno schermo davanti. */
+function pagaTempo(delta) {
+  segnaPagate('bimbi', bcPag('bimbi') + num(delta, 0));
+}
+
 function minutiPagati(c) {
   c = c || C();
   const bimbi = clamp(num(c.children, 0), 0, 1e6);
   const crazy = clamp(num(c.crazyJumping, 0), 0, 1e6);
   const costoCrazy = crazy * num(settings.crazyJumpingPrice, 0);
-  const presi = Math.max(0, num(c.paidPark, 0));
-  const regalati = presi >= costoCrazy - 0.005 ? crazy * num(settings.crazyExtraMinutes, 0) : 0;
+  /* I soldi si leggono dalla RIGA dei bambini, non dal totale del
+     parco meno il Crazy: paidAmt sa gia' quanto e' entrato per ognuna
+     delle due voci, e dedurre e' peggio che leggere. Il ripiego serve
+     agli ingressi vecchi, salvati prima che le righe tenessero il
+     conto dei loro soldi. */
+  const amt = c.paidAmt || {};
+  const rigaBimbi = num(amt.bimbi, NaN);
+  let soldiBimbi, crazyPagato;
+  if (isFinite(rigaBimbi)) {
+    soldiBimbi = Math.max(0, rigaBimbi);
+    crazyPagato = crazy === 0 || Math.max(0, num(amt.crazy, 0)) >= costoCrazy - 0.005;
+  } else {
+    const presi = Math.max(0, num(c.paidPark, 0));
+    crazyPagato = presi >= costoCrazy - 0.005;
+    soldiBimbi = Math.max(0, presi - costoCrazy);
+  }
+  const regalati = crazyPagato ? crazy * num(settings.crazyExtraMinutes, 0) : 0;
   if (!bimbi) return regalati;
-  const perBambino = Math.max(0, presi - costoCrazy) / bimbi;
+  const perBambino = soldiBimbi / bimbi;
   let coperti = 0;
   for (const t of tariffs()) if (t.p <= perBambino + 1e-9) coperti = t.m;
   return coperti + regalati;
@@ -772,9 +807,19 @@ function bcCardTempo() {
     '<div class="bc-zone"><span class="bc-chip">' + (aperto ? '\u221e' : fmtMin(min)) + '</span>' +
       '<button data-a="dur" data-v="-"' + (aperto ? ' disabled' : '') + '>\u2212</button>' +
       '<button data-a="dur" data-v="+"' + (aperto ? ' disabled' : '') + '>+</button></div>' +
-    '<div class="bc-zone v sola"><span class="bc-chip">' +
-      (aperto ? 'a tempo' : tutto ? '\u2713 ' + fmtMin(min) : pag + '/' + min + '\u2032') +
-    '</span></div></div>';
+    /* IL MENO E IL PIU' SONO QUELLI DEI BAMBINI, in minuti.
+       Questi minuti non hanno una cassa loro: li pagano gli STESSI
+       euro che la card dei Bambini conta a teste. Quindi il tasto
+       passa da segnaPagate('bimbi', ...) come li', e non si apre una
+       seconda strada per muovere i soldi -- che e' esattamente il
+       genere di doppione da cui nascono i conti storti.
+       Cambia solo l'unita' con cui si guarda la stessa cosa: li'
+       teste, qui i minuti che quelle teste hanno comprato. */
+    '<div class="bc-zone v"><span class="bc-chip">' +
+      (aperto ? 'a tempo' : tutto ? '\u2713 ' + fmtMin(min) : pag + '/' + min + '\u2032') + '</span>' +
+      '<button data-a="pagatempo" data-v="-1"' + (bcPag('bimbi') <= 0 ? ' disabled' : '') + '>\u2212</button>' +
+      '<button data-a="pagatempo" data-v="1"' + (bcPag('bimbi') >= bcQ('bimbi') ? ' disabled' : '') + '>+</button>' +
+    '</div></div>';
 }
 
 function pcFondoDis() {
