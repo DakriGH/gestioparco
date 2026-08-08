@@ -53,6 +53,12 @@ export function caricaApp() {
       clear: () => magazzino.clear()
     },
     console,
+    /* la finestra ascolta resize e orientationchange per rimettere a
+       misura il pannello: qui non succede mai niente, ma il codice deve
+       poterselo agganciare senza schiantarsi */
+    addEventListener() {}, removeEventListener() {}, dispatchEvent() { return true; },
+    innerWidth: 834, innerHeight: 1194, devicePixelRatio: 2,
+    getComputedStyle: () => ({ paddingBottom: '10px', getPropertyValue: () => '' }),
     setTimeout, clearTimeout, setInterval, clearInterval,
     requestAnimationFrame: fn => setTimeout(fn, 0),
     matchMedia: () => ({ matches: false, addEventListener() {}, addListener() {} }),

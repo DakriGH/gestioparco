@@ -107,6 +107,7 @@
 
   --sprite-edge: rgba(255, 255, 255, 0.22);
   --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
   --speed: 150ms;
 }
 
@@ -2146,18 +2147,52 @@ main {
 }
 .velo-scheda.on { opacity: 1; }
 
+/* LA SCHEDA CHE VOLA HA UN'ALTEZZA FISSA.
+   Arriva fino in fondo allo schermo e ci resta, qualunque cosa ci sia
+   dentro. Prima si rimisurava sul contenuto a ogni tocco e il banner
+   dei totali saliva e scendeva sotto le dita: quella cifra e' l'unica
+   cosa che si guarda mentre si parla col cliente, e se cambia posto
+   la si cerca da capo ogni volta.
+   Niente scorrimento: se il contenuto non ci sta, si rimpicciolisce
+   (lo fa adattaPannello con `zoom`), non si taglia. */
 .entry.vola {
   position: fixed;
   z-index: 41;
   margin: 0;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   overscroll-behavior: contain;
   box-shadow: 0 26px 64px rgba(0, 0, 0, 0.6);
   transition: left 480ms cubic-bezier(.4,.02,.2,1),
               top 480ms cubic-bezier(.4,.02,.2,1),
               width 480ms cubic-bezier(.4,.02,.2,1),
-              max-height 480ms cubic-bezier(.4,.02,.2,1),
+              height 480ms cubic-bezier(.4,.02,.2,1),
               box-shadow 480ms ease;
+}
+/* la riga di testa resta della sua misura, il resto si prende tutto
+   quello che avanza fino in fondo alla scheda */
+.entry.vola > .e-riga { flex: 0 0 auto; }
+.entry.vola.aperto > .e-aperta { flex: 1 1 auto; min-height: 0; }
+.entry.vola .e-dentro { display: flex; flex-direction: column; min-height: 0; }
+.entry.vola .e-fila,
+.entry.vola .e-note { flex: 0 0 auto; }
+.entry.vola .e-guscio { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+
+/* Il vuoto sopra la scheda e' il bersaglio per chiudere: la scritta lo
+   dice, perche' sfocato e basta sembra solo sfondo e chi non trova la
+   via d'uscita resta a cercare una X che non c'e'. */
+.velo-esci {
+  position: absolute;
+  left: 0; right: 0;
+  top: max(18px, calc(var(--safe-t, 0px) + 14px));
+  text-align: center;
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  color: rgba(255, 255, 255, 0.72);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
 }
 .segnaposto { flex-shrink: 0; }
 
@@ -2189,6 +2224,21 @@ html:not(.anima) .view.entra-dx { animation: none; }
    vista, perche il pannello si sposta e se lo lasciassi alla vista
    dentro la scheda che vola non avrebbe piu niente sotto. */
 .pan-conto { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; }
+/* IL VANO CHE SI RIMPICCIOLISCE.
+   Prende tutto lo spazio che avanza sopra il conto. Se quello che ha
+   dentro non ci sta, adattaPannello gli mette uno `zoom` e ci sta lo
+   stesso -- senza che il riquadro cambi misura, quindi senza che il
+   conto qui sotto si muova di un pixel.
+   Lo scorrimento e' l'ultima spiaggia: si vede solo se il contenuto e'
+   talmente tanto che rimpicciolirlo ancora lo renderebbe illeggibile. */
+.pan-conto .pc-scala { display: flex; flex-direction: column; gap: 10px;
+  flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+/* quando tocca scorrere, il bordo sfuma: cosi' l'ultimo riquadro non
+   sembra tagliato per sbaglio ma "continua sotto" */
+.pan-conto .pc-scala.scorre {
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent);
+}
 .pan-conto .bc-griglia { flex: 0 0 auto; }
 
 .bc-cat { position: sticky; top: 0; z-index: 6; display: flex; gap: 8px; flex-wrap: wrap;
@@ -2736,16 +2786,21 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
 /* Il conto sta IN FONDO anche qui, come in "+ Nuovo": e' il posto dove
    la cassiera lo cerca, e averlo in alto in un posto e in basso
    nell'altro voleva dire due abitudini diverse per la stessa cosa. */
-.entry .pc-fondo { margin-top: 0; padding-bottom: 0; }
+/* `auto` e non `0`: il pannello adesso e' alto quanto la scheda, e il
+   margine automatico e' quello che spinge il conto in fondo e ce lo
+   TIENE. Con 0 il conto si fermava subito dopo l'ultima card e finiva a
+   mezz'aria, spostandosi ogni volta che il contenuto sopra cambiava. */
+.entry .pc-fondo { margin-top: auto; padding-bottom: 0; }
 .entry .pan-conto .bc-cat { position: static; background: none; padding: 0 0 2px; }
 .entry .pan-conto .bc-fondo { position: static; box-shadow: none; background: rgba(0, 0, 0, 0.3); }
 /* dentro la scheda i tasti del conto sono quattro o meno: possono
    respirare senza andare a capo */
 .entry .pan-conto .bc-tasti { flex-wrap: wrap; }
 
-/* La scheda che vola: qui dentro ci sta un pannello intero, quindi
-   scorre. Le card del bar restano larghe come in "+ Nuovo". */
-.entry.vola .pan-conto { max-height: none; }
+/* La scheda che vola: dentro c'e' un pannello intero, che si prende
+   tutta l'altezza rimasta e si rimpicciolisce se non ci sta. NON
+   scorre: il conto in fondo deve restare dov'e'. */
+.entry.vola .pan-conto { max-height: none; flex: 1 1 auto; min-height: 0; }
 
 /* ── le due card sopra l'orario: bambini e Crazy Jumping ──
    Sono sempre in ballo, quindi tengono le due fasce SEMPRE aperte:

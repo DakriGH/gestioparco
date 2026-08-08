@@ -379,6 +379,27 @@ gruppo('I dati di prima continuano a funzionare');
   }
 }
 
+/* ============================================================
+   LA SCALA: tutto dentro lo schermo, e il conto fermo in fondo
+   ============================================================ */
+gruppo('Quanto rimpicciolire, e quanto vuoto lasciare sopra');
+{
+  const k = app.scalaChe;
+  prova('se ci sta, non si tocca niente', k(400, 800) === 1 && k(800, 800) === 1);
+  prova('se non ci sta, si riduce quel tanto', Math.abs(k(1000, 800) - 0.8) < 1e-9);
+  prova('non si rimpicciolisce mai sotto il leggibile', k(10000, 800) === 0.6);
+  prova('non si ingrandisce mai oltre il naturale', k(100, 800) === 1);
+  /* una divisione al contrario e il pannello raddoppierebbe invece di
+     ridursi: e' l'errore che questo gruppo esiste per prendere */
+  prova('non torna mai un valore piu’ grande di 1',
+    [[1, 900], [900, 1], [0, 0], [-5, 800], [800, -5], [NaN, 800]]
+      .every(([v, h]) => { const r = k(v, h); return r <= 1 && r >= 0.6; }));
+
+  const sopra = app.spazioSopra;
+  prova('il vuoto sopra c’è sempre, anche su schermi piccoli', sopra() >= 76);
+  prova('e non diventa mai mezza pagina', sopra() <= 170);
+}
+
 /* ---------- il verdetto ---------- */
 console.log('\n' + '━'.repeat(52));
 if (ko) {
