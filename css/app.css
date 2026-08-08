@@ -1085,14 +1085,30 @@ main {
 /* Larghezza FISSA, non minima: cosi' il tempo e i soldi restano
    sempre nello stesso punto, qualunque cifra ci sia dentro. Prima
    ballavano a ogni secondo e a ogni euro. */
+/* Etichetta sopra e numero sotto, esattamente come la cifra dei soldi
+   qui accanto: "45:12" da solo non dice se manca, se e' sforato o se e'
+   il tempo passato dentro. */
 .e-conto {
-  font-family: 'Fredoka', sans-serif;
-  font-size: 29px;
-  font-weight: 700;
   width: 116px;
   flex: 0 0 116px;
   text-align: right;
   white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.05;
+}
+.e-conto .k {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.78);
+}
+.e-conto .v {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 29px;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
@@ -1604,6 +1620,8 @@ main {
   .e-kids-badge { min-width: 46px; height: 40px; font-size: 18px; }
   .e-body { padding: 14px; gap: 10px; }
   .e-count { font-size: 32px; }
+  .e-conto .v { font-size: 26px; }
+  .e-conto .k { font-size: 10px; }
   .e-range { font-size: 18px; }
   .e-controls { gap: 8px; }
   .e-step { padding: 7px 8px 8px; gap: 4px; }

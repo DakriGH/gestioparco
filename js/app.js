@@ -785,7 +785,13 @@ function bcCardTempo() {
   const pag = Math.min(min, minutiPagati(c));
   const tutto = min > 0 && pag >= min;
   const aperto = !!c.payLater;
-  return '<div class="bc-card presa bc-tempo' + (tutto ? ' saldata' : '') + '">' +
+  /* NON e' "presa" come le altre. Li' l'accensione vuol dire "ne hai
+     preso almeno uno", e si spegne quando torni a zero; il tempo invece
+     c'e' sempre, quindi restava accesa per sempre -- un'evidenziazione
+     che non distingue niente e' solo una macchia di colore in piu'.
+     Resta la spunta verde quando e' tutto pagato, che quella una cosa
+     la dice. */
+  return '<div class="bc-card bc-tempo' + (tutto ? ' saldata' : '') + '">' +
     '<button class="bc-su" data-a="dur" data-v="+">' +
       '<span class="bc-fant">' + (aperto ? '\u221e' : fmtMin(min)) + '</span>' +
       ICONE.tempo() +
@@ -802,8 +808,13 @@ function bcCardTempo() {
        genere di doppione da cui nascono i conti storti.
        Cambia solo l'unita' con cui si guarda la stessa cosa: li'
        teste, qui i minuti che quelle teste hanno comprato. */
+    /* Senza bambini non c'e' tempo di parco da pagare, e i due tasti
+       restano spenti: allora lo si DICE, se no sembrano rotti. */
     '<div class="bc-zone v"><span class="bc-chip">' +
-      (aperto ? 'a tempo' : tutto ? '\u2713 ' + fmtMin(min) : pag + '/' + min + '\u2032') + '</span>' +
+      (!bcQ('bimbi') ? 'nessun bambino'
+        : aperto ? 'a tempo'
+        : tutto ? '\u2713 ' + fmtMin(min)
+        : pag + '/' + min + '\u2032') + '</span>' +
       '<button data-a="pagatempo" data-v="-1"' + (bcPag('bimbi') <= 0 ? ' disabled' : '') + '>\u2212</button>' +
       '<button data-a="pagatempo" data-v="1"' + (bcPag('bimbi') >= bcQ('bimbi') ? ' disabled' : '') + '>+</button>' +
     '</div></div>';
@@ -1183,7 +1194,11 @@ function accendiPersone() {
     sez.classList.remove('evidenzia');
     void sez.offsetWidth;
     sez.classList.add('evidenzia');
-    sez.scrollIntoView({ block: 'nearest' });
+    /* NIENTE SALTO. Portare la fascia a vista con uno scorrimento
+       lasciava la fila delle card tagliata a meta' e le linguette fuori
+       dallo schermo: sembrava rotto. Il battito basta a dire dov'e', e
+       quando il pannello ci sta tutto -- che e' il caso sulla tavoletta
+       -- non c'era niente da portare a vista. */
     setTimeout(() => sez.classList.remove('evidenzia'), 3000);
   }, 60);
 }
@@ -2460,8 +2475,17 @@ function entryCard(entry) {
   wrist.onclick = (ev) => { ev.stopPropagation(); apriMenuBracciale(wrist, entry); };
   riga.appendChild(wrist);
 
-  const count = el('div', 'e-conto num', '--:--');
-  riga.appendChild(count);
+  /* IL NUMERO GRANDE DA SOLO NON DICE COSA CONTA: lo stesso "45:12"
+     puo' essere il tempo che manca, quello sforato o quello passato
+     dentro con la tariffa aperta, e il colore della scheda lo suggerisce
+     ma non lo dice. Sopra ci va la parola, come gia' fa la cifra dei
+     soldi qui accanto ("DA PAGARE"). */
+  const countBox = el('div', 'e-conto');
+  const countK = el('span', 'k', '');
+  const count = el('span', 'v num', '--:--');
+  countBox.appendChild(countK);
+  countBox.appendChild(count);
+  riga.appendChild(countBox);
 
   /* i soldi: etichetta sopra, numero sotto */
   const soldi = el('div', 'e-soldi');
@@ -2593,7 +2617,7 @@ function entryCard(entry) {
 
   cardRefs.set(entry.id, {
     card, count, range, sKids, sCrazy, sTime,
-    dueVal: soldiV, soldiK, soldi, wrist, bimbiV, crzV, crz,
+    dueVal: soldiV, soldiK, soldi, wrist, bimbiV, crzV, crz, countK,
     payPanel, payBtn
   });
   syncCard(entry);
@@ -3615,9 +3639,12 @@ function tick() {
       // l'orario d'inizio è arrotondato ai 5 minuti e può cadere
       // qualche minuto avanti: non mostro un tempo trascorso negativo
       r.count.textContent = fmtClock(Math.max(0, now - entry.startTime));
+      if (r.countK) r.countK.textContent = 'dentro da';
       soldiDi(r, entry, dueOf(entry));                     // il conto sale col tempo
     } else {
-      r.count.textContent = fmtClock(endTimeOf(entry) - now);
+      const resta = endTimeOf(entry) - now;
+      r.count.textContent = fmtClock(resta);
+      if (r.countK) r.countK.textContent = resta < 0 ? 'sforato da' : 'esce fra';
     }
   });
 }
