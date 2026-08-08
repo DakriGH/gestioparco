@@ -307,6 +307,29 @@
   }
 
   /* Completa avatar parziali e converte il vecchio formato (dress.enabled) */
+  /* UN PEZZO SOPRA L'ALTRO, SALTANDO I BUCHI.
+     Object.assign copia anche le chiavi che valgono `undefined`, e
+     cosi' un capo salvato come { style: 'maglietta', color: undefined }
+     cancellava il colore di serie invece di lasciarlo: la figura usciva
+     con fill="undefined", cioe' un pezzo invisibile. Qui i buchi si
+     saltano e sotto resta quello che c'era. */
+  function fondi(base, sopra) {
+    const out = Object.assign({}, base);
+    if (sopra && typeof sopra === 'object') {
+      Object.keys(sopra).forEach(k => {
+        if (sopra[k] !== undefined && sopra[k] !== null) out[k] = sopra[k];
+      });
+    }
+    return out;
+  }
+  /* Un colore che non e' un colore fa sparire il pezzo senza dire
+     niente. Arrivano da dati vecchi, da un salvataggio interrotto o da
+     un sincronismo storto: meglio il colore di serie che un buco. */
+  const TINTA = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
+  function tinta(v, ripiego) {
+    return (typeof v === 'string' && TINTA.test(v.trim())) ? v.trim() : ripiego;
+  }
+
   function normalize(av, role) {
     const base = defaultFor(role || (av && av.role) || 'altro');
     if (!av || typeof av !== 'object') return base;
@@ -317,16 +340,27 @@
          descrizione di chi e' gia' registrato. */
       scelti: av.scelti ? Object.assign({}, av.scelti) : undefined,
       role: av.role || base.role,
-      skin: av.skin || base.skin,
-      hair: Object.assign({}, base.hair, av.hair),
-      hat: Object.assign({}, base.hat, av.hat),
+      skin: tinta(av.skin, base.skin),
+      hair: fondi(base.hair, av.hair),
+      hat: fondi(base.hat, av.hat),
       glasses: typeof av.glasses === 'string' ? av.glasses : base.glasses,
       facial: typeof av.facial === 'string' ? av.facial : base.facial,
-      top: Object.assign({}, base.top, av.top),
-      pants: Object.assign({}, base.pants, av.pants),
-      shoes: Object.assign({}, base.shoes, av.shoes),
-      bag: Object.assign({}, base.bag, av.bag)
+      top: fondi(base.top, av.top),
+      pants: fondi(base.pants, av.pants),
+      shoes: fondi(base.shoes, av.shoes),
+      bag: fondi(base.bag, av.bag)
     };
+    /* le tinte si controllano una per una: e' l'ultimo posto in cui si
+       puo' fermare un colore storto prima che diventi un pezzo
+       invisibile addosso a qualcuno */
+    out.hair.color = tinta(out.hair.color, base.hair.color);
+    out.hat.color = tinta(out.hat.color, base.hat.color);
+    out.top.color = tinta(out.top.color, base.top.color);
+    out.top.color2 = tinta(out.top.color2, base.top.color2);
+    out.pants.color = tinta(out.pants.color, base.pants.color);
+    out.pants.color2 = tinta(out.pants.color2, base.pants.color2);
+    out.shoes.color = tinta(out.shoes.color, base.shoes.color);
+    out.bag.color = tinta(out.bag.color, base.bag.color);
     // vecchio modello: vestito lungo come flag separato
     if (av.dress && av.dress.enabled) {
       out.top = {

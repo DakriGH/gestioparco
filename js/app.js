@@ -879,6 +879,14 @@ function syncPeople(container, people, onChange) {
      un colpo: il pannello va rimisurato subito, se no il conto in fondo
      esce dallo schermo */
   if (typeof adattaTutto === 'function' && PAN.root && PAN.root.contains(container)) adattaTutto();
+  /* La tavolozza appena aperta va PORTATA A VISTA: si apre sopra la
+     fila, e se in quel momento il vano e' scorso in basso resterebbe
+     fuori dallo schermo -- toccare "Scarpe" e non veder comparire
+     niente e' peggio che non avere il tasto. */
+  if (container.dataset.tav) {
+    const tav = container.querySelector('.volante');
+    if (tav && tav.scrollIntoView) tav.scrollIntoView({ block: 'nearest' });
+  }
 
   /* il tasto per togliere sta in testa al blocco: toglie chi stai
      vestendo, o tutti se non ne stai vestendo nessuno */

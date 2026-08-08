@@ -507,6 +507,112 @@ gruppo('Quanto rimpicciolire, e quanto vuoto lasciare sopra');
   prova('e non si mangia la scheda', sopra() <= 60);
 }
 
+/* ============================================================
+   BOMBARDAMENTO
+   Le prove qui sopra passano per gli stati che ho pensato io. Questa
+   passa per quelli che non ho pensato: migliaia di avatar tirati a
+   sorte, compresi quelli sgangherati che possono arrivare da dati
+   vecchi o da un salvataggio interrotto a metà.
+   ============================================================ */
+gruppo('Bombardamento: cinquemila avatar a caso');
+{
+  /* generatore ripetibile: se qualcosa si rompe, si rompe di nuovo
+     uguale e si può guardarci dentro */
+  let seme = 20260808;
+  const caso = (n) => { seme = (seme * 1103515245 + 12345) % 2147483648; return seme % n; };
+  const scegli = (a) => a[caso(a.length)];
+  const forse = (v) => (caso(4) === 0 ? undefined : v);
+
+  const SPAZZATURA = [null, undefined, '', 0, -1, NaN, {}, [], 'sombrero', '#nonUnColore', 1e9, ' '];
+  /* tinte che tinte non sono: arrivano da dati vecchi, da un
+     salvataggio interrotto o da un sincronismo storto, e senza
+     controllo diventano un pezzo invisibile addosso a qualcuno */
+  const TINTE_STORTE = ['', ' ', 'rosso', '#GGG', '#12', '#1234567', 'rgb(1,2,3)', null, 0, NaN, {}, '#ff00ff'];
+  const tintaACaso = (buone) => (caso(5) === 0 ? scegli(TINTE_STORTE) : (scegli(buone).c || scegli(buone)));
+  const avatarACaso = () => {
+    const modo = caso(10);
+    if (modo === 0) return scegli(SPAZZATURA);
+    if (modo === 1) return { top: scegli(SPAZZATURA), pants: scegli(SPAZZATURA), hair: scegli(SPAZZATURA) };
+    return {
+      role: forse(scegli(AV.ROLES).key),
+      skin: forse(scegli(AV.SKINS)),
+      hair: { style: forse(scegli(AV.HAIR).key), color: forse(tintaACaso(AV.HAIR_COLORS)) },
+      hat: { style: forse(scegli(AV.HAT).key), color: forse(tintaACaso(AV.COLORS)) },
+      glasses: forse(scegli(AV.GLASSES).key),
+      facial: forse(scegli(AV.FACIAL).key),
+      top: { style: forse(scegli(SOPRA.concat(['maglione', 'giubbotto', 'boh']))),
+             color: forse(tintaACaso(AV.COLORS)), pattern: forse(scegli(AV.PATTERNS).key) },
+      pants: { style: forse(scegli(SOTTO.concat(['boh']))), color: forse(tintaACaso(AV.COLORS)),
+               pattern: forse(scegli(AV.PATTERNS).key) },
+      shoes: { style: forse(scegli(AV.SHOES).key), color: forse(tintaACaso(AV.COLORS)) },
+      bag: { style: forse(scegli(AV.BAG).key), color: forse(tintaACaso(AV.COLORS)) },
+      scelti: caso(3) === 0 ? undefined : { maglietta: caso(2) === 0, pantaloni: caso(2) === 0, capelli: caso(2) === 0 }
+    };
+  };
+
+  const GIRI = 5000;
+  let rottura = '', nonIdempotente = '', trattiRotti = '', schedaRotta = '', tagRotti = '';
+  for (let i = 0; i < GIRI && !rottura; i++) {
+    const grezzo = avatarACaso();
+    try {
+      const av = app.AV.normalize(grezzo, 'altro');
+
+      /* 1. la figura si disegna sempre, e senza buchi nei numeri */
+      const svg = app.AV.build(av, {});
+      if (/NaN|undefined|\[object|Infinity/.test(svg)) { rottura = 'figura con buchi al giro ' + i; break; }
+      const aperti = (svg.match(/<path|<circle|<rect|<line|<ellipse/g) || []).length;
+      const chiusi = (svg.match(/\/>/g) || []).length;
+      if (aperti !== chiusi && !tagRotti) tagRotti = 'giro ' + i + ': ' + aperti + ' aperti, ' + chiusi + ' chiusi';
+
+      /* 2. NORMALIZZARE DUE VOLTE DEVE DARE LA STESSA COSA.
+            Se non fosse così, un avatar cambierebbe da solo a ogni
+            salvataggio — e chi è registrato si ritroverebbe vestito
+            diverso senza che nessuno l'abbia toccato. */
+      const due = app.AV.normalize(JSON.parse(JSON.stringify(av)), 'altro');
+      if (!nonIdempotente && JSON.stringify(due) !== JSON.stringify(av)) {
+        nonIdempotente = 'giro ' + i + ': ' + JSON.stringify(av.top) + ' → ' + JSON.stringify(due.top);
+      }
+
+      /* 3. i tratti scritti: mai un testo vuoto o rotto */
+      const tr = app.AV.traits(av, 4, caso(2) === 0);
+      if (!trattiRotti && tr.some(t => !t || typeof t.txt !== 'string' || !t.txt.trim() || /NaN|undefined/.test(t.txt))) {
+        trattiRotti = 'giro ' + i + ': ' + JSON.stringify(tr.map(t => t && t.txt));
+      }
+
+      /* 4. la scheda del banco si apre comunque, e completa */
+      const h = app.armadioDi({ id: 'f' + i, role: av.role, name: '', note: '', avatar: av },
+        caso(3) === 0 ? scegli(['capelli', 'scarpe', '']) : '');
+      if (!schedaRotta && (conta(h, /data-top="/g) !== SOPRA.length ||
+          conta(h, /data-pants="/g) !== SOTTO.length || /NaN|undefined/.test(h))) {
+        schedaRotta = 'giro ' + i;
+      }
+    } catch (e) { rottura = 'giro ' + i + ': ' + e.message; }
+  }
+
+  prova('cinquemila avatar a caso, nessuna eccezione', !rottura, rottura);
+  prova('la figura non ha mai buchi nei numeri né tag aperti', !tagRotti, tagRotti);
+  prova('normalizzare due volte dà sempre lo stesso avatar', !nonIdempotente, nonIdempotente);
+  prova('i tratti scritti non sono mai vuoti o rotti', !trattiRotti, trattiRotti);
+  prova('la scheda si apre completa in tutti i casi', !schedaRotta, schedaRotta);
+
+  /* Ogni colore che esce da normalize deve ESSERE un colore: e' l'ultimo
+     posto in cui si puo' fermare una tinta storta prima che diventi un
+     pezzo invisibile addosso a qualcuno. */
+  const COLORE = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
+  let tintaStorta = '';
+  seme = 20260808;
+  for (let i = 0; i < 1500 && !tintaStorta; i++) {
+    const av = app.AV.normalize(avatarACaso(), 'altro');
+    const tinte = { pelle: av.skin, capelli: av.hair.color, cappello: av.hat.color,
+      sopra: av.top.color, 'sopra-2': av.top.color2, sotto: av.pants.color,
+      'sotto-2': av.pants.color2, scarpe: av.shoes.color, borsa: av.bag.color };
+    Object.keys(tinte).forEach(k => {
+      if (!tintaStorta && !COLORE.test(String(tinte[k]))) tintaStorta = k + ' = ' + String(tinte[k]) + ' (giro ' + i + ')';
+    });
+  }
+  prova('nessuna tinta storta sopravvive a normalize', !tintaStorta, tintaStorta);
+}
+
 /* ---------- il verdetto ---------- */
 console.log('\n' + '━'.repeat(52));
 if (ko) {

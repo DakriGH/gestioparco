@@ -2723,7 +2723,21 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
 
 .armadio .tinte { display: grid; gap: 4px; }
 .armadio .tinte button { height: 27px; border-radius: 7px; border: 3px solid transparent;
-  padding: 0; cursor: pointer; min-width: 0; }
+  padding: 0; cursor: pointer; min-width: 0; position: relative; }
+/* Il bersaglio per il dito e' piu' largo del quadratino, ma non sposta
+   niente: la scala rimpicciolisce anche i bersagli, e una pastiglia di
+   colore alta ventisette pixel al banco ne diventa sedici -- che col
+   pollice si sbaglia. Meta' del gap per lato: si allarga fino a
+   toccare la vicina, mai a coprirla. */
+.armadio .tinte button::after { content: ""; position: absolute; inset: -2px; }
+
+/* Stessa cura per i comandi piu' battuti del pannello: il piu' e il
+   meno dell'orario, le pastiglie dei tagli di tempo e le pastiglie del
+   bar. Non cambiano misura -- se crescessero, crescerebbe il pannello e
+   la scala scenderebbe ancora -- ma il dito ne prende qualcuno in piu'. */
+.pan-conto .round-btn, .pan-conto .chips button, .pan-conto .step-b { position: relative; }
+.pan-conto .round-btn::after, .pan-conto .chips button::after,
+.pan-conto .step-b::after { content: ""; position: absolute; inset: -4px; border-radius: inherit; }
 .armadio .tinte button.on { border-color: #fff; }
 /* la ruota: il sedicesimo posto, per la tinta che non c'e' in fila */
 .armadio .ruota { position: relative; overflow: hidden; border: 3px solid transparent;
@@ -2731,8 +2745,13 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
   background: conic-gradient(#E23D4B,#F97316,#FBBF24,#22C55E,#0EA5E9,#2547C4,#8B5CF6,#EC4899,#E23D4B); }
 .armadio .ruota input { position: absolute; inset: -6px; opacity: 0; cursor: pointer; }
 
-/* la tavolozza degli accessori: si apre sotto il pulsante toccato */
-.armadio .volante { position: absolute; z-index: 30; top: calc(100% + 6px); left: 0;
+/* LA TAVOLOZZA SI APRE SOPRA LA FILA, non sotto.
+   La fila degli accessori e' la penultima del riquadro, e il vano che
+   la contiene ha i bordi tagliati: aprendola sotto finiva fuori dal
+   vano -- fino a duecento pixel piu' in basso -- e toccando "Scarpe"
+   non compariva niente. Sopra c'e' sempre tutto il resto del
+   guardaroba, quindi il posto non manca mai. */
+.armadio .volante { position: absolute; z-index: 30; bottom: calc(100% + 6px); left: 0;
   background: #1B1B24; border: 1px solid rgba(255,255,255,.16); border-radius: 14px;
   padding: 8px; box-shadow: 0 14px 34px rgba(0,0,0,.6);
   display: grid; grid-template-columns: repeat(8, 34px); gap: 5px; }
