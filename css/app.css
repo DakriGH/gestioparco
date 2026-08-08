@@ -843,6 +843,10 @@ main {
    da dove arriva; poi i gruppi uno per uno, che servono quando il
    conto non torna e bisogna capire dove.
    ══════════════════════════════════════════════════════════ */
+/* il tasto in fondo all'archivio: si vede che e' la fine della fetta,
+   non la fine di tutto */
+.mostra-tutti { margin-top: 10px; background: var(--surface-2); }
+
 .reg-giorni { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
 .reg-giorni .btn { min-width: 46px; }
 .reg-eti { flex: 1; text-align: center; display: flex; flex-direction: column; gap: 1px; }

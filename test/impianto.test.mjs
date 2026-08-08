@@ -168,6 +168,85 @@ gruppo('Le liste che arrivano da fuori passano tutte da lista()');
     /function lista\(x\) \{ return Array\.isArray\(x\)/.test(APP));
 }
 
+gruppo('Ogni funzione chiamata esiste davvero');
+{
+  /* IL GUASTO PIU' STUPIDO E PIU' CARO.
+     Ritoccando un pezzo grosso di file si puo' portare via una
+     funzione che sta li' in mezzo: il file resta valido, `node --check`
+     e' contento, le prove sui conti passano -- e al banco quel tasto
+     lancia "non e' definita" e non fa niente. E' successo davvero: la
+     patch dell'hub si e' portata via il foglio dell'uscita, e me ne
+     sono accorto solo premendo il tasto a mano.
+     Qui si guarda ogni `nome(...)` del file e si pretende che quel
+     nome sia definito da qualche parte: nel file stesso, negli altri
+     file dell'app, o fra le cose che il browser mette a disposizione. */
+  const fonti = ['js/app.js', 'js/avatar.js', 'js/capi.js', 'js/icone.js', 'js/dati.js', 'js/cloud.js']
+    .filter(f => existsSync(join(RADICE, f)))
+    .map(f => leggi(f)).join('\n');
+
+  const definiti = new Set();
+  for (const m of fonti.matchAll(/function\s+([A-Za-z_$][\w$]*)\s*\(/g)) definiti.add(m[1]);
+  for (const m of fonti.matchAll(/(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=/g)) definiti.add(m[1]);
+  for (const m of fonti.matchAll(/([A-Za-z_$][\w$]*)\s*[:,]\s*(?:function|\()/g)) definiti.add(m[1]);
+  /* i parametri e le variabili di comodo: si accettano tutti i nomi
+     che compaiono come argomenti di una funzione o in una destrutturazione */
+  for (const m of fonti.matchAll(/\(([^()]{0,200})\)\s*=>/g))
+    m[1].split(',').forEach(x => { const n = x.trim().replace(/[^\w$].*$/, ''); if (n) definiti.add(n); });
+  for (const m of fonti.matchAll(/function[^(]*\(([^()]{0,200})\)/g))
+    m[1].split(',').forEach(x => { const n = x.trim().replace(/[^\w$].*$/, ''); if (n) definiti.add(n); });
+
+  /* quello che c'e' comunque: browser, linguaggio, e i nomi delle
+     nostre librerie */
+  const DATI = new Set(('Math JSON Date Number String Object Array Boolean RegExp Error Promise Map Set ' +
+    'parseInt parseFloat isNaN isFinite encodeURIComponent decodeURIComponent setTimeout clearTimeout ' +
+    'setInterval clearInterval requestAnimationFrame cancelAnimationFrame fetch alert confirm prompt ' +
+    'Blob File FileReader URL Image Intl Symbol Proxy Reflect WeakMap WeakSet BigInt structuredClone ' +
+    'queueMicrotask atob btoa TextEncoder TextDecoder AbortController Event CustomEvent PointerEvent ' +
+    'MouseEvent KeyboardEvent ResizeObserver IntersectionObserver MutationObserver Notification ' +
+    'AV CAPI ICONE CLOUD DATI Sortable firebase getComputedStyle matchMedia print open close ' +
+    'if for while switch catch return typeof instanceof new delete void in of do else try finally ' +
+    'function class extends super this arguments eval Function Array32 Uint8Array Float32Array').split(/\s+/));
+
+  const chiamati = new Map();
+  /* si saltano le chiamate su un oggetto (`x.metodo(`), che non sono
+     nostre funzioni ma metodi di qualcun altro */
+  const app = leggi('js/app.js');
+  /* via i commenti E le stringhe: dentro le stringhe c'e' il CSS
+     (`rgba(`, `translateY(`) e l'HTML, che non sono chiamate a
+     funzioni nostre ma ci somigliano moltissimo */
+  const senzaCommenti = app
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/^\s*\/\/.*$/gm, ' ')
+    .replace(new RegExp('`(?:[^`\\\\]|\\\\.)*`', 'g'), '``')
+    .replace(new RegExp("'(?:[^'\\\\\\n]|\\\\.)*'", 'g'), "''")
+    .replace(new RegExp('"(?:[^"\\\\\\n]|\\\\.)*"', 'g'), '""')
+    /* e via anche i modelli di ricerca: dentro /^bar_(.+)_\d+$/ c'e'
+       un "bar_(" che sembra una chiamata e non lo e' */
+    .replace(new RegExp('/(?:[^/\\\\\\n]|\\\\.)+/[gimsuy]*', 'g'), ' RE ');
+  for (const m of senzaCommenti.matchAll(/(^|[^\w$.])([a-z][\w$]*)\s*\(/g)) {
+    const n = m[2];
+    if (!definiti.has(n) && !DATI.has(n)) chiamati.set(n, (chiamati.get(n) || 0) + 1);
+  }
+  const fantasmi = [...chiamati.keys()];
+  prova('nessuna funzione fantasma', fantasmi.length === 0,
+    'chiamate ma non definite: ' + fantasmi.join(', '));
+}
+
+gruppo('Le liste lunghe non si disegnano tutte in un colpo');
+{
+  /* A fine stagione l'archivio ha migliaia di ingressi: disegnarli
+     tutti vuol dire decine di migliaia di riquadri nella pagina, un
+     secondo per aprirlo e la tavoletta che se li porta dietro. Ne
+     bastano gli ultimi -- l'archivio serve a riaprire uno sbaglio, e
+     uno sbaglio e' sempre di poco fa -- con un tasto per vedere tutto. */
+  prova('l’archivio ha una soglia', /const ARCHIVIO_A_VISTA = \d+/.test(APP));
+  prova('e la soglia e’ un numero sensato',
+    (() => { const m = APP.match(/const ARCHIVIO_A_VISTA = (\d+)/); return m && +m[1] >= 50 && +m[1] <= 500; })());
+  prova('c’e’ il tasto per vedere tutto', APP.includes('Mostra tutti ('));
+  prova('e riaprendo l’archivio si riparte dagli ultimi',
+    /showArchive = !showArchive; archivioTutto = false;/.test(APP));
+}
+
 gruppo('I file di prova ci sono tutti e si chiamano fra loro');
 {
   const prove = readdirSync(join(RADICE, 'test')).filter(f => f.endsWith('.test.mjs'));

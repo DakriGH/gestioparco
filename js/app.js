@@ -380,6 +380,11 @@ function activeEntries() {
   return a.filter(e => !e.payLater).sort((x, y) => endTimeOf(x) - endTimeOf(y))
     .concat(a.filter(e => e.payLater).sort((x, y) => x.startTime - y.startTime));
 }
+/* quanti ingressi archiviati si disegnano prima di chiedere. Duecento
+   sono un paio di settimane piene: oltre, si sta cercando altro. */
+const ARCHIVIO_A_VISTA = 200;
+let archivioTutto = false;
+
 function archived() {
   return entries.filter(e => e.status !== 'active')
     .sort((a, b) => (b.closedAt || b.createdAt || 0) - (a.closedAt || a.createdAt || 0));
@@ -2493,7 +2498,7 @@ function buildActiveView() {
   }
   const arch = el('button', 'pill arch-btn' + (showArchive ? ' on' : ''));
   arch.innerHTML = showArchive ? '\u2190 Torna agli attivi' : ('\ud83d\uddc2\ufe0f Archivio (' + archived().length + ')');
-  arch.onclick = () => { showArchive = !showArchive; buildActiveView(); };
+  arch.onclick = () => { showArchive = !showArchive; archivioTutto = false; buildActiveView(); };
   head.appendChild(arch);
   root.appendChild(head);
 
@@ -2513,7 +2518,24 @@ function buildActiveView() {
   }
 
   const box = el('div', 'entries');
-  list.forEach(entry => box.appendChild(showArchive ? archiveCard(entry) : entryCard(entry)));
+  /* L'ARCHIVIO NON SI DISEGNA TUTTO.
+     A fine stagione qui dentro ci sono migliaia di ingressi, e
+     disegnarli tutti vuol dire decine di migliaia di riquadri nella
+     pagina: l'archivio ci mette un secondo ad aprirsi e la tavoletta
+     se lo porta dietro finche' resta li'.
+     Ne bastano gli ultimi: l'archivio serve a RIAPRIRE UNO SBAGLIO, e
+     uno sbaglio e' sempre di poco fa. Per guardare com'e' andato un
+     mese c'e' il registro, che i conti li fa senza disegnare niente.
+     Chi cerca proprio quello vecchio tocca "mostra tutti". */
+  const quanti = showArchive && !archivioTutto && list.length > ARCHIVIO_A_VISTA
+    ? ARCHIVIO_A_VISTA : list.length;
+  list.slice(0, quanti).forEach(entry => box.appendChild(showArchive ? archiveCard(entry) : entryCard(entry)));
+  if (quanti < list.length) {
+    const altri = el('button', 'btn btn-block mostra-tutti',
+      'Mostra tutti (' + list.length + ')');
+    altri.onclick = () => { archivioTutto = true; buildActiveView(); };
+    box.appendChild(altri);
+  }
   /* PRIMA si attaccano alla pagina, POI si misura dove sono finite:
      chiamata prima dell'appendChild, scivolaAlPosto interrogava schede
      che nel DOM non c'erano ancora, quindi l'animazione del riordino
@@ -4340,6 +4362,53 @@ function vistaStatistiche(dentro) {
     st.bambini + ' bambini \u00b7 ' + st.persone + ' accompagnatori'));
   fine.appendChild(el('b', null, 'in tutto ' + eur(st.incassato)));
   dentro.appendChild(fine);
+}
+
+/* Il foglio dell'uscita: due strade scritte, non un "sei sicuro?".
+   Uscire e cancellare sono cose diverse -- una lascia l'ingresso nei
+   conti della giornata, l'altra lo toglie di mezzo -- e vanno lette,
+   non indovinate. */
+function fogliUscita(entry, d, esci) {
+  const resta = d.total;
+  const s = sheet(resta > 0.005 ? 'Restano ' + eur(resta) + ' da incassare' : 'Esce il gruppo?');
+  s.body.appendChild(el('div', 'hint', resta > 0.005
+    ? 'Chi accompagna: ' + nomiDi(entry) + '. Puoi farlo uscire lo stesso: quello che manca resta segnato nel registro della giornata.'
+    : 'Chi accompagna: ' + nomiDi(entry) + '. Il conto e\u2019 saldato.'));
+
+  const scelta = (cls, em, titolo, sotto, fn) => {
+    const b = el('button', 'scelta-riga ' + cls);
+    b.appendChild(el('span', 'sc-em', em));
+    const t = el('span', 'sc-txt');
+    t.appendChild(el('b', null, titolo));
+    t.appendChild(el('span', null, sotto));
+    b.appendChild(t);
+    b.onclick = () => { s.close(); fn(); };
+    s.body.appendChild(b);
+    return b;
+  };
+
+  scelta('', '\ud83d\udeaa', 'Esce e va in archivio',
+    'Resta nel registro della giornata, con quello che ha pagato. Da li\u2019 puoi riaprirlo.',
+    esci);
+
+  scelta('pericolo', '\ud83d\uddd1\ufe0f', 'Elimina l\u2019ingresso',
+    'Sparisce del tutto: NON entra nel registro della giornata. Serve per gli sbagli, non per chi ha finito. Non si pu\u00f2 annullare.',
+    () => eliminaIngresso(entry));
+
+  footBtn(s.foot, 'Lascia stare', 'btn-ghost', s.close);
+}
+
+/* Toglie di mezzo un ingresso sbagliato: via dall'elenco, via dai
+   conti della giornata. I soldi che risultavano incassati se ne vanno
+   con lui -- ed e' il punto: se erano stati battuti per sbaglio, non
+   devono restare in cassa. */
+function eliminaIngresso(entry) {
+  if (volante) posaSubito(volante.card);
+  entries = lista(entries).filter(e => e.id !== entry.id);
+  saveEntries();
+  buildActiveView();
+  updateBadge();
+  toast('Ingresso eliminato \ud83d\uddd1\ufe0f');
 }
 
 function confirmSheet(title, text, onYes) {
