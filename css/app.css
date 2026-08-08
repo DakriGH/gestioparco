@@ -2180,7 +2180,13 @@ main {
 }
 /* la riga di testa resta della sua misura, il resto si prende tutto
    quello che avanza fino in fondo alla scheda */
-.entry.vola > .e-riga { flex: 0 0 auto; }
+/* L'intestazione si stringe quando la scheda vola: chi e', gli orari e
+   la cifra sono la stessa roba che il conto ripete qui sotto in
+   grande, e ogni pixel che si tiene lei e' un pixel che manca al
+   pannello -- che deve venire grande quasi quanto in "+ Nuovo". */
+.entry.vola > .e-riga { flex: 0 0 auto; padding: 6px 13px; }
+.entry.vola > .e-riga .e-av { transform: scale(.82); transform-origin: left center;
+  margin-right: -14px; }
 .entry.vola.aperto > .e-aperta { flex: 1 1 auto; min-height: 0; }
 .entry.vola .e-dentro { display: flex; flex-direction: column; min-height: 0;
   padding-left: 10px; padding-right: 10px; }
@@ -2684,7 +2690,7 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
    una decina di pixel in piu' -- e a quel punto tenere l'icona a 38 e
    il nome a 9,5px era sprecare il posto guadagnato. */
 .armadio .capo { padding: 3px 2px 4px; }
-.armadio .capo svg { display: block; width: 100%; height: auto; max-width: 50px; }
+.armadio .capo svg { display: block; width: 100%; height: auto; max-width: 54px; }
 .armadio .capo .nm { font-size: 11px; font-weight: 700; line-height: 1.05; text-align: center;
   letter-spacing: -.01em; color: rgba(255,255,255,.96); }
 .armadio .capo.on .nm { color: #221944; }
@@ -2780,7 +2786,7 @@ html:not(.anima) .card.evidenzia::after { animation: none; }
 @media (max-width: 759px) {
   .armadio { grid-template-columns: 98px 1fr; }
   .armadio .figura svg { width: 86px; height: 180px; }
-  .armadio .capo svg { max-width: 42px; }
+  .armadio .capo svg { max-width: 46px; }
   .armadio .capo .nm { font-size: 10px; }
   /* Tutti e otto su UNA riga anche stretti: con flex-wrap l'ultimo
      ("Altro") finiva da solo su una riga sua larga tutto il blocco. Si

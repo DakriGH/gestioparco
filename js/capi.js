@@ -285,6 +285,42 @@
   }
 
   /* Disegna un capo col suo colore e la sua fantasia. */
+  /* IL RIQUADRO E' UNO SOLO PER TUTTI I CAPI, e si stringe su quanto
+     occupano DAVVERO. Il riquadro fisso 0..48 lasciava un bordo di aria
+     tutt'attorno e i disegni venivano piccoli dentro il pulsante.
+     Ma stringere ogni capo sul PROPRIO ingombro sarebbe stato peggio
+     che lasciarlo com'era: pantaloni corti e pantaloni lunghi
+     riempirebbero il riquadro allo stesso modo, e la LUNGHEZZA e'
+     esattamente quello che li distingue -- come il vestito dal vestito
+     lungo e la gonna dalla gonna lunga. Un riquadro solo tiene le
+     proporzioni fra i capi e li ingrandisce tutti insieme.
+     Si calcola una volta sola, all'avvio, dalle sagome vere: cosi'
+     aggiungendo un capo il riquadro si riadatta da solo. */
+  let VISTA = null;
+  function riquadroComune() {
+    if (VISTA) return VISTA;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    Object.keys(CAPI).forEach(k => {
+      let d;
+      try { d = CAPI[k]('#888888'); } catch (e) { return; }
+      const n = (String(d && d.sagoma).match(/-?\d+(?:\.\d+)?/g) || []).map(Number);
+      /* i punti di controllo delle curve stanno per definizione fuori o
+         sul bordo della curva: il riquadro che ne esce e' semmai un
+         filo abbondante, mai stretto -- che sarebbe l'errore che taglia
+         il disegno */
+      for (let i = 0; i + 1 < n.length; i += 2) {
+        x0 = Math.min(x0, n[i]); x1 = Math.max(x1, n[i]);
+        y0 = Math.min(y0, n[i + 1]); y1 = Math.max(y1, n[i + 1]);
+      }
+    });
+    if (!isFinite(x0)) return (VISTA = '-3 -3 54 54');
+    const lato = Math.max(x1 - x0, y1 - y0) + 9;   // 4,5 per parte: il bordo bianco ci sta
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+    const arr = (v) => Math.round(v * 100) / 100;
+    VISTA = arr(cx - lato / 2) + ' ' + arr(cy - lato / 2) + ' ' + arr(lato) + ' ' + arr(lato);
+    return VISTA;
+  }
+
   function capo(chiave, colore, fantasia, misura) {
     const fn = CAPI[chiave];
     if (!fn) return '';
@@ -302,9 +338,11 @@
        scuro e uno bianco spariva sul tasto bianco della selezione. Con
        il bordo spesso la sagoma si stacca sempre, e da lontano si
        riconosce la forma prima ancora del colore.
-       Il viewBox e' allargato di tre pixel per lato, se no il bordo
-       grosso verrebbe tagliato ai margini. */
-    return `<svg viewBox="-3 -3 54 54" width="${m}" height="${m}" aria-hidden="true">` +
+       Il riquadro (vedi riquadroComune) e' stretto su quanto i capi
+       occupano davvero, quindi il disegno cresce dentro lo stesso
+       pulsante, senza che il pannello si allunghi di un pixel. */
+    const vb = riquadroComune();
+    return `<svg viewBox="${vb}" width="${m}" height="${m}" aria-hidden="true">` +
       (t.def ? `<defs>${t.def}</defs>` : '') +
       `<path d="${d.sagoma}" fill="none" stroke="rgba(255,255,255,.94)" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>` +
       `<path d="${d.sagoma}" fill="none" stroke="rgba(18,18,26,.9)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>` +
