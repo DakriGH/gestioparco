@@ -2646,7 +2646,12 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
 /* i chip di serie sono larghi un pollice l'uno: qui i tagli, i minuti
    esatti e il "paga dopo" devono stare tutti su una riga, quindi si
    stringono al testo */
+/* TUTTE DELLA STESSA MISURA. Lasciate stringere sul testo, "15m" veniva
+   larga la meta' di "1h30" e la fila sembrava sbilenca: una larghezza
+   minima uguale per tutte le rimette in riga. Il "Tempo aperto" resta
+   fuori -- e' un'altra cosa, non un taglio di tempo, e si vede che lo e'. */
 .riga-dur .chip { padding: 0 11px; min-width: 0; font-size: 15px; }
+.riga-dur .chips .chip:not(.later) { min-width: 64px; }
 .riga-dur .chip.later { flex: 0 0 auto; margin-left: auto; font-size: 14.5px; }.solobar.on { background: var(--ok); color: #08301F; }
 .solobar.on small { opacity: .85; }
 

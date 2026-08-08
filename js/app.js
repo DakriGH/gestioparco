@@ -494,8 +494,6 @@ function costruisciPannello() {
     if (!b || !p.contains(b)) return;
     const d = b.dataset;
     const c = C();
-    /* toccare qualunque altra cosa annulla la domanda dello Svuota */
-    if (d.svuota === undefined && d.a !== 'svuota') PAN.chiedeSvuota = false;
 
     /* l'uscita del gruppo: c'e' solo quando il pannello sta lavorando
        su un ingresso gia' registrato */
@@ -585,17 +583,7 @@ function costruisciPannello() {
       if (PAN.ingresso) { posa(cardRefs.get(PAN.ingresso.id) && cardRefs.get(PAN.ingresso.id).card); return; }
       commitEntry(); return;
     }
-    if (d.svuota !== undefined) {
-      if (!PAN.chiedeSvuota) { PAN.chiedeSvuota = true; pcFondoDis(); return; }
-      PAN.chiedeSvuota = false;
-      const cat = PAN.cat;
-      draft = freshDraft();
-      PAN.cat = cat;
-      const box = pcRif('.pc-people'); box.dataset.apri = ''; box.dataset.sig = '';
-      PAN.conto = draft;
-      aggiornaPannello();
-      return;
-    }
+    if (d.svuota !== undefined) { foglioSvuota(); return; }
     if (d.resto !== undefined) {
       const dovuto = contoResta();
       if (dovuto <= 0) return;
@@ -648,7 +636,6 @@ function montaPannello(host, conto, opz) {
   const p = costruisciPannello();
   PAN.conto = conto;
   PAN.ingresso = opz.ingresso || null;
-  PAN.chiedeSvuota = false;
   tocchi.id = null; tocchi.nato = null;
   const cats = bcCategorie();
   const voluta = opz.cat || PAN.cat;
@@ -1243,9 +1230,12 @@ function accTogli(av, acc, ruolo) {
 }
 
 function armadioDi(p, tavolozzaAperta) {
-  if (!p) return '<div class="invito">Tocca chi \u00e8 venuto \u2014 Mamma, Pap\u00e0, Nonna\u2026 \u2014 ' +
-    'e qui sotto compare come vestirlo. Ne basta <b>uno</b>: serve a ' +
-    'riconoscere il gruppo all\u2019uscita.</div>';
+  /* NIENTE INVITO, e il riquadro resta basso.
+     Questa schermata serve anche solo per il bar o per il solo Crazy:
+     non e' detto che ci siano bambini da registrare, e una spiegazione
+     lunga su chi mettere, sempre a video, e' rumore le volte in cui non
+     serve. La riga dei ruoli sopra dice gia' cosa si puo' fare. */
+  if (!p) return '';
   const av = p.avatar;
   /* solo il vestito LUNGO copre le gambe fino ai piedi: sotto quello
      un pantalone non si vedrebbe. Il vestito normale i sotto li lascia
@@ -1821,9 +1811,7 @@ function pcFondo() {
          vorrebbe dire cancellargli il conto sotto il naso. E chiede
          conferma, perche' rifarlo davanti al cliente e' una figuraccia. */
       (!PAN.ingresso && draft.touched
-        ? (PAN.chiedeSvuota
-          ? '<button class="btn bc-pericolo" data-svuota>\u26a0\ufe0f Butto via tutto? tocca ancora</button>'
-          : '<button class="btn" data-svuota>\ud83e\uddf9 Svuota</button>')
+        ? '<button class="btn" data-svuota>\ud83e\uddf9 Svuota\u2026</button>'
         : '') +
       (resta > 0 ? '<button class="btn" data-resto>\ud83e\uddee Resto</button>' +
         '<button class="btn" data-tutto>Paga tutto</button>' : '') +
@@ -2631,8 +2619,7 @@ const PAN = {
   root: null,          // il pannello: ce n'e' UNO SOLO e si sposta
   conto: null,         // il draft, oppure un ingresso gia' registrato
   ingresso: null,      // l'ingresso, se sto lavorando su uno registrato
-  cat: 'Parco',
-  chiedeSvuota: false
+  cat: 'Parco'
 };
 /* chi e' stato toccato per ultimo: serve solo alle animazioni, per far
    muovere QUELLA card e non tutta la griglia */
@@ -3062,9 +3049,17 @@ function adattaPannello(p, limiteSotto, cimaVoluta, largaVoluta) {
 
   /* il riquadro delle persone tiene il posto del guardaroba anche da
      chiuso: da nascosto e' largo zero e non si potrebbe misurare */
+  /* IL POSTO DEL GUARDAROBA SI TIENE SOLO SE QUALCUNO C'E'.
+     Serve a non far ballare la scala aprendo e chiudendo l'armadio --
+     ma se nessuno e' stato messo, l'armadio non c'e' e non ci sara'
+     finche' non lo si chiede: tenergli il posto vorrebbe dire trecento
+     pixel di vuoto in una schermata usata magari solo per due birre.
+     Il salto di scala resta uno solo, quando si mette il primo
+     riferimento, ed e' un gesto voluto con un effetto visibile. */
   const box = p.querySelector('.pc-people');
   if (box) {
-    const h = altezzaPersone(box);
+    const gente = PAN.conto && PAN.conto.people && PAN.conto.people.length;
+    const h = gente ? altezzaPersone(box) : 0;
     box.style.minHeight = h ? h + 'px' : '';
   }
 
@@ -3625,6 +3620,110 @@ function tick() {
       r.count.textContent = fmtClock(endTimeOf(entry) - now);
     }
   });
+}
+
+/* SVUOTA: SI SCEGLIE COSA.
+   Prima era un tasto che al primo tocco diventava "Butto via tutto?
+   tocca ancora": non si capiva cosa avrebbe buttato, e per saperlo
+   bisognava premerlo. Adesso e' un foglio come quello dell'uscita, con
+   le cose elencate e ognuna che si puo' lasciare -- perche' quasi
+   sempre si vuole azzerare una parte sola, non ricominciare tutto. */
+function foglioSvuota() {
+  const c = draft;
+  const barPresi = (c.barItems || []).filter(x => num(x.qty, 0) > 0);
+  const soldi = r2(num(c.paidPark, 0) + num(c.paidBar, 0));
+  const VOCI = [
+    { k: 'numeri', t: 'Bambini e Crazy Jumping',
+      d: (clamp(num(c.children, 0), 0, 1e6) || 0) + ' bambini · ' +
+         (clamp(num(c.crazyJumping, 0), 0, 1e6) || 0) + ' Crazy',
+      c: num(c.children, 0) > 0 || num(c.crazyJumping, 0) > 0 },
+    { k: 'bar', t: 'Il bar',
+      d: barPresi.length ? barPresi.map(x => x.qty + '× ' + x.name).join(', ') : 'niente segnato',
+      c: barPresi.length > 0 },
+    { k: 'persone', t: 'Chi accompagna',
+      d: (c.people || []).length ? (c.people || []).map(p => nameOf(p)).join(', ') : 'nessuno',
+      c: (c.people || []).length > 0 },
+    { k: 'tempo', t: 'Orario, durata e bracciale',
+      d: fmtTime(c.startTime) + ' · ' + (c.payLater ? 'tempo aperto' : fmtMin(c.durationMinutes)),
+      c: true },
+    { k: 'soldi', t: 'I soldi gia\u2019 presi',
+      d: soldi > 0 ? eur(soldi) + ' incassati' : 'niente incassato',
+      c: soldi > 0 }
+  ];
+  const scelte = {};
+  VOCI.forEach(v => { scelte[v.k] = v.c; });
+
+  const s = sheet('Svuota che cosa?');
+  s.body.appendChild(el('div', 'hint',
+    'Quello che lasci acceso viene azzerato. Quello che spegni resta com\u2019e\u2019.'));
+  VOCI.forEach(v => {
+    const riga = el('button', 'switch-row');
+    riga.setAttribute('role', 'switch');
+    const txt = el('span', 'sw-txt');
+    txt.appendChild(el('b', null, v.t));
+    txt.appendChild(el('span', null, v.d));
+    riga.appendChild(txt);
+    const sw = el('span', 'switch');
+    riga.appendChild(sw);
+    /* l'acceso sta sull'interruttore, non sulla riga: e' la stessa
+       classe che usano gli interruttori delle Impostazioni */
+    const dipingi = () => {
+      sw.classList.toggle('on', !!scelte[v.k]);
+      riga.setAttribute('aria-checked', scelte[v.k] ? 'true' : 'false');
+    };
+    riga.onclick = () => { scelte[v.k] = !scelte[v.k]; dipingi(); };
+    dipingi();
+    s.body.appendChild(riga);
+  });
+
+  footBtn(s.foot, 'Lascia stare', 'btn-ghost', s.close);
+  footBtn(s.foot, '\ud83e\uddf9 Svuota', 'btn-danger', () => {
+    s.close();
+    svuotaScelto(scelte);
+  });
+}
+
+/* Azzera quello che e' stato scelto. I soldi tornano indietro dalla
+   porta di sempre -- segnaPagate, che passa da muoviSoldi -- e mai
+   scritti a mano: una riga svuotata a mano lascerebbe l'importo in
+   cassa senza piu' niente a cui riferirsi. */
+function svuotaScelto(scelte) {
+  const c = draft;
+  const tutto = scelte.numeri && scelte.bar && scelte.persone && scelte.tempo && scelte.soldi;
+  if (tutto) {
+    const cat = PAN.cat;
+    draft = freshDraft();
+    PAN.cat = cat;
+    PAN.conto = draft;
+  } else {
+    const rendi = (id) => segnaPagate(id, 0);
+    if (scelte.numeri) { rendi('bimbi'); rendi('crazy'); bcSetQ('bimbi', 0); bcSetQ('crazy', 0); }
+    if (scelte.bar) {
+      (c.barItems || []).slice().forEach(x => { rendi(x.id); bcSetQ(x.id, 0); });
+      c.barItems = [];
+    }
+    if (scelte.soldi) {
+      /* tutte le righe che hanno incassato qualcosa, non solo quelle a
+         video: una bibita tolta dal listino non deve restare in cassa */
+      Object.keys(c.paidLines || {}).forEach(rendi);
+      Object.keys(c.paidAmt || {}).forEach(rendi);
+      c.paidPark = 0; c.paidBar = 0;
+    }
+    if (scelte.persone) c.people = [];
+    if (scelte.tempo) {
+      const f = freshDraft();
+      c.startTime = f.startTime; c.durationMinutes = f.durationMinutes;
+      c.payLater = false; c.braceletColor = null; c.braceletCustom = true;
+      c.baseMinutes = undefined;
+    }
+    if (!num(c.children, 0) && !num(c.crazyJumping, 0) && !(c.barItems || []).length &&
+        !(c.people || []).length) c.touched = false;
+  }
+  const box = pcRif('.pc-people');
+  if (box) { box.dataset.apri = ''; box.dataset.sig = ''; box.dataset.tav = ''; }
+  pcSalva();
+  aggiornaPannello();
+  toast('Svuotato');
 }
 
 function confirmSheet(title, text, onYes) {

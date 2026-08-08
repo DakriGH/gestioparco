@@ -250,8 +250,12 @@ const senzaId = s => s.replace(/k\d+/g, 'kN').replace(/a\d+/g, 'aN');
 
 gruppo('La scheda del banco: c’è tutto e nell’ordine giusto');
 {
+  /* Senza nessuno il riquadro resta BASSO e muto: questa schermata si usa
+     anche solo per il bar o per il solo Crazy, e una spiegazione lunga
+     su chi mettere, sempre a video, e' rumore le volte in cui non serve.
+     La riga dei ruoli sopra dice gia' cosa si puo' fare. */
   const vuoto = app.armadioDi(null, '');
-  prova('senza nessuno spiega cosa fare', vuoto.indexOf('invito') >= 0);
+  prova('senza nessuno non scrive niente', vuoto === '', 'lungo ' + vuoto.length);
 
   const h = app.armadioDi(persona(), '');
   prova('la figura c’è', conta(h, /<svg/g) > 0 && h.indexOf('class="figura"') >= 0);
