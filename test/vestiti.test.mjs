@@ -552,6 +552,19 @@ gruppo('La fascia del tempo: una sola, e dice fin quando e pagato');
   prova('e la punta indica il tasto anche quando la scatola non ci sta centrata',
     sorg.includes("setProperty('--punta'") &&
     readFileSync(join(RADICE, 'css/app.css'), 'utf8').includes('left: var(--punta'));
+  /* LE ANIMAZIONI: quelle che non devono ripartire.
+     Sono difetti che non si vedono in una prova sola -- si vedono al
+     decimo tocco, quando i tasti sembrano spostarsi da soli. */
+  prova('la nascita di una card si spegne dopo essere stata disegnata',
+    /tocchi\.nato = null;/.test(sorg));
+  prova('il pannello non fa il suo ingresso mentre la scheda vola',
+    /const inVolo = volante && volante\.card/.test(sorg));
+  prova('la misura del volo si prende una volta sola',
+    (sorg.match(/adattaTutto\(\); \}, \d+\)/g) || []).length === 1);
+  prova('scendendo, il pannello non si accartoccia',
+    /su\.style\.overflow = 'hidden'/.test(sorg));
+  prova('e le misure quasi uguali non si applicano',
+    /Math\.abs\(gia - spazio\) <= 4/.test(sorg));
   prova('il posto riservato al guardaroba non c e piu',
     !sorg.includes('altezzaPersone') && !sorg.includes('personeMisurate'));
   /* e la schermata resta UNA: niente si nasconde mentre si veste */

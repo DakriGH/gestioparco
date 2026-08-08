@@ -2332,7 +2332,18 @@ main {
      ha un'altezza fissa -- e la sfumatura si mangerebbe il bordo basso
      del conto */
   -webkit-mask-image: none; mask-image: none; }
-.entry.vola.aperto .e-dentro { padding-top: 8px; padding-bottom: 10px; }
+/* IL RESPIRO ARRIVA SUBITO, NON PIANO.
+   Nella lista il padding cresce insieme alla scheda che si apre, e va
+   bene. Ma mentre la scheda VOLA quel padding e' un pezzo del conto
+   che decide l'altezza del pannello: misurandolo a meta' strada il
+   pannello nasceva dieci pixel piu' corto del suo posto, e alla fine
+   del volo scattava a riempirlo -- il conto in fondo faceva un
+   sussulto proprio quando la scheda si fermava. Qui il valore e'
+   quello finale dal primo fotogramma: dentro una scheda che nel
+   frattempo cresce di novecento pixel, quattro pixel di respiro non
+   li vede nessuno. */
+.entry.vola.aperto .e-dentro { padding-top: 8px; padding-bottom: 10px;
+  transition: opacity 260ms ease 110ms; }
 .entry.vola .e-note { flex: 0 0 auto; }
 /* La riga dei comandi rapidi resta anche quando la scheda vola: i
    tasti per i bambini, il Crazy e i minuti extra si usano al volo

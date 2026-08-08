@@ -545,6 +545,13 @@ function costruisciPannello() {
          li' si rifa' tutto, per una bibita basta la sua card */
       if (voce === 'bimbi' || voce === 'crazy') aggiornaPannello();
       else { pcVoce(voce); pcFondoDis(); }
+      /* LA NASCITA SI VEDE UNA VOLTA SOLA.
+         `nato` accende la fascia dei tasti che scivola su: e' bella
+         quando una card prende vita, ma restava accesa e la rifaceva a
+         OGNI piu' e meno della stessa bibita -- e i tasti sembravano
+         spostarsi da soli mentre ci battevi sopra. Il disegno appena
+         fatto se l'e' presa, quindi qui si spegne. */
+      tocchi.nato = null;
       return;
     }
 
@@ -696,7 +703,15 @@ function montaPannello(host, conto, opz) {
   box.dataset.tav = '';
   if (p.parentNode !== host) {
     host.appendChild(p);
-    if (anima()) {
+    /* L'INGRESSO DEL PANNELLO NON SI FA SE LA SCHEDA STA GIA' VOLANDO.
+       Sono due movimenti nello stesso istante e in due direzioni
+       diverse: la scheda cresce verso il basso, il contenuto scivola
+       verso l'alto. Il volo E' gia' l'ingresso -- basta lui.
+       E non si fa nemmeno dentro una vista nascosta (il pannello che
+       torna in "+ Nuovo" mentre si guarda la lista): un'animazione che
+       nessuno vede e' solo lavoro. */
+    const inVolo = volante && volante.card && volante.card.contains(host);
+    if (anima() && !inVolo && host.offsetParent) {
       p.classList.remove('arriva');
       void p.offsetWidth;
       p.classList.add('arriva');
@@ -3134,11 +3149,23 @@ function adattaPannello(p, limiteSotto, cimaVoluta, largaVoluta) {
   /* si misura da dove COMINCIA: con altezza zero il pannello non
      sfonda niente, quindi la pagina non e' scorsa e il numero e' quello
      vero */
+  const prima = p.style.height;          // quella che ha adesso, per il confronto qui sotto
   p.style.height = '0px';
   const cima = (cimaVoluta === undefined) ? p.getBoundingClientRect().top : cimaVoluta;
   const spazio = Math.floor(limiteSotto - cima);
   if (spazio < 160 || !su) { p.style.height = ''; p.style.flex = ''; return 1; }
-  p.style.height = spazio + 'px';
+  /* QUATTRO PIXEL DI TOLLERANZA, e non e' pigrizia.
+     La stessa misura, rifatta a fine volo, puo' venire due o tre pixel
+     diversa: arrotondamenti, un respiro che stava ancora finendo la
+     sua transizione. Applicarla vuol dire far sussultare il conto in
+     fondo proprio nell'istante in cui la scheda si ferma -- il momento
+     in cui l'occhio ci sta guardando. Sotto i quattro pixel si tiene
+     quella di prima: nessuno si accorge dello scarto, tutti si
+     accorgono del sussulto. Le misure che contano davvero -- il tablet
+     girato, la tastiera che si apre -- valgono centinaia di pixel e
+     passano lo stesso. */
+  const gia = parseFloat(prima) || 0;
+  p.style.height = (gia && Math.abs(gia - spazio) <= 4 ? gia : spazio) + 'px';
 
   /* si misura col PARCO a vista, che e' lo stato piu' alto. Fra il
      nascondere e il rimettere a posto non c'e' nessun disegno a
@@ -3305,11 +3332,17 @@ function alza(card, misura) {
        riquadro sta fermo e a muoversi e' semmai la scala di quello che
        c'e' dentro. */
     card.style.height = (window.innerHeight - cima - respiroSotto()) + 'px';
-    /* la scala si calcola a sipario fermo: mentre la scheda si apre
-       (360ms di transizione sulle righe della griglia) la misura sarebbe
-       un'altezza di passaggio */
+    /* LA MISURA SI PRENDE UNA VOLTA SOLA, appena partita.
+       Ce n'era una seconda a sipario fermo, a mezzo secondo: serviva ai
+       tempi in cui il contenuto si rimpiccioliva e la scala andava
+       calcolata a scheda ferma. Adesso il pannello nasce gia' della sua
+       misura, e quella seconda misura tornava tre o quattro pixel
+       diversa -- arrotondamenti -- e li applicava ESATTAMENTE
+       nell'istante in cui la scheda si ferma: il conto in fondo faceva
+       un sussulto proprio dove l'occhio stava guardando.
+       Meglio quattro pixel in meno per sempre che quattro pixel di
+       scatto una volta: i primi non li vede nessuno. */
     setTimeout(() => { if (volante && volante.card === card) adattaTutto(); }, 60);
-    setTimeout(() => { if (volante && volante.card === card) adattaTutto(); }, 520);
   }));
 }
 
@@ -3334,7 +3367,14 @@ function posa(card) {
      controllo si portava via la misura del pannello che nel frattempo
      era gia' passato all'altra. */
   if (PAN.root && card.contains(PAN.root)) {
-    PAN.root.style.height = ''; PAN.root.style.flex = ''; PAN.root.style.width = '';
+    /* L'ALTEZZA RESTA QUELLA FINO A TERRA.
+       Toglierla qui voleva dire che il pannello si accorciava insieme
+       alla scheda: il contenuto si accartocciava e il conto in fondo
+       risaliva a rincorrere il bordo. Tenendola, la scheda cala e il
+       contenuto le scivola sotto -- lo taglia il bordo, che e' come
+       funziona una cosa che si chiude. Si toglie una volta atterrata,
+       quando il pannello torna al suo posto e si rimisura. */
+    PAN.root.style.width = '';
     const su = PAN.root.querySelector('.pc-scala');
     if (su) {
       su.classList.remove('scorre', 'dasu', 'dagiu');
@@ -3358,6 +3398,7 @@ function posa(card) {
     card.style.left = card.style.top = card.style.width = card.style.height = card.style.maxHeight = '';
     if (v.buco.parentNode) v.buco.remove();
     if (v.velo.parentNode) v.velo.remove();
+    if (PAN.root) { PAN.root.style.height = ''; PAN.root.style.flex = ''; }
     const su = PAN.root && PAN.root.querySelector('.pc-scala');
     if (su) su.style.overflow = '';     // atterrata: torna a poter scorrere
     riportaPannello(card);
