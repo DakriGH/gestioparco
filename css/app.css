@@ -2222,7 +2222,10 @@ main {
   margin-right: -14px; }
 .entry.vola.aperto > .e-aperta { flex: 1 1 auto; min-height: 0; }
 .entry.vola .e-dentro { display: flex; flex-direction: column; min-height: 0;
-  padding-left: 10px; padding-right: 10px;
+  /* quattro pixel per lato, non dieci: il pannello dentro la scheda
+     deve venire largo come in "+ Nuovo", se no la griglia del bar
+     cambia numero di colonne e le stesse card si vedono di due misure */
+  padding-left: 4px; padding-right: 4px;
   /* niente sfumatura qui: la scheda che vola non sta scoprendo niente,
      ha un'altezza fissa -- e la sfumatura si mangerebbe il bordo basso
      del conto */
@@ -2921,9 +2924,14 @@ html:not(.anima) .card.evidenzia::after { animation: none; }
 .entry .pan-conto .bc-tasti { flex-wrap: wrap; }
 
 /* La scheda che vola: dentro c'e' un pannello intero, che si prende
-   tutta l'altezza rimasta e si rimpicciolisce se non ci sta. NON
-   scorre: il conto in fondo deve restare dov'e'. */
-.entry.vola .pan-conto { max-height: none; flex: 1 1 auto; min-height: 0; }
+   tutta l'altezza rimasta. */
+/* NIENTE RESPIRI AI FIANCHI mentre vola. Sono quei dieci pixel per
+   lato -- venti in tutto -- la differenza fra "sono le stesse card" e
+   "sono card piu' piccole" rispetto a "+ Nuovo": lo spazio a
+   disposizione e' quello che e', e va speso dove si vede. Il respiro
+   dai bordi glielo da' gia' la scheda che lo contiene. */
+.entry.vola .pan-conto { max-height: none; flex: 1 1 auto; min-height: 0;
+  padding-left: 0; padding-right: 0; }
 
 /* ── le due card sopra l'orario: bambini e Crazy Jumping ──
    Sono sempre in ballo, quindi tengono le due fasce SEMPRE aperte:

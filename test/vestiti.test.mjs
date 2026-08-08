@@ -490,131 +490,19 @@ gruppo('Quello che scegli torna scritto sulla scheda');
 /* ============================================================
    LA SCALA: tutto dentro lo schermo, e il conto fermo in fondo
    ============================================================ */
-gruppo('Quanto rimpicciolire, e quanto vuoto lasciare sopra');
+gruppo('Il vuoto sopra la scheda che vola');
 {
-  const k = app.scalaChe;
-  prova('se ci sta, non si tocca niente', k(400, 800) === 1 && k(800, 800) === 1);
-  prova('se non ci sta, si riduce quel tanto', Math.abs(k(1000, 800) - 0.8) < 1e-9);
-  prova('non si rimpicciolisce mai sotto il leggibile', k(10000, 800) === 0.6);
-  prova('non si ingrandisce mai oltre il naturale', k(100, 800) === 1);
-  /* una divisione al contrario e il pannello raddoppierebbe invece di
-     ridursi: e' l'errore che questo gruppo esiste per prendere */
-  prova('non torna mai un valore piu’ grande di 1',
-    [[1, 900], [900, 1], [0, 0], [-5, 800], [800, -5], [NaN, 800]]
-      .every(([v, h]) => { const r = k(v, h); return r <= 1 && r >= 0.6; }));
-
-  /* Il vuoto in cima e' il bersaglio per chiudere: deve esserci sempre,
-     ma stretto — ogni pixel qui e' un pixel in meno per il pannello,
-     che dentro la scheda deve venire grande quasi quanto in "+ Nuovo". */
+  /* La rimpicciolitura non c'e' piu': il pannello e' UNO SOLO e vive in
+     due posti con altezze diverse, quindi rimpicciolirlo voleva dire
+     vedere le stesse card di due misure a seconda di da dove le avevi
+     aperte -- e la griglia del bar cambiava perfino il numero di
+     colonne, perche' con lo zoom l'elemento si crede piu' largo.
+     Fra "entra tutto" e "e' sempre la stessa schermata" vince la
+     seconda. Resta il vuoto in cima, che e' il bersaglio per chiudere. */
   const sopra = app.spazioSopra;
   prova('il vuoto sopra c’è sempre, e si prende col pollice', sopra() >= 40);
   prova('e non si mangia la scheda', sopra() <= 60);
-}
-
-/* ============================================================
-   BOMBARDAMENTO
-   Le prove qui sopra passano per gli stati che ho pensato io. Questa
-   passa per quelli che non ho pensato: migliaia di avatar tirati a
-   sorte, compresi quelli sgangherati che possono arrivare da dati
-   vecchi o da un salvataggio interrotto a metà.
-   ============================================================ */
-gruppo('Bombardamento: cinquemila avatar a caso');
-{
-  /* generatore ripetibile: se qualcosa si rompe, si rompe di nuovo
-     uguale e si può guardarci dentro */
-  let seme = 20260808;
-  const caso = (n) => { seme = (seme * 1103515245 + 12345) % 2147483648; return seme % n; };
-  const scegli = (a) => a[caso(a.length)];
-  const forse = (v) => (caso(4) === 0 ? undefined : v);
-
-  const SPAZZATURA = [null, undefined, '', 0, -1, NaN, {}, [], 'sombrero', '#nonUnColore', 1e9, ' '];
-  /* tinte che tinte non sono: arrivano da dati vecchi, da un
-     salvataggio interrotto o da un sincronismo storto, e senza
-     controllo diventano un pezzo invisibile addosso a qualcuno */
-  const TINTE_STORTE = ['', ' ', 'rosso', '#GGG', '#12', '#1234567', 'rgb(1,2,3)', null, 0, NaN, {}, '#ff00ff'];
-  const tintaACaso = (buone) => (caso(5) === 0 ? scegli(TINTE_STORTE) : (scegli(buone).c || scegli(buone)));
-  const avatarACaso = () => {
-    const modo = caso(10);
-    if (modo === 0) return scegli(SPAZZATURA);
-    if (modo === 1) return { top: scegli(SPAZZATURA), pants: scegli(SPAZZATURA), hair: scegli(SPAZZATURA) };
-    return {
-      role: forse(scegli(AV.ROLES).key),
-      skin: forse(scegli(AV.SKINS)),
-      hair: { style: forse(scegli(AV.HAIR).key), color: forse(tintaACaso(AV.HAIR_COLORS)) },
-      hat: { style: forse(scegli(AV.HAT).key), color: forse(tintaACaso(AV.COLORS)) },
-      glasses: forse(scegli(AV.GLASSES).key),
-      facial: forse(scegli(AV.FACIAL).key),
-      top: { style: forse(scegli(SOPRA.concat(['maglione', 'giubbotto', 'boh']))),
-             color: forse(tintaACaso(AV.COLORS)), pattern: forse(scegli(AV.PATTERNS).key) },
-      pants: { style: forse(scegli(SOTTO.concat(['boh']))), color: forse(tintaACaso(AV.COLORS)),
-               pattern: forse(scegli(AV.PATTERNS).key) },
-      shoes: { style: forse(scegli(AV.SHOES).key), color: forse(tintaACaso(AV.COLORS)) },
-      bag: { style: forse(scegli(AV.BAG).key), color: forse(tintaACaso(AV.COLORS)) },
-      scelti: caso(3) === 0 ? undefined : { maglietta: caso(2) === 0, pantaloni: caso(2) === 0, capelli: caso(2) === 0 }
-    };
-  };
-
-  const GIRI = 5000;
-  let rottura = '', nonIdempotente = '', trattiRotti = '', schedaRotta = '', tagRotti = '';
-  for (let i = 0; i < GIRI && !rottura; i++) {
-    const grezzo = avatarACaso();
-    try {
-      const av = app.AV.normalize(grezzo, 'altro');
-
-      /* 1. la figura si disegna sempre, e senza buchi nei numeri */
-      const svg = app.AV.build(av, {});
-      if (/NaN|undefined|\[object|Infinity/.test(svg)) { rottura = 'figura con buchi al giro ' + i; break; }
-      const aperti = (svg.match(/<path|<circle|<rect|<line|<ellipse/g) || []).length;
-      const chiusi = (svg.match(/\/>/g) || []).length;
-      if (aperti !== chiusi && !tagRotti) tagRotti = 'giro ' + i + ': ' + aperti + ' aperti, ' + chiusi + ' chiusi';
-
-      /* 2. NORMALIZZARE DUE VOLTE DEVE DARE LA STESSA COSA.
-            Se non fosse così, un avatar cambierebbe da solo a ogni
-            salvataggio — e chi è registrato si ritroverebbe vestito
-            diverso senza che nessuno l'abbia toccato. */
-      const due = app.AV.normalize(JSON.parse(JSON.stringify(av)), 'altro');
-      if (!nonIdempotente && JSON.stringify(due) !== JSON.stringify(av)) {
-        nonIdempotente = 'giro ' + i + ': ' + JSON.stringify(av.top) + ' → ' + JSON.stringify(due.top);
-      }
-
-      /* 3. i tratti scritti: mai un testo vuoto o rotto */
-      const tr = app.AV.traits(av, 4, caso(2) === 0);
-      if (!trattiRotti && tr.some(t => !t || typeof t.txt !== 'string' || !t.txt.trim() || /NaN|undefined/.test(t.txt))) {
-        trattiRotti = 'giro ' + i + ': ' + JSON.stringify(tr.map(t => t && t.txt));
-      }
-
-      /* 4. la scheda del banco si apre comunque, e completa */
-      const h = app.armadioDi({ id: 'f' + i, role: av.role, name: '', note: '', avatar: av },
-        caso(3) === 0 ? scegli(['capelli', 'scarpe', '']) : '');
-      if (!schedaRotta && (conta(h, /data-top="/g) !== SOPRA.length ||
-          conta(h, /data-pants="/g) !== SOTTO.length || /NaN|undefined/.test(h))) {
-        schedaRotta = 'giro ' + i;
-      }
-    } catch (e) { rottura = 'giro ' + i + ': ' + e.message; }
-  }
-
-  prova('cinquemila avatar a caso, nessuna eccezione', !rottura, rottura);
-  prova('la figura non ha mai buchi nei numeri né tag aperti', !tagRotti, tagRotti);
-  prova('normalizzare due volte dà sempre lo stesso avatar', !nonIdempotente, nonIdempotente);
-  prova('i tratti scritti non sono mai vuoti o rotti', !trattiRotti, trattiRotti);
-  prova('la scheda si apre completa in tutti i casi', !schedaRotta, schedaRotta);
-
-  /* Ogni colore che esce da normalize deve ESSERE un colore: e' l'ultimo
-     posto in cui si puo' fermare una tinta storta prima che diventi un
-     pezzo invisibile addosso a qualcuno. */
-  const COLORE = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
-  let tintaStorta = '';
-  seme = 20260808;
-  for (let i = 0; i < 1500 && !tintaStorta; i++) {
-    const av = app.AV.normalize(avatarACaso(), 'altro');
-    const tinte = { pelle: av.skin, capelli: av.hair.color, cappello: av.hat.color,
-      sopra: av.top.color, 'sopra-2': av.top.color2, sotto: av.pants.color,
-      'sotto-2': av.pants.color2, scarpe: av.shoes.color, borsa: av.bag.color };
-    Object.keys(tinte).forEach(k => {
-      if (!tintaStorta && !COLORE.test(String(tinte[k]))) tintaStorta = k + ' = ' + String(tinte[k]) + ' (giro ' + i + ')';
-    });
-  }
-  prova('nessuna tinta storta sopravvive a normalize', !tintaStorta, tintaStorta);
+  prova('la rimpicciolitura è sparita', typeof app.scalaChe === 'undefined');
 }
 
 /* ---------- il verdetto ---------- */

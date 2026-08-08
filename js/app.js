@@ -2919,21 +2919,21 @@ function occupaVolo(quanto) {
    scale l'elemento continuerebbe a occupare la misura di prima e il
    fondo resterebbe dov'era, cioe' fuori. */
 
-/* Sotto questa taglia i numeri non si leggono piu' da un metro, che e'
-   la distanza vera al banco: si smette di rimpicciolire e si lascia
-   scorrere, che e' il male minore. */
-const SCALA_MINIMA = 0.6;
-
-/* Di quanto rimpicciolire: quello che serve, mai piu' del necessario e
-   mai sotto il leggibile. Sta fuori da adattaPannello perche' e' la
-   sola parte che si puo' sbagliare in silenzio -- una divisione al
-   contrario e il pannello raddoppia invece di ridursi -- e cosi' si
-   puo' provare senza uno schermo davanti. */
-function scalaChe(vuole, ha) {
-  if (!(vuole > 0) || !(ha > 0)) return 1;
-  if (vuole <= ha) return 1;
-  return Math.max(SCALA_MINIMA, Math.min(1, ha / vuole));
-}
+/* LA RIMPICCIOLITURA E' STATA TOLTA, e vale la pena dire perche'.
+   Serviva a far entrare tutto senza scorrere. Ma il pannello e' UNO
+   SOLO e vive in due posti -- "+ Nuovo" e dentro la scheda che vola --
+   e in quei due posti l'altezza disponibile e' diversa: in "+ Nuovo"
+   non veniva rimpicciolito quasi per niente, dentro la scheda scendeva
+   a tre quarti. Risultato: le stesse identiche card si vedevano di due
+   misure diverse a seconda di da dove le avevi aperte, e la griglia del
+   bar cambiava perfino il numero di colonne -- perche' con lo zoom
+   l'elemento si crede piu' largo di quanto e', e ce ne stanno di piu'.
+   Fra "entra tutto senza scorrere" e "e' sempre la stessa schermata"
+   vince la seconda: una cosa che cambia faccia a seconda di come ci sei
+   arrivato costa piu' di uno scorrimento.
+   Quello che RESTA e' l'altezza fissa del pannello: e' quella che tiene
+   il conto incollato in fondo, e non ha niente a che fare con la
+   scala. */
 
 /* il respiro sotto e' quello di main: cosi' il pannello si ferma dove
    si fermerebbe comunque, safe-area del telefono compresa */
@@ -3050,19 +3050,6 @@ function adattaPannello(p, limiteSotto, cimaVoluta, largaVoluta) {
   if (spazio < 160 || !su) { p.style.height = ''; p.style.flex = ''; return 1; }
   p.style.height = spazio + 'px';
 
-  /* IL CONTO E' L'ULTIMO A RIMPICCIOLIRSI, ma un tetto ce l'ha.
-     Su uno schermo stretto i suoi quattro tasti vanno a capo tre volte
-     e il conto passa da 176 a oltre 400 pixel: si mangiava tutto lo
-     spazio e sopra restava una fessura. Oltre questa quota si riduce
-     anche lui -- sulla tavoletta e' un sesto dell'altezza e non
-     succede mai. */
-  if (giu) {
-    const suo = Math.ceil(giu.getBoundingClientRect().height);
-    const tetto = Math.round(spazio * 0.52);
-    const kf = scalaChe(suo, tetto);
-    if (kf < 1) giu.style.zoom = String(Math.round(kf * 1000) / 1000);
-  }
-
   /* si misura col PARCO a vista, che e' lo stato piu' alto. Fra il
      nascondere e il rimettere a posto non c'e' nessun disegno a
      schermo, quindi non si vede niente lampeggiare. */
@@ -3087,22 +3074,13 @@ function adattaPannello(p, limiteSotto, cimaVoluta, largaVoluta) {
     box.style.minHeight = h ? h + 'px' : '';
   }
 
-  let k = scalaChe(su.scrollHeight + 2, su.clientHeight);
-  const applica = () => { su.style.zoom = k < 1 ? String(Math.round(k * 1000) / 1000) : ''; };
-  applica();
-  /* la verifica: due giri bastano sempre, il terzo e' per scrupolo */
-  for (let giro = 0; giro < 3 && k > SCALA_MINIMA && su.scrollHeight > su.clientHeight + 1; giro++) {
-    k = Math.max(SCALA_MINIMA, k * (su.clientHeight / (su.scrollHeight + 3)));
-    applica();
-  }
-  /* Se nemmeno alla taglia minima ci sta, il vano scorre: e' l'ultima
-     spiaggia e succede solo su schermi molto bassi. Va DETTO, pero' --
+  /* Quando il contenuto non ci sta, il vano scorre. Va DETTO, pero' --
      un riquadro tagliato a meta' sul bordo sembra un errore, non
      "c'e' dell'altro sotto" -- e ci pensa la sfumatura in fondo. */
   su.classList.toggle('scorre', su.scrollHeight > su.clientHeight + 2);
 
   if (cambio) { parco.classList.add('hidden'); bar.classList.remove('hidden'); }
-  return k;
+  return 1;
 }
 
 /* Rimette a misura il pannello dovunque si trovi: in "+ Nuovo" arriva
@@ -3150,7 +3128,10 @@ function rimisura() {
          misura di prima di girare il tablet: tenerla voleva dire una
          scheda stretta come in verticale su tutto l'orizzontale. */
       const buco = volante.buco.getBoundingClientRect().width || volante.da.width;
-      const larg = Math.min(Math.max(buco, 320), window.innerWidth - 20);
+      /* piu' i respiri ai fianchi, come alla partenza: il segnaposto e'
+         largo quanto la scheda nella lista, e il pannello dentro deve
+         restare della misura che ha in "+ Nuovo" */
+      const larg = Math.min(Math.max(buco + num(volante.fianchi, 8), 320), window.innerWidth - 20);
       volante.larg = larg;
       const cima = spazioSopra();
       /* Girare il tablet non e' un volo: la scheda ci si trova gia',
@@ -3196,10 +3177,27 @@ function alza(card, misura) {
   card.style.maxHeight = 'none';
   card.style.height = Math.round(r.height) + 'px';
 
-  /* la larghezza d'arrivo si sa GIA' adesso: serve al pannello per
-     impaginarsi una volta sola invece che a ogni fotogramma */
-  const largArrivo = Math.min(Math.max(r.width, 320), window.innerWidth - 20);
-  volante = { card: card, buco: buco, velo: velo, da: r, larg: largArrivo };
+  /* IL PANNELLO DEVE VENIRE LARGO COME IN "+ NUOVO".
+     E' lo stesso pannello, e se qui viene un po' piu' stretto la
+     griglia del bar cambia numero di colonne e le stesse card si
+     vedono di due misure a seconda di da dove le hai aperte.
+     La misura giusta si ricava dalla scheda di partenza: le due viste
+     sono larghe uguali, quindi la scheda nella lista misura quanto il
+     pannello in "+ Nuovo". Va solo aggiunto quello che la scheda si
+     tiene per se' ai fianchi, e che in "+ Nuovo" non c'e'.
+     ("+ Nuovo" non lo si puo' misurare direttamente: mentre si guarda
+     la lista e' nascosto, e da nascosto un elemento e' largo zero.)
+     Si sa GIA' adesso, prima di partire: serve al pannello per
+     impaginarsi una volta sola invece che a ogni fotogramma. */
+  const pan = PAN.root;
+  let fianchi = 8;
+  if (pan && card.contains(pan)) {
+    pan.style.width = '';                 // se no si misura il volo di prima
+    const largaOra = card.getBoundingClientRect().width || r.width;
+    fianchi = Math.max(0, Math.round(largaOra - pan.getBoundingClientRect().width));
+  }
+  const largArrivo = Math.min(Math.max(r.width + fianchi, 320), window.innerWidth - 20);
+  volante = { card: card, buco: buco, velo: velo, da: r, larg: largArrivo, fianchi: fianchi };
   velo.onclick = () => posa(card);
   /* il vuoto in cima dice a cosa serve: senza scritta e' solo sfocato,
      e chi non trova l'uscita resta li' a cercare una X */
@@ -3643,7 +3641,9 @@ function tick() {
       soldiDi(r, entry, dueOf(entry));                     // il conto sale col tempo
     } else {
       const resta = endTimeOf(entry) - now;
-      r.count.textContent = fmtClock(resta);
+      /* niente meno davanti quando e' sforato: lo dice gia' la parola
+         sopra, e "sforato da -2:16" si legge due volte al contrario */
+      r.count.textContent = fmtClock(r.countK ? Math.abs(resta) : resta);
       if (r.countK) r.countK.textContent = resta < 0 ? 'sforato da' : 'esce fra';
     }
   });
