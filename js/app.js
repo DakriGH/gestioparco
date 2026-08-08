@@ -238,7 +238,17 @@ function freshDraft() {
 
 /* ---------- calcoli ---------- */
 function tariffs() {
-  return (settings.tariffs || []).filter(t => t && Number.isFinite(t.m) && t.m > 0).slice().sort((a, b) => a.m - b.m);
+  /* IL PREZZO SI CONTROLLA COME I MINUTI.
+     Si guardava solo che i minuti fossero un numero: una riga con il
+     prezzo sbagliato -- vuoto, una parola, un campo lasciato a meta'
+     nelle impostazioni -- entrava nel listino e da li' in poi il
+     dovuto veniva "NaN €". Una tariffa senza prezzo non e' una
+     tariffa: si butta, e le altre continuano a funzionare.
+     E la lista dev'essere una lista: da un salvataggio vecchio o dal
+     cloud puo' arrivare qualunque cosa (vedi lista()). */
+  return lista(settings.tariffs)
+    .filter(t => t && Number.isFinite(t.m) && t.m > 0 && Number.isFinite(t.p) && t.p >= 0)
+    .slice().sort((a, b) => a.m - b.m);
 }
 function priceFor(mins) {
   mins = Math.max(0, num(mins, 0));
@@ -253,7 +263,7 @@ function priceFor(mins) {
 function braceletFor(ts) {
   const d = new Date(num(ts, Date.now()));
   const mins = d.getHours() * 60 + d.getMinutes();
-  for (const s of (settings.braceletSlots || [])) {
+  for (const s of lista(settings.braceletSlots)) {
     const a = hhmmToMin(s.start), b = hhmmToMin(s.end);
     if (a <= b) { if (mins >= a && mins < b) return s; }
     else if (mins >= a || mins < b) return s;
@@ -602,23 +612,6 @@ function costruisciPannello() {
       const men = p.querySelector('.brc-menu');
       men.classList.toggle('hidden');
       if (!men.classList.contains('hidden')) chiudiFuori(men, p.querySelector('.brc'));
-      return;
-    }
-    if (d.a === 'dur') {
-      const passi = tariffs().map(t => t.m);
-      const ora = clamp(num(c.durationMinutes, 60), 0, 1e6);
-      let nuovo;
-      if (d.v === '+') {
-        nuovo = passi.find(m => m > ora);
-        if (nuovo === undefined) nuovo = ora + (passi.length > 1 ? passi[passi.length - 1] - passi[passi.length - 2] : 10);
-      } else {
-        const giu = passi.filter(m => m < ora);
-        nuovo = giu.length ? giu[giu.length - 1] : Math.max(5, ora - 5);
-      }
-      c.payLater = false;
-      c.durationMinutes = clamp(nuovo, 5, 100000);
-      pcSalva();
-      aggiornaPannello();
       return;
     }
     if (d.a === 'min') {
@@ -1009,7 +1002,7 @@ function costruisciBracciali(box, scegli) {
 
   /* i colori delle fasce orarie: quelli veri del parco */
   const usati = [];
-  (settings.braceletSlots || []).forEach(sl => {
+  lista(settings.braceletSlots).forEach(sl => {
     if (sl.color && !usati.some(u => u.toLowerCase() === sl.color.toLowerCase())) usati.push(sl.color);
   });
   usati.forEach(hex => {
@@ -1100,7 +1093,8 @@ function scrittaFinta(c2) {
 function sfuma(su) {
   if (!su) return;
   const fuori = su.scrollHeight - su.clientHeight;
-  su.classList.toggle('scorre', fuori > 2);
+  /* niente classe "scorre": non vestiva piu' niente da quando la
+     sfumatura sa anche da che PARTE c'e' dell'altro */
   su.classList.toggle('dasu', fuori > 2 && su.scrollTop > 2);
   su.classList.toggle('dagiu', fuori > 2 && su.scrollTop < fuori - 2);
 }
@@ -1929,7 +1923,7 @@ function traitChip(t) {
    "Birre" mostra una birra senza doverlo scrivere da nessuna parte */
 function iconaCat(cat) {
   if (cat === 'Parco') return typeof ICONE !== 'undefined' && ICONE.bimbi ? ICONE.bimbi() : '';
-  const v = (settings.barMenu || []).find(it => ((it.cat || 'Altro').trim() || 'Altro') === cat);
+  const v = lista(settings.barMenu).find(it => ((it.cat || 'Altro').trim() || 'Altro') === cat);
   return v ? iconaBar(v.name, v.em) : '';
 }
 
@@ -2822,7 +2816,7 @@ const r2 = v => Math.round(num(v, 0) * 100) / 100;
 function bcVoce(id) {
   if (id === 'bimbi') return { id: 'bimbi', name: 'Bambini', price: costOf(C()).unit, em: '\ud83e\uddd2' };
   if (id === 'crazy') return { id: 'crazy', name: 'Crazy Jumping', price: num(settings.crazyJumpingPrice, 0), em: '\ud83e\udd38' };
-  const v = (settings.barMenu || []).find(x => x.id === id);
+  const v = lista(settings.barMenu).find(x => x.id === id);
   if (v) return v;
   /* la voce e' stata tolta dal listino ma sta ancora su un conto
      aperto: si tiene quella scritta li', se no non si poteva piu'
@@ -2970,14 +2964,14 @@ function pagaTutto() {
 /* le categorie: il Parco davanti/* le categorie: il Parco davanti, poi quelle vere del menu */
 function bcCategorie() {
   const out = ['Parco'];
-  (settings.barMenu || []).forEach(it => {
+  lista(settings.barMenu).forEach(it => {
     const c = (it.cat || 'Altro').trim() || 'Altro';
     if (out.indexOf(c) < 0) out.push(c);
   });
   return out;
 }
 function bcVociDi(cat) {
-  return (settings.barMenu || []).filter(it => ((it.cat || 'Altro').trim() || 'Altro') === cat);
+  return lista(settings.barMenu).filter(it => ((it.cat || 'Altro').trim() || 'Altro') === cat);
 }
 
 /* La card di una voce. Bambini e Crazy Jumping tengono le due fasce
@@ -3377,7 +3371,7 @@ function posa(card) {
     PAN.root.style.width = '';
     const su = PAN.root.querySelector('.pc-scala');
     if (su) {
-      su.classList.remove('scorre', 'dasu', 'dagiu');
+      su.classList.remove('dasu', 'dagiu');
       /* MENTRE SCENDE, IL VANO SI ACCORCIA FINO A ZERO e il contenuto
          resta lungo com'era: senza questo, a OGNI chiusura compariva
          la barra di scorrimento per mezzo secondo, e il contenuto si
@@ -4175,7 +4169,7 @@ function renderQuick() {
 function renderTariffs() {
   const box = $('#sTariffs');
   box.innerHTML = '';
-  (settings.tariffs || []).forEach((t, i) => {
+  lista(settings.tariffs).forEach((t, i) => {
     const r = el('div', 'row-edit');
     r.appendChild(el('span', 'lab', 'fino a'));
     r.appendChild(numInput(t.m, '5', v => { t.m = clamp(Math.round(v), 1, 99999); saveSettings(); }));
@@ -4190,7 +4184,7 @@ function renderTariffs() {
 function renderBarMenu() {
   const box = $('#sBar');
   box.innerHTML = '';
-  (settings.barMenu || []).forEach((it, i) => {
+  lista(settings.barMenu).forEach((it, i) => {
     const r = el('div', 'row-edit');
     const em = el('input');
     em.value = it.em || '🥤';
@@ -4218,7 +4212,7 @@ function renderBarMenu() {
 function renderWristbands() {
   const box = $('#sWrist');
   box.innerHTML = '';
-  (settings.braceletSlots || []).forEach((s, i) => {
+  lista(settings.braceletSlots).forEach((s, i) => {
     const r = el('div', 'row-edit');
     const t1 = el('input'); t1.type = 'time'; t1.value = s.start;
     t1.oninput = () => { s.start = t1.value; saveSettings(); };
@@ -4292,9 +4286,9 @@ function aggiornaListinoFinto() {
     return n;
   };
 
-  const firmaBar = (m) => (m || []).map(x => x.name + ':' + x.price).join('|');
+  const firmaBar = (m) => lista(m).map(x => x.name + ':' + x.price).join('|');
   const BAR_FINTO = 'Acqua:1|Coca Cola:2.5|Caff\u00e8:1.2|Merendina:2|Panino:4';
-  const firmaTar0 = (t) => (t || []).map(x => x.m + ':' + x.p).join('|');
+  const firmaTar0 = (t) => lista(t).map(x => x.m + ':' + x.p).join('|');
   const TAR_FINTE0 = '10:2|15:3|30:5|45:7|60:9|75:10|90:12|105:13|120:15|150:18|180:21';
   if (firmaBar(settings.barMenu) === BAR_FINTO ||
       firmaTar0(settings.tariffs) === TAR_FINTE0 ||
@@ -4306,7 +4300,7 @@ function aggiornaListinoFinto() {
     cambiato.push('il bar');
   }
 
-  const firmaTar = (t) => (t || []).map(x => x.m + ':' + x.p).join('|');
+  const firmaTar = (t) => lista(t).map(x => x.m + ':' + x.p).join('|');
   const TAR_FINTE = '10:2|15:3|30:5|45:7|60:9|75:10|90:12|105:13|120:15|150:18|180:21';
   if (firmaTar(settings.tariffs) === TAR_FINTE) {
     settings.tariffs = JSON.parse(JSON.stringify(d.tariffs));
@@ -4702,7 +4696,7 @@ function partenza() {
   DATI.avvia([SK.entries, SK.settings, SK.presets]).then(r => {
     init();
     if (r.ripristinate && r.ripristinate.length) {
-      const n = (load(SK.entries) || []).length;
+      const n = lista(load(SK.entries)).length;
       toast('Dati recuperati dall’archivio: ' + n + ' ingressi ♻️');
     }
   }).catch(() => init());
