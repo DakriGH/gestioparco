@@ -438,13 +438,6 @@ function costruisciPannello() {
            quella che si fa ogni tanto.
            Il prezzo sulla card segue il tempo scelto qui sotto, e si
            aggiorna da solo: non c'e' bisogno di rileggerlo. -->
-      <!-- LA RIGA DI RIPIEGO. Mentre si veste qualcuno, le due card e
-           la fascia del tempo si ripiegano qui dentro: il guardaroba e'
-           alto quattrocento pixel e quello e' l'unico modo di farcelo
-           stare senza scorrere. Non spariscono, si accorciano -- i
-           numeri restano leggibili -- e toccando la riga si torna
-           subito com'era. -->
-      <button class="pc-riass hidden" data-a="chiudiarmadio"></button>
       <div class="bc-griglia pc-due"></div>
 
       <!-- UNA FASCIA SOLA PER IL TEMPO: "dalle ... alle ...".
@@ -584,14 +577,6 @@ function costruisciPannello() {
     }
     /* il menu del bracciale si apre e si chiude senza rifare la
        fascia: rifarla lo richiuderebbe a ogni colore provato */
-    /* la riga di ripiego riporta com'era: si richiude il guardaroba e
-       le due card e la fascia tornano al loro posto */
-    if (d.a === 'chiudiarmadio') {
-      const box = pcRif('.pc-people');
-      if (box) { box.dataset.apri = ''; box.dataset.tav = ''; }
-      aggiornaPannello();
-      return;
-    }
     if (d.a === 'bracapri') {
       const men = p.querySelector('.brc-menu');
       men.classList.toggle('hidden');
@@ -664,6 +649,11 @@ function costruisciPannello() {
     aggiornaPannello();
     if (PAN.ingresso) aggiornaPallino(PAN.ingresso);
   });
+
+  /* la sfumatura segue il dito: scorrendo cambia da che parte c'e'
+     dell'altro, e va ridetto */
+  const vano = p.querySelector('.pc-scala');
+  if (vano) vano.addEventListener('scroll', () => sfuma(vano), { passive: true });
 
   PAN.root = p;
   return p;
@@ -868,38 +858,6 @@ function disegnaFascia(p, c) {
 /* Fin quando ha pagato, in una pastiglia. Il verde vuol dire "pagato":
    finche' non e' entrato niente resta neutra, perche' una fascia verde
    con scritto "da pagare" dice due cose opposte nello stesso pezzo. */
-/* Mentre si veste qualcuno le due card e la fascia del tempo si
-   ripiegano nella riga qui sotto: il guardaroba e' alto quattrocento
-   pixel, e quello e' l'unico modo di farcelo stare senza scorrere.
-   Tollera di essere chiamata quando il pannello non c'e' ancora. */
-function ripiegaNumeri(veste) {
-  const p = PAN.root;
-  if (!p) return;
-  const parco = p.querySelector('.pc-parco');
-  const riass = p.querySelector('.pc-riass');
-  if (!parco || !riass) return;
-  parco.classList.toggle('veste', !!veste);
-  riass.classList.toggle('hidden', !veste);
-  if (veste) riass.innerHTML = rigaRipiego(C());
-}
-
-/* Quello che le due card e la fascia del tempo dicevano, in una riga.
-   Non e' un riassunto "carino": sono gli stessi numeri con le stesse
-   faccine, perche' chi li ha appena messi li deve ritrovare uguali. */
-function rigaRipiego(c) {
-  c = c || C();
-  const bimbi = clamp(num(c.children, 0), 0, 1e6);
-  const crazy = clamp(num(c.crazyJumping, 0), 0, 1e6);
-  const resta = r2(dueOf(c).total - num(c.paidPark, 0) - num(c.paidBar, 0));
-  return '<span class="rr">\ud83e\uddd2 <b>' + bimbi + '</b></span>' +
-    '<span class="rr">\ud83e\udd38 <b>' + crazy + '</b></span>' +
-    '<span class="rr">\ud83d\udd52 <b>' + fmtTime(c.startTime) + '</b> \u2192 <b>' +
-      (c.payLater ? 'a tempo' : fmtTime(endTimeOf(c))) + '</b></span>' +
-    '<span class="rr soldi">' + (resta > 0.005 ? 'da pagare <b>' + eur(resta) + '</b>'
-                                               : '\u2713 tutto pagato') + '</span>' +
-    '<span class="rr torna">tocca per riaprire</span>';
-}
-
 function pastigliaPagato(c) {
   c = c || C();
   const aperto = !!c.payLater;
@@ -989,13 +947,7 @@ function aggiornaPannello(opz) {
         '\u23f3 Tempo aperto</button>';
     }
     c.people = c.people || [];
-    const gente = p.querySelector('.pc-people');
-    syncPeople(gente, c.people, () => { pcSalva(); });
-    /* syncPeople lo fa da se' quando ridisegna, ma se la firma non e'
-       cambiata non ridisegna: qui i numeri possono essere cambiati lo
-       stesso (un bambino in piu', il tempo allungato) e la riga li deve
-       dire aggiornati */
-    ripiegaNumeri(!!gente.querySelector('.armadio'));
+    syncPeople(p.querySelector('.pc-people'), c.people, () => { pcSalva(); });
   } else {
     pcGriglia();
   }
@@ -1105,6 +1057,41 @@ function scrittaFinta(c2) {
     riga(20) + riga(14) + riga(17) + '</span>';
 }
 
+/* Porta a vista un riquadro dentro il vano che scorre, scorrendo del
+   MINIMO indispensabile: solo quanto basta a fargli arrivare il fondo
+   a filo. `scrollIntoView` invece lo incollerebbe al bordo alto,
+   buttando fuori tutto il resto -- ed e' il motivo per cui era stato
+   tolto dalle schede. */
+/* DA CHE PARTE C'E' DELL'ALTRO.
+   La sfumatura non e' un vezzo: e' l'unica cosa che distingue "il
+   riquadro finisce qui" da "il riquadro e' tagliato dal bordo". Quindi
+   va accesa dalla parte in cui c'e' davvero altro -- sopra, sotto o
+   tutt'e due -- e spenta quando si e' arrivati in fondo, se no dice
+   una bugia proprio sull'ultima riga. */
+function sfuma(su) {
+  if (!su) return;
+  const fuori = su.scrollHeight - su.clientHeight;
+  su.classList.toggle('scorre', fuori > 2);
+  su.classList.toggle('dasu', fuori > 2 && su.scrollTop > 2);
+  su.classList.toggle('dagiu', fuori > 2 && su.scrollTop < fuori - 2);
+}
+
+function portaAVista(chi) {
+  const su = chi.closest('.pc-scala');
+  if (!su) return;
+  requestAnimationFrame(() => {
+    const r = chi.getBoundingClientRect(), v = su.getBoundingClientRect();
+    /* ventidue pixel in piu' del necessario: e' l'altezza della
+       sfumatura in fondo, e senza quelli l'ultima riga del riquadro
+       arriverebbe a filo del bordo, cioe' proprio dentro la sfumatura,
+       e si leggerebbe smorta. Se non ce ne sono, si arriva in fondo e
+       la sfumatura si spegne da sola. */
+    const sotto = Math.round(r.bottom - v.bottom);
+    if (sotto > 1) su.scrollTop += sotto + 22;
+    sfuma(su);
+  });
+}
+
 /* CHI ACCOMPAGNA
    I ruoli stanno tutti su una riga, con l'icona sopra e il nome sotto:
    si trovano a colpo d'occhio. Toccarne uno lo aggiunge e apre subito
@@ -1145,15 +1132,20 @@ function syncPeople(container, people, onChange) {
   }).join('') + '</div>';
 
   container.innerHTML = ruoli + armadioDi(chi, chi ? (container.dataset.tav || '') : '');
-  /* Il ripiego si accende QUI e non in aggiornaPannello: questa fila si
-     ridisegna da sola, dal proprio gestore dei tocchi, senza passare di
-     li'. Messo altrove, in "+ Nuovo" toccando un ruolo l'armadio si
-     apriva e i numeri restavano aperti -- e il pannello scorreva. */
-  ripiegaNumeri(!!chi);
   /* aprire o chiudere l'armadio cambia l'altezza di trecento pixel in
      un colpo: il pannello va rimisurato subito, se no il conto in fondo
      esce dallo schermo */
   if (typeof adattaTutto === 'function' && PAN.root && PAN.root.contains(container)) adattaTutto();
+  /* IL GUARDAROBA SI PORTA A VISTA DA SOLO.
+     E' alto quattrocento pixel e sta in fondo alla linguetta: aperto da
+     dentro la scheda che vola non ci sta tutto, e restava mezzo sotto
+     il bordo -- toccavi un ruolo e dovevi scendere a mano per vedere i
+     vestiti. Si scorre del MINIMO che serve, cioe' quanto basta a
+     portargli il fondo a filo del vano: cosi' quello che c'e' sopra
+     resta dov'e' e si rivede risalendo, invece di sparire.
+     Le due card, la fascia del tempo e il conto restano quelli di
+     "+ Nuovo": la schermata e' una sola, non ce n'e' una per vestire. */
+  if (chi) portaAVista(container);
   /* La tavolozza appena aperta va PORTATA A VISTA: si apre sopra la
      fila, e se in quel momento il vano e' scorso in basso resterebbe
      fuori dallo schermo -- toccare "Scarpe" e non veder comparire
@@ -1428,10 +1420,14 @@ function armadioDi(p, tavolozzaAperta) {
     '<div class="roba">' +
       '<span class="et">Sopra</span>' + capiSopra +
       '<span class="et">Fantasia</span>' + fantasie +
-      '<span class="et">Colore del sopra</span>' + tinte('top') +
+      /* niente etichetta "Colore del sopra": una fila di pastiglie
+         colorate attaccata sotto i capi non puo' essere altro, e due
+         righe di scritta sono venti pixel che al guardaroba servono
+         per starci dentro tutto */
+      tinte('top') +
       '<span class="et">Sotto' + (lungo ? '<span class="spento-k">col vestito lungo non serve</span>' : '') +
         '</span>' + capiSotto +
-      '<span class="et">Colore del sotto</span>' + tinte('pants') +
+      tinte('pants') +
     '</div>' +
     /* la riga libera passa SOTTO a tutta larghezza: al banco e' quella
        che si usa di corsa, e va vista prima di tutte */
@@ -3067,7 +3063,7 @@ function spazioSopra() {
      pannello dentro la scheda deve venire grande quasi quanto in
      "+ Nuovo". Sotto ci sono comunque i fianchi e il fondo, che
      chiudono allo stesso modo. */
-  return Math.round(Math.min(52, Math.max(40, window.innerHeight * 0.038)));
+  return Math.round(Math.min(44, Math.max(32, window.innerHeight * 0.030)));
 }
 
 
@@ -3134,8 +3130,8 @@ function adattaPannello(p, limiteSotto, cimaVoluta, largaVoluta) {
 
   /* Quando il contenuto non ci sta, il vano scorre. Va DETTO, pero' --
      un riquadro tagliato a meta' sul bordo sembra un errore, non
-     "c'e' dell'altro sotto" -- e ci pensa la sfumatura in fondo. */
-  su.classList.toggle('scorre', su.scrollHeight > su.clientHeight + 2);
+     "c'e' dell'altro" -- e ci pensa la sfumatura, dalla parte giusta. */
+  sfuma(su);
 
   if (cambio) { parco.classList.add('hidden'); bar.classList.remove('hidden'); }
   return 1;

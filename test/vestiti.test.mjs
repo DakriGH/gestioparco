@@ -298,8 +298,12 @@ gruppo('La scheda del banco: c’è tutto e nell’ordine giusto');
     sottoCol === conta(h, /data-pants="/g) + conta(h, /data-acc="/g));
   prova('le fantasie: ' + AV.PATTERNS.length + ' in altrettante colonne',
     colonneDi('<span class="et">Fantasia') === AV.PATTERNS.length);
+  /* la fila dei colori non ha piu' l'etichetta sopra -- una fila di
+     pastiglie colorate attaccata sotto i capi non puo' essere altro --
+     quindi la si cerca a partire dai capi che la precedono */
   prova('le tinte: ' + AV.COLORS.length + ' più la ruota',
-    colonneDi('<span class="et">Colore del sopra') === AV.COLORS.length + 1);
+    colonneDi('data-pat="' + AV.PATTERNS[AV.PATTERNS.length - 1].key) === AV.COLORS.length + 1);
+  prova('e le etichette dei colori non ci sono piu', h.indexOf('Colore del') < 0);
 
   /* l'ordine conta: prima il sopra, poi la SUA fantasia, poi il SUO
      colore, e solo dopo il sotto. Con le tinte tutte in fondo si
@@ -532,19 +536,20 @@ gruppo('La fascia del tempo: una sola, e dice fin quando e pagato');
   prova('e non ha piu tasti suoi, diversi da quelli del bar',
     !/\.pc-due \.bc-zone\s*\{/.test(foglio));
 
-  /* IL GUARDAROBA CI DEVE STARE SENZA SCORRERE.
-     E' alto quattrocento pixel: insieme alle due card e alla fascia
-     del tempo non ci sta, e il pannello si mette a scorrere proprio
-     quando servono le due mani. Mentre si veste, quei numeri si
-     ripiegano in una riga sola. */
-  prova('c e la riga di ripiego', ha('pc-riass'));
-  prova('ed e un tasto, cosi si torna com era',
-    /<button class="pc-riass[^>]*data-a="chiudiarmadio"/.test(modello.replace(/\s+/g, ' ')));
-  prova('ripiegando spariscono le card e la fascia, non altro',
-    /\.pc-parco\.veste > \.pc-due, \.pc-parco\.veste > \.sec-tempo \{ display: none/
-      .test(readFileSync(join(RADICE, 'css/app.css'), 'utf8')));
+  /* IL GUARDAROBA SI PORTA A VISTA DA SOLO.
+     E' alto quattrocento pixel e sta in fondo alla linguetta: dentro la
+     scheda che vola non ci sta tutto, e restava mezzo sotto il bordo.
+     Si scorre del minimo che serve -- NON con scrollIntoView, che lo
+     incollerebbe in cima buttando fuori il resto. */
+  prova('il guardaroba si porta a vista', sorg.includes('portaAVista(container)'));
+  prova('scorrendo del minimo, non incollandolo in cima',
+    /function portaAVista[\s\S]{0,900}scrollTop \+= sotto \+ 22/.test(sorg));
   prova('il posto riservato al guardaroba non c e piu',
     !sorg.includes('altezzaPersone') && !sorg.includes('personeMisurate'));
+  /* e la schermata resta UNA: niente si nasconde mentre si veste */
+  prova('vestire non nasconde le card ne la fascia',
+    !sorg.includes('pc-riass') &&
+    !readFileSync(join(RADICE, 'css/app.css'), 'utf8').includes('.pc-parco.veste'));
 
   /* La pastiglia del pagato invece e' una funzione che torna testo:
      quella si prova davvero. E' l'unica parte della fascia che parla
@@ -594,16 +599,6 @@ gruppo('La fascia del tempo: una sola, e dice fin quando e pagato');
   h = app.pastigliaPagato(c);
   prova('col Crazy non pagato non e "tutto pagato"', !/pagato tutto/.test(h));
 
-  /* la riga di ripiego dice gli STESSI numeri delle card che nasconde:
-     chi li ha appena messi li deve ritrovare uguali */
-  c = mettiSotto(conto({ children: 3, crazyJumping: 2, durationMinutes: 90 }));
-  const riga = app.rigaRipiego(c);
-  prova('la riga ripiegata dice quanti bambini', /<b>3<\/b>/.test(riga));
-  prova('e quanti Crazy', /<b>2<\/b>/.test(riga));
-  prova('e da che ora a che ora', (riga.match(/\d\d:\d\d/g) || []).length === 2);
-  prova('e quanto resta da pagare', /da pagare/.test(riga));
-  app.segnaPagate('bimbi', 3); app.segnaPagate('crazy', 2);
-  prova('e quando e saldato lo dice', /tutto pagato/.test(app.rigaRipiego(c)));
 }
 
 gruppo('Il vuoto sopra la scheda che vola');
@@ -616,8 +611,8 @@ gruppo('Il vuoto sopra la scheda che vola');
      Fra "entra tutto" e "e' sempre la stessa schermata" vince la
      seconda. Resta il vuoto in cima, che e' il bersaglio per chiudere. */
   const sopra = app.spazioSopra;
-  prova('il vuoto sopra c’è sempre, e si prende col pollice', sopra() >= 40);
-  prova('e non si mangia la scheda', sopra() <= 60);
+  prova('il vuoto sopra c’è sempre, e si prende col pollice', sopra() >= 32);
+  prova('e non si mangia la scheda', sopra() <= 50);
   prova('la rimpicciolitura è sparita', typeof app.scalaChe === 'undefined');
 }
 

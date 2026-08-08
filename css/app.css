@@ -733,13 +733,13 @@ main {
    lavori.
    ══════════════════════════════════════════════════════════ */
 .tp-riga { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
-.tp-riga + .tp-riga { margin-top: 8px; }
+.tp-riga + .tp-riga { margin-top: 6px; }
 .tp-gr { display: flex; align-items: center; gap: 3px; padding: 4px;
   background: rgba(0, 0, 0, 0.28); border-radius: 13px; }
 .tp-gr > .em { font-size: 16px; padding: 0 2px 0 5px; opacity: .9; }
 .tp-gr .v { font-family: 'Fredoka', sans-serif; font-size: 25px; font-weight: 700;
   min-width: 62px; text-align: center; }
-.tp-gr button { min-width: 42px; height: 44px; padding: 0 7px; border: none;
+.tp-gr button { min-width: 42px; height: 42px; padding: 0 7px; border: none;
   border-radius: 10px; background: rgba(255, 255, 255, 0.1); color: var(--txt);
   font-family: 'Fredoka', sans-serif; font-size: 22px; font-weight: 700;
   cursor: pointer; transition: background var(--speed); }
@@ -755,7 +755,7 @@ main {
 /* il filo del pagato: una barra di otto pixel invece di una riga di
    testo. A tempo aperto diventa tratteggiata -- non c'e' una fine, e
    quindi non c'e' una frazione da riempire. */
-.tp-filo { position: relative; height: 8px; margin-top: 8px; border-radius: 5px;
+.tp-filo { position: relative; height: 7px; margin-top: 6px; border-radius: 4px;
   background: rgba(0, 0, 0, 0.4); overflow: hidden; }
 .tp-filo i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 5px;
   background: linear-gradient(180deg, #57D69C, #2E9E6D); transition: width .18s ease; }
@@ -765,7 +765,7 @@ main {
 /* i tagli rapidi, in versione stretta: non si allargano piu' a
    riempire la riga, cosi' accanto ci sta la pastiglia del pagato */
 .tp-riga .chips { gap: 7px; }
-.tp-riga .chip { flex: 0 0 auto; min-width: 56px; min-height: 44px; padding: 0 13px;
+.tp-riga .chip { flex: 0 0 auto; min-width: 56px; min-height: 42px; padding: 0 13px;
   font-size: 15px; border-width: 2px; }
 .tp-riga .chip.later { font-size: 15px; }
 
@@ -2311,9 +2311,17 @@ main {
    la cifra sono la stessa roba che il conto ripete qui sotto in
    grande, e ogni pixel che si tiene lei e' un pixel che manca al
    pannello -- che deve venire grande quasi quanto in "+ Nuovo". */
-.entry.vola > .e-riga { flex: 0 0 auto; padding: 6px 13px; }
-.entry.vola > .e-riga .e-av { transform: scale(.82); transform-origin: left center;
-  margin-right: -14px; }
+.entry.vola > .e-riga { flex: 0 0 auto; padding: 5px 13px; }
+/* LA FIGURINA SI RIMPICCIOLISCE DAVVERO, non con `transform`.
+   Con la scala il posto occupato resta quello di prima -- il disegno
+   si stringe ma il buco no -- e l'intestazione restava alta 88 pixel
+   per una figurina che ne mostrava 50. Quegli otto pixel per riga sono
+   quelli che mancano al guardaroba per starci dentro. */
+.entry.vola > .e-riga .e-av { height: 48px; margin-right: -4px; }
+/* Con il pannello aperto, gli orari e i numerini qui sotto sono gia'
+   scritti due volte piu' in basso -- nella fascia del tempo e sulle
+   card -- e ripeterli costa una riga intera. */
+.entry.vola.aperto > .e-riga .e-sotto { display: none; }
 .entry.vola.aperto > .e-aperta { flex: 1 1 auto; min-height: 0; }
 .entry.vola .e-dentro { display: flex; flex-direction: column; min-height: 0;
   /* quattro pixel per lato, non dieci: il pannello dentro la scheda
@@ -2383,7 +2391,7 @@ html:not(.anima) .view.entra-dx { animation: none; }
 /* Il pannello e la colonna: e lui ad avere il gap e il flex, non la
    vista, perche il pannello si sposta e se lo lasciassi alla vista
    dentro la scheda che vola non avrebbe piu niente sotto. */
-.pan-conto { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; }
+.pan-conto { display: flex; flex-direction: column; gap: 8px; flex: 1; min-height: 0; }
 /* IL VANO CHE SI RIMPICCIOLISCE.
    Prende tutto lo spazio che avanza sopra il conto. Se quello che ha
    dentro non ci sta, adattaPannello gli mette uno `zoom` e ci sta lo
@@ -2391,19 +2399,31 @@ html:not(.anima) .view.entra-dx { animation: none; }
    conto qui sotto si muova di un pixel.
    Lo scorrimento e' l'ultima spiaggia: si vede solo se il contenuto e'
    talmente tanto che rimpicciolirlo ancora lo renderebbe illeggibile. */
-.pan-conto .pc-scala { display: flex; flex-direction: column; gap: 10px;
+.pan-conto .pc-scala { display: flex; flex-direction: column; gap: 8px;
   flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 /* quando tocca scorrere, il bordo sfuma: cosi' l'ultimo riquadro non
    sembra tagliato per sbaglio ma "continua sotto" */
-.pan-conto .pc-scala.scorre {
+/* La sfumatura sta dalla parte in cui c'e' davvero dell'altro: sotto
+   finche' non si e' arrivati in fondo, sopra appena si e' scesi. Su
+   tutt'e due i lati quando si e' in mezzo. Spenta in fondo, se no
+   direbbe una bugia sull'ultima riga. */
+.pan-conto .pc-scala.dagiu {
   -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent);
   mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent);
+}
+.pan-conto .pc-scala.dasu {
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 22px);
+  mask-image: linear-gradient(to bottom, transparent, #000 22px);
+}
+.pan-conto .pc-scala.dasu.dagiu {
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 22px, #000 calc(100% - 22px), transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 22px, #000 calc(100% - 22px), transparent);
 }
 .pan-conto .bc-griglia { flex: 0 0 auto; }
 
 .bc-cat { position: sticky; top: 0; z-index: 6; display: flex; gap: 8px; flex-wrap: wrap;
   padding: 8px 0 10px; background: var(--bg); }
-.bc-cat button { border: none; border-radius: 15px; padding: 10px 15px; min-height: 46px;
+.bc-cat button { border: none; border-radius: 15px; padding: 7px 15px; min-height: 40px;
   background: var(--surface); color: var(--txt-3); font: inherit; font-size: 14.5px;
   font-weight: 700; cursor: pointer; }
 .bc-cat button.on { background: var(--txt); color: var(--bg); }.bc-tempo-k b.q { color: var(--warn); }.bc-chips button.on { background: var(--accent); color: var(--accent-ink); }.bc-allunga .et { font-size: 12px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase;
@@ -2490,22 +2510,26 @@ html:not(.anima) .view.entra-dx { animation: none; }
    scorre */
 .bc-fondo { position: sticky; bottom: max(10px, var(--safe-b)); z-index: 5; margin-top: auto;
   background: var(--surface); border-radius: 20px;
-  padding: 12px 14px 13px;
+  padding: 9px 12px 10px;
   box-shadow: 0 -6px 22px rgba(0,0,0,.45); display: flex; flex-direction: column; gap: 11px; }
 .bc-parti { display: flex; gap: 8px; flex-wrap: wrap; }
 /* icona, poi l'etichetta SOPRA la cifra, poi il tasto: sta in una riga
    sola da una quarantina di pixel, come nel modello */
-.bc-parte { flex: 1 1 170px; background: rgba(0,0,0,.24); border-radius: 14px; padding: 7px 10px;
-  display: flex; align-items: center; gap: 9px; }
+/* I TRE TOTALI SU UNA RIGA BASSA. Erano tre riquadri da 63 pixel con
+   dentro tre righe (nome, cifra, pagato): la cifra grossa che conta e'
+   quella sotto, queste sono la sua scomposizione e possono stare
+   strette. */
+.bc-parte { flex: 1 1 170px; background: rgba(0,0,0,.24); border-radius: 12px; padding: 4px 9px;
+  display: flex; align-items: center; gap: 8px; }
 .bc-parte svg { width: 22px; height: 22px; flex: 0 0 auto; }
 .bc-pk { flex: 1; min-width: 0; }
 .bc-parte .k { display: block; font-size: 11px; font-weight: 700; color: var(--txt-3); }
-.bc-parte .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 700;
-  line-height: 1.15; }
+.bc-parte .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 700;
+  line-height: 1.1; }
 /* la riga del pagato c'e' sempre: vuota diventa invisibile ma tiene il
    suo posto, cosi' il blocco non si alza e abbassa a ogni incasso */
-.bc-parte .q { display: block; font-size: 11px; font-weight: 700; color: var(--ok);
-  min-height: 14px; line-height: 14px; }
+.bc-parte .q { display: block; font-size: 10.5px; font-weight: 700; color: var(--ok);
+  min-height: 12px; line-height: 12px; }
 .bc-parte .q.vuota, .bc-conto .gia.vuota { visibility: hidden; }
 /* sul telefono (o col tablet in mano stretto) il numerone e i tasti
    stanno larghi uguale ma senza far crescere il fondo */
@@ -2700,8 +2724,8 @@ html:not(.anima) .entry.appena::before { animation: none; opacity: 1; }
    padding zero, e mettercelo la farebbe CRESCERE invece di accorciarla. */
 .pan-conto .card.blk { margin-bottom: 8px; }
 .pan-conto .card.blk > h2,
-.pan-conto .card.blk > .testa-viola > h2 { font-size: 15.5px; padding: 5px 14px; }
-.pan-conto .blk-in { padding: 8px 14px 10px; }
+.pan-conto .card.blk > .testa-viola > h2 { font-size: 15px; padding: 3px 14px; }
+.pan-conto .blk-in { padding: 5px 12px 6px; }
 /* Il conto e' incollato al bordo basso dello schermo, e Chrome ferma lo
    sticky al bordo INTERNO di main: col respiro di main sotto si
    fermerebbe 24px prima, a mezz'aria. Qui il respiro lo mette lui.
@@ -2735,7 +2759,7 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
 /* i posti vuoti non devono occupare il loro giro di gap: la fascia
    della modifica e la riga del suo annulla ci sono solo quando servono */
 
-.pan-conto .bc-cat { padding: 6px 0 8px; }
+.pan-conto .bc-cat { padding: 4px 0 6px; }
 
 .bc-cat button { display: flex; align-items: center; gap: 7px; }
 .bc-cat button svg { width: 21px; height: 21px; }
@@ -2775,18 +2799,18 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
    colpo d'occhio e non rubano altezza. */
 .testa-viola { display: flex; align-items: center; }
 .testa-viola h2 { flex: 1; }
-.butta { margin-right: 13px; border: none; border-radius: 11px; padding: 6px 11px; min-height: 36px;
+.butta { margin-right: 13px; border: none; border-radius: 11px; padding: 3px 11px; min-height: 28px;
   background: rgba(0,0,0,.28); color: rgba(255,255,255,.92); font: inherit; font-size: 12.5px;
   font-weight: 700; cursor: pointer; transition: transform .08s ease; }
 .butta:active { transform: scale(.95); }
 
 .ruoli { display: flex; gap: 6px; }
-.ruoli button { flex: 1; min-width: 0; border: none; border-radius: 13px; padding: 5px 2px;
+.ruoli button { flex: 1; min-width: 0; border: none; border-radius: 13px; padding: 3px 2px;
   background: rgba(0,0,0,.22); color: rgba(255,255,255,.86); font: inherit; cursor: pointer;
   display: flex; flex-direction: column; align-items: center; gap: 1px;
   transition: background .15s ease, transform .08s ease; }
 .ruoli button:active { transform: scale(.95); }
-.ruoli button .em { font-size: 23px; line-height: 1.15; }
+.ruoli button .em { font-size: 21px; line-height: 1.1; }
 .ruoli button .nm { font-size: 11px; font-weight: 700; line-height: 1.1; }
 .ruoli button.messo { background: rgba(255,255,255,.2); }
 .ruoli button.on { background: #fff; color: #221944; }
@@ -2800,9 +2824,9 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
    erano tutte in fondo si sbagliava capo un tocco su tre.
    In fondo, a tutta larghezza, la riga libera: al banco e' quella che
    si usa di corsa, quindi e' la piu' grande e la piu' visibile. */
-.armadio { display: grid; grid-template-columns: 112px 1fr; gap: 7px 9px;
-  margin-top: 7px; align-items: stretch; }
-.armadio .largo { grid-column: span 2; display: flex; flex-direction: column; gap: 5px; }
+.armadio { display: grid; grid-template-columns: 112px 1fr; gap: 5px 9px;
+  margin-top: 5px; align-items: stretch; }
+.armadio .largo { grid-column: span 2; display: flex; flex-direction: column; gap: 4px; }
 .armadio .figura { background: rgba(0,0,0,.24); border-radius: 14px; display: flex;
   flex-direction: column; align-items: center; justify-content: center; gap: 5px;
   padding: 6px; height: 100%; box-sizing: border-box; }
@@ -2810,15 +2834,15 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
    altezza di prima e' larga trentotto pixel in meno -- che vanno tutti
    ai capi qui accanto */
 .armadio .figura svg { display: block; width: 99px; height: 206px; }
-.armadio .roba { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.armadio .et { font-size: 9.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
-  color: rgba(255,255,255,.62); margin-bottom: 1px; display: block; line-height: 1.05; }
+.armadio .roba { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.armadio .et { font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+  color: rgba(255,255,255,.62); margin-bottom: 0; display: block; line-height: 1; }
 
 /* I CAPI DISEGNATI. Prima erano emoji: 👕 e 🧥 al banco sono la stessa
    macchia colorata, e nessuna emoji sa dirti di che colore e' il capo
    che stai per mettere. Queste sono le stesse sagome che finiscono
    sulla figura, nel colore e nella fantasia scelti. */
-.armadio .capi { display: grid; gap: 5px; }
+.armadio .capi { display: grid; gap: 4px; }
 .armadio .capo { border: none; border-radius: 11px; background: rgba(0,0,0,.24); min-width: 0;
   color: rgba(255,255,255,.9); padding: 2px 1px 3px; cursor: pointer; font: inherit;
   display: flex; flex-direction: column; align-items: center; gap: 1px;
@@ -2829,8 +2853,12 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
    una decina di pixel in piu' -- e a quel punto tenere l'icona a 38 e
    il nome a 9,5px era sprecare il posto guadagnato. */
 .armadio .capo { padding: 3px 2px 4px; }
-.armadio .capo svg { display: block; width: 100%; height: auto; max-width: 54px; }
-.armadio .capo .nm { font-size: 11px; font-weight: 700; line-height: 1.05; text-align: center;
+/* IL DISEGNO RESTA GRANDE: quarantotto invece di cinquantaquattro,
+   sei pixel per fila. E' l'unico posto in cui ho toccato la misura dei
+   capi, e solo perche' senza quei dodici pixel il guardaroba non
+   entrava: il nome sotto resta lo stesso. */
+.armadio .capo svg { display: block; width: 100%; height: auto; max-width: 48px; }
+.armadio .capo .nm { font-size: 10.5px; font-weight: 700; line-height: 1; text-align: center;
   letter-spacing: -.01em; color: rgba(255,255,255,.96); }
 .armadio .capo.on .nm { color: #221944; }
 .armadio .capo.on { background: #fff; color: #221944; }
@@ -2857,11 +2885,11 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
   background: rgba(0,0,0,.24); cursor: pointer; }
 .armadio .fant button.on { background: #fff; }
 .armadio .fant .sw { display: flex; align-items: center; justify-content: center;
-  width: 100%; height: 30px; border-radius: 7px; box-shadow: 0 0 0 1px rgba(0,0,0,.4) inset; }
+  width: 100%; height: 23px; border-radius: 7px; box-shadow: 0 0 0 1px rgba(0,0,0,.4) inset; }
 .armadio .fant .sw b { font-size: 25px; line-height: 1; }
 
 .armadio .tinte { display: grid; gap: 4px; }
-.armadio .tinte button { height: 27px; border-radius: 7px; border: 3px solid transparent;
+.armadio .tinte button { height: 21px; border-radius: 7px; border: 3px solid transparent;
   padding: 0; cursor: pointer; min-width: 0; position: relative; }
 /* Il bersaglio per il dito e' piu' largo del quadratino, ma non sposta
    niente: la scala rimpicciolisce anche i bersagli, e una pastiglia di
@@ -2920,7 +2948,7 @@ html:not(.anima) .card.evidenzia::after { animation: none; }
   border-radius: 12px; background: rgba(0,0,0,.3); color: #fff; font: inherit; font-size: 15px;
   padding: 10px 13px; min-height: 46px; }
 /* la riga libera e' grande e ambrata: e' la piu' usata di tutte */
-.armadio .libero.grosso { font-size: 16px; min-height: 48px;
+.armadio .libero.grosso { font-size: 15.5px; min-height: 40px;
   border-color: rgba(232,180,76,.55); background: rgba(232,180,76,.09); }
 /* La figura e' una colonna: senza azzerare il flex, il flex-basis
    diventava l'ALTEZZA e il campo del nome cresceva a dismisura. */
@@ -2990,25 +3018,8 @@ html:not(.anima) .card.evidenzia::after { animation: none; }
    scuro suo e ci rimette dentro le variabili della pagina, che .entry
    riscrive in versione bianco-su-colore.
    ══════════════════════════════════════════════════════════ */
-.pc-parco { display: flex; flex-direction: column; gap: 8px; }
+.pc-parco { display: flex; flex-direction: column; gap: 6px; }
 
-/* MENTRE SI VESTE QUALCUNO, I NUMERI SI RIPIEGANO.
-   Il guardaroba e' alto quattrocento pixel: insieme alle due card e
-   alla fascia del tempo non ci sta, e il pannello si mette a scorrere
-   -- proprio nel momento in cui servono le due mani. Quei numeri pero'
-   in quel momento sono gia' stati messi: si accorciano in una riga
-   sola, restano leggibili, e si riaprono toccandola. */
-.pc-parco.veste > .pc-due, .pc-parco.veste > .sec-tempo { display: none; }
-.pc-riass { display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
-  width: 100%; border: none; cursor: pointer; text-align: left;
-  background: var(--surface); border-radius: 14px; padding: 9px 12px;
-  color: var(--txt); font: inherit; font-size: 14px; }
-.pc-riass:active { background: var(--surface-2); }
-.pc-riass.hidden { display: none; }
-.pc-riass .rr { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
-.pc-riass .rr b { font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 700; }
-.pc-riass .soldi { color: var(--ok); }
-.pc-riass .torna { margin-left: auto; font-size: 12px; font-weight: 700; color: var(--txt-3); }
 
 .entry .pan-conto {
   --bg: #14141B;
@@ -3057,6 +3068,11 @@ html:not(.anima) .card.evidenzia::after { animation: none; }
    peggio di due file diverse: si guarda due volte per capire se e' la
    stessa cosa. */
 .bc-griglia.pc-due { grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); }
+/* La parte alta delle due card aveva un respiro da schermo grande.
+   Qui ogni riga conta: dentro la scheda che vola devono starci queste,
+   la fascia del tempo e il guardaroba aperto, tutto insieme. */
+.pc-due .bc-su { padding-top: 5px; padding-bottom: 5px; }
+.pc-due .bc-zone button { min-height: 44px; }
 
 /* quando non e' stato ancora scelto niente */
 .ed-tr.vuoto { opacity: 0.55; font-style: italic; }
