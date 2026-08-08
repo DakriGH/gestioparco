@@ -142,8 +142,7 @@ const BOTTONI = [
   { capo: 'camicia', scarto: -54, quanti: 3 },
   { capo: 'gilet', scarto: -54, quanti: 3 },
   { capo: 'giacca', scarto: -54, quanti: 2 },
-  { capo: 'felpa', scarto: -50, quanti: 2 },   // occhielli dei laccetti
-  { capo: 'giubbotto', scarto: 48, quanti: 1 } // il bottone in cima alla zip
+  { capo: 'felpa', scarto: -50, quanti: 2 }    // occhielli dei laccetti
 ];
 for (const b of BOTTONI) {
   const col = AV.shade(VERDE, b.scarto);
@@ -260,7 +259,7 @@ gruppo('La scheda del banco: c’è tutto e nell’ordine giusto');
   prova('tutti i ' + SOPRA.length + ' capi di sopra', conta(h, /data-top="/g) === SOPRA.length);
   prova('tutte le ' + AV.PATTERNS.length + ' fantasie', conta(h, /data-pat="/g) === AV.PATTERNS.length);
   prova('tutti gli ' + SOTTO.length + ' capi di sotto', conta(h, /data-pants="/g) === SOTTO.length);
-  prova('i 4 accessori in coda al sotto', conta(h, /data-acc="/g) === 4);
+  prova('i 2 accessori in coda al sotto', conta(h, /data-acc="/g) === 2);
   prova('le tinte: ' + AV.COLORS.length + ' × 2 gruppi',
     conta(h, /data-col="top\|/g) === AV.COLORS.length &&
     conta(h, /data-col="pants\|/g) === AV.COLORS.length);
@@ -289,7 +288,7 @@ gruppo('Nell’editor niente emoji: solo i capi disegnati');
   const dentro = [...new Set(emoji)].filter(e => h.indexOf(e) >= 0);
   prova('nessuna emoji di capo nella scheda', dentro.length === 0, 'trovate ' + dentro.join(' '));
   prova('un disegno per ogni capo e accessorio',
-    conta(h, /<svg/g) >= SOPRA.length + SOTTO.length + 4);
+    conta(h, /<svg/g) >= SOPRA.length + SOTTO.length + 2);
 }
 
 gruppo('Il pulsante mostra ESATTAMENTE il capo che finirà addosso');
@@ -323,14 +322,14 @@ gruppo('Il vestito lungo spegne i sotto, il corto no');
   prova('col lungo i pantaloni si spengono', lungo.indexOf('spento-capi') >= 0);
   prova('col lungo lo dice anche a parole', lungo.indexOf('col vestito lungo non serve') >= 0);
   prova('col corto i pantaloni restano vivi', corto.indexOf('spento-capi') < 0);
-  /* ma gli accessori NON si spengono mai: cappello, scarpe e zaino se
-     li mette anche chi ha il vestito lungo */
-  prova('gli accessori restano toccabili anche col lungo', conta(lungo, /data-acc="/g) === 4);
+  /* ma gli accessori NON si spengono mai: capelli e scarpe ce li ha
+     anche chi porta il vestito lungo */
+  prova('gli accessori restano toccabili anche col lungo', conta(lungo, /data-acc="/g) === 2);
 }
 
 gruppo('Gli accessori: si mettono, si tolgono, e si vedono addosso');
 {
-  const ACC = ['capelli', 'cappello', 'scarpe', 'zaino'];
+  const ACC = ['capelli', 'scarpe'];
   for (const a of ACC) {
     const p = persona();
     const prima = app.AV.build(p.avatar);
@@ -346,14 +345,14 @@ gruppo('Gli accessori: si mettono, si tolgono, e si vedono addosso');
   /* la tavolozza si apre su UNO solo, quello toccato */
   const p = persona();
   const chiusa = app.armadioDi(p, '');
-  const aperta = app.armadioDi(p, 'cappello');
+  const aperta = app.armadioDi(p, 'scarpe');
   prova('senza tocchi nessuna tavolozza aperta', chiusa.indexOf('class="volante"') < 0);
-  prova('toccato il cappello, si apre la sua', conta(aperta, /class="volante"/g) === 1 &&
-    aperta.indexOf('data-acccol="cappello|') >= 0);
+  prova('toccate le scarpe, si apre la loro', conta(aperta, /class="volante"/g) === 1 &&
+    aperta.indexOf('data-acccol="scarpe|') >= 0);
   prova('la tavolozza ha tutte le ' + AV.COLORS.length + ' tinte, la ruota e il togli',
     conta(aperta, /data-acccol="/g) === AV.COLORS.length &&
-    aperta.indexOf('data-accruota="cappello"') >= 0 &&
-    aperta.indexOf('data-accvia="cappello"') >= 0);
+    aperta.indexOf('data-accruota="scarpe"') >= 0 &&
+    aperta.indexOf('data-accvia="scarpe"') >= 0);
 }
 
 gruppo('I dati di prima continuano a funzionare');
@@ -377,6 +376,81 @@ gruppo('I dati di prima continuano a funzionare');
     } catch (e) { esito = e.message; }
     prova('avatar vecchio n.' + (i + 1) + ': la scheda si apre lo stesso', esito === '', esito);
   }
+}
+
+gruppo('I due capi tolti non fanno sparire nessuno');
+{
+  /* maglione e giubbotto se ne sono andati per far posto agli altri.
+     Chi li ha addosso nei dati salvati NON deve ritrovarsi in
+     maglietta a gennaio: diventano quello a cui somigliavano. */
+  const dove = (vecchio) => app.AV.normalize({ top: { style: vecchio, color: VERDE } }, 'altro').top.style;
+  prova('il maglione diventa una manica lunga', dove('maglione') === 'manicalunga', dove('maglione'));
+  prova('il giubbotto diventa una giacca', dove('giubbotto') === 'giacca', dove('giubbotto'));
+  prova('un capo che non è mai esistito ripiega sulla maglietta', dove('sombrero') === 'maglietta');
+  prova('nell’elenco non ci sono più', SOPRA.indexOf('maglione') < 0 && SOPRA.indexOf('giubbotto') < 0);
+  prova('restano dieci capi di sopra', SOPRA.length === 10, String(SOPRA.length));
+}
+
+gruppo('La giacca ha la cravatta, di qua e di là');
+{
+  /* è lei a farla riconoscere: i risvolti da soli, a due centimetri,
+     si confondono con un colletto qualunque */
+  const crav = app.AV.coloreFantasia(VERDE);
+  prova('la cravatta c’è nell’icona', app.CAPI.capo('giacca', VERDE, 'solid', 46).indexOf(crav) >= 0);
+  prova('la cravatta c’è sulla figura', figura('giacca', 'pantaloni').indexOf(crav) >= 0);
+  prova('e non finisce sugli altri capi',
+    figura('camicia', 'pantaloni').indexOf('M46.8 76.4') < 0);
+}
+
+gruppo('Capelli e scarpe: spenti finché non li scegli tu');
+{
+  /* Ce li hanno tutti, quindi partivano sempre accesi: due pastiglie
+     bianche che dicevano "selezionato" senza che nessuno avesse
+     selezionato niente. */
+  const p = persona();
+  const spento = app.armadioDi(p, '');
+  prova('appena aperto nessun accessorio è acceso',
+    conta(spento, /class="capo acc-b on"/g) === 0);
+
+  app.segna(p, 'scarpe');
+  const acceso = app.armadioDi(p, '');
+  prova('scelte le scarpe, si accendono quelle',
+    conta(acceso, /class="capo acc-b on"/g) === 1 &&
+    acceso.indexOf('acc-b on" data-acc="scarpe"') >= 0);
+  prova('e i capelli restano spenti', acceso.indexOf('acc-b on" data-acc="capelli"') < 0);
+}
+
+gruppo('Quello che scegli torna scritto sulla scheda');
+{
+  /* La descrizione sotto il nome ("Camicia rossa · Jeans blu") è quello
+     che si legge all'uscita per riconoscere il gruppo. Dice solo i
+     pezzi toccati a mano: l'armadio nuovo non li segnava più, e la
+     descrizione era sparita da tutte le schede. */
+  const p = persona('camicia', 'jeans', '#E23D4B');
+  p.avatar.scelti = {};
+  prova('senza scelte non promette niente', app.AV.traits(p.avatar, 3, true).length === 0);
+
+  app.segna(p, 'maglietta');
+  const uno = app.AV.traits(p.avatar, 3, true).map(t => t.txt);
+  prova('scelto il sopra, il sopra si legge', uno.length === 1 && /Camicia/i.test(uno[0]), uno.join(' · '));
+  prova('e ne dice il colore', /ross/i.test(uno[0]), uno[0]);
+
+  app.segna(p, 'pantaloni');
+  const due = app.AV.traits(p.avatar, 3, true).map(t => t.txt);
+  prova('scelto il sotto, si legge anche quello', due.length === 2 && /Jeans/i.test(due[1]), due.join(' · '));
+
+  p.avatar.top.pattern = 'stripes-h';
+  app.segna(p, 'maglietta');
+  prova('e la fantasia entra nella frase',
+    /righe/i.test(app.AV.traits(p.avatar, 3, true)[0].txt),
+    app.AV.traits(p.avatar, 3, true)[0].txt);
+
+  app.segna(p, 'capelli');
+  prova('anche i capelli, se li scegli',
+    app.AV.traits(p.avatar, 5, true).some(t => /capell|cod|frang|pelat|ricc|liscio|corti|medi|lungh/i.test(t.txt)),
+    app.AV.traits(p.avatar, 5, true).map(t => t.txt).join(' · '));
+
+  prova('segnare accende anche il "toccato"', p.tocco === true);
 }
 
 /* ============================================================

@@ -620,7 +620,13 @@ function montaPannello(host, conto, opz) {
   /* l'elenco delle persone cambia padrone: la firma va buttata, se no
      i tasti restano agganciati al gruppo di prima */
   const box = p.querySelector('.pc-people');
-  box.dataset.sig = ''; box.dataset.apri = '';
+  box.dataset.sig = '';
+  /* Se un riferimento c'e' GIA', l'armadio si apre da solo: e' gia'
+     stato scelto in registrazione, e richiederne un tocco per rivederlo
+     voleva dire far ricominciare da capo chi voleva solo controllare o
+     correggere un dettaglio. */
+  box.dataset.apri = (conto && conto.people && conto.people.length) ? conto.people[0].id : '';
+  box.dataset.tav = '';
   if (p.parentNode !== host) {
     host.appendChild(p);
     if (anima()) {
@@ -838,7 +844,13 @@ function syncPeople(container, people, onChange) {
   if (container.__lista !== people) {
     container.__lista = people;
     container.dataset.sig = '';
-    container.dataset.apri = '';
+    container.dataset.tav = '';
+    /* Cambia il gruppo di cui ci si occupa: se un riferimento c'e'
+       GIA' l'armadio si apre da solo. E' stato scelto in
+       registrazione, e richiedere un tocco in piu' per rivederlo
+       voleva dire far ricominciare da capo chi voleva solo
+       controllare o correggere un dettaglio. */
+    container.dataset.apri = people.length ? people[0].id : '';
   }
   /* chi non c'e' piu' non puo' restare aperto */
   if (container.dataset.apri && !people.some(p => p.id === container.dataset.apri)) {
@@ -900,7 +912,7 @@ function syncPeople(container, people, onChange) {
          colore lo si guarda addosso alla figura mentre lo si sceglie. */
       if (t.dataset.ruota !== undefined) {
         p.avatar[t.dataset.ruota].color = t.value;
-        p.tocco = true;
+        segna(p, t.dataset.ruota === 'top' ? 'maglietta' : 'pantaloni');
         container.dataset.sig = '';
         avvisa();
         syncPeople(container, people, container.__cambia);
@@ -911,7 +923,7 @@ function syncPeople(container, people, onChange) {
            spostamento del dito, e chiuderla al primo la strapperebbe
            via mentre la si sta ancora usando */
         accMetti(p.avatar, t.dataset.accruota, t.value);
-        p.tocco = true;
+        segna(p, t.dataset.accruota);
         container.dataset.sig = '';
         avvisa();
         syncPeople(container, people, container.__cambia);
@@ -971,13 +983,13 @@ function syncPeople(container, people, onChange) {
           }
           container.dataset.apri = gia.id;
         }
-      } else if (p && d.top !== undefined)   { p.avatar.top.style = d.top; p.tocco = true; container.dataset.tav = ''; }
-      else if (p && d.pat !== undefined)     { p.avatar.top.pattern = d.pat; p.tocco = true; container.dataset.tav = ''; }
-      else if (p && d.pants !== undefined)   { p.avatar.pants.style = d.pants; p.tocco = true; container.dataset.tav = ''; }
+      } else if (p && d.top !== undefined)   { p.avatar.top.style = d.top; segna(p, 'maglietta'); container.dataset.tav = ''; }
+      else if (p && d.pat !== undefined)     { p.avatar.top.pattern = d.pat; segna(p, 'maglietta'); container.dataset.tav = ''; }
+      else if (p && d.pants !== undefined)   { p.avatar.pants.style = d.pants; segna(p, 'pantaloni'); container.dataset.tav = ''; }
       else if (p && d.col !== undefined) {
         const parti = d.col.split('|');
         p.avatar[parti[0]][parti[1]] = parti[2];
-        p.tocco = true;
+        segna(p, parti[0] === 'top' ? 'maglietta' : 'pantaloni');
         container.dataset.tav = '';
       } else if (p && d.acc !== undefined) {
         /* l'accessorio non si sceglie per forma ma per COLORE: toccarlo
@@ -986,11 +998,12 @@ function syncPeople(container, people, onChange) {
       } else if (p && d.acccol !== undefined) {
         const parti = d.acccol.split('|');
         accMetti(p.avatar, parti[0], parti[1]);
-        p.tocco = true;
+        segna(p, parti[0]);
         container.dataset.tav = '';
       } else if (p && d.accvia !== undefined) {
         accTogli(p.avatar, d.accvia, p.role);
         p.tocco = true;
+        if (p.avatar.scelti) delete p.avatar.scelti[d.accvia];
         container.dataset.tav = '';
       } else return;
       container.dataset.sig = '';
@@ -998,6 +1011,37 @@ function syncPeople(container, people, onChange) {
       syncPeople(container, people, container.__cambia);
     });
   }
+}
+
+/* Chi ha toccato la figura sta cercando "Chi accompagna", che pero'
+   sta in fondo alla linguetta Parco, sotto altre tre fasce: senza un
+   segnale si arriva li' e non si capisce dove guardare. Il riquadro si
+   accende per tre secondi, con lo stesso battito delle schede in
+   ritardo -- un linguaggio che nell'app c'e' gia'. */
+function accendiPersone() {
+  setTimeout(() => {
+    const sez = PAN.root && PAN.root.querySelector('.sec-people');
+    if (!sez) return;
+    sez.classList.remove('evidenzia');
+    void sez.offsetWidth;
+    sez.classList.add('evidenzia');
+    sez.scrollIntoView({ block: 'nearest' });
+    setTimeout(() => sez.classList.remove('evidenzia'), 3000);
+  }, 60);
+}
+
+/* SEGNARE QUELLO CHE SI E' SCELTO A MANO.
+   La descrizione scritta sulla scheda ("Camicia rossa a righe · Jeans
+   blu") dice solo i pezzi che qualcuno ha davvero toccato: il resto e'
+   il vestito di serie del ruolo, non una cosa vista addosso alla
+   persona, e metterlo li' vorrebbe dire far cercare all'uscita un
+   dettaglio che nessuno ha guardato.
+   L'armadio nuovo non lo segnava, e la descrizione era sparita dalle
+   schede. */
+function segna(p, parte) {
+  p.tocco = true;
+  p.avatar.scelti = p.avatar.scelti || {};
+  p.avatar.scelti[parte] = true;
 }
 
 /* L'ARMADIO: figura grande a sinistra, scelte a destra.
@@ -1009,24 +1053,22 @@ function syncPeople(container, people, onChange) {
    attorno alla persona, e cercarli altrove costava un giro in piu'. */
 
 /* dove sta scritto, dentro l'avatar, il colore di ogni accessorio */
+/* Capelli e scarpe, e basta. Cappello e zaino se ne sono andati:
+   quasi nessuno li ha, e occupavano due posti in una fila dove ogni
+   posto e' larghezza tolta ai capi. Chi ne ha bisogno li mette
+   dall'editor completo. */
 const ACC_DOVE = {
   capelli: (av) => av.hair.color,
-  cappello: (av) => (av.hat.style === 'none' ? null : av.hat.color),
-  scarpe: (av) => av.shoes.color,
-  zaino: (av) => (av.bag.style === 'none' ? null : av.bag.color)
+  scarpe: (av) => av.shoes.color
 };
-const ACC_NOME = { capelli: 'Capelli', cappello: 'Cappello', scarpe: 'Scarpe', zaino: 'Zaino' };
+const ACC_NOME = { capelli: 'Capelli', scarpe: 'Scarpe' };
 function accMetti(av, acc, colore) {
   if (acc === 'capelli') av.hair.color = colore;
-  else if (acc === 'cappello') av.hat = { style: 'cappellino', color: colore };
   else if (acc === 'scarpe') av.shoes = { style: 'sneakers', color: colore };
-  else if (acc === 'zaino') av.bag = { style: 'zaino', color: colore };
 }
 function accTogli(av, acc, ruolo) {
   if (acc === 'capelli') av.hair.color = AV.baseFor(ruolo).hair.color;
-  else if (acc === 'cappello') av.hat = { style: 'none', color: '#E23D4B' };
   else if (acc === 'scarpe') av.shoes = { style: 'sneakers', color: '#F4F6F8' };
-  else if (acc === 'zaino') av.bag = { style: 'none', color: '#7C4A2D' };
 }
 
 function armadioDi(p, tavolozzaAperta) {
@@ -1063,9 +1105,14 @@ function armadioDi(p, tavolozzaAperta) {
       '" data-pat="' + f.key + '" title="' + esc(f.n) + '">' +
       pezzaFantasia(f.key, c1, c2) + '</button>').join('') + '</div>';
 
+  /* ACCESI SOLO SE LI HAI SCELTI TU. Capelli e scarpe ce li hanno
+     tutti, quindi partivano sempre accesi: due pastiglie bianche che
+     dicevano "selezionato" senza che nessuno avesse selezionato
+     niente, e l'occhio ci tornava sopra ogni volta per capire perche'. */
   const accessori = Object.keys(ACC_DOVE).map(k => {
     const c = ACC_DOVE[k](av);
-    return '<button class="capo acc-b' + (c ? ' on' : '') + '" data-acc="' + k + '">' +
+    const mio = !!(av.scelti && av.scelti[k]);
+    return '<button class="capo acc-b' + (mio ? ' on' : '') + '" data-acc="' + k + '">' +
       CAPI.accessorio(k, c || '#8A8AA0', 44) +
       '<span class="nm">' + ACC_NOME[k] + '</span></button>';
   }).join('');
@@ -1077,7 +1124,10 @@ function armadioDi(p, tavolozzaAperta) {
     (tavolozzaAperta ? tavolozza(av, tavolozzaAperta) : '') + '</div>';
 
   return '<div class="armadio">' +
-    '<div class="figura">' + AV.build(av) +
+    /* inquadratura "figura": la persona intera ma senza i fianchi
+       vuoti, che erano quattordici pixel per parte di aria buona solo
+       a rubare larghezza ai capi qui accanto */
+    '<div class="figura">' + AV.build(av, { zona: 'figura' }) +
       '<input class="libero chi" placeholder="' + esc(roleOf(p.role).label) + '" value="' +
         esc(p.name || '') + '" data-campo="name"></div>' +
     '<div class="roba">' +
@@ -1601,12 +1651,6 @@ function pcFondo() {
         : '') +
       (resta > 0 ? '<button class="btn" data-resto>\ud83e\uddee Resto</button>' +
         '<button class="btn" data-tutto>Paga tutto</button>' : '') +
-      /* USCITA sta qui, accanto ai soldi: si esce quando si e' finito
-         di pagare, ed e' li' che si guarda. Prima stava su una riga
-         sua dentro la scheda, insieme a tre comandi che il pannello
-         gia' rifa' -- e quella riga costava cinquanta pixel al
-         pannello, che ne ha bisogno piu' di lei. */
-      (PAN.ingresso ? '<button class="btn bc-uscita" data-uscita>\ud83d\udeaa Uscita</button>' : '') +
       '<button class="btn btn-ok" data-reg>' +
         (PAN.ingresso ? '\u2713 Fatto' : tot > 0 && resta <= 0 ? '\u2705 Registra e incassa' : 'Registra') +
       '</button>' +
@@ -2182,9 +2226,11 @@ function entryCard(entry) {
     if (!payPanel.classList.contains('hidden') && PAN.ingresso === entry) {
       PAN.cat = 'Parco';
       aggiornaPannello({ entra: true });
+      accendiPersone();
       return;
     }
     apriConto('Parco');
+    accendiPersone();
   };
   if (!people.length) {
     avBox.classList.add('manca');

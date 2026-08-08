@@ -117,8 +117,6 @@
     { key: 'felpa', label: 'Felpa', em: '🧥', g: 1, noun: 'Felpa', maniche: 'lunghe' },
     { key: 'giacca', label: 'Giacca', em: '🧳', g: 1, noun: 'Giacca', maniche: 'lunghe' },
     { key: 'gilet', label: 'Gilet', em: '🦺', g: 0, noun: 'Gilet', maniche: 'nessuna' },
-    { key: 'maglione', label: 'Maglione', em: '🧶', g: 0, noun: 'Maglione', maniche: 'lunghe' },
-    { key: 'giubbotto', label: 'Giubbotto', em: '🧥', g: 0, noun: 'Giubbotto', maniche: 'lunghe' },
     { key: 'vestito', label: 'Vestito', em: '👗', g: 0, noun: 'Vestito', maniche: 'nessuna' },
     /* l'unico che copre le gambe fino ai piedi: sotto non ci va niente */
     { key: 'vestitolungo', label: 'Vestito lungo', em: '👚', g: 0, noun: 'Vestito lungo', full: true, maniche: 'nessuna' }
@@ -345,6 +343,10 @@
     const OLD_HAIR = { boccoli: 'ricci', pelata: 'pelato' };
     if (OLD_HAIR[out.hair.style]) out.hair.style = OLD_HAIR[out.hair.style];
     if (!HAIR.some(h => h.key === out.hair.style)) out.hair.style = 'corti';
+    /* i due capi tolti diventano quello a cui somigliavano: chi e' gia'
+       registrato col maglione non si ritrova in maglietta a gennaio */
+    const TOP_TOLTI = { maglione: 'manicalunga', giubbotto: 'giacca' };
+    if (TOP_TOLTI[out.top.style]) out.top.style = TOP_TOLTI[out.top.style];
     if (!TOP.some(t => t.key === out.top.style)) out.top.style = 'maglietta';
     if (!PANTS.some(p => p.key === out.pants.style)) out.pants.style = 'pantaloni';
     if (!SHOES.some(s => s.key === out.shoes.style)) out.shoes.style = 'sneakers';
@@ -355,6 +357,11 @@
 
   /* inquadrature per le miniature dell'editor: si vede solo il pezzo */
   const ZONE = {
+    /* la figura INTERA ma senza i fianchi vuoti: il disegno sta fra 14
+       e 86, e i quattordici pixel per parte erano aria che rubava
+       larghezza ai capi qui accanto. La figura non si taglia mai --
+       gonna lunga e borsa a tracolla ci stanno dentro. */
+    figura: '14 0 72 150',
     testa:  '22 2 56 62',
     viso:   '26 18 48 42',
     busto:  '18 52 64 58',
@@ -704,28 +711,21 @@
                <circle cx="50" cy="89.8" r="1.3" fill="${shade(ct, -54)}"/>
                <circle cx="50" cy="97.1" r="1.3" fill="${shade(ct, -54)}"/>
                <path d="M37.8 81.2 L44.6 81.2 L44.6 87.4 L37.8 87.4 Z" fill="none" stroke="${shade(ct, -30)}" stroke-width="1.3"/>`;
-    } else if (av.top.style === 'maglione') {
-      /* lana grossa: collo, coste verticali e fondo a coste. Il
-         polsino lo mette la regola delle maniche lunghe. */
-      torso = `<path d="M34 ${bodyTop} L42 65 Q50 71 58 65 L66 ${bodyTop} L70 78 L66 82 L66 104 L34 104 L34 82 L30 78 Z" fill="${topP.fill}" ${line}/>
-               <path d="M42.9 64.4 Q50 70.1 57.1 64.4 Q58.9 67.7 50 72.6 Q41.1 67.7 42.9 64.4 Z" fill="${shade(ct, -24)}"/>
-               <path d="M39.3 78 L39.3 96 M46.4 78 L46.4 96 M53.6 78 L53.6 96 M60.7 78 L60.7 96" stroke="${shade(ct, 30)}" stroke-width="1.9" opacity=".85"/>
-               <path d="M34 99.4 L66 99.4" stroke="${shade(ct, -32)}" stroke-width="3.2"/>`;
-    } else if (av.top.style === 'giubbotto') {
-      // piumino: QUATTRO trapuntature, la zip e il bottone in alto
-      torso = `<path d="M33 ${bodyTop} L42 64 Q50 70 58 64 L67 ${bodyTop} L71 78 L67 82 L67 105 L33 105 L33 82 L29 78 Z" fill="${topP.fill}" ${line}/>
-               <path d="M33.4 75 L66.6 75 M33.4 82.4 L66.6 82.4 M33.4 89.7 L66.6 89.7 M33.4 97.1 L66.6 97.1" stroke="${shade(ct, -32)}" stroke-width="1.4" opacity=".9"/>
-               <path d="M50 66 L50 105" stroke="${shade(ct, -50)}" stroke-width="2.4"/>
-               <circle cx="50" cy="70" r="1.7" fill="${shade(ct, 48)}"/>`;
     } else if (av.top.style === 'giacca') {
       /* risvolti, abbottonatura al centro, due bottoni e le tasche:
          gli stessi cinque segni dell'icona */
+      /* la CRAVATTA e' quello che la fa riconoscere da lontano: e' del
+         colore della fantasia, cosi' stacca sempre dal capo qualunque
+         tinta si scelga */
+      const crav = coloreFantasia(ct);
       torso = `<path d="M34 ${bodyTop} L42 64 Q50 70 58 64 L66 ${bodyTop} L70 78 L66 82 L66 103 L34 103 L34 82 L30 78 Z" fill="${topP.fill}" ${line}/>
+               <path d="M46 65 L50 73 L54 65 L54 78 L46 78 Z" fill="#F4F6F8" stroke="${shade(ct, -40)}" stroke-width="0.7"/>
+               <path d="M47.4 70.6 L52.6 70.6 L54.4 74.4 L50 77 L45.6 74.4 Z" fill="${crav}" stroke="rgba(0,0,0,.35)" stroke-width="0.6"/>
+               <path d="M46.8 76.4 L53.2 76.4 L55.4 95 L50 99 L44.6 95 Z" fill="${crav}" stroke="rgba(0,0,0,.3)" stroke-width="0.6"/>
                <path d="M44.7 64 L50 72.6 L41.1 76.3 L39.3 66.5 Z M55.3 64 L50 72.6 L58.9 76.3 L60.7 66.5 Z" fill="${shade(ct, -34)}" stroke="${shade(ct, -46)}" stroke-width="0.8"/>
-               <path d="M50 72.6 L50 103" stroke="${shade(ct, -46)}" stroke-width="2.4"/>
                <path d="M35.8 87.3 L44.7 87.3 M64.2 87.3 L55.3 87.3" stroke="${shade(ct, -36)}" stroke-width="1.8"/>
-               <circle cx="54.3" cy="86.1" r="1.5" fill="${shade(ct, -54)}"/>
-               <circle cx="54.3" cy="92.2" r="1.5" fill="${shade(ct, -54)}"/>`;
+               <circle cx="58.6" cy="86.1" r="1.5" fill="${shade(ct, -54)}"/>
+               <circle cx="58.6" cy="92.2" r="1.5" fill="${shade(ct, -54)}"/>`;
     } else if (av.top.style === 'gilet') {
       // scollo a V, TRE bottoni e le due tasche
       torso = `<path d="M40 66 Q50 72 60 66 L64 78 L64 103 L36 103 L36 78 Z" fill="${topP.fill}" ${line}/>

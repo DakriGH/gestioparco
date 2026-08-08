@@ -89,16 +89,23 @@
               <path d="M14 36.5 L34 36.5" stroke="${sc(c, -34)}" stroke-width="2.4"/>`
     }),
 
-    giacca: (c) => ({
-      sagoma: 'M16 10 L21 8 L24 15 L27 8 L32 10 L42 16 L39 34 L34 33 L34 39 Q24 41 14 39 L14 33 L9 34 L6 16 Z',
-      ombra: 'M14 33 L9 34 L6 16 L16 10 L14 20 Z',
-      segni: `<path d="M21 8 L24 15 L19 18 L18 10 Z M27 8 L24 15 L29 18 L30 10 Z" fill="${sc(c, -34)}" stroke="${sc(c, -46)}" stroke-width="0.6"/>
-              <path d="M24 15 L24 39" stroke="${sc(c, -46)}" stroke-width="1.7"/>
-              <path d="M16 27 L21 27 M32 27 L27 27" stroke="${sc(c, -36)}" stroke-width="1.3"/>
-              <circle cx="26.4" cy="26" r="1.1" fill="${sc(c, -54)}"/>
-              <circle cx="26.4" cy="31" r="1.1" fill="${sc(c, -54)}"/>
-              <path d="M9.4 30.4 L14 31.4 M38.6 30.4 L34 31.4" stroke="${sc(c, -34)}" stroke-width="1.5"/>`
-    }),
+    /* la GIACCA si riconosce dalla cravatta, non dai risvolti: quelli a
+       due centimetri si confondono con un colletto qualunque */
+    giacca: (c) => {
+      const crav = (global.AV && AV.coloreFantasia) ? AV.coloreFantasia(c) : sc(c, -50);
+      return {
+        sagoma: 'M16 10 L21 8 L24 15 L27 8 L32 10 L42 16 L39 34 L34 33 L34 39 Q24 41 14 39 L14 33 L9 34 L6 16 Z',
+        ombra: 'M14 33 L9 34 L6 16 L16 10 L14 20 Z',
+        segni: `<path d="M21.4 8.4 L24 14 L26.6 8.4 L26.6 16.5 L21.4 16.5 Z" fill="#F4F6F8" stroke="${sc(c, -40)}" stroke-width="0.6"/>
+                <path d="M22.2 12.6 L25.8 12.6 L27 15.4 L24 17.2 L21 15.4 Z" fill="${crav}" stroke="rgba(0,0,0,.35)" stroke-width="0.5"/>
+                <path d="M21.7 16.6 L26.3 16.6 L27.8 30 L24 32.6 L20.2 30 Z" fill="${crav}" stroke="rgba(0,0,0,.3)" stroke-width="0.5"/>
+                <path d="M21 8 L24 15 L19 18 L18 10 Z M27 8 L24 15 L29 18 L30 10 Z" fill="${sc(c, -34)}" stroke="${sc(c, -46)}" stroke-width="0.6"/>
+                <path d="M16 27 L20 27 M32 27 L28 27" stroke="${sc(c, -36)}" stroke-width="1.3"/>
+                <circle cx="30.2" cy="24.6" r="1.1" fill="${sc(c, -54)}"/>
+                <circle cx="30.2" cy="29.6" r="1.1" fill="${sc(c, -54)}"/>
+                <path d="M9.4 30.4 L14 31.4 M38.6 30.4 L34 31.4" stroke="${sc(c, -34)}" stroke-width="1.5"/>`
+      };
+    },
 
     gilet: (c) => ({
       sagoma: 'M18 8 L21.5 7.5 L24 15 L26.5 7.5 L30 8 L32 17 L32.5 36 L24 39.5 L15.5 36 L16 17 Z',
@@ -111,22 +118,6 @@
               <path d="M17 30 L20.5 30 M31 30 L27.5 30" stroke="${sc(c, -32)}" stroke-width="1.1"/>`
     }),
 
-    maglione: (c) => ({
-      sagoma: 'M17 10 L20 8 Q24 12 28 8 L31 10 L41 16 L38 33 L33 32 L33 39 Q24 41 15 39 L15 32 L10 33 L7 16 Z',
-      ombra: 'M15 32 L10 33 L7 16 L17 10 L15 20 Z',
-      segni: `<path d="M20 8 Q24 13 28 8 Q29 11 24 15 Q19 11 20 8 Z" fill="${sc(c, -24)}"/>
-              <path d="M15 35.5 L33 35.5" stroke="${sc(c, -32)}" stroke-width="2.6"/>
-              <path d="M9.6 30 L14.4 31 M38.4 30 L33.6 31" stroke="${sc(c, -32)}" stroke-width="2.2"/>
-              <path d="M18 18 L18 34 M22 18 L22 34 M26 18 L26 34 M30 18 L30 34" stroke="${sc(c, 30)}" stroke-width="1.1" opacity=".7"/>`
-    }),
-    giubbotto: (c) => ({
-      sagoma: 'M16 10 L20 8 Q24 11 28 8 L32 10 L42 16 L39 33 L34 32 L34 39 Q24 41 14 39 L14 32 L9 33 L6 16 Z',
-      ombra: 'M14 32 L9 33 L6 16 L16 10 L14 20 Z',
-      segni: `<path d="M14 17 L34 17 M14 23 L34 23 M14 29 L34 29 M14 35 L34 35" stroke="${sc(c, -32)}" stroke-width="1.3" opacity=".9"/>
-              <path d="M24 9 L24 39" stroke="${sc(c, -50)}" stroke-width="1.9"/>
-              <circle cx="24" cy="12.5" r="1.3" fill="${sc(c, 48)}"/>
-              <path d="M9.6 30 L14.4 31 M38.4 30 L33.6 31" stroke="${sc(c, -32)}" stroke-width="1.5"/>`
-    }),
     /* LUNGO: stretto, cade dritto e ARRIVA IN FONDO all'icona, con le
        pieghe verticali della stoffa lunga. La differenza col corto si
        vede prima di leggere il nome: uno finisce a meta', l'altro no. */
