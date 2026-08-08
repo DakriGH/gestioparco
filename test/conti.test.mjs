@@ -288,6 +288,46 @@ gruppo('Pagare il tempo E pagare i bambini: stessa cassa', () => {
   ok('e zero anche in cassa', d.paidPark, 0);
 });
 
+gruppo('A tempo aperto non si incassa in anticipo', () => {
+  /* Senza un'ora di uscita non c'e' una durata, quindi non c'e' un
+     prezzo da coprire: il conto si fa all'uscita, sul tempo davvero
+     passato. Incassare prima vorrebbe dire prendere dei soldi contro
+     un numero che ancora non esiste.
+     Il tasto e' spento anche nel pannello, ma il divieto deve stare
+     nella funzione: una regola che vive solo nel disegno se la porta
+     via la prima scorciatoia. */
+  const c = conto({ children: 2, crazyJumping: 0, durationMinutes: 60, payLater: true, barItems: [] });
+  ctx.pagaTempo(1);
+  ok('il piu non muove un euro', c.paidPark, 0);
+  ok('e non lascia nemmeno una spunta', ctx.bcPag('bimbi'), 0);
+  ctx.pagaTempo(5);
+  ok('nemmeno insistendo', c.paidPark, 0);
+
+  /* il RESO invece deve restare possibile: se il tempo e' diventato
+     aperto DOPO un incasso, quei soldi devono poter tornare indietro */
+  c.payLater = false;
+  ctx.segnaPagate('bimbi', 2);
+  const presi = c.paidPark;
+  vero('a tempo chiuso si incassa come sempre', presi > 0);
+  c.payLater = true;
+  ctx.pagaTempo(-1);
+  vero('a tempo aperto il meno rende indietro', c.paidPark < presi);
+  ctx.pagaTempo(-9);
+  ok('fino a svuotare', c.paidPark, 0);
+});
+
+gruppo('Il tempo totale comprende i minuti del Crazy', () => {
+  /* E' il numero che sta dietro all'ora di uscita scritta nella
+     fascia: se il metro fosse la sola durata, un gruppo col Crazy
+     risulterebbe "pagato tutto" con dentro dei minuti scoperti. */
+  const c = conto({ children: 1, crazyJumping: 0, durationMinutes: 60, barItems: [] });
+  ok('senza Crazy e la durata e basta', ctx.tempoTotale(c), 60);
+  const d = conto({ children: 1, crazyJumping: 2, durationMinutes: 60, barItems: [] });
+  ok('con due Crazy si allunga', ctx.tempoTotale(d), 60 + 2 * ctx.settings.crazyExtraMinutes);
+  ok('e coincide con l ora di uscita',
+     ctx.endTimeOf(d) - d.startTime, ctx.tempoTotale(d) * 60000);
+});
+
 gruppo('Bombardamento: mille tocchi a caso', () => {
   let seme = 12345;
   const caso = (n) => { seme = (seme * 1103515245 + 12345) % 2147483648; return seme % n; };

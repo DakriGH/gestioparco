@@ -437,33 +437,46 @@ function costruisciPannello() {
            tempo, quindi col tempo scelto sopra quel numero e' gia'
            giusto quando ci arrivi. Con le card per prime lo si leggeva
            una volta, si sceglieva la durata e lo si rileggeva. -->
-      <div class="card blk c-blu">
-        <h2><span class="em">\ud83d\udd52</span> Orario di inizio</h2>
+      <!-- UNA FASCIA SOLA PER IL TEMPO: "dalle ... alle ...".
+           Erano DUE fasce piu' una card ("Estendi tempo"): tre posti
+           per la stessa domanda, e nessuno dei tre diceva fin quando
+           il cliente aveva pagato.
+           Adesso sono due gruppi uguali -- uno per quando entra, uno
+           per quando esce -- e allungare vuol dire premere il piu' a
+           destra, che e' come la domanda arriva davvero al banco: "me
+           lo tieni fino alle tre?". Il filo verde sotto dice fin dove
+           arrivano i soldi senza doverlo scrivere. -->
+      <div class="card blk c-blu sec-tempo">
+        <h2><span class="em">\u23f1\ufe0f</span> Tempo</h2>
         <div class="blk-in">
-        <div class="time-row">
-          <button class="round-btn" data-a="ora" data-v="-5" aria-label="5 minuti prima">\u2212</button>
-          <div class="time-display num pc-ora">--:--</div>
-          <button class="round-btn" data-a="ora" data-v="5" aria-label="5 minuti dopo">+</button>
-          <button class="now-btn" data-a="ora" data-v="ora"><span class="em">\ud83d\udccd</span> Adesso</button>
-          <div class="wrist-inline-row">
-            <span class="wl-k"><span class="em">\ud83c\udf97\ufe0f</span> Bracciale</span>
-            <div class="wrist-row pc-brac"></div>
-          </div>
+        <div class="tp-riga">
+          <span class="tp-gr">
+            <span class="em">\ud83d\udd52</span>
+            <button data-a="ora" data-v="-5" aria-label="5 minuti prima">\u2212</button>
+            <span class="v num pc-ora">--:--</span>
+            <button data-a="ora" data-v="5" aria-label="5 minuti dopo">+</button>
+            <button class="txt" data-a="ora" data-v="ora"><span class="em">\ud83d\udccd</span> ora</button>
+          </span>
+          <span class="tp-gr pc-gfine">
+            <span class="em">\ud83d\udeaa</span>
+            <button data-a="fine" data-v="-1" aria-label="esce prima">\u2212</button>
+            <span class="v num pc-fine">--:--</span>
+            <button data-a="fine" data-v="1" aria-label="esce dopo">+</button>
+          </span>
+          <span class="brc tp-dx">
+            <button class="brc-b" data-a="bracapri">
+              <span class="pallo pc-pallo"></span><span class="pc-bracnome">Auto</span>
+            </button>
+            <span class="brc-menu hidden">
+              <span class="wl-k"><span class="em">\ud83c\udf97\ufe0f</span> Bracciale</span>
+              <span class="wrist-row pc-brac"></span>
+            </span>
+          </span>
         </div>
-        </div>
-      </div>
-
-      <div class="card blk c-ambra sec-dur">
-        <h2><span class="em">\u23f3</span> Quanto restano</h2>
-        <div class="blk-in">
-        <div class="riga-dur">
+        <div class="tp-filo"><i class="pc-filo"></i></div>
+        <div class="tp-riga">
           <div class="chips pc-dur"></div>
-          <div class="dur-custom">
-            <span class="lab">oppure minuti esatti</span>
-            <button class="step-b sm" data-a="min" data-v="-5">\u2212</button>
-            <input type="number" class="pc-durin" min="1" step="5" inputmode="numeric" value="60">
-            <button class="step-b sm plus" data-a="min" data-v="+5">+</button>
-          </div>
+          <span class="tp-dx pc-pag"></span>
         </div>
         </div>
       </div>
@@ -542,6 +555,33 @@ function costruisciPannello() {
       aggiornaPannello();
       return;
     }
+    /* L'ORA DI USCITA SALTA AL QUARTO D'ORA, non di quindici minuti
+       tondi. Chi chiede "me lo tieni fino alle tre?" pensa a un orario
+       dell'orologio, non a una durata: partendo dalle 14:10 il piu'
+       porta alle 14:15, poi 14:30, 14:45, 15:00 -- cioe' proprio dove
+       si vuole arrivare. Con un passo fisso da quindici si sarebbe
+       fermato a 14:25, 14:40, 14:55 e le tre non le avrebbe prese mai.
+       Si muove la DURATA, non l'orario di fine: l'ingresso resta dov'e'
+       e i minuti regalati dal Crazy restano attaccati alla fine. */
+    if (d.a === 'fine') {
+      if (c.payLater) return;
+      const min = clamp(num(c.durationMinutes, 60), 0, 1e6);
+      const uscita = new Date(endTimeOf(c));
+      const resto = (uscita.getHours() * 60 + uscita.getMinutes()) % 15;
+      const passo = num(d.v, 0) > 0 ? 15 - resto : (resto || 15);
+      c.durationMinutes = clamp(num(d.v, 0) > 0 ? min + passo : min - passo, 5, 100000);
+      pcSalva();
+      aggiornaPannello();
+      return;
+    }
+    /* il menu del bracciale si apre e si chiude senza rifare la
+       fascia: rifarla lo richiuderebbe a ogni colore provato */
+    if (d.a === 'bracapri') {
+      const men = p.querySelector('.brc-menu');
+      men.classList.toggle('hidden');
+      if (!men.classList.contains('hidden')) chiudiFuori(men, p.querySelector('.brc'));
+      return;
+    }
     if (d.a === 'dur') {
       const passi = tariffs().map(t => t.m);
       const ora = clamp(num(c.durationMinutes, 60), 0, 1e6);
@@ -596,23 +636,6 @@ function costruisciPannello() {
     }
   });
 
-  /* i minuti esatti e i campi liberi delle persone */
-  p.addEventListener('input', (ev) => {
-    const t = ev.target;
-    if (!t.classList || !t.classList.contains('pc-durin')) return;
-    const v = parseInt(t.value, 10);
-    if (!Number.isFinite(v) || v <= 0) return;
-    C().durationMinutes = clamp(v, 1, 99999);
-    C().payLater = false;
-    pcSalva();
-    aggiornaPannello({ tieniDurata: true });
-  });
-  p.addEventListener('blur', (ev) => {
-    if (ev.target.classList && ev.target.classList.contains('pc-durin')) {
-      ev.target.value = C().durationMinutes;
-    }
-  }, true);
-
   /* Le pastiglie del bracciale: la riga era un div vuoto e nessuno la
      riempiva piu', quindi registrando non si poteva scegliere il
      colore. sincronizzaBracciali() da sola accende, non crea. */
@@ -621,6 +644,7 @@ function costruisciPannello() {
     c.braceletColor = hex;
     c.braceletCustom = custom;
     pcSalva();
+    p.querySelector('.brc-menu').classList.add('hidden');   // scelto: si chiude
     aggiornaPannello();
     if (PAN.ingresso) aggiornaPallino(PAN.ingresso);
   });
@@ -738,7 +762,28 @@ function pcVoce(id) {
    Sta in una funzione con un nome suo, e non dentro il gestore dei
    tocchi, perche' cosi' si puo' provare senza uno schermo davanti. */
 function pagaTempo(delta) {
-  segnaPagate('bimbi', bcPag('bimbi') + num(delta, 0));
+  delta = num(delta, 0);
+  /* A TEMPO APERTO NON SI INCASSA IN ANTICIPO.
+     Senza un'ora di uscita non c'e' una durata, quindi non c'e' un
+     prezzo da coprire: il conto si fa all'uscita, sul tempo davvero
+     passato. Incassare prima vorrebbe dire prendere dei soldi contro
+     un numero che ancora non esiste.
+     Il tasto e' spento anche nel pannello, ma il divieto sta QUI: una
+     regola che vive solo nel disegno se la porta via la prima
+     scorciatoia. Il RESO invece resta sempre possibile -- se il tempo
+     e' diventato aperto dopo un incasso, quei soldi devono poter
+     tornare indietro da dove sono entrati. */
+  if (delta > 0 && C().payLater) return;
+  segnaPagate('bimbi', bcPag('bimbi') + delta);
+}
+
+/* Quanto dura in tutto, minuti regalati dal Crazy compresi: e' il
+   numero che sta dietro all'ora di uscita scritta nella fascia, e
+   quindi anche il metro su cui si misura quanto e' pagato. */
+function tempoTotale(c) {
+  c = c || C();
+  return clamp(num(c.durationMinutes, 60), 0, 1e6) +
+    clamp(num(c.crazyJumping, 0), 0, 1e6) * num(settings.crazyExtraMinutes, 0);
 }
 
 function minutiPagati(c) {
@@ -770,54 +815,66 @@ function minutiPagati(c) {
   return coperti + regalati;
 }
 
-/* LA CARD DEL TEMPO.
-   Stessa faccia delle altre due -- e' il patto con le bevande: numero
-   grande in filigrana, nome sotto, il meno e il piu' in mezzo. Qui la
-   "roba" sono minuti: il meno e il piu' vanno di scaglione in
-   scaglione, e la fascia verde in fondo dice quanti minuti sono gia'
-   pagati invece di quanti pezzi.
-   La fascia verde NON ha tasti: i minuti pagati non si scelgono, si
-   ricavano dai soldi presi. Due tasti spenti sarebbero due tasti da
-   provare a premere. */
-function bcCardTempo() {
-  const c = C();
-  const min = clamp(num(c.durationMinutes, 60), 0, 1e6);
-  const pag = Math.min(min, minutiPagati(c));
-  const tutto = min > 0 && pag >= min;
+/* LA FASCIA DEL TEMPO, riempita a mano e non rifatta da capo: qui
+   dentro c'e' un menu che puo' essere aperto (il bracciale) e rifare
+   l'HTML lo chiuderebbe a ogni colore provato. */
+function disegnaFascia(p, c) {
   const aperto = !!c.payLater;
-  /* NON e' "presa" come le altre. Li' l'accensione vuol dire "ne hai
-     preso almeno uno", e si spegne quando torni a zero; il tempo invece
-     c'e' sempre, quindi restava accesa per sempre -- un'evidenziazione
-     che non distingue niente e' solo una macchia di colore in piu'.
-     Resta la spunta verde quando e' tutto pagato, che quella una cosa
-     la dice. */
-  return '<div class="bc-card bc-tempo' + (tutto ? ' saldata' : '') + '">' +
-    '<button class="bc-su" data-a="dur" data-v="+">' +
-      '<span class="bc-fant">' + (aperto ? '\u221e' : fmtMin(min)) + '</span>' +
-      ICONE.tempo() +
-      '<span class="bc-testi"><span class="bc-pr">' + (aperto ? 'senza fine' : fmtMin(min)) + '</span>' +
-      '<span class="bc-nm">Estendi tempo</span></span></button>' +
-    '<div class="bc-zone"><span class="bc-chip">' + (aperto ? '\u221e' : fmtMin(min)) + '</span>' +
-      '<button data-a="dur" data-v="-"' + (aperto ? ' disabled' : '') + '>\u2212</button>' +
-      '<button data-a="dur" data-v="+"' + (aperto ? ' disabled' : '') + '>+</button></div>' +
-    /* IL MENO E IL PIU' SONO QUELLI DEI BAMBINI, in minuti.
-       Questi minuti non hanno una cassa loro: li pagano gli STESSI
-       euro che la card dei Bambini conta a teste. Quindi il tasto
-       passa da segnaPagate('bimbi', ...) come li', e non si apre una
-       seconda strada per muovere i soldi -- che e' esattamente il
-       genere di doppione da cui nascono i conti storti.
-       Cambia solo l'unita' con cui si guarda la stessa cosa: li'
-       teste, qui i minuti che quelle teste hanno comprato. */
-    /* Senza bambini non c'e' tempo di parco da pagare, e i due tasti
-       restano spenti: allora lo si DICE, se no sembrano rotti. */
-    '<div class="bc-zone v"><span class="bc-chip">' +
-      (!bcQ('bimbi') ? 'nessun bambino'
-        : aperto ? 'a tempo'
-        : tutto ? '\u2713 ' + fmtMin(min)
-        : pag + '/' + min + '\u2032') + '</span>' +
-      '<button data-a="pagatempo" data-v="-1"' + (bcPag('bimbi') <= 0 ? ' disabled' : '') + '>\u2212</button>' +
-      '<button data-a="pagatempo" data-v="1"' + (bcPag('bimbi') >= bcQ('bimbi') ? ' disabled' : '') + '>+</button>' +
-    '</div></div>';
+  p.querySelector('.pc-ora').textContent = fmtTime(c.startTime);
+  p.querySelector('.pc-fine').textContent = aperto ? '\u2014' : fmtTime(endTimeOf(c));
+  /* i due tasti dell'uscita non hanno senso se un'uscita non c'e' */
+  p.querySelector('.pc-gfine').classList.toggle('spento', aperto);
+  $$('.pc-gfine button', p).forEach(b => { b.disabled = aperto; });
+
+  /* il filo verde: quanto del tempo e' gia' coperto dai soldi presi */
+  const tot = tempoTotale(c);
+  const pag = Math.min(tot, minutiPagati(c));
+  const filo = p.querySelector('.pc-filo');
+  filo.style.width = aperto || !tot ? '0%' : Math.round(pag / tot * 100) + '%';
+  p.querySelector('.tp-filo').classList.toggle('aperta', aperto);
+
+  /* la pastiglia del bracciale: un pallino e una parola. I sei tasti
+     stanno nel menu che si apre -- sempre in fila si mangiavano
+     mezza riga per una cosa che si sceglie una volta sola. */
+  const slot = braceletFor(c.startTime);
+  const senza = c.braceletCustom && !c.braceletColor;
+  const col = senza ? null : (c.braceletCustom ? c.braceletColor : (slot && slot.color));
+  const pallo = p.querySelector('.pc-pallo');
+  pallo.style.background = col || 'transparent';
+  pallo.style.borderStyle = col ? 'solid' : 'dashed';
+  p.querySelector('.pc-bracnome').textContent =
+    senza ? 'Senza' : c.braceletCustom ? (AV.colorName(col, 0) || 'Bracciale') : 'Auto';
+  sincronizzaBracciali(p.querySelector('.pc-brac'), c.startTime, c.braceletColor, c.braceletCustom);
+
+  p.querySelector('.pc-pag').innerHTML = pastigliaPagato(c);
+}
+
+/* Fin quando ha pagato, in una pastiglia. Il verde vuol dire "pagato":
+   finche' non e' entrato niente resta neutra, perche' una fascia verde
+   con scritto "da pagare" dice due cose opposte nello stesso pezzo. */
+function pastigliaPagato(c) {
+  c = c || C();
+  const aperto = !!c.payLater;
+  const bimbi = clamp(num(c.children, 0), 0, 1e6);
+  const tot = tempoTotale(c);
+  const pag = Math.min(tot, minutiPagati(c));
+  const tutto = !aperto && tot > 0 && pag >= tot;
+  let testo;
+  if (!bimbi) testo = 'nessun bambino';
+  else if (aperto) testo = 'si conta all\u2019uscita';
+  else if (tutto) testo = '\u2713 pagato tutto';
+  else if (pag <= 0) testo = 'da pagare <b>' + eur(dueOf(c).park) + '</b>';
+  else testo = 'pagato fino alle <b>' + fmtTime(num(c.startTime, 0) + pag * 60000) + '</b>';
+  /* il piu' e' spento a tempo aperto: non c'e' una durata, quindi non
+     c'e' un prezzo da coprire. Il meno resta, che un reso deve poter
+     tornare indietro sempre. */
+  const su = tutto || !bimbi || aperto;
+  return '<span class="pgl' + (tutto ? ' tutto' : pag > 0 && !aperto ? '' : ' vuota') + '">' +
+    '<span class="k">' + testo + '</span>' +
+    '<button data-a="pagatempo" data-v="-1"' + (bcPag('bimbi') <= 0 ? ' disabled' : '') +
+      ' aria-label="togli un pagamento">\u2212</button>' +
+    '<button data-a="pagatempo" data-v="1"' + (su ? ' disabled' : '') +
+      ' aria-label="incassa il tempo">+</button></span>';
 }
 
 function pcFondoDis() {
@@ -852,16 +909,18 @@ function aggiornaPannello(opz) {
     /* le due card sopra l'orario: bambini e Crazy, sempre aperte */
     const due = p.querySelector('.pc-due');
     const firmaDue = ['bimbi', 'crazy'].map(k =>
-      k + ':' + bcQ(k) + '/' + bcPag(k) + '/' + prezzoUnita(k)).join(',') +
-      '|t:' + (c.payLater ? 'aperto' : c.durationMinutes) + '/' + minutiPagati(c);
+      k + ':' + bcQ(k) + '/' + bcPag(k) + '/' + prezzoUnita(k)).join(',');
     if (due.dataset.sig !== firmaDue) {
       due.dataset.sig = firmaDue;
-      due.innerHTML = bcCard(bcVoce('bimbi'), true) + bcCard(bcVoce('crazy'), true) + bcCardTempo();
+      /* DUE card, non piu' tre. Quello che faceva "Estendi tempo" adesso
+         lo fa la fascia del tempo qui sopra, e lo fa meglio: li' c'e'
+         anche l'ora di uscita, e i minuti pagati si leggono come un
+         orario ("fino alle 13:40") invece che come una frazione. */
+      due.innerHTML = bcCard(bcVoce('bimbi'), true) + bcCard(bcVoce('crazy'), true);
       tocchi.id = null; tocchi.nato = null;
     }
 
-    p.querySelector('.pc-ora').textContent = fmtTime(c.startTime);
-    sincronizzaBracciali(p.querySelector('.pc-brac'), c.startTime, c.braceletColor, c.braceletCustom);
+    disegnaFascia(p, c);
 
     const dur = p.querySelector('.pc-dur');
     const tagli = (settings.quickDurations || [15, 30, 60, 90]);
@@ -881,10 +940,6 @@ function aggiornaPannello(opz) {
         'title="Resta senza un orario di fine: si conta il tempo davvero passato">' +
         '\u23f3 Tempo aperto</button>';
     }
-    const inp = p.querySelector('.pc-durin');
-    if (!opz.tieniDurata && document.activeElement !== inp) inp.value = c.durationMinutes;
-    inp.parentElement.style.opacity = c.payLater ? '0.4' : '';
-
     c.people = c.people || [];
     syncPeople(p.querySelector('.pc-people'), c.people, () => { pcSalva(); });
   } else {
@@ -3348,6 +3403,19 @@ function chiudiSchede(tranne) {
 
 /* Le scelte del bracciale, aperte accanto al pallino.
    Il colore giusto per l'ORA D'INGRESSO e' gia' segnalato. */
+/* Chiude `chi` al primo tocco fuori da `zona`. Sta a parte perche'
+   e' il gesto che ci si aspetta da qualunque cosa che si apre: senza,
+   resta aperta finche' non si ritocca il tasto, e chi la lascia aperta
+   se la ritrova sopra le dita al tocco dopo. */
+function chiudiFuori(chi, zona) {
+  const via = (ev) => {
+    if (zona.contains(ev.target)) return;
+    chi.classList.add('hidden');
+    document.removeEventListener('pointerdown', via, true);
+  };
+  setTimeout(() => document.addEventListener('pointerdown', via, true), 0);
+}
+
 function apriMenuBracciale(ancora, entry) {
   document.querySelectorAll('.wrist-menu').forEach(m => m.remove());
   const menu = el('div', 'wrist-menu');

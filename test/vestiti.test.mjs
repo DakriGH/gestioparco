@@ -490,6 +490,84 @@ gruppo('Quello che scegli torna scritto sulla scheda');
 /* ============================================================
    LA SCALA: tutto dentro lo schermo, e il conto fermo in fondo
    ============================================================ */
+gruppo('La fascia del tempo: una sola, e dice fin quando e pagato');
+{
+  /* Il pannello nasce da una stringa di HTML e poi il codice ne cerca
+     i pezzi con querySelector. Se una classe manca, la ricerca torna
+     null e il tasto muore in silenzio -- non se ne accorge nessuno
+     finche' qualcuno non lo preme. Il finto browser dei test risponde
+     null a tutto, quindi il pannello non si puo' costruire davvero:
+     si legge il modello di partenza, che e' esattamente quello che poi
+     finisce a video. */
+  const sorg = readFileSync(join(RADICE, 'js/app.js'), 'utf8');
+  const modello = sorg.slice(sorg.indexOf('<div class="pc-scala">'),
+                             sorg.indexOf('<div class="pc-fondo">'));
+  const ha = (x) => modello.includes(x);
+  prova('la fascia del tempo c e', ha('sec-tempo'));
+  prova('ed e una sola', modello.split('sec-tempo').length - 1 === 1);
+  prova('le vecchie due fasce non ci sono piu', !ha('time-row') && !ha('sec-dur'));
+  prova('c e l ora d ingresso', ha('pc-ora'));
+  prova('c e l ora di uscita', ha('pc-fine'));
+  prova('c e il filo del pagato', ha('pc-filo'));
+  prova('c e il posto della pastiglia del pagato', ha('pc-pag"'));
+  prova('c e la pastiglia del bracciale', ha('brc-b') && ha('pc-pallo') && ha('pc-bracnome'));
+  prova('i sei tasti stanno nel menu, e il menu nasce chiuso',
+    /brc-menu hidden[\s\S]{0,220}pc-brac/.test(modello));
+  prova('i tagli rapidi ci sono ancora', ha('pc-dur"'));
+  prova('il campo dei minuti esatti se n e andato', !ha('pc-durin'));
+  prova('i due tasti dell uscita chiamano il comando giusto',
+    modello.split('data-a="fine"').length - 1 === 2);
+  prova('la card "Estendi tempo" non esiste piu', !sorg.includes('bcCardTempo'));
+
+  /* La pastiglia del pagato invece e' una funzione che torna testo:
+     quella si prova davvero. E' l'unica parte della fascia che parla
+     di soldi, ed e' quella che deve stare zitta a tempo aperto. */
+  const conto = (extra) => Object.assign({
+    id: 'x', createdAt: 0, startTime: 0, status: 'active',
+    durationMinutes: 60, baseMinutes: 60, payLater: false,
+    children: 2, crazyJumping: 0, people: [], barItems: [],
+    paidLines: {}, paidAmt: {}, paidPark: 0, paidBar: 0,
+    braceletColor: null, braceletCustom: true
+  }, extra || {});
+  const mettiSotto = (c) => { app.PAN.conto = c; app.PAN.ingresso = null; return c; };
+
+  let c = mettiSotto(conto());
+  let h = app.pastigliaPagato(c);
+  prova('senza un euro dice quanto c e da pagare', /da pagare/.test(h));
+  prova('e non e verde', /pgl vuota/.test(h));
+  prova('il piu si puo premere', !/data-v="1" disabled/.test(h));
+
+  app.segnaPagate('bimbi', 1);
+  h = app.pastigliaPagato(c);
+  prova('pagato a meta dice fino a che ora', /fino alle/.test(h));
+  prova('e adesso e verde', !/pgl vuota/.test(h));
+
+  app.segnaPagate('bimbi', 2);
+  h = app.pastigliaPagato(c);
+  prova('pagato tutto lo dice', /pagato tutto/.test(h));
+  prova('e il piu si spegne', /data-v="1" disabled/.test(h));
+
+  /* IL PUNTO CHE HA VISTO LUI: a tempo aperto il piu' non si deve
+     poter premere, perche' non c'e' un prezzo da coprire. */
+  c = mettiSotto(conto({ payLater: true }));
+  h = app.pastigliaPagato(c);
+  prova('a tempo aperto si conta all uscita', /uscita/.test(h));
+  prova('a tempo aperto il piu e spento', /data-v="1" disabled/.test(h));
+
+  c = mettiSotto(conto({ children: 0 }));
+  h = app.pastigliaPagato(c);
+  prova('senza bambini lo dice invece di sembrare rotta', /nessun bambino/.test(h));
+  prova('e i tasti sono spenti', /data-v="1" disabled/.test(h));
+
+  /* i minuti del Crazy stanno dentro l'ora di uscita, quindi anche
+     dentro il metro del pagato: se no un gruppo col Crazy risulterebbe
+     a posto con dei minuti scoperti */
+  c = mettiSotto(conto({ children: 1, crazyJumping: 1 }));
+  app.segnaPagate('bimbi', 1);
+  h = app.pastigliaPagato(c);
+  prova('col Crazy non pagato non e "tutto pagato"', !/pagato tutto/.test(h));
+}
+
 gruppo('Il vuoto sopra la scheda che vola');
 {
   /* La rimpicciolitura non c'e' piu': il pannello e' UNO SOLO e vive in
