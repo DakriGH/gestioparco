@@ -518,6 +518,19 @@ gruppo('La fascia del tempo: una sola, e dice fin quando e pagato');
   prova('i due tasti dell uscita chiamano il comando giusto',
     modello.split('data-a="fine"').length - 1 === 2);
   prova('la card "Estendi tempo" non esiste piu', !sorg.includes('bcCardTempo'));
+  /* l'ordine: quanti bambini e' la cosa che si tocca SEMPRE, il tempo
+     il piu' delle volte resta quello di serie. Se un giorno qualcuno
+     rimette il tempo davanti, questo controllo lo dice. */
+  prova('le due card stanno sopra la fascia del tempo',
+    modello.indexOf('pc-due') < modello.indexOf('sec-tempo'));
+  /* e devono venire della misura di quelle delle bevande: `auto-fit`
+     accorpa le colonne vuote e due card sole si allargano a riempire
+     la riga, con i tasti lunghi un palmo */
+  const foglio = readFileSync(join(RADICE, 'css/app.css'), 'utf8');
+  prova('la griglia delle due card riempie a colonne fisse',
+    /\.bc-griglia\.pc-due\s*\{[^}]*auto-fill/.test(foglio));
+  prova('e non ha piu tasti suoi, diversi da quelli del bar',
+    !/\.pc-due \.bc-zone\s*\{/.test(foglio));
 
   /* La pastiglia del pagato invece e' una funzione che torna testo:
      quella si prova davvero. E' l'unica parte della fascia che parla

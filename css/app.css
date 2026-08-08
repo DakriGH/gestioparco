@@ -2991,22 +2991,6 @@ html:not(.anima) .card.evidenzia::after { animation: none; }
    riscrive in versione bianco-su-colore.
    ══════════════════════════════════════════════════════════ */
 .pc-parco { display: flex; flex-direction: column; gap: 8px; }
-.pc-due { grid-template-columns: 1fr 1fr; }
-/* DUE CARD SOLE, MA I TASTI NON SI STIRANO.
-   Tolta la card del tempo, Bambini e Crazy si prendono meta' pannello
-   a testa e il meno e il piu' venivano larghi duecento pixel: un tasto
-   cosi' non e' piu' comodo di uno da cento, e' solo piu' facile
-   premerlo per sbaglio mentre si scorre. Restano della misura del
-   dito, in mezzo alla fascia, e ai fianchi resta il fondo della card. */
-.pc-due .bc-zone { grid-template-columns: 1fr auto auto 1fr; }
-.pc-due .bc-zone::before, .pc-due .bc-zone::after { content: ""; }
-.pc-due .bc-zone button { min-width: 108px; }
-/* ai fianchi non resta una fascia scura: quei due spazi vuoti col
-   fondo della fascia sembravano due tasti spenti. Trasparenti, sono
-   il fondo della card e i due tasti galleggiano. La fascia VERDE
-   invece resta una fascia: li' il colore vuol dire "pagato", e una
-   banda che si interrompe direbbe che il pagamento e' a pezzi. */
-.pc-due .bc-zone:not(.v) { background: transparent; }
 
 .entry .pan-conto {
   --bg: #14141B;
@@ -3042,24 +3026,19 @@ html:not(.anima) .card.evidenzia::after { animation: none; }
 .entry.vola .pan-conto { max-height: none; flex: 1 1 auto; min-height: 0;
   padding-left: 0; padding-right: 0; }
 
-/* ── le due card sopra l'orario: bambini e Crazy Jumping ──
+/* ── le due card in cima: bambini e Crazy Jumping ──
    Sono sempre in ballo, quindi tengono le due fasce SEMPRE aperte:
    vederle comparire e sparire faceva ballare mezza schermata. */
-/* TRE card adesso, non due: bambini, Crazy e il tempo. Con due sole su
-   una riga larga 786 ognuna veniva 374 pixel e il meno e il piu' si
-   stiravano fino a centottantasei -- un tasto lungo un palmo per fare
-   +1. Con tre stanno a 245 e il problema si risolve da solo. */
-.bc-griglia.pc-due { grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); }
-/* I TASTI SONO QUELLI DEL BAR, punto: mezza card il meno e mezza il
-   piu'. Li avevo stretti a 88 pixel per via delle card larghe 374, ma
-   quel problema lo risolve gia' la terza card -- adesso stanno a 262,
-   esattamente come quelle delle bevande, e i tasti vengono uguali.
+/* `auto-fill` E NON `auto-fit`, ed e' tutta la differenza.
+   Con auto-fit le colonne vuote si accorpano e due card sole si
+   allargavano a riempire la riga: 397 pixel l'una, con il meno e il
+   piu' lunghi un palmo. Con auto-fill la colonna che avanza resta al
+   suo posto vuota, e le card restano larghe 261 -- ESATTAMENTE come
+   quelle delle bevande, quindi anche i tasti vengono uguali.
    Due file di comandi che si somigliano ma non sono identiche sono
    peggio di due file diverse: si guarda due volte per capire se e' la
    stessa cosa. */
-/* la pastiglia dei minuti e' piu' larga di quella dei numeri: ci sta
-   dentro "28/70'" invece di "2/3" */
-.bc-tempo .bc-zone.v .bc-chip { min-width: 88px; font-size: 16px; }
+.bc-griglia.pc-due { grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); }
 
 /* quando non e' stato ancora scelto niente */
 .ed-tr.vuoto { opacity: 0.55; font-style: italic; }

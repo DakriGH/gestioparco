@@ -431,12 +431,15 @@ function costruisciPannello() {
     <div class="bc-cat pc-cat"></div>
 
     <div class="pc-parco">
-      <!-- L'ORDINE E' QUELLO IN CUI SI PARLA AL BANCO: "da che ora?
-           quanto restano? quanti bambini?". E c'e' un motivo pratico
-           oltre a quello: il prezzo sulla card dei Bambini DIPENDE dal
-           tempo, quindi col tempo scelto sopra quel numero e' gia'
-           giusto quando ci arrivi. Con le card per prime lo si leggeva
-           una volta, si sceglieva la durata e lo si rileggeva. -->
+      <!-- QUANTI BAMBINI, PRIMA DI TUTTO IL RESTO.
+           E' la cosa che si tocca sempre, a ogni gruppo, mentre il
+           tempo il piu' delle volte resta quello di serie: la prima
+           cosa sotto le dita deve essere quella che si fa sempre, non
+           quella che si fa ogni tanto.
+           Il prezzo sulla card segue il tempo scelto qui sotto, e si
+           aggiorna da solo: non c'e' bisogno di rileggerlo. -->
+      <div class="bc-griglia pc-due"></div>
+
       <!-- UNA FASCIA SOLA PER IL TEMPO: "dalle ... alle ...".
            Erano DUE fasce piu' una card ("Estendi tempo"): tre posti
            per la stessa domanda, e nessuno dei tre diceva fin quando
@@ -480,8 +483,6 @@ function costruisciPannello() {
         </div>
         </div>
       </div>
-
-      <div class="bc-griglia pc-due"></div>
 
       <div class="card blk c-viola sec-people">
         <div class="testa-viola">
