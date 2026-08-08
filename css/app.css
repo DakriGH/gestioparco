@@ -2910,17 +2910,23 @@ html:not(.anima) .card.evidenzia::after { animation: none; }
    stiravano fino a centottantasei -- un tasto lungo un palmo per fare
    +1. Con tre stanno a 245 e il problema si risolve da solo. */
 .bc-griglia.pc-due { grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); }
-/* IL MENO E IL PIU' NON SI STIRANO. Restano larghi come un dito e
-   stanno in mezzo, con la pastiglia del numero fra i due: il bersaglio
-   e' lo stesso di prima, ma al centro invece che ai bordi. */
-.pc-due .bc-zone { grid-template-columns: 1fr auto auto 1fr; }
-.pc-due .bc-zone::before, .pc-due .bc-zone::after { content: ""; background: rgba(255,255,255,.04); }
-.pc-due .bc-zone button { width: 88px; }
-/* la fascia dei minuti pagati non ha tasti: quei minuti non si
-   scelgono, si ricavano dai soldi presi. Due tasti spenti sarebbero
-   due tasti da provare a premere. */
-.bc-zone.sola { grid-template-columns: 1fr; min-height: 44px; }
-.bc-tempo .bc-zone.v .bc-chip { min-width: 84px; font-size: 15px; }
+/* I TASTI SONO QUELLI DEL BAR, punto: mezza card il meno e mezza il
+   piu'. Li avevo stretti a 88 pixel per via delle card larghe 374, ma
+   quel problema lo risolve gia' la terza card -- adesso stanno a 262,
+   esattamente come quelle delle bevande, e i tasti vengono uguali.
+   Due file di comandi che si somigliano ma non sono identiche sono
+   peggio di due file diverse: si guarda due volte per capire se e' la
+   stessa cosa. */
+/* la fascia dei minuti pagati non ha tasti -- quei minuti non si
+   scelgono, si ricavano dai soldi presi -- ma e' alta come le altre e
+   dello stesso verde, cosi' la card resta della stessa famiglia */
+.bc-zone.sola { grid-template-columns: 1fr; min-height: 48px;
+  /* lo STESSO strato che hanno i tasti delle altre card sopra il verde
+     della fascia: senza, questa restava piu' scura delle sorelle e in
+     fila si vedeva che era un'altra cosa */
+  background-image: linear-gradient(rgba(106,220,175,.13), rgba(106,220,175,.13)); }
+.bc-zone.sola .bc-chip { position: static; transform: none; }
+.bc-tempo .bc-zone.v .bc-chip { min-width: 84px; font-size: 16px; }
 
 /* quando non e' stato ancora scelto niente */
 .ed-tr.vuoto { opacity: 0.55; font-style: italic; }
