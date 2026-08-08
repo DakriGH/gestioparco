@@ -890,6 +890,73 @@ main {
   font-variant-numeric: tabular-nums; }
 .reg-riga .soldi .manca { font-size: 12px; font-weight: 700; color: #F09A94; }
 
+/* ══════════════════════════════════════════════════════════
+   L'HUB: registro, storico, statistiche
+   I grafici sono barre fatte con dei riquadri. Nessuna libreria da
+   scaricare -- l'app deve partire senza rete -- e su una tavoletta una
+   barra orizzontale con l'etichetta a sinistra e il numero a destra si
+   legge meglio di un disegno pieno di dettagli: si confrontano le
+   lunghezze con l'occhio e si leggono le cifre quando servono.
+   ══════════════════════════════════════════════════════════ */
+/* il foglio dei grafici e' alto: qui dentro si scorre e si confronta,
+   non si risponde a una domanda sola */
+.m-box.grande { max-width: 900px; max-height: 94dvh; }
+
+.hub-cat { display: flex; gap: 8px; margin-bottom: 14px; }
+.hub-cat button {
+  flex: 1; min-height: 44px; border: none; border-radius: 14px;
+  background: var(--surface); color: var(--txt-3);
+  font: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: background var(--speed), color var(--speed);
+}
+.hub-cat button.on { background: var(--txt); color: var(--bg); }
+.hub-dentro { display: flex; flex-direction: column; }
+
+.hub-periodo { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.hub-periodo .chip { flex: 0 0 auto; min-width: 0; min-height: 40px; padding: 0 14px;
+  font-size: 14px; border-width: 2px; }
+
+/* ── i grafici a barre ── */
+.gr { margin-top: 18px; display: flex; flex-direction: column; gap: 3px; }
+.gr-tit { font-size: 12px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--txt-3); margin-bottom: 6px; }
+.gr-riga { display: flex; align-items: center; gap: 10px; padding: 3px 6px; border-radius: 10px; }
+.gr-riga.cliccabile { cursor: pointer; }
+.gr-riga.cliccabile:active { background: var(--surface-2); }
+.gr-eti { flex: 0 0 62px; font-size: 12.5px; font-weight: 700; color: var(--txt-2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gr-pista { flex: 1; height: 20px; border-radius: 6px; background: rgba(0, 0, 0, .28);
+  overflow: hidden; display: flex; }
+.gr-barra { height: 100%; border-radius: 6px; background: var(--accent); transition: width .25s ease; }
+.gr-val { flex: 0 0 auto; min-width: 96px; text-align: right; font-family: 'Fredoka', sans-serif;
+  font-size: 13.5px; font-weight: 700; color: var(--txt-2); font-variant-numeric: tabular-nums; }
+/* LA PIU' ALTA SI ACCENDE. In un grafico si cerca sempre quella --
+   "il giorno che tira", "l'ora di punta" -- e trovarla a occhio fra
+   dieci barre simili costa piu' fatica di quanto sembri. */
+.gr-riga.su .gr-barra { background: var(--ok); }
+.gr-riga.su .gr-eti, .gr-riga.su .gr-val { color: var(--txt); }
+
+/* ── le medie: sei riquadri, un numero grosso ciascuno ── */
+.st-griglia { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px; }
+.st-dato { background: var(--surface); border-radius: 15px; padding: 11px 13px;
+  display: flex; flex-direction: column; gap: 1px; }
+.st-dato .em { font-size: 19px; line-height: 1; }
+.st-dato .vl { font-family: 'Fredoka', sans-serif; font-size: 23px; font-weight: 700;
+  line-height: 1.15; }
+.st-dato .nm { font-size: 12.5px; font-weight: 700; color: var(--txt-2); }
+.st-dato .sub { font-size: 11px; color: var(--txt-3); }
+
+.st-fine { margin-top: 20px; padding-top: 12px; border-top: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 3px; align-items: center; text-align: center; }
+.st-fine span { font-size: 12.5px; color: var(--txt-3); }
+.st-fine b { font-family: 'Fredoka', sans-serif; font-size: 20px; font-weight: 700; }
+
+/* il riquadro neutro dello storico: non e' un incasso da festeggiare
+   ne' un buco da tappare, e' solo una media */
+.reg-grossa.neutra { background: var(--surface); border-color: var(--line); }
+.reg-grossa.neutra .v { color: var(--txt); }
+
 /* ---------- stepper ---------- */
 .steppers { display: flex; gap: 14px; flex-wrap: wrap; }
 .stepper {

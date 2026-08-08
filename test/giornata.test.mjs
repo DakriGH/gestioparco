@@ -32,7 +32,16 @@ function ok(nome, avuto, atteso) {
 function vero(nome, cond) { return ok(nome, !!cond, true); }
 
 let seme = 7770808;
-function caso(n) { seme = (seme * 1103515245 + 12345) & 0x7fffffff; return seme % n; }
+/* I BIT ALTI, NON QUELLI BASSI.
+   Con `seme % n` si prendono i bit bassi di un generatore lineare, che
+   ciclano su pochissimi valori: `caso(4)` tornava SEMPRE zero, e mezza
+   tempesta batteva sempre sugli stessi tasti credendo di variare. E'
+   un difetto dello strumento, non del codice provato -- ma uno
+   strumento che mente e' peggio di nessuno strumento. */
+function caso(n) {
+  seme = (seme * 1103515245 + 12345) & 0x7fffffff;
+  return Math.floor((seme >>> 15) / 65536 * n) % n;
+}
 const r2 = (x) => Math.round(x * 100) / 100;
 const num = (x) => typeof x === 'number' && Number.isFinite(x);
 
@@ -322,6 +331,71 @@ gruppo('Il registro della giornata conta quello che deve', () => {
   const ieri = ctx.contiGiornata(ctx.giornataDi(oggi - 1));
   ok('la giornata prima ha i suoi', ieri.gruppi, 1);
   ok('con i suoi soldi', ieri.incassato, 60);
+  ctx.entries = [];
+});
+
+gruppo('Le statistiche dicono quello che si vede coi propri occhi', () => {
+  /* Si costruisce una storia FINTA ma con dentro una verita' che si
+     conosce -- il sabato tira il doppio, si entra alle 17, si beve
+     soprattutto acqua -- e si controlla che le statistiche la trovino.
+     E' l'unico modo di provare un grafico senza guardarlo. */
+  const oggi = ctx.giornataDi(Date.now());
+  const giorno = 24 * 3600 * 1000;
+  const finte = [];
+  for (let g = 0; g < 28; g++) {
+    const inizio = ctx.giornataDi(oggi - g * giorno);
+    const gs = new Date(inizio).getDay();
+    const quanti = gs === 6 ? 8 : 2;              // il sabato tira
+    for (let k = 0; k < quanti; k++) {
+      const t = new Date(inizio);
+      t.setHours(17, 5 + k, 0, 0);                // tutti alle 17
+      finte.push({
+        id: 'f' + g + '_' + k, createdAt: t.getTime(), startTime: t.getTime(), status: 'closed',
+        durationMinutes: 60, baseMinutes: 60, payLater: false,
+        children: 2, crazyJumping: g % 2 ? 1 : 0, people: [{ id: 'p', role: 'mamma', name: '', avatar: null }],
+        barItems: [{ id: 'b1', name: 'Acqua', price: 1, qty: 3 }],
+        paidLines: {}, paidAmt: { bimbi: 24, crazy: (g % 2 ? 4 : 0) },
+        paidPark: 24 + (g % 2 ? 4 : 0), paidBar: 3,
+        braceletColor: null, braceletCustom: true
+      });
+    }
+  }
+  ctx.entries = finte;
+  const giorni = ctx.tutteLeGiornate();
+  ok('trova tutte le giornate', giorni.length, 28);
+  const st = ctx.statistiche(giorni);
+
+  ok('conta tutti i gruppi', st.gruppi, finte.length);
+  ok('e tutti i bambini', st.bambini, finte.length * 2);
+  ok('e gli accompagnatori', st.persone, finte.length);
+
+  /* il sabato: quattro volte i gruppi degli altri giorni */
+  const GIORNI = st.settimana;
+  const sab = GIORNI[6], lun = GIORNI[1];
+  vero('il sabato ha piu’ gruppi a giornata', sab.gruppi / sab.giornate > lun.gruppi / lun.giornate);
+  ok('il sabato ne ha quattro volte tanti', sab.gruppi / sab.giornate, lun.gruppi / lun.giornate * 4);
+
+  /* l'ora di punta e' quella in cui sono entrati tutti */
+  const punta = st.ore.indexOf(Math.max(...st.ore));
+  ok('l’ora di punta e’ le cinque del pomeriggio', punta, 17);
+  ok('e non ce n’e’ nessuna alle nove', st.ore[9], 0);
+
+  /* il bar */
+  ok('una sola bevanda nel listino delle statistiche', st.bevande.size, 1);
+  ok('e i pezzi tornano', st.bevande.get('Acqua').pezzi, finte.length * 3);
+  ok('anche in euro', st.bevande.get('Acqua').euro, finte.length * 3);
+
+  /* le medie */
+  ok('la durata media e’ un’ora', Math.round(st.minutiTotali / st.gruppi), 60);
+  ok('meta’ dei gruppi prende il Crazy', st.conCrazy, finte.filter(f => f.crazyJumping).length);
+
+  /* i giorni senza niente NON contano come giornate a zero: falserebbero
+     tutte le medie */
+  ctx.entries = finte.filter(f => new Date(f.startTime).getDay() === 6);
+  const soloSabati = ctx.tutteLeGiornate();
+  vero('senza gli altri giorni restano solo i sabati', soloSabati.length < 28);
+  const st2 = ctx.statistiche(soloSabati);
+  ok('e la media a giornata e’ quella dei sabati', st2.gruppi / st2.giornate, 8);
   ctx.entries = [];
 });
 

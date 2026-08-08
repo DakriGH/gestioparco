@@ -41,7 +41,16 @@ function vero(nome, cond) { return ok(nome, !!cond, true); }
 
 /* i dadi truccati: sempre gli stessi, cosi' un guaio si ritrova */
 let seme = 20260808;
-function caso(n) { seme = (seme * 1103515245 + 12345) & 0x7fffffff; return seme % n; }
+/* I BIT ALTI, NON QUELLI BASSI.
+   Con `seme % n` si prendono i bit bassi di un generatore lineare, che
+   ciclano su pochissimi valori: `caso(4)` tornava SEMPRE zero, e mezza
+   tempesta batteva sempre sugli stessi tasti credendo di variare. E'
+   un difetto dello strumento, non del codice provato -- ma uno
+   strumento che mente e' peggio di nessuno strumento. */
+function caso(n) {
+  seme = (seme * 1103515245 + 12345) & 0x7fffffff;
+  return Math.floor((seme >>> 15) / 65536 * n) % n;
+}
 
 function conto(extra) {
   const c = Object.assign({
@@ -57,10 +66,21 @@ function conto(extra) {
 }
 
 const num = (x) => typeof x === 'number' && Number.isFinite(x);
+const lista = (x) => Array.isArray(x) ? x : [];
+const r2 = (x) => Math.round(x * 100) / 100;
+
+/* IL CONTO VIVO, non quello che avevo in mano.
+   Una mossa puo' SOSTITUIRLO: "svuota tutto" ne fabbrica uno nuovo di
+   zecca e lo mette al posto del vecchio. Chi continua a guardare
+   l'oggetto di prima vede una fotografia e si convince che l'app ha
+   sbagliato -- mi ci sono cascato: cercavo un guasto nei minuti pagati
+   e stavo confrontando due conti diversi. */
+const vivo = () => ctx.PAN.conto;
 
 /* Il controllo che si fa dopo OGNI mossa. Torna la lista di quello che
    non torna, vuota se e' tutto a posto. */
-function guai(c, dove) {
+function guai(_, dove) {
+  const c = vivo();
   const g = [];
   if (!num(c.paidPark) || c.paidPark < -0.005) g.push('parco incassato ' + c.paidPark);
   if (!num(c.paidBar) || c.paidBar < -0.005) g.push('bar incassato ' + c.paidBar);
@@ -82,11 +102,14 @@ function guai(c, dove) {
   if (Math.abs(parco - c.paidPark) > 0.02) g.push('righe parco ' + parco.toFixed(2) + ' ma totale ' + c.paidPark);
   if (Math.abs(bar - c.paidBar) > 0.02) g.push('righe bar ' + bar.toFixed(2) + ' ma totale ' + c.paidBar);
 
-  /* 4. nessuna riga puo' aver incassato piu' di quanto costa */
-  Object.keys(amt).forEach(k => {
-    const costa = ctx.totaleRiga(k);
-    if (num(costa) && amt[k] > costa + 0.02) g.push('riga ' + k + ': presi ' + amt[k] + ' su ' + costa);
-  });
+  /* 4. UNA RIGA PUO' AVERE PIU' SOLDI DI QUANTO COSTA, ed e' giusto
+     cosi': si paga un'ora per quattro bambini, poi il gruppo accorcia a
+     mezz'ora -- quei quarantotto euro sono gia' nel cassetto e non si
+     riprendono da soli. Quello che NON puo' succedere e' incassare
+     piu' del dovuto NEL MOMENTO in cui si incassa: quello si controlla
+     dove i soldi si muovono, non qui.
+     Qui basta che nessuna riga vada sotto zero (gia' fatto sopra) e
+     che il conto non chieda mai una cifra negativa. */
 
   /* 5. i minuti pagati stanno dentro il tempo comprato */
   const mp = ctx.minutiPagati(c);
@@ -191,11 +214,12 @@ gruppo('I minuti pagati non promettono mai piu' + '’' + ' di quello che i sold
   for (let n = 0; n < 500; n++) {
     const c = conto({ children: 1 + caso(5), crazyJumping: caso(3), durationMinutes: 10 + caso(150) });
     for (let k = 0; k < 4; k++) mossa(c, caso(16));
-    const mp = ctx.minutiPagati(c);
-    const perBambino = c.children ? Math.max(0, ctx.importoRiga('bimbi')) / c.children : 0;
-    const regalo = (ctx.importoRiga('crazy') >= c.crazyJumping * ctx.settings.crazyJumpingPrice - 0.005)
-      ? c.crazyJumping * ctx.settings.crazyExtraMinutes : 0;
-    if (!c.children) { if (mp !== regalo) male.push('n' + n + ': senza bambini promette ' + mp); continue; }
+    const v = vivo();                       // una mossa puo' aver cambiato conto
+    const mp = ctx.minutiPagati(v);
+    const perBambino = v.children ? Math.max(0, ctx.importoRiga('bimbi')) / v.children : 0;
+    const regalo = (ctx.importoRiga('crazy') >= v.crazyJumping * ctx.settings.crazyJumpingPrice - 0.005)
+      ? v.crazyJumping * ctx.settings.crazyExtraMinutes : 0;
+    if (!v.children) { if (mp !== regalo) male.push('n' + n + ': senza bambini promette ' + mp); continue; }
     /* i minuti "comprati" col tempo di parco, tolti quelli in regalo,
        devono costare meno o uguale a quello che ogni bambino ha pagato */
     const comprati = Math.max(0, mp - regalo);
@@ -212,7 +236,7 @@ gruppo('Svuotare e rifare non lascia soldi appesi', () => {
     const c = conto({ children: 1 + caso(5), crazyJumping: caso(3), durationMinutes: 10 + caso(120) });
     for (let k = 0; k < 6; k++) mossa(c, caso(16));
     ctx.svuotaScelto({ numeri: true, bar: true, persone: true, tempo: true, soldi: true });
-    if (Math.abs(ctx.PAN.conto.paidPark) > 0.005) male.push('n' + n + ': parco ' + ctx.PAN.conto.paidPark);
+    if (Math.abs(vivo().paidPark) > 0.005) male.push('n' + n + ': parco ' + vivo().paidPark);
     if (Math.abs(ctx.PAN.conto.paidBar) > 0.005) male.push('n' + n + ': bar ' + ctx.PAN.conto.paidBar);
     const amt = ctx.PAN.conto.paidAmt || {};
     Object.keys(amt).forEach(k => { if (Math.abs(amt[k]) > 0.005) male.push('n' + n + ': riga ' + k + ' = ' + amt[k]); });
@@ -268,6 +292,39 @@ gruppo('Un elenco di ingressi marcio non porta giu tutta la lista', () => {
     } catch (e) { male.push(i + ': esplode -> ' + e.message); }
   });
   ok('quindici elenchi marci, nessuno porta giu la lista', male.slice(0, 6), []);
+});
+
+gruppo('Incassare non porta mai una riga sopra il suo costo', () => {
+  /* Il controllo va fatto NEL MOMENTO del pagamento: dopo, il costo
+     puo' scendere (tempo accorciato, un bambino in meno) e i soldi
+     restano dove sono -- sono nel cassetto. Ma un tocco sul "paga" non
+     deve mai poter prendere piu' di quello che c'e' da prendere. */
+  const male = [];
+  for (let n = 0; n < 600; n++) {
+    const c = conto({ children: caso(7), crazyJumping: caso(4),
+                      durationMinutes: 10 + caso(150) });
+    ctx.bcSetQ('bimbi', c.children);
+    ctx.bcSetQ('crazy', c.crazyJumping);
+    const bar = LISTINO();
+    for (let k = 0; k < caso(4); k++) ctx.bcSetQ(bar[caso(bar.length)], 1 + caso(3));
+    /* si paga in tutti i modi possibili */
+    const righe = ['bimbi', 'crazy'].concat(lista(c.barItems).map(x => x.id));
+    righe.forEach(id => {
+      const prima = ctx.importoRiga(id);
+      const costa = ctx.totaleRiga(id);
+      ctx.segnaPagate(id, caso(9));
+      const dopo = ctx.importoRiga(id);
+      if (dopo > prima + 0.005 && dopo > costa + 0.02)
+        male.push('n' + n + '/' + id + ': da ' + prima + ' a ' + dopo + ' ma costa ' + costa);
+    });
+    const primaT = r2(c.paidPark + c.paidBar);
+    ctx.pagaTutto();
+    const dopoT = r2(c.paidPark + c.paidBar);
+    const totale = r2(ctx.dueOf(c).park + ctx.dueOf(c).bar);
+    if (dopoT > primaT + 0.005 && dopoT > totale + 0.02)
+      male.push('n' + n + ': paga tutto ha preso ' + dopoT + ' su ' + totale);
+  }
+  ok('seicento incassi, nessuno prende piu’ del dovuto', male.slice(0, 5), []);
 });
 
 gruppo('A tempo aperto non entra un euro in anticipo, mai', () => {

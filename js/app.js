@@ -395,7 +395,10 @@ function sheet(title, opts) {
   root.innerHTML = '';
 
   const ov = el('div', 'm-overlay');
-  const box = el('div', 'm-box');
+  /* `grande`: per i fogli che devono contenere dei grafici. Un foglio
+     alto mezzo schermo va bene per una domanda sola, non per una
+     schermata in cui si scorre e si confronta. */
+  const box = el('div', 'm-box' + (opts.grande ? ' grande' : ''));
   box.appendChild(el('div', 'm-grip'));
 
   const head = el('div', 'm-head');
@@ -3978,137 +3981,365 @@ function nomiDi(e) {
   return p.length ? p.join(', ') : 'senza riferimento';
 }
 
-/* Il foglio del registro: una giornata alla volta, con le frecce per
-   tornare indietro. Le giornate vecchie servono davvero -- "quanto
-   abbiamo fatto sabato?" e' la domanda che si fa il lunedi'. */
+/* TUTTE LE GIORNATE CHE HANNO QUALCOSA DENTRO, dalla piu' recente.
+   Non si inventano i giorni vuoti: un lunedi' di chiusura non deve
+   comparire come "zero incassato", perche' non e' andata male -- era
+   chiuso. Nelle medie i giorni chiusi non ci sono proprio. */
+function tutteLeGiornate() {
+  const mappa = new Map();
+  lista(entries).forEach(e => {
+    const g = giornataDi(num(e.startTime, num(e.createdAt, 0)));
+    if (!mappa.has(g)) mappa.set(g, []);
+    mappa.get(g).push(e);
+  });
+  return [...mappa.keys()].sort((a, b) => b - a);
+}
+
+/* LE STATISTICHE DI UN PERIODO.
+   Quello che al banco si vuole sapere davvero: quanto si e' fatto,
+   quanto si e' fatto IN MEDIA (che e' il numero con cui si confronta
+   una serata), quale giorno della settimana tira e quale no, a che ora
+   arriva la gente, e cosa beve.
+   Le medie sono per GIORNATA APERTA, non per giorno di calendario. */
+function statistiche(giorni) {
+  const st = {
+    giornate: giorni.length, gruppi: 0, bambini: 0, crazy: 0, persone: 0,
+    incassato: 0, parco: 0, crazyEuro: 0, bar: 0, resta: 0,
+    minutiTotali: 0, conCrazy: 0, conRiferimento: 0, pezziBar: 0,
+    perGiorno: [],            // una riga per giornata, dalla piu' vecchia
+    settimana: Array.from({ length: 7 }, () => ({ giornate: 0, gruppi: 0, incassato: 0, bambini: 0 })),
+    ore: Array.from({ length: 24 }, () => 0),
+    bevande: new Map(),
+    mesi: new Map()
+  };
+  giorni.slice().sort((a, b) => a - b).forEach(g => {
+    const c = contiGiornata(g);
+    st.gruppi += c.gruppi; st.bambini += c.bambini; st.crazy += c.crazy;
+    st.incassato = r2(st.incassato + c.incassato);
+    st.parco = r2(st.parco + c.parco);
+    st.crazyEuro = r2(st.crazyEuro + c.crazyEuro);
+    st.bar = r2(st.bar + c.bar);
+    st.resta = r2(st.resta + c.resta);
+    st.perGiorno.push({ giorno: g, incassato: c.incassato, gruppi: c.gruppi, bambini: c.bambini });
+
+    const gs = new Date(g).getDay();
+    st.settimana[gs].giornate++;
+    st.settimana[gs].gruppi += c.gruppi;
+    st.settimana[gs].bambini += c.bambini;
+    st.settimana[gs].incassato = r2(st.settimana[gs].incassato + c.incassato);
+
+    const dm = new Date(g);
+    const kMese = dm.getFullYear() + '-' + pad2(dm.getMonth() + 1);
+    const m = st.mesi.get(kMese) || { incassato: 0, gruppi: 0, bambini: 0, giornate: 0 };
+    m.incassato = r2(m.incassato + c.incassato); m.gruppi += c.gruppi;
+    m.bambini += c.bambini; m.giornate++;
+    st.mesi.set(kMese, m);
+  });
+
+  /* le cose che si contano ingresso per ingresso */
+  const dentro = new Set(giorni);
+  lista(entries).forEach(e => {
+    const g = giornataDi(num(e.startTime, num(e.createdAt, 0)));
+    if (!dentro.has(g)) return;
+    st.minutiTotali += clamp(e.durationMinutes, 0, 1e6);
+    if (clamp(e.crazyJumping, 0, 1e6) > 0) st.conCrazy++;
+    const p = lista(e.people).length;
+    st.persone += p;
+    if (p) st.conRiferimento++;
+    st.ore[new Date(num(e.startTime, 0)).getHours()]++;
+    lista(e.barItems).forEach(bi => {
+      const q = clamp(bi.qty, 0, 1e6);
+      if (!q) return;
+      st.pezziBar += q;
+      const nome = bi.name || bi.id;
+      const b = st.bevande.get(nome) || { pezzi: 0, euro: 0 };
+      b.pezzi += q; b.euro = r2(b.euro + q * num(bi.price, 0));
+      st.bevande.set(nome, b);
+    });
+  });
+  return st;
+}
+
+/* ══════════════════════════════════════════════════════════
+   L'HUB: la giornata, lo storico, le statistiche.
+   Tre domande diverse e tre schermate, ma una porta sola -- perche'
+   sono la stessa cosa guardata da tre distanze:
+     GIORNATA    com'e' andata oggi (o un giorno preciso)
+     STORICO     come sono andati gli ultimi giorni, in fila
+     STATISTICHE cosa succede di solito: che giorno tira, a che ora
+                 arriva la gente, cosa beve, quanto si ferma
+   I grafici sono barre fatte con dei riquadri: nessuna libreria da
+   scaricare, funziona senza rete come tutto il resto, e su una
+   tavoletta si leggono meglio di un disegno pieno di dettagli.
+   ══════════════════════════════════════════════════════════ */
+let hubDove = 'giornata';
+let hubGiorno = null;
+let hubPeriodo = 30;              // quanti giorni guarda lo storico
+
 function fogliRegistro(giorno) {
-  let quale = giorno === undefined ? giornataDi(Date.now()) : giorno;
-  const s = sheet('\ud83d\udcd2 Registro della giornata');
-  const dentro = el('div');
+  hubDove = giorno === undefined ? hubDove : 'giornata';
+  hubGiorno = giorno === undefined ? (hubGiorno || giornataDi(Date.now())) : giorno;
+  const s = sheet('\ud83d\udcd2 Registro e statistiche', { grande: true });
+
+  const linguette = el('div', 'hub-cat');
+  const dentro = el('div', 'hub-dentro');
+  s.body.appendChild(linguette);
   s.body.appendChild(dentro);
 
   const disegna = () => {
-    const c = contiGiornata(quale);
+    linguette.innerHTML = '';
+    [['giornata', '\ud83d\udcc5 Giornata'], ['storico', '\ud83d\udcc8 Storico'],
+     ['statistiche', '\ud83d\udcca Statistiche']].forEach(([k, nome]) => {
+      const b = el('button', hubDove === k ? 'on' : '', nome);
+      b.onclick = () => { hubDove = k; disegna(); };
+      linguette.appendChild(b);
+    });
     dentro.innerHTML = '';
-
-    /* la barra dei giorni */
-    const barra = el('div', 'reg-giorni');
-    const indietro = el('button', 'btn btn-sm', '\u25c0');
-    indietro.title = 'giornata prima';
-    indietro.onclick = () => { quale = giornataDi(quale - 1); disegna(); };
-    const eti = el('div', 'reg-eti');
-    eti.appendChild(el('b', null, nomeGiornata(quale)));
-    eti.appendChild(el('span', null, 'dalle ' + ORA_CAMBIO_GIORNO + ':00 alle ' + ORA_CAMBIO_GIORNO + ':00'));
-    const avanti = el('button', 'btn btn-sm', '\u25b6');
-    avanti.title = 'giornata dopo';
-    avanti.disabled = quale >= giornataDi(Date.now());
-    avanti.onclick = () => { quale = giornataDi(quale + 25 * 3600 * 1000); disegna(); };
-    barra.appendChild(indietro); barra.appendChild(eti); barra.appendChild(avanti);
-    dentro.appendChild(barra);
-
-    if (!c.gruppi) {
-      dentro.appendChild(el('div', 'hint', 'Nessun ingresso in questa giornata.'));
-      return;
-    }
-
-    /* la cifra grossa: quella che si cerca per prima */
-    const testa = el('div', 'reg-testa');
-    const gr = el('div', 'reg-grossa');
-    gr.appendChild(el('span', 'k', 'INCASSATO'));
-    gr.appendChild(el('span', 'v', eur(c.incassato)));
-    testa.appendChild(gr);
-    if (c.resta > 0.005) {
-      const rs = el('div', 'reg-grossa manca');
-      rs.appendChild(el('span', 'k', 'NON INCASSATO'));
-      rs.appendChild(el('span', 'v', eur(c.resta)));
-      testa.appendChild(rs);
-    }
-    dentro.appendChild(testa);
-
-    /* da dove arriva */
-    const voci = el('div', 'reg-voci');
-    [['\u23f1\ufe0f', 'Tempo di parco', c.parco],
-     ['\ud83e\udd38', 'Crazy Jumping', c.crazyEuro],
-     ['\ud83e\udd64', 'Bar', c.bar]].forEach(([em, nome, val]) => {
-      const r = el('div', 'reg-voce');
-      r.appendChild(el('span', 'em', em));
-      r.appendChild(el('span', 'nm', nome));
-      r.appendChild(el('span', 'vl', eur(val)));
-      voci.appendChild(r);
-    });
-    dentro.appendChild(voci);
-
-    const conta = el('div', 'reg-conta');
-    conta.appendChild(el('span', null, c.gruppi + (c.gruppi === 1 ? ' gruppo' : ' gruppi')));
-    conta.appendChild(el('span', null, c.bambini + (c.bambini === 1 ? ' bambino' : ' bambini')));
-    if (c.crazy) conta.appendChild(el('span', null, c.crazy + ' Crazy'));
-    dentro.appendChild(conta);
-
-    /* uno per uno, in ordine di entrata */
-    const lst = el('div', 'reg-lista');
-    c.righe.forEach(r => {
-      const riga = el('div', 'reg-riga' + (r.resta > 0.005 ? ' deve' : ''));
-      riga.appendChild(el('span', 'ora', r.ora));
-      const chi = el('span', 'chi');
-      chi.appendChild(el('b', null, r.chi));
-      chi.appendChild(el('span', null, r.bambini + (r.bambini === 1 ? ' bambino' : ' bambini') +
-        (r.uscito ? '' : ' \u00b7 ancora dentro')));
-      riga.appendChild(chi);
-      const soldi = el('span', 'soldi');
-      soldi.appendChild(el('b', null, eur(r.preso)));
-      if (r.resta > 0.005) soldi.appendChild(el('span', 'manca', '\u2212' + eur(r.resta)));
-      riga.appendChild(soldi);
-      lst.appendChild(riga);
-    });
-    dentro.appendChild(lst);
+    if (hubDove === 'giornata') vistaGiornata(dentro, disegna);
+    else if (hubDove === 'storico') vistaStorico(dentro, disegna);
+    else vistaStatistiche(dentro);
   };
-
   disegna();
   footBtn(s.foot, 'Chiudi', 'btn-ghost', s.close);
 }
 
-/* Il foglio dell'uscita: due strade scritte, non un "sei sicuro?". */
-function fogliUscita(entry, d, esci) {
-  const resta = d.total;
-  const s = sheet(resta > 0.005 ? 'Restano ' + eur(resta) + ' da incassare' : 'Esce il gruppo?');
-  s.body.appendChild(el('div', 'hint', resta > 0.005
-    ? 'Chi accompagna: ' + nomiDi(entry) + '. Puoi farlo uscire lo stesso: quello che manca resta segnato nel registro della giornata.'
-    : 'Chi accompagna: ' + nomiDi(entry) + '. Il conto e\u2019 saldato.'));
+/* ── una giornata: quella di oggi, o quella che si sceglie ── */
+function vistaGiornata(dentro, ridisegna) {
+  const c = contiGiornata(hubGiorno);
 
-  const scelta = (cls, em, titolo, sotto, fn) => {
-    const b = el('button', 'scelta-riga ' + cls);
-    b.appendChild(el('span', 'sc-em', em));
-    const t = el('span', 'sc-txt');
-    t.appendChild(el('b', null, titolo));
-    t.appendChild(el('span', null, sotto));
-    b.appendChild(t);
-    b.onclick = () => { s.close(); fn(); };
-    s.body.appendChild(b);
-    return b;
-  };
+  const barra = el('div', 'reg-giorni');
+  const indietro = el('button', 'btn btn-sm', '\u25c0');
+  indietro.title = 'giornata prima';
+  indietro.onclick = () => { hubGiorno = giornataDi(hubGiorno - 1); ridisegna(); };
+  const eti = el('div', 'reg-eti');
+  eti.appendChild(el('b', null, nomeGiornata(hubGiorno)));
+  eti.appendChild(el('span', null, 'dalle ' + ORA_CAMBIO_GIORNO + ':00 alle ' + ORA_CAMBIO_GIORNO + ':00'));
+  const avanti = el('button', 'btn btn-sm', '\u25b6');
+  avanti.title = 'giornata dopo';
+  avanti.disabled = hubGiorno >= giornataDi(Date.now());
+  avanti.onclick = () => { hubGiorno = giornataDi(hubGiorno + 25 * 3600 * 1000); ridisegna(); };
+  barra.appendChild(indietro); barra.appendChild(eti); barra.appendChild(avanti);
+  dentro.appendChild(barra);
 
-  scelta('', '\ud83d\udeaa', 'Esce e va in archivio',
-    'Resta nel registro della giornata, con quello che ha pagato. Da li\u2019 puoi riaprirlo.',
-    esci);
+  if (!c.gruppi) {
+    dentro.appendChild(el('div', 'hint', 'Nessun ingresso in questa giornata.'));
+    return;
+  }
 
-  scelta('pericolo', '\ud83d\uddd1\ufe0f', 'Elimina l\u2019ingresso',
-    'Sparisce del tutto: NON entra nel registro della giornata. Serve per gli sbagli, non per chi ha finito. Non si pu\u00f2 annullare.',
-    () => eliminaIngresso(entry));
+  const testa = el('div', 'reg-testa');
+  const gr = el('div', 'reg-grossa');
+  gr.appendChild(el('span', 'k', 'INCASSATO'));
+  gr.appendChild(el('span', 'v', eur(c.incassato)));
+  testa.appendChild(gr);
+  if (c.resta > 0.005) {
+    const rs = el('div', 'reg-grossa manca');
+    rs.appendChild(el('span', 'k', 'NON INCASSATO'));
+    rs.appendChild(el('span', 'v', eur(c.resta)));
+    testa.appendChild(rs);
+  }
+  dentro.appendChild(testa);
 
-  footBtn(s.foot, 'Lascia stare', 'btn-ghost', s.close);
+  const voci = el('div', 'reg-voci');
+  [['\u23f1\ufe0f', 'Tempo di parco', c.parco],
+   ['\ud83e\udd38', 'Crazy Jumping', c.crazyEuro],
+   ['\ud83e\udd64', 'Bar', c.bar]].forEach(([em, nome, val]) => {
+    const r = el('div', 'reg-voce');
+    r.appendChild(el('span', 'em', em));
+    r.appendChild(el('span', 'nm', nome));
+    r.appendChild(el('span', 'vl', eur(val)));
+    voci.appendChild(r);
+  });
+  dentro.appendChild(voci);
+
+  const conta = el('div', 'reg-conta');
+  conta.appendChild(el('span', null, c.gruppi + (c.gruppi === 1 ? ' gruppo' : ' gruppi')));
+  conta.appendChild(el('span', null, c.bambini + (c.bambini === 1 ? ' bambino' : ' bambini')));
+  if (c.crazy) conta.appendChild(el('span', null, c.crazy + ' Crazy'));
+  dentro.appendChild(conta);
+
+  const lst = el('div', 'reg-lista');
+  c.righe.forEach(r => {
+    const riga = el('div', 'reg-riga' + (r.resta > 0.005 ? ' deve' : ''));
+    riga.appendChild(el('span', 'ora', r.ora));
+    const chi = el('span', 'chi');
+    chi.appendChild(el('b', null, r.chi));
+    chi.appendChild(el('span', null, r.bambini + (r.bambini === 1 ? ' bambino' : ' bambini') +
+      (r.uscito ? '' : ' \u00b7 ancora dentro')));
+    riga.appendChild(chi);
+    const soldi = el('span', 'soldi');
+    soldi.appendChild(el('b', null, eur(r.preso)));
+    if (r.resta > 0.005) soldi.appendChild(el('span', 'manca', '\u2212' + eur(r.resta)));
+    riga.appendChild(soldi);
+    lst.appendChild(riga);
+  });
+  dentro.appendChild(lst);
 }
 
-/* Toglie di mezzo un ingresso sbagliato: via dall'elenco, via dai
-   conti della giornata. I soldi che risultavano incassati se ne vanno
-   con lui -- ed e' il punto: se erano stati battuti per sbaglio, non
-   devono restare in cassa. */
-function eliminaIngresso(entry) {
-  if (volante) posaSubito(volante.card);
-  entries = lista(entries).filter(e => e.id !== entry.id);
-  saveEntries();
-  buildActiveView();
-  updateBadge();
-  toast('Ingresso eliminato \ud83d\uddd1\ufe0f');
+/* ── una barra: il riquadro colorato piu' il suo numero ──
+   Si passa il valore e il massimo, e lei si arrangia. La barra piu'
+   alta si accende: e' quella che si cerca guardando. */
+function barra(etichetta, valore, massimo, testo, acceso) {
+  const r = el('div', 'gr-riga' + (acceso ? ' su' : ''));
+  r.appendChild(el('span', 'gr-eti', etichetta));
+  const pista = el('span', 'gr-pista');
+  const b = el('span', 'gr-barra');
+  b.style.width = (massimo > 0 ? Math.max(2, Math.round(valore / massimo * 100)) : 0) + '%';
+  pista.appendChild(b);
+  r.appendChild(pista);
+  r.appendChild(el('span', 'gr-val', testo));
+  return r;
+}
+
+/* ── lo storico: gli ultimi giorni uno sotto l'altro ── */
+function vistaStorico(dentro, ridisegna) {
+  const tutte = tutteLeGiornate();
+  if (!tutte.length) { dentro.appendChild(el('div', 'hint', 'Non c\u2019\u00e8 ancora niente da guardare.')); return; }
+
+  const scelte = el('div', 'hub-periodo');
+  [[7, 'ultimi 7'], [30, 'ultimi 30'], [90, 'ultimi 90'], [0, 'tutto']].forEach(([n, nome]) => {
+    const b = el('button', 'chip' + (hubPeriodo === n ? ' on' : ''), nome);
+    b.onclick = () => { hubPeriodo = n; ridisegna(); };
+    scelte.appendChild(b);
+  });
+  dentro.appendChild(scelte);
+
+  const giorni = hubPeriodo ? tutte.slice(0, hubPeriodo) : tutte;
+  const st = statistiche(giorni);
+
+  const testa = el('div', 'reg-testa');
+  const g1 = el('div', 'reg-grossa');
+  g1.appendChild(el('span', 'k', 'INCASSATO IN ' + giorni.length + (giorni.length === 1 ? ' GIORNATA' : ' GIORNATE')));
+  g1.appendChild(el('span', 'v', eur(st.incassato)));
+  testa.appendChild(g1);
+  const g2 = el('div', 'reg-grossa neutra');
+  g2.appendChild(el('span', 'k', 'MEDIA A GIORNATA'));
+  g2.appendChild(el('span', 'v', eur(giorni.length ? st.incassato / giorni.length : 0)));
+  testa.appendChild(g2);
+  dentro.appendChild(testa);
+
+  /* il grafico: una barra per giornata, la piu' alta accesa */
+  const max = Math.max(...st.perGiorno.map(x => x.incassato), 0);
+  const graf = el('div', 'gr');
+  graf.appendChild(el('div', 'gr-tit', 'Incassato per giornata'));
+  st.perGiorno.slice().reverse().forEach(x => {
+    const d = new Date(x.giorno);
+    const eti = pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1);
+    const r = barra(eti, x.incassato, max, eur(x.incassato), x.incassato >= max && max > 0);
+    r.onclick = () => { hubGiorno = x.giorno; hubDove = 'giornata'; ridisegna(); };
+    r.classList.add('cliccabile');
+    r.title = 'apri questa giornata';
+    graf.appendChild(r);
+  });
+  dentro.appendChild(graf);
+  dentro.appendChild(el('div', 'hint', 'Tocca una barra per aprire quella giornata.'));
+}
+
+/* ── le statistiche: cosa succede DI SOLITO ── */
+function vistaStatistiche(dentro) {
+  const tutte = tutteLeGiornate();
+  if (!tutte.length) { dentro.appendChild(el('div', 'hint', 'Non c\u2019\u00e8 ancora niente da guardare.')); return; }
+  const st = statistiche(tutte);
+  const perGruppo = st.gruppi ? st.incassato / st.gruppi : 0;
+  const perBambino = st.bambini ? st.incassato / st.bambini : 0;
+  const durataMedia = st.gruppi ? Math.round(st.minutiTotali / st.gruppi) : 0;
+
+  /* le medie: i numeri con cui si giudica una serata */
+  const griglia = el('div', 'st-griglia');
+  const dato = (em, nome, valore, sotto) => {
+    const d = el('div', 'st-dato');
+    d.appendChild(el('span', 'em', em));
+    d.appendChild(el('span', 'vl', valore));
+    d.appendChild(el('span', 'nm', nome));
+    if (sotto) d.appendChild(el('span', 'sub', sotto));
+    griglia.appendChild(d);
+  };
+  dato('\ud83d\udcb6', 'a gruppo', eur(perGruppo), 'in media');
+  dato('\ud83e\uddd2', 'a bambino', eur(perBambino), 'in media');
+  dato('\u23f1\ufe0f', 'si fermano', fmtMin(durataMedia), 'in media');
+  dato('\ud83d\udc65', 'gruppi a giornata', (st.giornate ? Math.round(st.gruppi / st.giornate * 10) / 10 : 0) + '', 'in media');
+  dato('\ud83e\udd38', 'prende il Crazy', (st.gruppi ? Math.round(st.conCrazy / st.gruppi * 100) : 0) + '%', 'dei gruppi');
+  dato('\ud83e\udd64', 'consumazioni', (st.gruppi ? Math.round(st.pezziBar / st.gruppi * 10) / 10 : 0) + '', 'a gruppo');
+  dentro.appendChild(griglia);
+
+  /* IL GIORNO CHE TIRA: la domanda vera e' "quando conviene esserci" */
+  const GIORNI = ['Domenica', 'Luned\u00ec', 'Marted\u00ec', 'Mercoled\u00ec', 'Gioved\u00ec', 'Venerd\u00ec', 'Sabato'];
+  const sett = st.settimana.map((x, i) => ({
+    nome: GIORNI[i],
+    media: x.giornate ? x.incassato / x.giornate : 0,
+    gruppi: x.giornate ? x.gruppi / x.giornate : 0,
+    giornate: x.giornate
+  })).filter(x => x.giornate);
+  if (sett.length) {
+    const maxS = Math.max(...sett.map(x => x.media));
+    const ordinati = sett.slice().sort((a, b) => b.media - a.media);
+    const graf = el('div', 'gr');
+    graf.appendChild(el('div', 'gr-tit', 'Che giorno tira, in media'));
+    /* in ordine di settimana, non di classifica: si cerca "il sabato",
+       non "il primo" */
+    [1, 2, 3, 4, 5, 6, 0].forEach(i => {
+      const x = sett.find(y => y.nome === GIORNI[i]);
+      if (!x) return;
+      graf.appendChild(barra(x.nome.slice(0, 3), x.media, maxS,
+        eur(x.media) + '  \u00b7  ' + (Math.round(x.gruppi * 10) / 10) + ' gr.',
+        x.nome === ordinati[0].nome));
+    });
+    dentro.appendChild(graf);
+    if (ordinati.length > 1) {
+      dentro.appendChild(el('div', 'hint',
+        'Il pi\u00f9 pieno \u00e8 ' + ordinati[0].nome.toLowerCase() + ' (' + eur(ordinati[0].media) +
+        ' a giornata), il pi\u00f9 scarico ' + ordinati[ordinati.length - 1].nome.toLowerCase() +
+        ' (' + eur(ordinati[ordinati.length - 1].media) + ').'));
+    }
+  }
+
+  /* A CHE ORA ARRIVA LA GENTE: serve a sapere quando stare in due */
+  const maxO = Math.max(...st.ore, 0);
+  if (maxO) {
+    const graf = el('div', 'gr');
+    graf.appendChild(el('div', 'gr-tit', 'A che ora entrano'));
+    st.ore.forEach((n, h) => {
+      if (!n) return;
+      graf.appendChild(barra(pad2(h) + ':00', n, maxO, n + (n === 1 ? ' gruppo' : ' gruppi'), n >= maxO));
+    });
+    dentro.appendChild(graf);
+    const punta = st.ore.indexOf(maxO);
+    dentro.appendChild(el('div', 'hint', 'L\u2019ora di punta \u00e8 le ' + punta + ':00.'));
+  }
+
+  /* COSA BEVONO */
+  const bev = [...st.bevande.entries()].map(([nome, x]) => ({ nome, ...x }))
+    .sort((a, b) => b.pezzi - a.pezzi).slice(0, 8);
+  if (bev.length) {
+    const maxB = bev[0].pezzi;
+    const graf = el('div', 'gr');
+    graf.appendChild(el('div', 'gr-tit', 'Cosa prendono al bar'));
+    bev.forEach((b, i) => graf.appendChild(
+      barra(b.nome, b.pezzi, maxB, b.pezzi + '  \u00b7  ' + eur(b.euro), i === 0)));
+    dentro.appendChild(graf);
+  }
+
+  /* I MESI */
+  const mesi = [...st.mesi.entries()].sort((a, b) => a[0] < b[0] ? -1 : 1);
+  if (mesi.length > 1) {
+    const maxM = Math.max(...mesi.map(([, m]) => m.incassato));
+    const MESI = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio',
+                  'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
+    const graf = el('div', 'gr');
+    graf.appendChild(el('div', 'gr-tit', 'Mese per mese'));
+    mesi.forEach(([k, m]) => {
+      const [anno, mm] = k.split('-');
+      graf.appendChild(barra(MESI[+mm - 1].slice(0, 3) + ' ' + anno.slice(2), m.incassato, maxM,
+        eur(m.incassato) + '  \u00b7  ' + m.gruppi + ' gr.', m.incassato >= maxM));
+    });
+    dentro.appendChild(graf);
+  }
+
+  /* il totale in fondo: chi scorre fin qui vuole il numero grosso */
+  const fine = el('div', 'st-fine');
+  fine.appendChild(el('span', null, st.giornate + ' giornate \u00b7 ' + st.gruppi + ' gruppi \u00b7 ' +
+    st.bambini + ' bambini \u00b7 ' + st.persone + ' accompagnatori'));
+  fine.appendChild(el('b', null, 'in tutto ' + eur(st.incassato)));
+  dentro.appendChild(fine);
 }
 
 function confirmSheet(title, text, onYes) {
