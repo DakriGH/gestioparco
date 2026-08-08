@@ -37,6 +37,8 @@
     text-transform: uppercase; border-radius: 20px; padding: 4px 10px; color: #C9CFDA;
     background: rgba(0,0,0,.55); }
   .mis.giu { background: rgba(106,220,175,.16); color: #7BE0A8; }
+  .cap { font-family: 'Fredoka', sans-serif; font-size: 22px; margin: 58px 0 8px;
+    padding-top: 24px; border-top: 1px solid rgba(255,255,255,.12); }
 
   .tavoletta { background: #14141B; border-radius: 18px; border: 1px solid rgba(255,255,255,.08);
     padding: 10px 12px 12px; width: 786px; max-width: 100%; }
@@ -95,9 +97,39 @@
 
   <div id="proposte"></div>
   <div class="nota" id="scelta"></div>
+
+  <h2 class="cap">La tua: la F riordinata</h2>
+  <p class="intro">
+    Tre card in quest'ordine — <b>Bambini</b>, <b>Crazy</b>, <b>Estendi tempo</b> — e ognuna col
+    prezzo che si aggiorna da solo: quello dei bambini cambia col tempo scelto, quello del Crazy
+    col numero di Crazy. Sotto la terza, i <b>minuti gia' pagati</b>.
+    E l'ordine delle fasce ribaltato: prima <b>quando entrano</b> e <b>quanto restano</b>, poi cosa
+    prendono, poi chi sono.
+  </p>
+  <div class="barra" style="top:0">
+    <label><input type="checkbox" id="totali"> I prezzi sulle card sono i TOTALI della voce</label>
+    <label><input type="checkbox" id="saldato"> Come si vede a conto gia' saldato</label>
+  </div>
+  <div id="proposte2"></div>
+  <div class="nota" id="scelta2"></div>
 </div>
 
-<script src="./js/icone.js?v=222"></script>
+<script src="./js/icone.js?v=222">document.getElementById('scelta2').innerHTML =
+  '<b>Sul prezzo delle card.</b> Con l\u2019interruttore in cima puoi vedere le due letture: ' +
+  '<b>prezzo unitario</b> (come le bevande: \u00ab2,50 \u20ac Coca Cola\u00bb, e quanti ne prendi lo dice la ' +
+  'pastiglia) oppure <b>totale della voce</b> (\u00ab38,00 \u20ac Bambini\u00bb). Il totale risponde subito ' +
+  'alla domanda \u00abquanto fa?\u00bb, ma rompe il patto col bar, dove quel numero e\u2019 sempre il prezzo ' +
+  'di UNO. Io terrei l\u2019unitario e lascerei i totali al conto in fondo, che e\u2019 il posto loro: ' +
+  'cosi\u2019 la card dice sempre la stessa cosa, in tutte e cinque le linguette.' +
+  '<br><br><b>Sull\u2019ordine.</b> La F1 e\u2019 l\u2019ordine in cui si parla davvero al banco, e ha un ' +
+  'vantaggio che si vede solo mettendole in fila: il prezzo sulla card dei Bambini <b>dipende dal ' +
+  'tempo</b>, e con il tempo scelto SOPRA quel numero e\u2019 gia\u2019 giusto quando ci arrivi. ' +
+  'Nella F2 lo leggi prima di aver deciso quanto restano, quindi lo leggi due volte.' +
+  '<br><br><b>La F3 e\u2019 la stessa cosa con una cornice in meno</b>: \u00abquando entrano\u00bb e \u00abquanto ' +
+  'restano\u00bb sono la stessa domanda spezzata in due, e unirle toglie un titolo, un bordo e un po\u2019 ' +
+  'di altezza. Se la F1 ti convince, la F3 e\u2019 la F1 fatta meglio -- a meno che i due gruppi non ti ' +
+  'servano separati per come tocchi le cose.';
+</script>
 <script src="./js/avatar.js?v=222"></script>
 <script src="./js/capi.js?v=222"></script>
 <script>
@@ -284,13 +316,117 @@ function misura() {
     b.className = 'mis' + (d < 0 ? ' giu' : '');
   });
 }
+/* ══════════════════════════════════════════════════════════
+   LA TUA: la F riordinata.
+   Tre card -- Bambini, Crazy, Estendi tempo -- e le fasce del
+   tempo PRIMA, cosi' si legge nell'ordine in cui si ragiona.
+   ══════════════════════════════════════════════════════════ */
+let TOTALI = false, SALDATO = false;
+const prezzoBimbi = () => TOTALI ? eur(C.unit * C.children) : eur(C.unit);
+const prezzoCrazy = () => TOTALI ? eur(CRAZY_PREZZO * C.crazy) : eur(CRAZY_PREZZO);
+const minPagati = () => SALDATO ? C.durata : C.minCoperti;
+
+const cardBimbi2 = () => card({ ico: 'bimbi', prezzo: prezzoBimbi(), nome: 'Bambini',
+  sotto: '<span class="bc-fino">' + (TOTALI ? eur(C.unit) + ' a testa per ' + durTxt(C.durata)
+                                            : 'per ' + durTxt(C.durata)) + '</span>',
+  q: C.children, fant: C.children, chip: C.children,
+  chip2: (SALDATO ? C.children : 0) + '/' + C.children });
+
+const cardCrazy2 = () => card({ ico: 'crazy', prezzo: prezzoCrazy(), nome: 'Crazy Jumping',
+  sotto: '<span class="bc-fino">' + (TOTALI ? eur(CRAZY_PREZZO) + ' l\u2019uno \u00b7 +' + (CRAZY_MINUTI * C.crazy) + '\u2032 dentro'
+                                            : '+' + CRAZY_MINUTI + '\u2032 dentro l\u2019uno') + '</span>',
+  q: C.crazy, fant: C.crazy, chip: C.crazy,
+  chip2: (SALDATO ? C.crazy : 0) + '/' + C.crazy });
+
+/* la terza card: il MENO e il PIU' allungano il tempo, e sotto ci stanno
+   i minuti gia' pagati -- la stessa fascia verde delle altre, solo che
+   la roba sono minuti */
+const cardEstendi = () => {
+  const pag = minPagati();
+  const tutto = pag >= C.durata;
+  return '<div class="bc-card presa bc-tempo nuovo' + (tutto ? ' saldata' : '') + '">' +
+    '<button class="bc-su"><span class="bc-fant">' + durTxt(C.durata) + '</span>' +
+    '<span style="font-size:26px;line-height:1">\u23f3</span>' +
+    '<span class="bc-testi"><span class="bc-pr">fino alle ' + ore(C.fine) + '</span>' +
+    '<span class="bc-nm">Estendi tempo</span>' +
+    '<span class="bc-fino">' + eur(C.unit) + ' a bambino</span></span></button>' +
+    '<div class="bc-zone"><span class="bc-chip">' + durTxt(C.durata) + '</span>' +
+    '<button>\u2212</button><button>+</button></div>' +
+    '<div class="bc-zone v"><span class="bc-chip">' +
+      (tutto ? '\u2713 ' + durTxt(C.durata) : pag + '/' + C.durata + '\u2032') + '</span>' +
+    '<button>\u2212</button><button>+</button></div></div>';
+};
+const treCard = () => griglia(cardBimbi2() + cardCrazy2() + cardEstendi(), 3);
+const linguette = () => '<div class="bc-cat">' + ['Parco', 'Bevande', 'Snack', 'Birre', 'Alcolici']
+  .map((n, i) => '<button' + (i === 0 ? ' class="on"' : '') + '>' + n + '</button>').join('') + '</div>';
+
+/* orario e durata insieme: una cornice sola, due righe */
+function bloccoTempoUnico() {
+  return '<div class="card blk c-blu nuovo"><h2><span class="em">\ud83d\udd52</span> Quando e per quanto</h2>' +
+    '<div class="blk-in">' +
+    '<div class="time-row" style="margin-bottom:8px"><button class="round-btn">\u2212</button>' +
+    '<div class="time-display num">' + ore(C.inizio) + '</div><button class="round-btn">+</button>' +
+    '<button class="now-btn"><span class="em">\ud83d\udccd</span> Adesso</button>' +
+    '<div class="wrist-inline-row"><span class="wl-k"><span class="em">\ud83c\udf97\ufe0f</span> Bracciale</span>' +
+    '<div class="wrist-row">' + ['#8A8AA0', '#3ECF6B', '#E8B44C', '#4EA6FF', '#E4574F']
+      .map((x, i) => '<button class="wrist-dot' + (i === 1 ? ' on' : '') + '" style="background:' + x + '"></button>').join('') +
+    '</div></div></div>' +
+    '<div class="riga-dur"><div class="chips">' +
+    [15, 30, 60, 90].map(m => '<button class="chip' + (m === C.durata ? ' on' : '') + '">' +
+      (m < 60 ? m + 'm' : m === 60 ? '1h' : '1h30') + '</button>').join('') +
+    '<button class="chip later">\u23f3 Tempo aperto</button></div>' +
+    '<div class="dur-custom"><span class="lab">minuti esatti</span>' +
+    '<button class="step-b sm">\u2212</button><input type="number" class="pc-durin" value="' + C.durata + '">' +
+    '<button class="step-b sm plus">+</button></div></div></div></div>';
+}
+
+const V = [
+  { l: 'F1', t: 'La tua: tempo sopra, card sotto',
+    p: 'Prima <b>quando entrano</b>, poi <b>quanto restano</b>, poi <b>cosa prendono</b>, poi <b>chi sono</b>. E\u2019 l\u2019ordine in cui si parla al banco: \u00abda che ora? un\u2019ora e mezza? quanti bambini?\u00bb. Le tre card stanno larghe 245 e i tasti non si stirano; la fascia \u00abQuanto restano\u00bb resta per i tagli rapidi, e il meno e il piu\u2019 della terza card allungano di scaglione.',
+    fai: () => '<div class="pan-conto">' + linguette() +
+      '<div class="pc-parco">' + bloccoOrario() + bloccoDurata(true) + treCard() + bloccoPersone() + '</div>' +
+      conto() + '</div>' },
+
+  { l: 'F2', t: 'Come oggi: card sopra, tempo sotto',
+    p: 'Lo stesso contenuto ma nell\u2019ordine di adesso, per confronto: prima le card, poi le fasce del tempo. Cosi\u2019 si vede se l\u2019ordine nuovo aiuta davvero o e\u2019 solo abitudine.',
+    fai: () => '<div class="pan-conto">' + linguette() +
+      '<div class="pc-parco">' + treCard() + bloccoOrario() + bloccoDurata(true) + bloccoPersone() + '</div>' +
+      conto() + '</div>' },
+
+  { l: 'F3', t: 'Orario e durata in una fascia sola',
+    p: 'Terza prova: siccome adesso stanno vicine e parlano tutt\u2019e due di tempo, le due fasce diventano una. \u00abQuando entrano\u00bb e \u00abquanto restano\u00bb sono la stessa domanda in due pezzi, e unirle toglie un titolo e una cornice.',
+    fai: () => '<div class="pan-conto">' + linguette() +
+      '<div class="pc-parco">' + bloccoTempoUnico() + treCard() + bloccoPersone() + '</div>' +
+      conto() + '</div>' }
+];
+
+function disegna2() {
+  document.getElementById('proposte2').innerHTML = V.map(v =>
+    '<div class="testa" id="p' + v.l + '"><span class="lett">' + v.l + '</span><h3>' + v.t + '</h3>' +
+    '<span class="mis"></span></div>' +
+    '<p class="perche">' + v.p + '</p>' +
+    '<div class="tavoletta stretti">' + v.fai() + '</div>').join('');
+  const base = document.querySelectorAll('#proposte .tavoletta')[0];
+  const h0 = base ? Math.round(base.getBoundingClientRect().height) : 0;
+  document.querySelectorAll('#proposte2 .tavoletta').forEach((t, i) => {
+    const h = Math.round(t.getBoundingClientRect().height);
+    const b = document.querySelectorAll('#proposte2 .mis')[i];
+    const d = h - h0;
+    b.textContent = (d === 0 ? 'come oggi' : (d > 0 ? '+' + d : d) + ' px') + ' \u00b7 ' + h + 'px';
+    b.className = 'mis' + (d < 0 ? ' giu' : '');
+  });
+}
+document.getElementById('totali').onchange = e => { TOTALI = e.target.checked; disegna2(); };
+document.getElementById('saldato').onchange = e => { SALDATO = e.target.checked; disegna2(); };
+
 document.getElementById('spia').onchange = e => document.body.classList.toggle('spia', e.target.checked);
 document.getElementById('stretto').onchange = e => {
   document.querySelectorAll('.tavoletta').forEach(t => { t.style.width = e.target.checked ? '430px' : ''; });
-  misura();
+  misura(); disegna2();
 };
 document.body.classList.add('spia');
 disegna();
+disegna2();
 
 document.getElementById('scelta').innerHTML =
   '<b>Se devo consigliarti: la D.</b> E’ la piu’ comoda e insieme la piu’ corta — il pannello ' +
