@@ -226,6 +226,159 @@ gruppo('Niente disegni rotti in nessuna combinazione');
     storte.length === 0, storte.slice(0, 6).join('; '));
 }
 
+/* ============================================================
+   E ORA L'APP VERA: la scheda "Chi accompagna" del banco deve
+   mostrare le STESSE icone della pagina di studio, non le emoji.
+   ============================================================ */
+const { caricaApp } = await import('./ambiente.mjs');
+const app = caricaApp();
+
+function persona(top, sotto, colore) {
+  return {
+    id: 'x1', role: 'mamma', name: '', note: '', tocco: false,
+    avatar: app.AV.normalize({
+      role: 'mamma',
+      top: { style: top || 'maglietta', color: colore || VERDE, color2: '#F4F6F8', pattern: 'solid' },
+      pants: { style: sotto || 'pantaloni', color: colore || VERDE, color2: '#F4F6F8', pattern: 'solid' }
+    }, 'mamma')
+  };
+}
+const conta = (s, re) => (s.match(re) || []).length;
+/* Ogni fantasia disegnata si porta dietro un identificativo nuovo
+   (k1, k2...) per non pestare i piedi alle altre sulla stessa pagina:
+   va tolto, altrimenti due disegni identici sembrano diversi. */
+const senzaId = s => s.replace(/k\d+/g, 'kN').replace(/a\d+/g, 'aN');
+
+gruppo('La scheda del banco: c’è tutto e nell’ordine giusto');
+{
+  const vuoto = app.armadioDi(null, '');
+  prova('senza nessuno spiega cosa fare', vuoto.indexOf('invito') >= 0);
+
+  const h = app.armadioDi(persona(), '');
+  prova('la figura c’è', conta(h, /<svg/g) > 0 && h.indexOf('class="figura"') >= 0);
+  prova('il campo del nome c’è', h.indexOf('data-campo="name"') >= 0);
+  prova('tutti i ' + SOPRA.length + ' capi di sopra', conta(h, /data-top="/g) === SOPRA.length);
+  prova('tutte le ' + AV.PATTERNS.length + ' fantasie', conta(h, /data-pat="/g) === AV.PATTERNS.length);
+  prova('tutti gli ' + SOTTO.length + ' capi di sotto', conta(h, /data-pants="/g) === SOTTO.length);
+  prova('i 4 accessori in coda al sotto', conta(h, /data-acc="/g) === 4);
+  prova('le tinte: ' + AV.COLORS.length + ' × 2 gruppi',
+    conta(h, /data-col="top\|/g) === AV.COLORS.length &&
+    conta(h, /data-col="pants\|/g) === AV.COLORS.length);
+  prova('le due ruote per la tinta che manca', conta(h, /data-ruota="/g) === 2);
+  prova('la riga libera grande in fondo',
+    h.indexOf('libero grosso') >= 0 && h.indexOf('data-campo="note"') >= 0);
+
+  /* l'ordine conta: prima il sopra, poi la SUA fantasia, poi il SUO
+     colore, e solo dopo il sotto. Con le tinte tutte in fondo si
+     sbagliava capo un tocco su tre. */
+  const dove = (s) => h.indexOf(s);
+  prova('l’ordine è sopra → fantasia → colore → sotto → colore',
+    dove('data-top="') < dove('data-pat="') &&
+    dove('data-pat="') < dove('data-col="top|') &&
+    dove('data-col="top|') < dove('data-pants="') &&
+    dove('data-pants="') < dove('data-col="pants|'));
+}
+
+gruppo('Nell’editor niente emoji: solo i capi disegnati');
+{
+  const h = app.armadioDi(persona(), '');
+  /* Le emoji vanno benissimo dappertutto TRANNE qui: 👕 e 🧥 al banco
+     sono la stessa macchia, e nessuna emoji sa dire di che colore è il
+     capo che stai per mettere. */
+  const emoji = [...AV.TOP, ...AV.PANTS].map(t => t.em).filter(Boolean);
+  const dentro = [...new Set(emoji)].filter(e => h.indexOf(e) >= 0);
+  prova('nessuna emoji di capo nella scheda', dentro.length === 0, 'trovate ' + dentro.join(' '));
+  prova('un disegno per ogni capo e accessorio',
+    conta(h, /<svg/g) >= SOPRA.length + SOTTO.length + 4);
+}
+
+gruppo('Il pulsante mostra ESATTAMENTE il capo che finirà addosso');
+{
+  /* Se il pulsante disegna una cosa e la figura ne indossa un'altra,
+     siamo punto e a capo. Qui si prende il disegno dentro il pulsante
+     e lo si confronta con quello che l'icona produce da sola. */
+  for (const pat of ['solid', 'stripes-h', 'fiori']) {
+    for (const colore of ['#E23D4B', '#2547C4']) {
+      const p = persona('camicia', 'jeans', colore);
+      p.avatar.top.pattern = pat;
+      p.avatar.pants.pattern = pat;
+      const h = senzaId(app.armadioDi(p, ''));
+      let storti = [];
+      for (const k of SOPRA) {
+        if (h.indexOf(senzaId(app.CAPI.capo(k, colore, pat, 46))) < 0) storti.push('sopra:' + k);
+      }
+      for (const k of SOTTO) {
+        if (h.indexOf(senzaId(app.CAPI.capo(k, colore, pat, 44))) < 0) storti.push('sotto:' + k);
+      }
+      prova('col ' + pat + ' in ' + colore + ' i pulsanti disegnano il capo vero',
+        storti.length === 0, storti.slice(0, 4).join(' '));
+    }
+  }
+}
+
+gruppo('Il vestito lungo spegne i sotto, il corto no');
+{
+  const lungo = app.armadioDi(persona('vestitolungo'), '');
+  const corto = app.armadioDi(persona('vestito'), '');
+  prova('col lungo i pantaloni si spengono', lungo.indexOf('spento-capi') >= 0);
+  prova('col lungo lo dice anche a parole', lungo.indexOf('col vestito lungo non serve') >= 0);
+  prova('col corto i pantaloni restano vivi', corto.indexOf('spento-capi') < 0);
+  /* ma gli accessori NON si spengono mai: cappello, scarpe e zaino se
+     li mette anche chi ha il vestito lungo */
+  prova('gli accessori restano toccabili anche col lungo', conta(lungo, /data-acc="/g) === 4);
+}
+
+gruppo('Gli accessori: si mettono, si tolgono, e si vedono addosso');
+{
+  const ACC = ['capelli', 'cappello', 'scarpe', 'zaino'];
+  for (const a of ACC) {
+    const p = persona();
+    const prima = app.AV.build(p.avatar);
+    app.accMetti(p.avatar, a, '#EC4899');
+    const dopo = app.AV.build(p.avatar);
+    prova(a + ': messo, si vede sulla figura', prima !== dopo && dopo.indexOf('#EC4899') >= 0);
+
+    app.accTogli(p.avatar, a, 'mamma');
+    const via = app.AV.build(p.avatar);
+    prova(a + ': tolto, sparisce dalla figura', via.indexOf('#EC4899') < 0);
+  }
+
+  /* la tavolozza si apre su UNO solo, quello toccato */
+  const p = persona();
+  const chiusa = app.armadioDi(p, '');
+  const aperta = app.armadioDi(p, 'cappello');
+  prova('senza tocchi nessuna tavolozza aperta', chiusa.indexOf('class="volante"') < 0);
+  prova('toccato il cappello, si apre la sua', conta(aperta, /class="volante"/g) === 1 &&
+    aperta.indexOf('data-acccol="cappello|') >= 0);
+  prova('la tavolozza ha tutte le ' + AV.COLORS.length + ' tinte, la ruota e il togli',
+    conta(aperta, /data-acccol="/g) === AV.COLORS.length &&
+    aperta.indexOf('data-accruota="cappello"') >= 0 &&
+    aperta.indexOf('data-accvia="cappello"') >= 0);
+}
+
+gruppo('I dati di prima continuano a funzionare');
+{
+  /* Chi è già registrato ha un avatar salvato col guardaroba VECCHIO:
+     deve continuare a comparire, non sparire né far saltare la
+     schermata. */
+  const vecchi = [
+    { top: { style: 'maglietta', color: '#0EA5E9', pattern: 'solid' }, pants: { style: 'pantaloni', color: '#2547C4' } },
+    { top: { style: 'felpa', color: '#E23D4B', pattern: 'diag' }, pants: { style: 'gonna', color: '#FBBF24' } },
+    { top: { style: 'unaCosaCheNonEsiste', color: '#123456' }, pants: { style: 'boh' } },
+    { top: null, pants: undefined },
+    {}
+  ];
+  for (let i = 0; i < vecchi.length; i++) {
+    let esito = '';
+    try {
+      const p = { id: 'v' + i, role: 'papa', name: 'Gio', note: '', avatar: app.AV.normalize(vecchi[i], 'papa') };
+      const h = app.armadioDi(p, '');
+      esito = (h.indexOf('class="armadio"') >= 0 && conta(h, /data-top="/g) === SOPRA.length) ? '' : 'scheda incompleta';
+    } catch (e) { esito = e.message; }
+    prova('avatar vecchio n.' + (i + 1) + ': la scheda si apre lo stesso', esito === '', esito);
+  }
+}
+
 /* ---------- il verdetto ---------- */
 console.log('\n' + '━'.repeat(52));
 if (ko) {

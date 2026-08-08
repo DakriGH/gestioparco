@@ -786,23 +786,41 @@ function sincronizzaBracciali(box, inizio, colore, custom) {
   });
 }
 
+/* La pezza della fantasia: la TRAMA VERA, coi due colori del capo.
+   Un quadretto grande e senza didascalia si riconosce a vista, e al
+   banco si sceglie guardando, non leggendo. */
 function pezzaFantasia(pat, c1, c2) {
   const st = {
     'solid':     'background:' + c1,
-    'stripes-h': 'background:repeating-linear-gradient(180deg,' + c1 + ' 0 5px,' + c2 + ' 5px 10px)',
-    'stripes-v': 'background:repeating-linear-gradient(90deg,' + c1 + ' 0 5px,' + c2 + ' 5px 10px)',
-    'diag':      'background:repeating-linear-gradient(45deg,' + c1 + ' 0 5px,' + c2 + ' 5px 10px)',
-    'dots':      'background:' + c1 + ';background-image:radial-gradient(' + c2 + ' 2.2px,transparent 2.4px);background-size:9px 9px',
-    'plaid':     'background:' + c1 + ';background-image:repeating-linear-gradient(90deg,' + c2 + ' 0 3px,transparent 3px 10px),repeating-linear-gradient(180deg,' + c2 + ' 0 3px,transparent 3px 10px)',
-    'scacchi':   'background:' + c1 + ';background-image:linear-gradient(45deg,' + c2 + ' 25%,transparent 25% 75%,' + c2 + ' 75%),linear-gradient(45deg,' + c2 + ' 25%,transparent 25% 75%,' + c2 + ' 75%);background-size:12px 12px;background-position:0 0,6px 6px',
-    'camo':      'background:' + c1 + ';background-image:radial-gradient(' + c2 + ' 42%,transparent 43%),radial-gradient(' + c2 + ' 38%,transparent 39%);background-size:14px 12px,10px 9px;background-position:0 0,7px 5px',
-    'animalier': 'background:' + c1 + ';background-image:radial-gradient(ellipse 3px 2px,' + c2 + ' 60%,transparent 62%),radial-gradient(ellipse 2.6px 2px,' + c2 + ' 60%,transparent 62%);background-size:11px 9px,11px 9px;background-position:0 0,5px 4px',
-    'zigzag':    'background:' + c1 + ';background-image:linear-gradient(135deg,' + c2 + ' 25%,transparent 25%),linear-gradient(225deg,' + c2 + ' 25%,transparent 25%);background-size:8px 8px'
+    'stripes-h': 'background:repeating-linear-gradient(180deg,' + c1 + ' 0 6px,' + c2 + ' 6px 12px)',
+    'stripes-v': 'background:repeating-linear-gradient(90deg,' + c1 + ' 0 6px,' + c2 + ' 6px 12px)',
+    'dots':      'background:' + c1 + ';background-image:radial-gradient(' + c2 + ' 3px,transparent 3.2px);background-size:12px 12px',
+    'plaid':     'background:' + c1 + ';background-image:repeating-linear-gradient(90deg,' + c2 + ' 0 4px,transparent 4px 13px),repeating-linear-gradient(180deg,' + c2 + ' 0 4px,transparent 4px 13px)',
+    'scacchi':   'background:' + c1 + ';background-image:linear-gradient(45deg,' + c2 + ' 25%,transparent 25% 75%,' + c2 + ' 75%),linear-gradient(45deg,' + c2 + ' 25%,transparent 25% 75%,' + c2 + ' 75%);background-size:16px 16px;background-position:0 0,8px 8px',
+    /* mimetico: tre toni e tessere di misura diversa, cosi' la griglia
+       regolare non si vede piu' e sembra una macchia vera */
+    'camo':      'background:' + c1 + ';background-image:' +
+      'radial-gradient(ellipse 60% 70% at 20% 30%,' + c2 + ' 48%,transparent 50%),' +
+      'radial-gradient(ellipse 55% 65% at 75% 65%,' + AV.shade(c1, -34) + ' 46%,transparent 48%),' +
+      'radial-gradient(ellipse 50% 60% at 60% 15%,' + AV.shade(c1, 26) + ' 44%,transparent 46%);' +
+      'background-size:29px 24px,23px 19px,19px 16px;background-position:0 0,11px 7px,5px 13px'
   };
-  /* fiori, cuori, stelle e stampa sono SEGNI: a questa misura un
-     carattere si legge meglio di un motivo ripetuto */
-  const segno = { fiori: '\u273f', cuori: '\u2665', stars: '\u2605', logo: '\u25c9' }[pat] || '';
-  return '<span class="sw" style="' + (st[pat] || ('background:' + c1 + ';color:' + c2)) + '">' + segno + '</span>';
+  /* fiori e cuori sono SEGNI: a questa misura un carattere grande si
+     legge meglio di un motivo ripetuto */
+  const segno = { fiori: '\u273f', cuori: '\u2665' }[pat];
+  const dentro = segno
+    ? '<b style="color:' + c2 + '">' + segno + '</b>'
+    : (pat === 'logo' ? scrittaFinta(c2) : '');
+  return '<span class="sw" style="' + (st[pat] || ('background:' + c1)) + '">' + dentro + '</span>';
+}
+
+/* la "scritta sulla maglietta" si DISEGNA: tre righe di paroline. Un
+   simbolo tipografico qualunque non diceva niente. */
+function scrittaFinta(c2) {
+  const riga = (w) => '<i style="display:block;height:3px;width:' + w +
+    'px;border-radius:2px;background:' + c2 + '"></i>';
+  return '<span style="display:flex;flex-direction:column;gap:2.5px;align-items:center">' +
+    riga(20) + riga(14) + riga(17) + '</span>';
 }
 
 /* CHI ACCOMPAGNA
@@ -819,9 +837,11 @@ function syncPeople(container, people, onChange) {
   /* chi non c'e' piu' non puo' restare aperto */
   if (container.dataset.apri && !people.some(p => p.id === container.dataset.apri)) {
     container.dataset.apri = '';
+    container.dataset.tav = '';
   }
   const sig = people.map(p => p.id + '|' + p.role + '|' + (p.name || '') + '|' + (p.note || '') +
-    '|' + JSON.stringify(p.avatar)).join('\u00a7') + '>' + (container.dataset.apri || '');
+    '|' + JSON.stringify(p.avatar)).join('\u00a7') + '>' + (container.dataset.apri || '') +
+    '>' + (container.dataset.tav || '');
   if (container.dataset.sig === sig) return;
   container.dataset.sig = sig;
 
@@ -836,7 +856,7 @@ function syncPeople(container, people, onChange) {
       '<span class="em">' + r.em + '</span><span class="nm">' + esc(r.label) + '</span></button>';
   }).join('') + '</div>';
 
-  container.innerHTML = ruoli + armadioDi(chi);
+  container.innerHTML = ruoli + armadioDi(chi, chi ? (container.dataset.tav || '') : '');
 
   /* il tasto per togliere sta in testa al blocco: toglie chi stai
      vestendo, o tutti se non ne stai vestendo nessuno */
@@ -864,12 +884,36 @@ function syncPeople(container, people, onChange) {
       const t = ev.target;
       const people = elenco();
       const p = people.find(x => x.id === container.dataset.apri);
-      if (!p || !t.dataset.campo) return;
+      if (!p) return;
+      /* le RUOTE dei colori sono <input type="color">: mandano input,
+         non click, e vanno prese qui. Ridisegnano subito, perche' il
+         colore lo si guarda addosso alla figura mentre lo si sceglie. */
+      if (t.dataset.ruota !== undefined) {
+        p.avatar[t.dataset.ruota].color = t.value;
+        p.tocco = true;
+        container.dataset.sig = '';
+        avvisa();
+        syncPeople(container, people, container.__cambia);
+        return;
+      }
+      if (t.dataset.accruota !== undefined) {
+        /* la tavolozza resta APERTA: la ruota manda un evento a ogni
+           spostamento del dito, e chiuderla al primo la strapperebbe
+           via mentre la si sta ancora usando */
+        accMetti(p.avatar, t.dataset.accruota, t.value);
+        p.tocco = true;
+        container.dataset.sig = '';
+        avvisa();
+        syncPeople(container, people, container.__cambia);
+        return;
+      }
+      if (!t.dataset.campo) return;
       p[t.dataset.campo] = t.value;
       /* la firma si aggiorna a mano: ridisegnare mentre scrive gli
          porterebbe via il cursore da sotto le dita */
       container.dataset.sig = people.map(q => q.id + '|' + q.role + '|' + (q.name || '') + '|' +
-        (q.note || '') + '|' + JSON.stringify(q.avatar)).join('\u00a7') + '>' + (container.dataset.apri || '');
+        (q.note || '') + '|' + JSON.stringify(q.avatar)).join('\u00a7') + '>' + (container.dataset.apri || '') +
+        '>' + (container.dataset.tav || '');
       avvisa();
     });
     container.addEventListener('click', (ev) => {
@@ -917,13 +961,27 @@ function syncPeople(container, people, onChange) {
           }
           container.dataset.apri = gia.id;
         }
-      } else if (p && d.top !== undefined)   { p.avatar.top.style = d.top; p.tocco = true; }
-      else if (p && d.pat !== undefined)     { p.avatar.top.pattern = d.pat; p.tocco = true; }
-      else if (p && d.pants !== undefined)   { p.avatar.pants.style = d.pants; p.tocco = true; }
+      } else if (p && d.top !== undefined)   { p.avatar.top.style = d.top; p.tocco = true; container.dataset.tav = ''; }
+      else if (p && d.pat !== undefined)     { p.avatar.top.pattern = d.pat; p.tocco = true; container.dataset.tav = ''; }
+      else if (p && d.pants !== undefined)   { p.avatar.pants.style = d.pants; p.tocco = true; container.dataset.tav = ''; }
       else if (p && d.col !== undefined) {
         const parti = d.col.split('|');
         p.avatar[parti[0]][parti[1]] = parti[2];
         p.tocco = true;
+        container.dataset.tav = '';
+      } else if (p && d.acc !== undefined) {
+        /* l'accessorio non si sceglie per forma ma per COLORE: toccarlo
+           apre la tavolozza, toccarlo ancora la richiude */
+        container.dataset.tav = (container.dataset.tav === d.acc) ? '' : d.acc;
+      } else if (p && d.acccol !== undefined) {
+        const parti = d.acccol.split('|');
+        accMetti(p.avatar, parti[0], parti[1]);
+        p.tocco = true;
+        container.dataset.tav = '';
+      } else if (p && d.accvia !== undefined) {
+        accTogli(p.avatar, d.accvia, p.role);
+        p.tocco = true;
+        container.dataset.tav = '';
       } else return;
       container.dataset.sig = '';
       avvisa();
@@ -932,49 +990,112 @@ function syncPeople(container, people, onChange) {
   }
 }
 
-/* l'armadio di chi si sta vestendo: figura a sinistra, scelte a destra */
-function armadioDi(p) {
+/* L'ARMADIO: figura grande a sinistra, scelte a destra.
+   L'ordine e' quello con cui si veste davvero qualcuno: prima il
+   sopra, poi la sua fantasia, poi il suo colore; poi il sotto e il
+   suo colore. Ogni tinta sta ATTACCATA al gruppo a cui serve.
+   I quattro accessori — capelli, cappello, scarpe, zaino — stanno in
+   coda al sotto e non in un capitolo loro: sono roba che sta sotto o
+   attorno alla persona, e cercarli altrove costava un giro in piu'. */
+
+/* dove sta scritto, dentro l'avatar, il colore di ogni accessorio */
+const ACC_DOVE = {
+  capelli: (av) => av.hair.color,
+  cappello: (av) => (av.hat.style === 'none' ? null : av.hat.color),
+  scarpe: (av) => av.shoes.color,
+  zaino: (av) => (av.bag.style === 'none' ? null : av.bag.color)
+};
+const ACC_NOME = { capelli: 'Capelli', cappello: 'Cappello', scarpe: 'Scarpe', zaino: 'Zaino' };
+function accMetti(av, acc, colore) {
+  if (acc === 'capelli') av.hair.color = colore;
+  else if (acc === 'cappello') av.hat = { style: 'cappellino', color: colore };
+  else if (acc === 'scarpe') av.shoes = { style: 'sneakers', color: colore };
+  else if (acc === 'zaino') av.bag = { style: 'zaino', color: colore };
+}
+function accTogli(av, acc, ruolo) {
+  if (acc === 'capelli') av.hair.color = AV.baseFor(ruolo).hair.color;
+  else if (acc === 'cappello') av.hat = { style: 'none', color: '#E23D4B' };
+  else if (acc === 'scarpe') av.shoes = { style: 'sneakers', color: '#F4F6F8' };
+  else if (acc === 'zaino') av.bag = { style: 'none', color: '#7C4A2D' };
+}
+
+function armadioDi(p, tavolozzaAperta) {
   if (!p) return '<div class="invito">Tocca chi \u00e8 venuto \u2014 Mamma, Pap\u00e0, Nonna\u2026 \u2014 ' +
     'e qui sotto compare come vestirlo. Ne basta <b>uno</b>: serve a ' +
     'riconoscere il gruppo all\u2019uscita.</div>';
-  const av = p.avatar, vestito = av.top.style === 'vestito';
-  /* un colore solo: quello della fantasia se lo ricava da se', schiarendo
-     o scurendo il capo. Sceglierlo era una domanda in piu' al banco per
-     una cosa che si decide da sola. */
+  const av = p.avatar;
+  /* solo il vestito LUNGO copre le gambe fino ai piedi: sotto quello
+     un pantalone non si vedrebbe. Il vestito normale i sotto li lascia
+     scegliere — una gonna sopra i leggings si vede eccome. */
+  const lungo = av.top.style === 'vestitolungo';
+  /* un colore solo: quello della fantasia se lo ricava da se',
+     schiarendo o scurendo il capo. Sceglierlo era una domanda in piu'
+     al banco per una cosa che si decide da sola. */
   const c1 = av.top.color, c2 = AV.coloreFantasia(c1);
-  const tinte = (dove, val) => '<div class="tinte">' + AV.COLORS.slice(0, 10).map(c =>
-    '<button data-col="' + dove + '|color|' + c.c + '" style="background:' + c.c + '"' +
-    (val === c.c ? ' class="on"' : '') + '></button>').join('') + '</div>';
+  const colonne = (n) => 'grid-template-columns:repeat(' + n + ',1fr)';
+
+  /* le tinte: quindici in ordine di colore piu' la ruota, che e' il
+     sedicesimo posto per quella che in fila non c'e' */
+  const tinte = (campo) => '<div class="tinte" style="' + colonne(AV.COLORS.length + 1) + '">' +
+    AV.COLORS.map(c => '<button data-col="' + campo + '|color|' + c.c + '" style="background:' + c.c +
+      '" title="' + esc(c.n[0]) + '"' +
+      (av[campo].color.toLowerCase() === c.c.toLowerCase() ? ' class="on"' : '') + '></button>').join('') +
+    '<span class="ruota" title="scegli tu"><input type="color" data-ruota="' + campo +
+      '" value="' + av[campo].color + '"></span></div>';
+
+  const capiSopra = '<div class="capi" style="' + colonne(AV.TOP.length) + '">' +
+    AV.TOP.map(t => '<button class="capo' + (av.top.style === t.key ? ' on' : '') +
+      '" data-top="' + t.key + '">' + CAPI.capo(t.key, c1, av.top.pattern, 46) +
+      '<span class="nm">' + esc(t.label) + '</span></button>').join('') + '</div>';
+
+  const fantasie = '<div class="fant" style="' + colonne(AV.PATTERNS.length) + '">' +
+    AV.PATTERNS.map(f => '<button class="' + (av.top.pattern === f.key ? 'on' : '') +
+      '" data-pat="' + f.key + '" title="' + esc(f.n) + '">' +
+      pezzaFantasia(f.key, c1, c2) + '</button>').join('') + '</div>';
+
+  const accessori = Object.keys(ACC_DOVE).map(k => {
+    const c = ACC_DOVE[k](av);
+    return '<button class="capo acc-b' + (c ? ' on' : '') + '" data-acc="' + k + '">' +
+      CAPI.accessorio(k, c || '#8A8AA0', 44) +
+      '<span class="nm">' + ACC_NOME[k] + '</span></button>';
+  }).join('');
+  const capiSotto = '<div class="sottoblocco' + (lungo ? ' spento-capi' : '') + '">' +
+    '<div class="capi" style="' + colonne(AV.PANTS.length + 4) + '">' +
+    AV.PANTS.map(t => '<button class="capo' + (av.pants.style === t.key ? ' on' : '') +
+      '" data-pants="' + t.key + '">' + CAPI.capo(t.key, av.pants.color, av.pants.pattern, 44) +
+      '<span class="nm">' + esc(t.label) + '</span></button>').join('') + accessori + '</div>' +
+    (tavolozzaAperta ? tavolozza(av, tavolozzaAperta) : '') + '</div>';
 
   return '<div class="armadio">' +
     '<div class="figura">' + AV.build(av) +
       '<input class="libero chi" placeholder="' + esc(roleOf(p.role).label) + '" value="' +
         esc(p.name || '') + '" data-campo="name"></div>' +
     '<div class="roba">' +
-      '<div><span class="et">Che cosa indossa</span><div class="icone">' +
-        AV.TOP.map(t => '<button class="ico' + (av.top.style === t.key ? ' on' : '') +
-          '" data-top="' + t.key + '"><span class="dis">' + t.em + '</span>' +
-          '<span class="nome">' + esc(t.label) + '</span></button>').join('') + '</div></div>' +
-      '<div><span class="et">Fantasia</span><div class="icone">' +
-        AV.PATTERNS.map(f => '<button class="ico' + (av.top.pattern === f.key ? ' on' : '') +
-          '" data-pat="' + f.key + '">' + pezzaFantasia(f.key, c1, c2) +
-          '<span class="nome">' + esc(f.n) + '</span></button>').join('') + '</div></div>' +
+      '<span class="et">Sopra</span>' + capiSopra +
+      '<span class="et">Fantasia</span>' + fantasie +
+      '<span class="et">Colore del sopra</span>' + tinte('top') +
+      '<span class="et">Sotto' + (lungo ? '<span class="spento-k">col vestito lungo non serve</span>' : '') +
+        '</span>' + capiSotto +
+      '<span class="et">Colore del sotto</span>' + tinte('pants') +
     '</div>' +
-    /* da qui in giu' si va a TUTTA LARGHEZZA: la figura sta solo di
-       fianco a capi e fantasie */
+    /* la riga libera passa SOTTO a tutta larghezza: al banco e' quella
+       che si usa di corsa, e va vista prima di tutte */
     '<div class="largo">' +
-      '<div><span class="et">Colore del capo</span>' + tinte('top', c1) + '</div>' +
-      '<div class="' + (vestito ? 'spento' : '') + '"><span class="et">Sotto' +
-        (vestito ? ' \u2014 col vestito non serve' : '') + '</span>' +
-        '<div class="sottoriga"><div class="icone">' +
-        AV.PANTS.map(t => '<button class="ico' + (av.pants.style === t.key ? ' on' : '') +
-          '" data-pants="' + t.key + '"><span class="dis">' + t.em + '</span>' +
-          '<span class="nome">' + esc(t.label) + '</span></button>').join('') + '</div>' +
-        tinte('pants', av.pants.color) + '</div></div>' +
-      '<div><span class="et">Qualcosa che salta all\u2019occhio</span>' +
-        '<input class="libero largo" data-campo="note" value="' + esc(p.note || '') + '" ' +
-        'placeholder="\u00abzaino giallo\u00bb, \u00abgamba ingessata\u00bb, \u00abbarba lunga\u00bb, \u00abcappellino rosso\u00bb\u2026"></div>' +
-    '</div></div>';
+      '<input class="libero grosso" data-campo="note" value="' + esc(p.note || '') + '" ' +
+      'placeholder="Qualcosa che salta all\u2019occhio: \u00abzaino giallo\u00bb, \u00abgamba ingessata\u00bb\u2026"></div>' +
+    '</div>';
+}
+
+/* la tavolozza di un accessorio: le stesse quindici tinte, la ruota, e
+   il tasto per toglierlo */
+function tavolozza(av, acc) {
+  const ora = ACC_DOVE[acc](av);
+  return '<div class="volante">' +
+    AV.COLORS.map(c => '<button data-acccol="' + acc + '|' + c.c + '" style="background:' + c.c + '"' +
+      (ora && ora.toLowerCase() === c.c.toLowerCase() ? ' class="on"' : '') + '></button>').join('') +
+    '<span class="ruota"><input type="color" data-accruota="' + acc + '" value="' +
+      (ora || '#8A8AA0') + '"></span>' +
+    '<button class="via" data-accvia="' + acc + '">togli</button></div>';
 }
 
 /* ---------- cloud: accensione, arrivi da fuori, schermata d'accesso ---------- */

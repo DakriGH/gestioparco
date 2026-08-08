@@ -2573,61 +2573,109 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
 .ruoli button.messo { background: rgba(255,255,255,.2); }
 .ruoli button.on { background: #fff; color: #221944; }
 
-/* L'armadio: la figura affianca solo capi e fantasie; colori, pantaloni
-   e la riga libera passano SOTTO a tutta larghezza, cosi' le pastiglie
-   dei colori stanno su una riga sola invece che su due. */
-.armadio { display: grid; grid-template-columns: 142px 1fr; gap: 7px 12px;
-  margin-top: 7px; align-items: start; }
+/* L'ARMADIO
+   La figura sta grande a SINISTRA e non si muove mai: e' lei che si
+   guarda mentre si sceglie, e vederla cambiare sotto le dita e' tutto
+   il senso della schermata. A destra le scelte in ordine di come le si
+   fa davvero: sopra, la sua fantasia, il suo colore; poi sotto, e il
+   suo colore. Ogni tinta sta ATTACCATA al gruppo a cui serve — quando
+   erano tutte in fondo si sbagliava capo un tocco su tre.
+   In fondo, a tutta larghezza, la riga libera: al banco e' quella che
+   si usa di corsa, quindi e' la piu' grande e la piu' visibile. */
+.armadio { display: grid; grid-template-columns: 150px 1fr; gap: 7px 9px;
+  margin-top: 7px; align-items: stretch; }
 .armadio .largo { grid-column: span 2; display: flex; flex-direction: column; gap: 5px; }
-.armadio .figura { background: rgba(0,0,0,.24); border-radius: 16px; display: flex;
-  flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 7px; }
-.armadio .figura svg { width: 116px; height: 152px; }
-.armadio .roba { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
-.armadio .et { font-size: 10px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
-  color: rgba(255,255,255,.62); margin-bottom: 2px; display: block; line-height: 1.3; }
-.armadio .icone { display: flex; gap: 5px; flex-wrap: wrap; }
-.armadio .ico { border: none; border-radius: 12px; background: rgba(0,0,0,.22);
-  color: rgba(255,255,255,.86); width: 62px; padding: 4px 2px 3px; font: inherit; cursor: pointer;
-  display: flex; flex-direction: column; align-items: center; gap: 3px;
-  transition: background .15s ease, transform .08s ease; }
-.armadio .ico:active { transform: scale(.95); }
-.armadio .ico .dis { font-size: 21px; line-height: 1.05; }
-.armadio .ico .nome { font-size: 9.5px; font-weight: 700; line-height: 1.1; text-align: center; }
-.armadio .ico.on { background: #fff; color: #221944; }
-/* la pezza: la fantasia vera, coi colori che finiranno sulla figura */
-.armadio .ico .sw { width: 32px; height: 22px; border-radius: 6px; font-size: 15px;
-  line-height: 22px; text-align: center; font-weight: 700;
-  box-shadow: 0 0 0 1px rgba(0,0,0,.4) inset; }
-/* I capi di sotto sono passati da quattro a sei (ci sono i jeans): con
-   le misure di prima le icone e le tinte non stavano piu' su una riga
-   sola e il blocco cresceva di una quarantina di pixel, cioe' quanto
-   basta a far scorrere una schermata che deve stare ferma. Qui dentro
-   si stringono quel tanto che serve. */
-.armadio .sottoriga { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.armadio .sottoriga .ico { width: 55px; }
-.armadio .sottoriga .tinte { gap: 5px; }
-.armadio .sottoriga .tinte button { width: 31px; height: 31px; }
-.armadio .tinte { display: flex; gap: 6px; flex-wrap: wrap; }
-.armadio .tinte button { width: 34px; height: 34px; border-radius: 9px; border: 3px solid transparent;
-  padding: 0; cursor: pointer; transition: transform .1s ease; }
-.armadio .tinte button.on { border-color: #fff; transform: scale(1.08); }
+.armadio .figura { background: rgba(0,0,0,.24); border-radius: 14px; display: flex;
+  flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+  padding: 6px; height: 100%; box-sizing: border-box; }
+.armadio .figura svg { display: block; width: 137px; height: 206px; }
+.armadio .roba { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.armadio .et { font-size: 9.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+  color: rgba(255,255,255,.62); margin-bottom: 1px; display: block; line-height: 1.05; }
+
+/* I CAPI DISEGNATI. Prima erano emoji: 👕 e 🧥 al banco sono la stessa
+   macchia colorata, e nessuna emoji sa dirti di che colore e' il capo
+   che stai per mettere. Queste sono le stesse sagome che finiscono
+   sulla figura, nel colore e nella fantasia scelti. */
+.armadio .capi { display: grid; gap: 5px; }
+.armadio .capo { border: none; border-radius: 11px; background: rgba(0,0,0,.24); min-width: 0;
+  color: rgba(255,255,255,.9); padding: 2px 1px 3px; cursor: pointer; font: inherit;
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  transition: background .14s ease, transform .08s ease; }
+.armadio .capo:active { transform: scale(.94); }
+.armadio .capo svg { display: block; width: 100%; height: auto; max-width: 38px; }
+.armadio .capo .nm { font-size: 9.5px; font-weight: 700; line-height: 1; text-align: center;
+  letter-spacing: -.03em; }
+.armadio .capo.on { background: #fff; color: #221944; }
+/* I quattro accessori NON sono capi: si scelgono per colore, non per
+   forma, e aprono una tavolozza. Quindi hanno il contorno tratteggiato
+   ambrato e il puntino che dice "qui si apre qualcosa". */
+.armadio .capo.acc-b { border: 1.5px dashed rgba(232,180,76,.75);
+  background: rgba(232,180,76,.10); position: relative; }
+.armadio .capo.acc-b::after { content: ''; position: absolute; top: 4px; right: 4px;
+  width: 6px; height: 6px; border-radius: 50%; background: #E8B44C; }
+.armadio .capo.acc-b .nm { color: #F0CE8A; }
+.armadio .capo.acc-b.on { background: #fff; border-color: #B98A20; }
+.armadio .capo.acc-b.on .nm { color: #6B4E0E; }
+/* col vestito lungo si spengono i PANTALONI, non gli accessori:
+   cappello, scarpe e zaino se li mette lo stesso */
+.armadio .sottoblocco { position: relative; }
+.armadio .spento-capi [data-pants] { opacity: .3; pointer-events: none; }
+.armadio .spento-k { font-size: 10px; font-weight: 700; color: #E8B44C;
+  text-transform: none; letter-spacing: 0; margin-left: 6px; }
+
+/* le fantasie: grandi e senza didascalia, si riconoscono a vista */
+.armadio .fant { display: grid; gap: 5px; }
+.armadio .fant button { border: none; border-radius: 9px; padding: 2px; min-width: 0;
+  background: rgba(0,0,0,.24); cursor: pointer; }
+.armadio .fant button.on { background: #fff; }
+.armadio .fant .sw { display: flex; align-items: center; justify-content: center;
+  width: 100%; height: 30px; border-radius: 7px; box-shadow: 0 0 0 1px rgba(0,0,0,.4) inset; }
+.armadio .fant .sw b { font-size: 25px; line-height: 1; }
+
+.armadio .tinte { display: grid; gap: 4px; }
+.armadio .tinte button { height: 27px; border-radius: 7px; border: 3px solid transparent;
+  padding: 0; cursor: pointer; min-width: 0; }
+.armadio .tinte button.on { border-color: #fff; }
+/* la ruota: il sedicesimo posto, per la tinta che non c'e' in fila */
+.armadio .ruota { position: relative; overflow: hidden; border: 3px solid transparent;
+  border-radius: 8px; min-width: 0;
+  background: conic-gradient(#E23D4B,#F97316,#FBBF24,#22C55E,#0EA5E9,#2547C4,#8B5CF6,#EC4899,#E23D4B); }
+.armadio .ruota input { position: absolute; inset: -6px; opacity: 0; cursor: pointer; }
+
+/* la tavolozza degli accessori: si apre sotto il pulsante toccato */
+.armadio .volante { position: absolute; z-index: 30; top: calc(100% + 6px); left: 0;
+  background: #1B1B24; border: 1px solid rgba(255,255,255,.16); border-radius: 14px;
+  padding: 8px; box-shadow: 0 14px 34px rgba(0,0,0,.6);
+  display: grid; grid-template-columns: repeat(8, 34px); gap: 5px; }
+.armadio .volante button { height: 32px; border-radius: 8px; border: 3px solid transparent;
+  padding: 0; cursor: pointer; }
+.armadio .volante button.on { border-color: #fff; }
+.armadio .volante .ruota { height: 32px; }
+.armadio .volante .via { grid-column: span 8; border: none; background: rgba(255,255,255,.1);
+  color: #E9E9F2; border-radius: 9px; height: 30px; font: inherit; font-size: 12px; font-weight: 700; }
+
 .armadio .spento { opacity: .38; pointer-events: none; }
-.armadio .libero { flex: 1 1 190px; min-width: 140px; border: 1px solid rgba(255,255,255,.18);
-  border-radius: 11px; background: rgba(0,0,0,.25); color: #fff; font: inherit; font-size: 13px;
-  padding: 7px 11px; min-height: 36px; }
-.armadio .libero.largo { width: 100%; flex: 1 1 100%; }
-/* La figura e' una colonna: senza azzerare il flex, il flex-basis di
-   190px diventava l'ALTEZZA e il campo del nome cresceva fino a 190px. */
+.armadio .libero { width: 100%; box-sizing: border-box; border: 1px solid rgba(255,255,255,.22);
+  border-radius: 12px; background: rgba(0,0,0,.3); color: #fff; font: inherit; font-size: 15px;
+  padding: 10px 13px; min-height: 46px; }
+/* la riga libera e' grande e ambrata: e' la piu' usata di tutte */
+.armadio .libero.grosso { font-size: 16px; min-height: 48px;
+  border-color: rgba(232,180,76,.55); background: rgba(232,180,76,.09); }
+/* La figura e' una colonna: senza azzerare il flex, il flex-basis
+   diventava l'ALTEZZA e il campo del nome cresceva a dismisura. */
 .armadio .libero.chi { flex: 0 0 auto; width: 100%; box-sizing: border-box; text-align: center;
-  font-weight: 700; min-height: 32px; padding: 5px 8px; }
-.armadio .libero::placeholder { color: rgba(255,255,255,.5); }
+  font-weight: 700; font-size: 13px; min-height: 30px; padding: 4px 6px; border-radius: 10px; }
+.armadio .libero::placeholder { color: rgba(255,255,255,.45); }
 .person-list .invito { color: rgba(255,255,255,.65); font-size: 14.5px; line-height: 1.6;
   padding: 14px 4px 4px; }.ab-voce.pagata { background: var(--ok-soft); }
 .ab-voce.pagata .ab-seg { color: var(--ok); }.ab-gia.vuota { visibility: hidden; }
 
 @media (max-width: 900px) {
-  .armadio { grid-template-columns: 116px 1fr; }
-  .armadio .figura svg { width: 96px; height: 128px; }
+  .armadio { grid-template-columns: 132px 1fr; }
+  .armadio .figura svg { width: 120px; height: 180px; }
+  .armadio .capo svg { max-width: 34px; }
+  .armadio .capo .nm { font-size: 9px; }
   /* Tutti e otto su UNA riga anche stretti: con flex-wrap l'ultimo
      ("Altro") finiva da solo su una riga sua larga tutto il blocco. Si
      stringono invece di andare a capo. */
@@ -2635,6 +2683,31 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
   .ruoli button { flex: 1 1 0; min-width: 0; padding: 5px 1px; }
   .ruoli button .nm { font-size: 10px; }
 }
+/* QUANTE COLONNE.
+   Il numero di colonne lo scrive il codice nello style del blocco,
+   perche' e' un DATO: dodici capi di sopra, otto sotto piu' quattro
+   accessori, quindici tinte piu' la ruota. Scriverlo qui vorrebbe dire
+   tenerlo allineato a mano ogni volta che si aggiunge un capo.
+   Sotto una certa larghezza pero' una fila sola non ci sta piu' — a
+   430px i pulsanti diventavano quattordici pixel, cioe' inservibili —
+   e allora la fila va a capo. Serve !important proprio perche' deve
+   avere la meglio sul numero scritto inline. */
+@media (max-width: 759px) {
+  .armadio .capi { grid-template-columns: repeat(6, 1fr) !important; }
+  .armadio .tinte { grid-template-columns: repeat(8, 1fr) !important; }
+  .armadio .fant { grid-template-columns: repeat(5, 1fr) !important; }
+}
+@media (max-width: 519px) {
+  .armadio { grid-template-columns: 1fr; }
+  .armadio .largo { grid-column: span 1; }
+  .armadio .figura { flex-direction: row; justify-content: center; gap: 10px; }
+  .armadio .figura svg { width: 100px; height: 150px; }
+  .armadio .libero.chi { width: auto; flex: 1 1 auto; }
+  .armadio .capi { grid-template-columns: repeat(4, 1fr) !important; }
+  .armadio .volante { grid-template-columns: repeat(5, 34px); }
+  .armadio .volante .via { grid-column: span 5; }
+}
+
 @media (max-width: 700px) {
   .ruoli button .nm { font-size: 9px; letter-spacing: -.02em; }
 }

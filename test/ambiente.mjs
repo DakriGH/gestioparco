@@ -67,6 +67,7 @@ export function caricaApp() {
   const leggi = f => readFileSync(join(RADICE, f), 'utf8');
   vm.runInContext(leggi('js/icone.js'), ctx, { filename: 'icone.js' });
   vm.runInContext(leggi('js/avatar.js'), ctx, { filename: 'avatar.js' });
+  vm.runInContext(leggi('js/capi.js'), ctx, { filename: 'capi.js' });
 
   /* l'ultima riga di app.js accende l'applicazione: nei test non
      serve, servono le funzioni */
@@ -84,6 +85,7 @@ export function caricaApp() {
     get settings() { return settings; }, set settings(v) { settings = v; },
     get entries() { return entries; }, set entries(v) { entries = v; },
     get draft() { return draft; }, set draft(v) { draft = v; },
+    AV: AV, CAPI: CAPI,
     PAN: PAN, C: C, r2: r2, tocchi: tocchi,
     contoParco: contoParco, contoCrazy: contoCrazy, contoBar: contoBar,
     contoResta: contoResta, contoPagatoParco: contoPagatoParco,
