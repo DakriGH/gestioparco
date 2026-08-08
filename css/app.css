@@ -1132,11 +1132,19 @@ main {
   overflow: hidden;
   min-height: 0;
   opacity: 0;
-  transition: opacity 260ms ease 110ms;
+  /* Il respiro CRESCE insieme alla scheda. Prima compariva tutto
+     insieme nel primo fotogramma mentre l'altezza si apriva piano: il
+     contenuto faceva un salto di dodici pixel proprio all'inizio, ed
+     era quello a far sembrare l'apertura rotta. Il respiro laterale
+     invece non si tocca, se no il testo si stringe mentre scende. */
+  padding: 0 13px;
+  transition: opacity 260ms ease 110ms,
+              padding-top 360ms cubic-bezier(.4,.02,.2,1),
+              padding-bottom 360ms cubic-bezier(.4,.02,.2,1);
 }
 .entry.aperto .e-dentro { opacity: 1; }
 .entry.aperto .e-aperta { grid-template-rows: minmax(0, 1fr); }
-.entry.aperto .e-dentro { padding: 12px 13px 13px; }
+.entry.aperto .e-dentro { padding-top: 12px; padding-bottom: 13px; }
 .entry.aperto .e-riga { border-radius: 16px 16px 0 0; cursor: default; }
 
 .e-fila { display: flex; gap: 9px; flex-wrap: wrap; align-items: center; }
@@ -2174,10 +2182,23 @@ main {
    quello che avanza fino in fondo alla scheda */
 .entry.vola > .e-riga { flex: 0 0 auto; }
 .entry.vola.aperto > .e-aperta { flex: 1 1 auto; min-height: 0; }
-.entry.vola .e-dentro { display: flex; flex-direction: column; min-height: 0; }
-.entry.vola .e-fila,
+.entry.vola .e-dentro { display: flex; flex-direction: column; min-height: 0;
+  padding-left: 10px; padding-right: 10px; }
+.entry.vola.aperto .e-dentro { padding-top: 8px; padding-bottom: 10px; }
 .entry.vola .e-note { flex: 0 0 auto; }
-.entry.vola .e-guscio { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+/* A PANNELLO APERTO LA RIGA DEI COMANDI SPARISCE.
+   I tre comandi rapidi (bambini, Crazy, minuti) stanno gia' nella
+   linguetta Parco, e "Bar & Conto" e' il tasto che hai appena premuto:
+   restavano li' a occupare cinquanta pixel per ripetere cose. "Uscita"
+   non si perde -- e' passata accanto ai soldi, dove si guarda quando
+   si e' finito. */
+.entry.vola .e-fila { display: none; }
+/* Il guscio non mette respiro suo: ce l'hanno gia' il riquadro che lo
+   contiene e il pannello che ci sta dentro, e tre padding annidati
+   attorno alla stessa cosa erano venticinque pixel tolti al pannello
+   per non farci niente. */
+.entry.vola .e-guscio { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column;
+  padding: 0; }
 
 /* Il vuoto sopra la scheda e' il bersaglio per chiudere: la scritta lo
    dice, perche' sfocato e basta sembra solo sfondo e chi non trova la
@@ -2569,6 +2590,9 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
    minimo che hanno di serie andavano a capo e il pannello cresceva di
    74px, mangiandosi il respiro di tutta la schermata */
 .pc-fondo .bc-tasti .btn { min-width: 0; padding: 0 15px; }
+/* si riconosce a colpo d'occhio: e' l'unico che porta via il gruppo */
+.bc-tasti .bc-uscita { background: var(--warn-soft, rgba(232,140,60,.18));
+  color: var(--warn, #E8934C); box-shadow: inset 0 0 0 1.5px currentColor; }
 /* i posti vuoti non devono occupare il loro giro di gap: la fascia
    della modifica e la riga del suo annulla ci sono solo quando servono */
 
@@ -2717,8 +2741,13 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
 .armadio .libero.chi { flex: 0 0 auto; width: 100%; box-sizing: border-box; text-align: center;
   font-weight: 700; font-size: 13px; min-height: 30px; padding: 4px 6px; border-radius: 10px; }
 .armadio .libero::placeholder { color: rgba(255,255,255,.45); }
+/* Il riquadro delle persone tiene il posto del guardaroba anche da
+   chiuso (vedi altezzaArmadio): l'invito si mette in mezzo a quel
+   posto invece di lasciarlo vuoto sopra. */
+.person-list { display: flex; flex-direction: column; }
 .person-list .invito { color: rgba(255,255,255,.65); font-size: 14.5px; line-height: 1.6;
-  padding: 14px 4px 4px; }.ab-voce.pagata { background: var(--ok-soft); }
+  padding: 14px 4px 4px; margin: auto 0; text-align: center; max-width: 46ch;
+  align-self: center; }.ab-voce.pagata { background: var(--ok-soft); }
 .ab-voce.pagata .ab-seg { color: var(--ok); }.ab-gia.vuota { visibility: hidden; }
 
 @media (max-width: 900px) {

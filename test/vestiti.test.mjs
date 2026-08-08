@@ -395,9 +395,12 @@ gruppo('Quanto rimpicciolire, e quanto vuoto lasciare sopra');
     [[1, 900], [900, 1], [0, 0], [-5, 800], [800, -5], [NaN, 800]]
       .every(([v, h]) => { const r = k(v, h); return r <= 1 && r >= 0.6; }));
 
+  /* Il vuoto in cima e' il bersaglio per chiudere: deve esserci sempre,
+     ma stretto — ogni pixel qui e' un pixel in meno per il pannello,
+     che dentro la scheda deve venire grande quasi quanto in "+ Nuovo". */
   const sopra = app.spazioSopra;
-  prova('il vuoto sopra c’è sempre, anche su schermi piccoli', sopra() >= 76);
-  prova('e non diventa mai mezza pagina', sopra() <= 170);
+  prova('il vuoto sopra c’è sempre, e si prende col pollice', sopra() >= 40);
+  prova('e non si mangia la scheda', sopra() <= 60);
 }
 
 /* ---------- il verdetto ---------- */
