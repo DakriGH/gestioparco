@@ -1479,6 +1479,17 @@ main {
   gap: 6px;
 }
 .e-cella .k { font-size: 11.5px; color: rgba(255, 255, 255, 0.75); }
+/* LA CELLA DEL CRAZY DICE IN CHE GIRO SEI.
+   Qui il piu' apre un giro NUOVO -- la scheda si riapre al volo
+   perche' sono tornati a saltare, non per correggere il numero di
+   prima -- e senza scritta uno regalerebbe otto minuti credendo di
+   aggiustare un numero. La riga sotto e' piccola e spenta finche' il
+   giro e' vuoto, e si accende quando ci sale il primo. */
+.e-cella.e-crz { flex-wrap: wrap; row-gap: 0; }
+.e-crz-k { flex: 1 0 100%; text-align: center; font-size: 9.5px; font-weight: 800;
+  letter-spacing: .07em; text-transform: uppercase; color: rgba(255, 255, 255, 0.45);
+  line-height: 1.2; margin-top: -1px; }
+.e-crz-k.acceso { color: #C9B6FF; }
 .e-cella .v {
   font-family: 'Fredoka', sans-serif;
   font-size: 19px;

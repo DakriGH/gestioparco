@@ -343,6 +343,24 @@ gruppo('Nessuna funzione scritta e poi dimenticata');
     morte.length <= restiNoti.length, 'adesso sono ' + morte.length + ': ' + morte.join(', '));
 }
 
+gruppo('Nella fascetta della lista il Crazy apre un giro nuovo');
+{
+  /* Li' non si sta registrando: si segna una cosa successa ADESSO,
+     perche' il gruppo e' tornato a saltare. Quindi il piu' non
+     aggiunge al giro di prima -- quello e' finito -- ma ne apre uno
+     nuovo. E deve essere SCRITTO, se no uno preme credendo di
+     correggere il numero di prima e regala otto minuti. */
+  prova('la cella del Crazy e una cosa sua', /function mkCellaCrazy/.test(APP));
+  prova('il primo tocco apre un giro',
+    /function mkCellaCrazy[\s\S]{0,900}if \(!stato\.aperto\) \{[\s\S]{0,120}giroNuovo\(entry\)/.test(APP));
+  prova('e i tocchi dopo contano in QUEL giro',
+    /function mkCellaCrazy[\s\S]{0,1100}cambiaGiro\(entry, stato\.i, 1\)/.test(APP));
+  prova('la fascetta scrive in che giro sei', APP.includes('nuovo giro') && APP.includes('e-crz-k'));
+  prova('e la scritta ha il suo aspetto', /\.e-crz-k \{/.test(CSS));
+  prova('riaprendo la scheda il giro si chiude',
+    /giroLista = \{ id: null, i: -1 \}/.test(APP));
+}
+
 gruppo('Il vestito cambiato si vede subito anche nella lista');
 {
   /* Si vestiva qualcuno dal conto e la figura piccola della scheda "In
@@ -353,7 +371,9 @@ gruppo('Il vestito cambiato si vede subito anche nella lista');
   prova('e la firma di chi c e comprende il vestito',
     /function firmaGente[\s\S]{0,220}JSON\.stringify\(p\.avatar\)/.test(APP));
   prova('syncCard se ne accorge e la riveste',
-    /function syncCard[\s\S]{0,1400}sigGente !== firma[\s\S]{0,120}vestiRiga\(r, entry\)/.test(APP));
+    /sigGente !== firma[\s\S]{0,140}vestiRiga\(r, entry\)/.test(APP));
+  prova('e ritinge anche il pallino del bracciale',
+    /function syncCard[\s\S]{0,2600}aggiornaPallino\(entry\)/.test(APP));
   prova('la scheda si tiene i pezzi da rivestire',
     /cardRefs\.set\([\s\S]{0,320}avBox, nome, tratti, apriParco, sigGente/.test(APP));
 }

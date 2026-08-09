@@ -3192,7 +3192,7 @@ function entryCard(entry) {
     return { box, val, minus };
   };
   const sKids = mkCella('\ud83e\uddd2', 'children', 1);
-  const sCrazy = mkCella('\ud83e\udd38', 'crazyJumping', 1);
+  const sCrazy = mkCellaCrazy(entry, fila);
   const sTime = mkCella(null, 'durationMinutes', 5);
   if (entry.payLater) {
     sTime.box.classList.add('hidden');
@@ -3269,6 +3269,11 @@ function entryCard(entry) {
     const gia = card.classList.contains('aperto');
     chiudiSchede(null);
     if (!gia) card.classList.add('aperto');
+    /* aprire (o chiudere) la fascetta chiude il giro che si stava
+       contando: la volta dopo il piu' ne apre uno nuovo, che e' il
+       motivo per cui uno riapre la scheda -- sono tornati a saltare */
+    giroLista = { id: null, i: -1 };
+    if (cardRefs.get(entry.id)) syncCard(entry);
   };
   aperta.onclick = (ev) => ev.stopPropagation();
 
@@ -4245,7 +4250,13 @@ function apriMenuBracciale(ancora, entry) {
 }
 
 /* Ritinge il pallino sulla riga senza rifare la scheda: se la
-   ridisegnassi, il menu aperto sparirebbe a ogni colore provato. */
+   ridisegnassi, il menu aperto sparirebbe a ogni colore provato.
+   VA CHIAMATA ANCHE QUANDO CAMBIA L'ORA D'INGRESSO: col bracciale su
+   "Auto" il colore lo decide la fascia oraria, quindi spostando
+   l'orario dal conto il pallino qui restava quello di prima -- e il
+   bracciale e' proprio la cosa che si guarda per riconoscere chi esce.
+   Il titolo si rifa' con lui, se no diceva un colore e ne mostrava un
+   altro. */
 function aggiornaPallino(entry) {
   const r = cardRefs.get(entry.id);
   if (!r || !r.wrist) return;
@@ -4253,6 +4264,10 @@ function aggiornaPallino(entry) {
   const col = entry.braceletCustom ? entry.braceletColor : (slot ? slot.color : null);
   r.wrist.classList.toggle('vuoto', !col);
   r.wrist.style.background = col || '';
+  r.wrist.title = col
+    ? 'Bracciale ' + ((slot && !entry.braceletCustom && slot.label)
+        ? slot.label : (AV.colorName(col, 0) || '')) + ' \u2014 tocca per cambiare'
+    : 'Nessun bracciale \u2014 tocca per sceglierlo';
 }
 
 /* chiude i pannelli aperti; con "tranne" si risparmia una scheda */
@@ -4504,6 +4519,71 @@ function firmaGente(entry) {
     p.id + '|' + p.role + '|' + (p.name || '') + '|' + JSON.stringify(p.avatar)).join('\u00a7');
 }
 
+/* ══════════════════════════════════════════════════════════
+   IL CRAZY NELLA FASCETTA DELLA LISTA
+   Qui non si sta registrando un ingresso: si sta segnando una cosa
+   successa ADESSO, con la scheda aperta al volo perche' il gruppo e'
+   tornato a saltare. Quindi il piu' non aggiunge al giro di prima --
+   quello e' finito -- ma APRE UN GIRO NUOVO, e i tocchi seguenti
+   contano chi sale in quel giro.
+   La fascetta lo scrive: "1\u00ba giro" mentre stai contando, e "nuovo
+   giro" finche' non e' salito nessuno. Senza quella scritta uno
+   premerebbe il piu' credendo di correggere il numero di prima, e
+   invece regala otto minuti.
+   Il giro aperto qui vale finche' la fascetta resta com'e': si chiude
+   riaprendo la scheda. */
+let giroLista = { id: null, i: -1 };
+
+/* quale giro sta contando la fascetta di questo ingresso, e quanti ci
+   sono saliti */
+function giroDiLista(entry) {
+  const g = conConto(entry, () => giriCrazy(entry));
+  if (giroLista.id === entry.id && giroLista.i >= 0 && giroLista.i < g.length) {
+    return { i: giroLista.i, n: g[giroLista.i], aperto: true };
+  }
+  return { i: -1, n: 0, aperto: false };
+}
+
+function mkCellaCrazy(entry, fila) {
+  const box = el('div', 'e-cella e-crz');
+  const minus = el('button', null, '\u2212');
+  const kk = el('span', 'k', '\ud83e\udd38');
+  const val = el('span', 'v num', '0');
+  const plus = el('button', null, '+');
+  const nota = el('span', 'e-crz-k', 'nuovo giro');
+  const tocca = (d) => (ev) => {
+    ev.stopPropagation();
+    conConto(entry, () => {
+      let stato = giroDiLista(entry);
+      if (d > 0) {
+        /* il primo tocco apre il giro: da qui in poi si conta li' */
+        if (!stato.aperto) {
+          giroNuovo(entry);
+          giroLista = { id: entry.id, i: giriCrazy(entry).length - 1 };
+          stato = giroDiLista(entry);
+        }
+        cambiaGiro(entry, stato.i, 1);
+      } else if (stato.aperto) {
+        cambiaGiro(entry, stato.i, -1);
+        /* svuotato del tutto: il giro non c'e' piu' */
+        if (giriCrazy(entry).length <= stato.i) giroLista = { id: null, i: -1 };
+      }
+    });
+    saveEntries();
+    syncCard(entry);
+    tick();
+  };
+  minus.onclick = tocca(-1);
+  plus.onclick = tocca(1);
+  box.appendChild(minus);
+  box.appendChild(kk);
+  box.appendChild(val);
+  box.appendChild(plus);
+  box.appendChild(nota);
+  fila.appendChild(box);
+  return { box, val, minus, nota };
+}
+
 function syncCard(entry) {
   const r = cardRefs.get(entry.id);
   if (!r) return;
@@ -4514,10 +4594,19 @@ function syncCard(entry) {
   r.sKids.val.textContent = kids;
   if (r.bimbiV) r.bimbiV.textContent = kids;
   if (r.crzV) { r.crzV.textContent = crazy; r.crz.classList.toggle('hidden', crazy <= 0); }
-  r.sCrazy.val.textContent = crazy;
+  /* nella fascetta il numero e' quello del GIRO che si sta contando,
+     non il totale delle salite: sono il piu' e il meno qui accanto a
+     muoverlo, e il totale sta nella pastiglia della riga sopra */
+  const gl = giroDiLista(entry);
+  r.sCrazy.val.textContent = gl.aperto ? gl.n : 0;
+  if (r.sCrazy.nota) {
+    r.sCrazy.nota.textContent = !gl.aperto ? 'nuovo giro'
+      : gl.n === 0 ? 'nuovo giro' : (gl.i + 1) + '\u00ba giro';
+    r.sCrazy.nota.classList.toggle('acceso', gl.aperto && gl.n > 0);
+  }
   r.sTime.val.textContent = entry.payLater ? '\u2014' : entry.durationMinutes + '\u2032';
   r.sKids.minus.disabled = kids <= 0;
-  r.sCrazy.minus.disabled = crazy <= 0;
+  r.sCrazy.minus.disabled = !gl.aperto || gl.n <= 0;
   r.sTime.minus.disabled = num(entry.durationMinutes, 0) <= 5;
 
   /* IL VESTITO CAMBIATO SI VEDE SUBITO. syncCard() gira a ogni tocco
@@ -4530,6 +4619,9 @@ function syncCard(entry) {
     r.sigGente = firma;
     vestiRiga(r, entry);
   }
+  /* il pallino del bracciale: col "Auto" il colore dipende dall'ora
+     d'ingresso, che si puo' spostare dal conto */
+  aggiornaPallino(entry);
 
   soldiDi(r, entry, due);
 
