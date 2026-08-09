@@ -314,6 +314,28 @@ gruppo("L'aria che avanza va al guardaroba, e non schiaccia nessuno");
     /\.testa-viola h2 \{[^}]*margin:\s*0/.test(CSS));
 }
 
+gruppo('I giri del Crazy stanno nella sua card');
+{
+  /* Il tempo del Crazy si conta a giri, non a teste: tre che salgono
+     insieme sono un giro solo. E in giri diversi sale chi vuole --
+     "3 poi 2" non e' "5" -- quindi i giri si scrivono uno per uno. */
+  prova('i giri sono una lista, non un numero', /function giriCrazy/.test(APP));
+  prova('e i minuti si contano sui giri',
+    /function minutiCrazy[\s\S]{0,160}turniCrazy\(e\) \* /.test(APP));
+  prova('il piu e il meno della card lavorano sul giro aperto',
+    /function metteCrazy[\s\S]{0,600}g\[g\.length - 1\]\+\+/.test(APP));
+  prova('e c e un tasto per aprirne un altro', APP.includes('data-giro="crazy"'));
+  prova('che ci fa salire (e pagare) il primo',
+    /function giroNuovo[\s\S]{0,200}concat\(\[1\]\)/.test(APP));
+  prova('il tasto sta in riga col piu, non sotto: la card non cresce',
+    /\.bc-riga-q \{[^}]*display:\s*flex/.test(CSS) && APP.includes('bc-riga-q'));
+  prova('e la composizione si legge sulla riga del prezzo',
+    /\.bc-gi \{[^}]*margin-left/.test(CSS) && APP.includes('bcGiriTesto'));
+  /* i soldi restano a testa: e' il tempo che non si moltiplica */
+  prova('i soldi seguono le salite, non i giri',
+    /const crazy = clamp\(entry\.crazyJumping, 0, 1e6\) \* settings\.crazyJumpingPrice/.test(APP));
+}
+
 gruppo('Estendi tempo: una sezione sua, e i prezzi veri');
 {
   /* I tagli rapidi SOSTITUISCONO la durata; questi tasti la

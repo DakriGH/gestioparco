@@ -79,22 +79,43 @@ gruppo('Il Crazy Jumping', () => {
   ok('tre che salgono INSIEME sono un giro solo', minuti, 60 + extra);
   ok('ed e un giro, non tre', ctx.turniCrazy(c), 1);
 
-  /* se tornano a saltare, quello e' un altro giro */
-  c.crazyTurni = 2;
-  ok('un altro giro, altri minuti',
+  ok('e sono scritti uno per uno', ctx.giriCrazy(c), [3]);
+
+  /* IN GIRI DIVERSI SALE CHI VUOLE. Il secondo giro comincia con uno
+     -- quello che ci sale e paga -- e gli altri si aggiungono col piu'
+     della card, che lavora sempre sul giro APERTO. */
+  ctx.giroNuovo(c);
+  ok('un altro giro: ci sale il primo', ctx.giriCrazy(c), [3, 1]);
+  ok('e le salite pagate diventano quattro', c.crazyJumping, 4);
+  ok('due giri, due blocchi di minuti',
      Math.round((ctx.endTimeOf(c) - c.startTime) / 60000), 60 + 2 * extra);
-  ok('ma i soldi non cambiano: si paga chi sale, non quante volte',
-     ctx.contoCrazy(), 3 * ctx.settings.crazyJumpingPrice);
+  ok('e i soldi seguono le salite, non i giri',
+     ctx.contoCrazy(), 4 * ctx.settings.crazyJumpingPrice);
 
-  /* non si possono fare piu' giri delle salite pagate */
-  c.crazyTurni = 9;
-  ok('i giri non superano le salite pagate', ctx.turniCrazy(c), 3);
+  ctx.metteCrazy(c, 5);
+  ok('il piu’ aggiunge al giro aperto', ctx.giriCrazy(c), [3, 2]);
+  ok('sempre due giri', ctx.turniCrazy(c), 2);
+  ok('cinque salite: tre la prima volta, due la seconda', c.crazyJumping, 5);
 
-  /* e chi arriva da una versione vecchia (senza il campo) prende un
-     giro solo: e' la lettura giusta di quei dati */
+  /* il meno svuota il giro aperto, e quando resta vuoto sparisce --
+     e con lui i suoi minuti */
+  ctx.metteCrazy(c, 3);
+  ok('svuotato il secondo giro, resta il primo', ctx.giriCrazy(c), [3]);
+  ok('e i minuti tornano a un blocco solo',
+     Math.round((ctx.endTimeOf(c) - c.startTime) / 60000), 60 + extra);
+
+  /* e chi arriva da una versione vecchia (senza il campo) vale un giro
+     solo con tutti dentro: e' la lettura giusta di quei dati */
   const vecchio = ctx.normalizeEntries([{ id: 'v', children: 2, crazyJumping: 4,
     durationMinutes: 60, startTime: Date.now(), status: 'active' }])[0];
-  ok('i dati vecchi valgono un giro', vecchio.crazyTurni, 1);
+  ok('i dati vecchi valgono un giro solo', vecchio.crazyGiri, [4]);
+
+  /* e una lista che non torna coi conti si riallinea invece di
+     raccontare due storie diverse */
+  const storto = ctx.normalizeEntries([{ id: 's', children: 1, crazyJumping: 5,
+    crazyGiri: [2, 2, 'due', -1], durationMinutes: 60, startTime: Date.now(), status: 'active' }])[0];
+  ok('una lista storta si rimette in riga',
+     storto.crazyGiri.reduce((a, b) => a + b, 0), storto.crazyJumping);
 
   /* senza nessuno che sale, non c'e' nessun giro */
   const senza = conto({ children: 1, crazyJumping: 0, durationMinutes: 60 });
