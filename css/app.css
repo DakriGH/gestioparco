@@ -1479,6 +1479,15 @@ main {
   gap: 6px;
 }
 .e-cella .k { font-size: 11.5px; color: rgba(255, 255, 255, 0.75); }
+/* IL BRACCIALE DENTRO LA FASCETTA: la fila dei colori aperta, non un
+   menu che si apre. Il pallino nella riga resta per guardarlo da
+   lontano; per cambiarlo si apre la scheda e si tocca il colore. */
+.e-cella.e-brc-cella { gap: 8px; padding: 5px 10px; }
+.e-brc-cella .wrist-row { display: flex; gap: 6px; flex-wrap: nowrap; }
+.e-brc-cella .wrist-dot { width: 34px; height: 34px; }
+.e-brc-cella .wrist-dot.senza, .e-brc-cella .wrist-dot.auto {
+  width: auto; padding: 0 10px; height: 34px; font-size: 11.5px; }
+
 /* LA CELLA DEL CRAZY DICE IN CHE GIRO SEI.
    Qui il piu' apre un giro NUOVO -- la scheda si riapre al volo
    perche' sono tornati a saltare, non per correggere il numero di

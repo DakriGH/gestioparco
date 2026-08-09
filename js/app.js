@@ -303,7 +303,12 @@ function freshDraft() {
     people: [],
     barItems: [],
     braceletColor: null,
-    braceletCustom: true,   // si parte "senza": il colore va scelto apposta
+    /* SI PARTE SU AUTO. Prima si partiva "senza", con l'idea che il
+       colore andasse messo apposta per non scordarselo -- ma al banco
+       il bracciale giusto e' quasi sempre quello della fascia oraria,
+       e partire senza voleva dire sceglierlo a mano ogni volta (o
+       scordarselo davvero). Auto lo mette da se' e resta cambiabile. */
+    braceletCustom: false,
     /* il conto vive qui insieme all'ingresso: la linguetta aperta, che
        cosa e' gia' stato pagato riga per riga, e le due sezioni grosse */
     /* il conto vive qui insieme all'ingresso, con la stessa forma che
@@ -3211,6 +3216,7 @@ function entryCard(entry) {
   const sKids = mkCella('\ud83e\uddd2', 'children', 1);
   const sCrazy = mkCellaCrazy(entry, fila);
   const sTime = mkCella(null, 'durationMinutes', 5);
+  const sBrac = mkCellaBracciale(entry, fila);
   if (entry.payLater) {
     sTime.box.classList.add('hidden');
     fila.appendChild(el('div', 'e-later-tag', '\u23f3 Tempo aperto'));
@@ -3295,7 +3301,7 @@ function entryCard(entry) {
   aperta.onclick = (ev) => ev.stopPropagation();
 
   cardRefs.set(entry.id, {
-    card, count, range, sKids, sCrazy, sTime,
+    card, count, range, sKids, sCrazy, sTime, sBrac,
     dueVal: soldiV, soldiK, soldi, wrist, bimbiV, crzV, crz, countK,
     payPanel, payBtn,
     /* servono a rivestire la riga quando cambia un vestito */
@@ -4561,6 +4567,32 @@ function giroDiLista(entry) {
   return { i: -1, n: 0, aperto: false };
 }
 
+/* IL BRACCIALE, DENTRO LA FASCETTA.
+   C'era solo il pallino nella riga, che apre un menu a comparsa: un
+   bersaglio da trentaquattro pixel e una tendina che si chiude al
+   primo tocco fuori. Al banco, con la fila davanti, non e' un tasto:
+   e' un tiro al bersaglio.
+   Qui invece la fila dei colori sta APERTA dentro la scheda, grande
+   come le altre celle: si apre la scheda e si tocca il colore. Il
+   pallino nella riga resta -- e' lui che si guarda da lontano -- e i
+   due si tengono allineati da soli. */
+function mkCellaBracciale(entry, fila) {
+  const box = el('div', 'e-cella e-brc-cella');
+  box.appendChild(el('span', 'k', '\ud83c\udf97\ufe0f'));
+  const riga = el('span', 'wrist-row');
+  box.appendChild(riga);
+  costruisciBracciali(riga, (hex, custom) => {
+    entry.braceletColor = hex;
+    entry.braceletCustom = custom;
+    saveEntries();
+    sincronizzaBracciali(riga, entry.startTime, entry.braceletColor, entry.braceletCustom);
+    aggiornaPallino(entry);
+  });
+  sincronizzaBracciali(riga, entry.startTime, entry.braceletColor, entry.braceletCustom);
+  fila.appendChild(box);
+  return { box, riga };
+}
+
 function mkCellaCrazy(entry, fila) {
   const box = el('div', 'e-cella e-crz');
   const minus = el('button', null, '\u2212');
@@ -4637,8 +4669,12 @@ function syncCard(entry) {
     vestiRiga(r, entry);
   }
   /* il pallino del bracciale: col "Auto" il colore dipende dall'ora
-     d'ingresso, che si puo' spostare dal conto */
+     d'ingresso, che si puo' spostare dal conto. E con lui la fila
+     dentro la fascetta, che deve dire la stessa cosa. */
   aggiornaPallino(entry);
+  if (r.sBrac && r.sBrac.riga) {
+    sincronizzaBracciali(r.sBrac.riga, entry.startTime, entry.braceletColor, entry.braceletCustom);
+  }
 
   soldiDi(r, entry, due);
 
