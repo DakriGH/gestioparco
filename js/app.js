@@ -1299,6 +1299,10 @@ function syncPeople(container, people, onChange) {
   }).join('') + '</div>';
 
   container.innerHTML = ruoli + armadioDi(chi, chi ? (container.dataset.tav || '') : '');
+  /* col guardaroba aperto il riquadro si prende l'altezza che avanza,
+     e dentro se la spartiscono gli stacchi. Da chiuso no: un riquadro
+     mezzo vuoto stirato a tutta pagina e' solo un buco. */
+  if (PAN.root && PAN.root.contains(container)) PAN.root.classList.toggle('veste', !!chi);
   /* aprire o chiudere l'armadio cambia l'altezza di trecento pixel in
      un colpo: il pannello va rimisurato subito, se no il conto in fondo
      esce dallo schermo */
@@ -1545,6 +1549,20 @@ function accTogli(av, acc, ruolo) {
   else if (acc === 'scarpe') av.shoes = { style: 'sneakers', color: '#F4F6F8' };
 }
 
+/* LO STACCO FRA UN GRUPPO E L'ALTRO.
+   Le fantasie e i colori erano attaccati: due pixel, e i due bersagli
+   invisibili che allargano le pastiglie (tre pixel in giu' le
+   fantasie, cinque in su i colori) si SOVRAPPONEVANO -- toccando il
+   bordo basso di una fantasia si sceglieva un colore. Non e' che non
+   si capiva dove si stava cliccando: davvero si prendeva l'altro.
+   Adesso in mezzo c'e' uno stacco, e lo stacco e' ELASTICO: tiene il
+   minimo che serve perche' i bersagli non si tocchino, e quando sopra
+   avanza dello spazio -- in "+ Nuovo" ne avanza sempre, e su un tablet
+   alto anche nella scheda che vola -- se lo prende invece di lasciarlo
+   morto in fondo al vano. */
+const STACCO = '<i class="stacco"></i>';
+const STACCO_FORTE = '<i class="stacco forte"></i>';
+
 function armadioDi(p, tavolozzaAperta) {
   /* NIENTE INVITO, e il riquadro resta basso.
      Questa schermata serve anche solo per il bar o per il solo Crazy:
@@ -1612,15 +1630,15 @@ function armadioDi(p, tavolozzaAperta) {
       '<input class="libero chi" placeholder="' + esc(roleOf(p.role).label) + '" value="' +
         esc(p.name || '') + '" data-campo="name"></div>' +
     '<div class="roba">' +
-      '<span class="et">Sopra</span>' + capiSopra +
-      '<span class="et">Fantasia</span>' + fantasie +
+      '<span class="et">Sopra</span>' + capiSopra + STACCO +
+      '<span class="et">Fantasia</span>' + fantasie + STACCO_FORTE +
       /* niente etichetta "Colore del sopra": una fila di pastiglie
          colorate attaccata sotto i capi non puo' essere altro, e due
          righe di scritta sono venti pixel che al guardaroba servono
          per starci dentro tutto */
-      tinte('top') +
+      tinte('top') + STACCO +
       '<span class="et">Sotto' + (lungo ? '<span class="spento-k">col vestito lungo non serve</span>' : '') +
-        '</span>' + capiSotto +
+        '</span>' + capiSotto + STACCO_FORTE +
       tinte('pants') +
     '</div>' +
     /* la riga libera passa SOTTO a tutta larghezza: al banco e' quella

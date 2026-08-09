@@ -266,6 +266,54 @@ gruppo('L’avviso di chi sfora viene a cercarti');
   prova('e se ne va da solo', /setTimeout\(\(\) => \{[\s\S]{0,120}a\.classList\.remove\('su'\)/.test(APP));
 }
 
+gruppo('Nel guardaroba i bersagli non si pestano i piedi');
+{
+  /* IL GUASTO CHE C'ERA. Le pastiglie del guardaroba sono piccole, e
+     per farle prendere bene ognuna si porta dietro un rettangolo
+     invisibile piu' largo di quello che si vede. Fantasie e colori
+     erano due file attaccate -- due pixel -- e quei due rettangoli si
+     SOVRAPPONEVANO: toccando il bordo basso di una fantasia si
+     cambiava il colore. Non era un'impressione, capitava davvero.
+     Qui si rifa' il conto con i numeri veri del CSS: lo stacco fra le
+     due file deve essere almeno quanto i due bersagli sporgono. */
+  const num = (re) => { const m = CSS.match(re); return m ? parseFloat(m[1]) : NaN; };
+  const sporgeFant = -num(/\.armadio \.fant button::after \{[^}]*inset:\s*(-?[\d.]+)px/);
+  const sporgeTinte = -num(/\.armadio \.tinte button::after \{[^}]*inset:\s*(-?[\d.]+)px/);
+  const stacco = num(/\.armadio \.stacco\.forte \{[^}]*min-height:\s*([\d.]+)px/);
+  prova('i due bersagli sporgono ' + sporgeFant + ' e ' + sporgeTinte + ' pixel',
+    sporgeFant > 0 && sporgeTinte > 0);
+  prova('lo stacco fra le due file ne tiene ' + stacco + ': non si toccano',
+    stacco >= sporgeFant + sporgeTinte,
+    'servono almeno ' + (sporgeFant + sporgeTinte) + 'px');
+
+  /* e che gli stacchi ci siano davvero, tutti e quattro */
+  prova('il guardaroba mette quattro stacchi', (APP.match(/STACCO(_FORTE)?\b/g) || []).length >= 6);
+  prova('due sono forti: fantasia/colore e capi/colore',
+    (APP.match(/STACCO_FORTE/g) || []).length >= 3);
+}
+
+gruppo("L'aria che avanza va al guardaroba, e non schiaccia nessuno");
+{
+  /* Il riquadro si allunga SOLO mentre si veste qualcuno, e solo per
+     crescere: `flex: 1 0 auto`. Con l'1 in mezzo -- cioe' potendo
+     restringersi -- su uno schermo basso invece di far scorrere il
+     vano schiaccerebbe i capi, che e' lo stesso guasto delle card del
+     bar tornato da un'altra porta. */
+  prova('il pannello sa quando si sta vestendo', /classList\.toggle\('veste'/.test(APP));
+  const blocco = (CSS.match(/\.pan-conto\.veste[^{]*\{[^}]*\}/g) || []).join(' ');
+  prova('e allora il riquadro si allunga', /flex:\s*1 0 auto/.test(blocco));
+  prova('ma puo solo crescere, mai schiacciare',
+    !/\.pan-conto\.veste[^{]*\{[^}]*flex:\s*1 1 /.test(CSS));
+  /* gli stacchi elastici hanno un tetto: su uno schermo altissimo il
+     guardaroba non deve diventare una lista sparpagliata */
+  prova('gli stacchi hanno un minimo e un massimo',
+    /\.armadio \.stacco \{[^}]*min-height:[^}]*max-height:/.test(CSS));
+  prova('e cosi le file dei capi', /\.armadio \.roba > \.capi[^{]*\{[^}]*max-height:/.test(CSS));
+  /* il margine di serie del titolo: 25 pixel che non serviva a niente */
+  prova('il titolo di "Chi accompagna" non si porta il margine del browser',
+    /\.testa-viola h2 \{[^}]*margin:\s*0/.test(CSS));
+}
+
 gruppo('Il conto sopra o sotto, a scelta');
 {
   /* Non c'e' una risposta giusta: sotto e' dove arriva il pollice,

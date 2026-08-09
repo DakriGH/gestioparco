@@ -3060,7 +3060,13 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
    I ruoli su una riga sola, icona sopra e nome sotto: si trovano a
    colpo d'occhio e non rubano altezza. */
 .testa-viola { display: flex; align-items: center; }
-.testa-viola h2 { flex: 1; }
+/* VENTICINQUE PIXEL REGALATI. Il titolo delle altre card e' figlio
+   diretto della card e prende il `margin: 0` di `.card.blk > h2`; qui
+   sta dentro `.testa-viola`, quel `>` non lo prendeva e restava il
+   margine di serie del browser -- 12,45px sopra e sotto. Risultato:
+   l'intestazione di "Chi accompagna" era alta 52px contro i 28 di
+   tutte le altre. Recuperati, e vanno all'armadio. */
+.testa-viola h2 { flex: 1; margin: 0; }
 .butta { margin-right: 13px; border: none; border-radius: 11px; padding: 3px 11px; min-height: 28px;
   background: rgba(0,0,0,.28); color: rgba(255,255,255,.92); font: inherit; font-size: 12.5px;
   font-weight: 700; cursor: pointer; transition: transform .08s ease; }
@@ -3096,9 +3102,25 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
    altezza di prima e' larga trentotto pixel in meno -- che vanno tutti
    ai capi qui accanto */
 .armadio .figura svg { display: block; width: 99px; height: 206px; }
-.armadio .roba { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+/* ══════════════════════════════════════════════════════════
+   GLI STACCHI, E COME SI SPARTISCONO L'ARIA
+   La colonna dei capi non ha piu' un gap uguale per tutti: l'etichetta
+   sta ATTACCATA alla sua fila -- due pixel, sono la stessa cosa -- e
+   fra un gruppo e l'altro c'e' uno stacco vero.
+   Gli stacchi sono elastici. Il minimo e' quello che serve perche' i
+   bersagli invisibili non si tocchino: le fantasie si allargano di tre
+   pixel in giu', i colori di cinque in su, quindi dove sono attaccati
+   ci vogliono almeno otto pixel e ce ne stanno undici. Il massimo
+   evita che su uno schermo altissimo il guardaroba diventi una lista
+   sparpagliata.
+   ══════════════════════════════════════════════════════════ */
+.armadio .roba { min-width: 0; display: flex; flex-direction: column; gap: 0; }
+.armadio .stacco { display: block; flex: 1.4 1 auto; min-height: 6px; max-height: 30px; }
+/* forte = qui sotto e sopra ci sono due file di pulsanti diversi e
+   nessuna scritta a dividerle: e' il posto dove si sbagliava */
+.armadio .stacco.forte { min-height: 11px; }
 .armadio .et { font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
-  color: rgba(255,255,255,.62); margin-bottom: 0; display: block; line-height: 1; }
+  color: rgba(255,255,255,.62); margin-bottom: 2px; display: block; line-height: 1; }
 
 /* I CAPI DISEGNATI. Prima erano emoji: 👕 e 🧥 al banco sono la stessa
    macchia colorata, e nessuna emoji sa dirti di che colore e' il capo
@@ -3142,17 +3164,32 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
   text-transform: none; letter-spacing: 0; margin-left: 6px; }
 
 /* le fantasie: grandi e senza didascalia, si riconoscono a vista */
+/* le file crescono un po' anche loro, se c'e' da crescere: una
+   pastiglia alta ventuno pixel si prende male, e i pixel che avanzano
+   fanno piu' comodo qui che vuoti in fondo al vano.
+   Ordine di servizio: prima gli stacchi (crescono di piu', 1.4 contro
+   1), poi i pulsanti. E' la separazione il problema, non la misura. */
+.armadio .roba > .fant, .armadio .roba > .tinte { flex: 1 1 auto; }
+/* anche le due file dei capi, con misura: un pulsante alto cento pixel
+   e' comodo, uno alto centocinquanta e' un cartellone. Il disegno e il
+   nome restano in mezzo mentre il pulsante cresce. */
+.armadio .roba > .capi, .armadio .roba > .sottoblocco { flex: 1 1 auto; max-height: 100px; }
+.armadio .sottoblocco > .capi { height: 100%; }
+.armadio .capo { justify-content: center; }
+.armadio .roba > .fant { min-height: 27px; max-height: 33px; }
+.armadio .roba > .tinte { min-height: 21px; max-height: 30px; }
 .armadio .fant { display: grid; gap: 5px; }
 .armadio .fant button { border: none; border-radius: 9px; padding: 2px; min-width: 0;
   background: rgba(0,0,0,.24); cursor: pointer; }
 .armadio .fant button.on { background: #fff; }
 .armadio .fant .sw { display: flex; align-items: center; justify-content: center;
-  width: 100%; height: 23px; border-radius: 7px; box-shadow: 0 0 0 1px rgba(0,0,0,.4) inset; }
+  width: 100%; height: 100%; min-height: 23px; border-radius: 7px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.4) inset; }
 .armadio .fant .sw b { font-size: 25px; line-height: 1; }
 
 .armadio .tinte { display: grid; gap: 4px; }
-.armadio .tinte button { height: 21px; border-radius: 7px; border: 3px solid transparent;
-  padding: 0; cursor: pointer; min-width: 0; position: relative; }
+.armadio .tinte button { height: 100%; min-height: 21px; border-radius: 7px;
+  border: 3px solid transparent; padding: 0; cursor: pointer; min-width: 0; position: relative; }
 /* IL BERSAGLIO E' PIU' GRANDE DEL QUADRATINO, e non sposta niente.
    Le pastiglie sono alte ventitre pixel -- e' il prezzo di far stare
    il guardaroba aperto dentro la scheda senza barre di scorrimento --
@@ -3222,6 +3259,23 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.35); }
 .ruota-ora b { font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 700;
   color: #E9E9F2; text-transform: capitalize; }
+
+/* L'ARIA CHE AVANZA VA AL GUARDAROBA.
+   Prima restava morta in fondo al vano: in "+ Nuovo" erano centotrenta
+   pixel di niente sotto l'ultima fila, mentre due pastiglie sopra si
+   toccavano. Adesso, e SOLO mentre si veste qualcuno, il riquadro si
+   prende quello che avanza e lo passa giu' fino agli stacchi.
+   `flex: 1 0 auto` e non `1 1 auto`: puo' solo CRESCERE. Se il posto
+   non basta -- la scheda che vola su uno schermo basso -- nessuno si
+   schiaccia e il vano scorre come ha sempre fatto. */
+.pan-conto.veste .pc-parco,
+.pan-conto.veste .sec-people,
+.pan-conto.veste .sec-people > .blk-in,
+.pan-conto.veste .pc-people { flex: 1 0 auto; min-height: 0; }
+.pan-conto.veste .sec-people,
+.pan-conto.veste .sec-people > .blk-in,
+.pan-conto.veste .pc-people { display: flex; flex-direction: column; }
+.pan-conto.veste .armadio { flex: 1 0 auto; grid-template-rows: minmax(0, 1fr) auto; }
 
 /* LA TAVOLOZZA SI APRE SOPRA LA FILA, non sotto.
    La fila degli accessori e' la penultima del riquadro, e il vano che
