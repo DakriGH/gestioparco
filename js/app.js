@@ -3230,7 +3230,6 @@ function entryCard(entry) {
     return { box, val, minus };
   };
   const sKids = mkCella('\ud83e\uddd2', 'children', 1);
-  const sCrazy = mkCellaCrazy(entry, fila);
   const sTime = mkCella(null, 'durationMinutes', 5);
   if (entry.payLater) {
     sTime.box.classList.add('hidden');
@@ -3246,6 +3245,11 @@ function entryCard(entry) {
     return b;
   };
   fila.appendChild(azioni);
+  /* IL CRAZY VA IN FONDO, e si prende tutta la seconda riga: e' quello
+     con dentro piu' roba -- il totale, il giro, i due tasti -- e
+     schiacciato accanto agli altri mandava la fascetta a capo dove
+     capitava. Due righe DECISE stanno meglio di tre a caso. */
+  const sCrazy = mkCellaCrazy(entry, fila);
   dentro.appendChild(fila);
 
   /* Il guscio del conto: qui dentro ci entra IL pannello -- lo stesso
@@ -3307,11 +3311,6 @@ function entryCard(entry) {
     const gia = card.classList.contains('aperto');
     chiudiSchede(null);
     if (!gia) card.classList.add('aperto');
-    /* aprire (o chiudere) la fascetta chiude il giro che si stava
-       contando: la volta dopo il piu' ne apre uno nuovo, che e' il
-       motivo per cui uno riapre la scheda -- sono tornati a saltare */
-    giroLista = { id: null, i: -1 };
-    if (cardRefs.get(entry.id)) syncCard(entry);
   };
   aperta.onclick = (ev) => ev.stopPropagation();
 
@@ -4591,14 +4590,20 @@ function firmaGente(entry) {
    riaprendo la scheda. */
 let giroLista = { id: null, i: -1 };
 
-/* quale giro sta contando la fascetta di questo ingresso, e quanti ci
-   sono saliti */
+/* QUAL E' IL GIRO SU CUI SI STA LAVORANDO.
+   Di suo e' l'ULTIMO, sempre: e' quello aperto, quello che stai
+   segnando adesso. Non si chiude da solo chiudendo la scheda --
+   riaprendola ti ritrovi dove eri -- e un giro nuovo si apre solo col
+   suo tasto, che e' l'unica cosa che deve deciderlo.
+   Cosi' anche il meno e la crocetta hanno sempre qualcosa su cui
+   lavorare: prima, se non avevi ancora toccato il piu', erano spenti e
+   non c'era modo di togliere un Crazy dalla fascetta. */
 function giroDiLista(entry) {
   const g = conConto(entry, () => giriCrazy(entry));
-  if (giroLista.id === entry.id && giroLista.i >= 0 && giroLista.i < g.length) {
-    return { i: giroLista.i, n: g[giroLista.i], aperto: true };
-  }
-  return { i: -1, n: 0, aperto: false };
+  if (!g.length) return { i: -1, n: 0, aperto: false };
+  const scelto = (giroLista.id === entry.id && giroLista.i >= 0 && giroLista.i < g.length)
+    ? giroLista.i : g.length - 1;
+  return { i: scelto, n: g[scelto], aperto: true };
 }
 
 function mkCellaCrazy(entry, fila) {
@@ -4630,8 +4635,10 @@ function mkCellaCrazy(entry, fila) {
   const via = el('button', 'crz-via', '\u2715');
   box.appendChild(nuovo);
   box.appendChild(via);
+  /* la scritta sta IN RIGA, non sotto: sotto faceva la cella piu'
+     alta delle altre e la fascetta veniva storta */
   const nota = el('span', 'e-crz-k', 'nuovo giro');
-  box.appendChild(nota);
+  gruppo.appendChild(nota);
 
   const dopo = () => { saveEntries(); syncCard(entry); tick(); };
   const tocca = (d) => (ev) => {
@@ -4639,7 +4646,9 @@ function mkCellaCrazy(entry, fila) {
     conConto(entry, () => {
       let stato = giroDiLista(entry);
       if (d > 0) {
-        /* il primo tocco apre il giro: da qui in poi si conta li' */
+        /* se non c'e' proprio nessun giro, il primo si apre da se': il
+           resto delle volte si conta in quello aperto, e un giro nuovo
+           lo apre solo il suo tasto */
         if (!stato.aperto) {
           giroNuovo(entry);
           giroLista = { id: entry.id, i: giriCrazy(entry).length - 1 };
@@ -4648,7 +4657,7 @@ function mkCellaCrazy(entry, fila) {
         cambiaGiro(entry, stato.i, 1);
       } else if (stato.aperto) {
         cambiaGiro(entry, stato.i, -1);
-        /* svuotato del tutto: il giro non c'e' piu' */
+        /* svuotato del tutto: si torna a lavorare sull'ultimo che resta */
         if (giriCrazy(entry).length <= stato.i) giroLista = { id: null, i: -1 };
       }
     });
@@ -4702,9 +4711,9 @@ function syncCard(entry) {
     r.sCrazy.totN.title = crazy + ' salite in ' + pieni + (pieni === 1 ? ' giro' : ' giri');
   }
   if (r.sCrazy.nota) {
-    r.sCrazy.nota.textContent = !gl.aperto ? 'il piu\u2019 apre un giro nuovo'
-      : gl.n === 0 ? 'giro nuovo: conta chi sale'
-      : 'stai contando il ' + (gl.i + 1) + '\u00ba giro';
+    r.sCrazy.nota.textContent = !gl.aperto ? 'il piu\u2019 apre il primo giro'
+      : gl.n === 0 ? (gl.i + 1) + '\u00ba giro \u00b7 conta chi sale'
+      : (gl.i + 1) + '\u00ba giro';
     r.sCrazy.nota.classList.toggle('acceso', gl.aperto && gl.n > 0);
   }
   if (r.sCrazy.via) r.sCrazy.via.disabled = !gl.aperto;
