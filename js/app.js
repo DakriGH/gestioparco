@@ -757,7 +757,16 @@ function costruisciPannello() {
   if (vano) vano.addEventListener('scroll', () => sfuma(vano), { passive: true });
 
   PAN.root = p;
+  applicaContoSu();
   return p;
+}
+
+/* Mette (o toglie) il conto in cima, secondo com'e' stato scelto.
+   E' una riga di CSS -- l'ordine dei due pezzi dentro il pannello --
+   quindi non si ridisegna niente e non si perde nessuna scelta a
+   meta'. */
+function applicaContoSu() {
+  if (PAN.root) PAN.root.classList.toggle('conto-su', !!settings.contoInAlto);
 }
 
 /* Sposta il pannello dentro un contenitore e gli dice su che cosa
@@ -4785,6 +4794,10 @@ function buildSettingsView() {
         <span class="sw-txt"><b>Animazioni</b><span>La scheda che si apre e quella che vola sopra le altre. Spento: tutto istantaneo, come chiede il risparmio animazioni del sistema.</span></span>
         <span class="switch"></span>
       </button>
+      <button class="switch-row" id="setContoSu" role="switch" style="margin-top:10px;">
+        <span class="sw-txt"><b>Conto e tasti in alto</b><span>La striscia con i totali, la cifra da incassare e i tasti finali passa <b>sopra</b> invece che sotto. Di serie sta in basso, vicino al pollice; in alto e&grave; comoda a chi guarda prima la cifra e poi tocca.</span></span>
+        <span class="switch"></span>
+      </button>
       <button class="switch-row" id="setPieno" role="switch" style="margin-top:10px;">
         <span class="sw-txt"><b>Schermo intero</b><span>Toglie la barra di sistema del tablet, che copriva la parte bassa dell'app. Se l'app &egrave; installata, il tutto schermo parte al primo tocco.</span></span>
         <span class="switch"></span>
@@ -4906,6 +4919,26 @@ function buildSettingsView() {
     applyTheme();
     paintAnima();
     saveSettings();
+  };
+
+  /* IL CONTO SOPRA O SOTTO: non c'e' una risposta giusta.
+     Sotto e' dove arriva il pollice mentre l'altra mano fa altro, ed
+     e' li' di serie. Sopra e' dove guarda chi legge prima la cifra e
+     poi decide cosa toccare. Sono due modi di lavorare diversi, e
+     litigarci e' inutile: si sceglie. */
+  const cs = $('#setContoSu');
+  const paintContoSu = () => {
+    const on = !!settings.contoInAlto;
+    $('.switch', cs).classList.toggle('on', on);
+    cs.setAttribute('aria-checked', on ? 'true' : 'false');
+  };
+  paintContoSu();
+  cs.onclick = () => {
+    settings.contoInAlto = !settings.contoInAlto;
+    paintContoSu();
+    saveSettings();
+    applicaContoSu();
+    adattaTutto();
   };
 
   const sp = $('#setPieno');

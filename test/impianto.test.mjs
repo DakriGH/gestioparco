@@ -266,6 +266,22 @@ gruppo('L’avviso di chi sfora viene a cercarti');
   prova('e se ne va da solo', /setTimeout\(\(\) => \{[\s\S]{0,120}a\.classList\.remove\('su'\)/.test(APP));
 }
 
+gruppo('Il conto sopra o sotto, a scelta');
+{
+  /* Non c'e' una risposta giusta: sotto e' dove arriva il pollice,
+     sopra e' dove guarda chi legge prima la cifra. Si sceglie dalle
+     impostazioni, e cambiare idea non deve ridisegnare niente -- si
+     cambia solo l'ORDINE dei due pezzi dentro il pannello. */
+  prova('l interruttore c e', HTML.includes('setContoSu') || APP.includes('setContoSu'));
+  prova('e ricorda la scelta', APP.includes('settings.contoInAlto'));
+  prova('e' + String.fromCharCode(39) + ' solo una classe sul pannello',
+    /classList\.toggle\('conto-su'/.test(APP));
+  prova('che nel CSS cambia l ordine, non il codice',
+    /\.pan-conto\.conto-su \.pc-fondo \{[^}]*order:\s*-1/.test(CSS));
+  prova('e la striscia si incolla in cima invece che in fondo',
+    /\.pan-conto\.conto-su \.bc-fondo \{[^}]*top:\s*0/.test(CSS));
+}
+
 gruppo('Il bancone scorre, ma le card non si schiacciano');
 {
   /* Una griglia con un'altezza decisa da fuori ACCORCIA le sue righe

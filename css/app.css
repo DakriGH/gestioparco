@@ -2669,7 +2669,12 @@ html:not(.anima) .view.entra-dx { animation: none; }
    `align-items: stretch` resta: due card sulla stessa riga devono
    restare alte uguali, se no la fila sembra sbilenca. */
 .pan-conto .pc-bar { flex: 1 1 auto; min-height: 0; overflow-y: auto;
-  overscroll-behavior: contain; align-content: start; grid-auto-rows: min-content; }
+  overscroll-behavior: contain; align-content: start; grid-auto-rows: min-content;
+  /* UN PO' D'ARIA IN FONDO. Senza, l'ultima fila arriva a filo del
+     bordo: i suoi due tasti finiscono sotto la sfumatura e per
+     premerli bene bisogna spingere la lista oltre la fine, che non si
+     puo'. Trentadue pixel bastano a staccarla dal bordo. */
+  padding-bottom: 32px; }
 .pc-bar.scorre {
   -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent);
   mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent);
@@ -2992,6 +2997,20 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
    la schermata scorre: cosi' il pannello sta allo stesso posto nei due
    casi, e non sembra incollato al vetro */
 .pc-fondo { margin-top: auto; }
+/* ══════════════════════════════════════════════════════════
+   IL CONTO IN ALTO (scelta nelle impostazioni)
+   Non si sposta niente nel codice: si cambia l'ORDINE dei due pezzi
+   dentro il pannello, e la striscia che si incollava in basso si
+   incolla in cima. Cosi' la scelta si puo' cambiare mentre si lavora
+   -- anche a conto aperto e mezzo pagato -- senza ridisegnare niente
+   e senza perdere nulla per strada.
+   ══════════════════════════════════════════════════════════ */
+.pan-conto.conto-su .pc-fondo { order: -1; margin-top: 0; margin-bottom: 4px; }
+.pan-conto.conto-su .bc-fondo { margin-top: 0; margin-bottom: auto;
+  bottom: auto; top: 0; box-shadow: 0 6px 22px rgba(0, 0, 0, .45); }
+/* la linguetta Parco/Bar scorre sotto la striscia del conto: se
+   restasse appiccicata in cima si sovrapporrebbero */
+.pan-conto.conto-su .bc-cat { position: static; }
 /* i quattro tasti stanno in fila accanto alla cifra: coi 150px di
    minimo che hanno di serie andavano a capo e il pannello cresceva di
    74px, mangiandosi il respiro di tutta la schermata */
