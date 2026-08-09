@@ -779,6 +779,33 @@ main {
    posto in cui sta la sezione "Estendi". */
 .entry.vola .e-fila { display: none; }
 
+/* I GIRI DEL CRAZY.
+   Una riga bassa e viola dentro la fascia del tempo: dice chi e'
+   salito, quanti giri hanno fatto e quanti minuti ne vengono. E' li' e
+   non sulla card del Crazy perche' e' TEMPO -- sta accanto all'ora
+   d'uscita che fa spostare. */
+.tp-crazy { display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+  margin-top: 6px; padding: 3px 9px; border-radius: 13px;
+  background: rgba(182, 158, 255, 0.12);
+  box-shadow: inset 0 0 0 1.5px rgba(182, 158, 255, 0.3); }
+.tp-crazy .cz-k { display: flex; align-items: center; gap: 6px; font-size: 11.5px;
+  font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: #C9B6FF; }
+.tp-crazy .cz-k .em { font-size: 15px; }
+.tp-crazy .cz-q { font-size: 12.5px; font-weight: 700; color: rgba(255, 255, 255, 0.72); }
+.tp-crazy .cz-giri { display: flex; align-items: center; gap: 4px; }
+.tp-crazy .cz-giri b { min-width: 62px; text-align: center; font-family: 'Fredoka', sans-serif;
+  font-size: 15px; font-weight: 700; color: #EDE6FF; }
+.tp-crazy .cz-giri button { min-width: 42px; height: 38px; border: none; border-radius: 10px;
+  cursor: pointer; background: rgba(182, 158, 255, 0.2); color: #EDE6FF;
+  font-family: 'Fredoka', sans-serif; font-size: 20px; font-weight: 700; }
+.tp-crazy .cz-giri button:active { background: rgba(182, 158, 255, 0.36); }
+.tp-crazy .cz-giri button:disabled { opacity: .3; cursor: default; }
+.tp-crazy .cz-min { margin-left: auto; text-align: right; font-family: 'Fredoka', sans-serif;
+  font-size: 16px; font-weight: 700; color: #C9B6FF; line-height: 1.05; }
+.tp-crazy .cz-min small { display: block; font-family: 'Inter', sans-serif; font-size: 10.5px;
+  font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5); }
+
 /* ══════════════════════════════════════════════════════════
    ESTENDI TEMPO: la sezione a parte
    Sta dentro la card del Tempo ma non le somiglia: fondo ambrato e un

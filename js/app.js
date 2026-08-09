@@ -353,8 +353,32 @@ function sistemaAggiunte(e) {
   if (!e.aggiunte.length) delete e.aggiunte;
 }
 
+/* ══════════════════════════════════════════════════════════
+   IL TEMPO DEL CRAZY SI CONTA A GIRI, NON A TESTE
+   Tre bambini che salgono INSIEME fanno un giro solo: il gruppo resta
+   dentro otto minuti in piu', non ventiquattro. Contarli a testa
+   regalava mezz'ora a una comitiva -- e sballava l'ora d'uscita
+   scritta sul bracciale.
+   Se poi tornano a saltare, quello e' un altro giro: si aggiunge un
+   turno e il tempo cresce di nuovo, sempre di otto minuti, che ci
+   vadano in uno o in cinque.
+   I SOLDI restano a testa: il Crazy si paga per ognuno che lo fa. E'
+   il tempo che non si moltiplica.
+   Di serie e' un giro solo (i dati vecchi non hanno il campo), e i
+   giri non possono essere piu' delle salite pagate. */
+function turniCrazy(e) {
+  e = e || C();
+  const q = clamp(num(e.crazyJumping, 0), 0, 1e6);
+  if (!q) return 0;
+  return clamp(Math.round(num(e.crazyTurni, 1)) || 1, 1, q);
+}
+/* i minuti regalati: quelli di TUTTI i giri messi insieme */
+function minutiCrazy(e) {
+  return turniCrazy(e) * clamp(num(settings.crazyExtraMinutes, 0), 0, 1e6);
+}
+
 function endTimeOf(e) {
-  return e.startTime + (num(e.durationMinutes, 0) + num(e.crazyJumping, 0) * settings.crazyExtraMinutes) * 60000;
+  return e.startTime + (num(e.durationMinutes, 0) + minutiCrazy(e)) * 60000;
 }
 function stateOf(e, now) {
   if (e.payLater) return 'later';
@@ -377,7 +401,7 @@ function costOf(entry) {
   /* I minuti REGALATI dal Crazy Jumping non si pagano: restano dentro
      piu' a lungo, ma lo scaglione si calcola sul tempo del parco. Il
      Crazy si paga a parte, col suo prezzo. */
-  const regalati = clamp(entry.crazyJumping, 0, 1e6) * settings.crazyExtraMinutes;
+  const regalati = minutiCrazy(entry);
   let base;
   if (entry.payLater) {
     // paga il tempo passato dentro, meno quello regalato dal Crazy
@@ -607,6 +631,11 @@ function costruisciPannello() {
             </span>
           </span>
         </div>
+        <!-- I GIRI DEL CRAZY stanno qui e non sulla sua card: sono
+             TEMPO, e il tempo si guarda in questa fascia -- accanto
+             all'ora d'uscita che fanno spostare. Compare solo quando
+             qualcuno e' salito. -->
+        <div class="tp-crazy hidden"></div>
         <div class="tp-filo"><i class="pc-filo"></i></div>
         <div class="tp-riga">
           <div class="chips pc-dur"></div>
@@ -769,6 +798,16 @@ function costruisciPannello() {
         c.aggiunte = vendite;
       }
       sistemaAggiunte(c);
+      pcSalva();
+      aggiornaPannello();
+      return;
+    }
+    /* un altro giro di Crazy: altri minuti regalati, stessi soldi.
+       Chi sale si conta con la card, i giri con questo. */
+    if (d.a === 'turni') {
+      const q = clamp(num(c.crazyJumping, 0), 0, 1e6);
+      if (!q) return;
+      c.crazyTurni = clamp(turniCrazy(c) + num(d.v, 0), 1, q);
       pcSalva();
       aggiornaPannello();
       return;
@@ -1116,7 +1155,34 @@ function disegnaFascia(p, c) {
   sincronizzaBracciali(p.querySelector('.pc-brac'), c.startTime, c.braceletColor, c.braceletCustom);
 
   p.querySelector('.pc-pag').innerHTML = pastigliaPagato(c);
+  disegnaCrazy(p, c);
   disegnaEstendi(p, c);
+}
+
+/* La riga dei giri di Crazy: quanti sono saliti, quanti giri hanno
+   fatto e quanti minuti in piu' ne vengono. Compare solo se qualcuno
+   e' salito, se no e' una riga che non dice niente. */
+function disegnaCrazy(p, c) {
+  const box = p.querySelector('.tp-crazy');
+  if (!box) return;
+  const q = clamp(num(c.crazyJumping, 0), 0, 1e6);
+  box.classList.toggle('hidden', q <= 0);
+  if (q <= 0) { box.innerHTML = ''; box.dataset.sig = ''; return; }
+  const giri = turniCrazy(c), min = minutiCrazy(c);
+  const firma = q + '/' + giri + '/' + min;
+  if (box.dataset.sig === firma) return;
+  box.dataset.sig = firma;
+  box.innerHTML =
+    '<span class="cz-k"><span class="em">\ud83e\udd38</span> Crazy</span>' +
+    '<span class="cz-q">' + q + (q === 1 ? ' salita' : ' salite') + '</span>' +
+    '<span class="cz-giri">' +
+      '<button data-a="turni" data-v="-1"' + (giri <= 1 ? ' disabled' : '') +
+        ' aria-label="un giro in meno">\u2212</button>' +
+      '<b>' + giri + (giri === 1 ? ' giro' : ' giri') + '</b>' +
+      '<button data-a="turni" data-v="1"' + (giri >= q ? ' disabled' : '') +
+        ' aria-label="un altro giro">+</button>' +
+    '</span>' +
+    '<span class="cz-min">+' + min + ' min<small>di tempo regalato</small></span>';
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -3253,7 +3319,16 @@ function bcSetQ(id, n) {
   const c = C();
   n = clamp(n, 0, 9999);
   if (id === 'bimbi') c.children = n;
-  else if (id === 'crazy') c.crazyJumping = n;
+  else if (id === 'crazy') {
+    const prima = clamp(num(c.crazyJumping, 0), 0, 9999);
+    c.crazyJumping = n;
+    /* il primo che sale apre il giro; se non sale piu' nessuno il giro
+       non c'e'. Gli altri che salgono con lui NON aprono un giro
+       nuovo: e' il senso di tutta questa storia. */
+    if (!prima && n > 0) c.crazyTurni = 1;
+    if (!n) delete c.crazyTurni;
+    else if (turniCrazy(c) > n) c.crazyTurni = n;
+  }
   else {
     const v = bcVoce(id); if (!v) return;
     c.barItems = lista(c.barItems);
@@ -5548,6 +5623,12 @@ function riparaConto(o) {
 
   o.children = int(o.children, 9999);
   o.crazyJumping = int(o.crazyJumping, 9999);
+  /* i giri di Crazy: almeno uno se qualcuno e' salito, mai piu' delle
+     salite. Chi arriva da una versione vecchia non ce l'ha e prende un
+     giro solo -- che e' anche la lettura giusta di quei dati: si
+     segnava chi saliva, non quante volte. */
+  if (o.crazyJumping > 0) o.crazyTurni = Math.min(o.crazyJumping, Math.max(1, int(o.crazyTurni, 9999) || 1));
+  else delete o.crazyTurni;
   o.durationMinutes = Math.max(1, int(o.durationMinutes, 99999) || 60);
   o.baseMinutes = Math.max(1, int(o.baseMinutes, 99999) || o.durationMinutes);
   /* le vendite di tempo: una lista di numeri buoni, e mai piu' lunga

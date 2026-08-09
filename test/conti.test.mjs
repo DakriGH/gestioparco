@@ -66,11 +66,41 @@ gruppo('Zero bambini costa zero', () => {
 });
 
 gruppo('Il Crazy Jumping', () => {
+  const extra = ctx.settings.crazyExtraMinutes;
   const c = conto({ children: 1, crazyJumping: 3, durationMinutes: 60 });
-  ok('costa a parte', ctx.contoCrazy(), 3 * ctx.settings.crazyJumpingPrice);
+  ok('costa a parte, per ognuno che sale', ctx.contoCrazy(), 3 * ctx.settings.crazyJumpingPrice);
   ok('e non gonfia lo scaglione del parco', ctx.contoParco(), 12);
+
+  /* IL TEMPO SI CONTA A GIRI, NON A TESTE. Tre bambini che salgono
+     insieme fanno un giro solo: il gruppo resta dentro otto minuti in
+     piu', non ventiquattro. Contarli a testa regalava mezz'ora a una
+     comitiva -- e sballava l'ora scritta sul bracciale. */
   const minuti = Math.round((ctx.endTimeOf(c) - c.startTime) / 60000);
-  ok('ma allunga la permanenza', minuti, 60 + 3 * ctx.settings.crazyExtraMinutes);
+  ok('tre che salgono INSIEME sono un giro solo', minuti, 60 + extra);
+  ok('ed e un giro, non tre', ctx.turniCrazy(c), 1);
+
+  /* se tornano a saltare, quello e' un altro giro */
+  c.crazyTurni = 2;
+  ok('un altro giro, altri minuti',
+     Math.round((ctx.endTimeOf(c) - c.startTime) / 60000), 60 + 2 * extra);
+  ok('ma i soldi non cambiano: si paga chi sale, non quante volte',
+     ctx.contoCrazy(), 3 * ctx.settings.crazyJumpingPrice);
+
+  /* non si possono fare piu' giri delle salite pagate */
+  c.crazyTurni = 9;
+  ok('i giri non superano le salite pagate', ctx.turniCrazy(c), 3);
+
+  /* e chi arriva da una versione vecchia (senza il campo) prende un
+     giro solo: e' la lettura giusta di quei dati */
+  const vecchio = ctx.normalizeEntries([{ id: 'v', children: 2, crazyJumping: 4,
+    durationMinutes: 60, startTime: Date.now(), status: 'active' }])[0];
+  ok('i dati vecchi valgono un giro', vecchio.crazyTurni, 1);
+
+  /* senza nessuno che sale, non c'e' nessun giro */
+  const senza = conto({ children: 1, crazyJumping: 0, durationMinutes: 60 });
+  ok('nessuna salita, nessun giro', ctx.turniCrazy(senza), 0);
+  ok('e nessun minuto regalato',
+     Math.round((ctx.endTimeOf(senza) - senza.startTime) / 60000), 60);
 });
 
 gruppo('Paga dopo', () => {
@@ -339,8 +369,9 @@ gruppo('Il tempo DA PAGARE e solo quello del parco', () => {
 
   const d = conto({ children: 1, crazyJumping: 2, durationMinutes: 60, barItems: [] });
   ok('col Crazy il tempo da pagare NON cambia', ctx.tempoTotale(d), 60);
+  /* due che salgono insieme: un giro, un blocco di minuti regalati */
   ok('ma l ora di uscita si sposta piu in la',
-     ctx.endTimeOf(d) - d.startTime, (60 + 2 * ctx.settings.crazyExtraMinutes) * 60000);
+     ctx.endTimeOf(d) - d.startTime, (60 + ctx.settings.crazyExtraMinutes) * 60000);
 
   /* e pagando tutto non deve restare del tempo "scoperto" */
   ctx.pagaTutto();
