@@ -394,17 +394,40 @@ function turniCrazy(e) { return giriCrazy(e).length; }
 /* Mette o toglie salite, sempre dall'ULTIMO giro: e' quello aperto,
    quello che stai segnando adesso. Quando un giro resta senza nessuno
    sparisce, e col giro se ne vanno i suoi minuti regalati. */
+/* IL PIU' E IL MENO DELLA CARD sono quelli di sempre: cambiano il
+   numero delle salite. Quello che cambiano DENTRO e' il giro scelto --
+   di suo l'ultimo -- perche' una salita appartiene sempre a un giro.
+   Quando un giro resta senza nessuno sparisce, e con lui i suoi minuti
+   regalati: un giro a cui non e' salito nessuno non e' mai esistito. */
 function metteCrazy(c, n) {
   n = clamp(Math.round(num(n, 0)), 0, 9999);
   const g = giriCrazy(c);
   let somma = g.reduce((a, b) => a + b, 0);
-  while (somma < n) { if (!g.length) g.push(0); g[g.length - 1]++; somma++; }
+  let i = g.length ? clamp(giroScelto, 0, g.length - 1) : 0;
+  while (somma < n) {
+    if (!g.length) { g.push(0); i = 0; }
+    g[i]++; somma++;
+  }
   while (somma > n && g.length) {
-    if (g[g.length - 1] > 1) { g[g.length - 1]--; somma--; }
-    else { somma -= g.pop(); }
+    if (g[i] > 1) { g[i]--; somma--; }
+    else {
+      somma -= g[i]; g.splice(i, 1);
+      i = Math.min(i, Math.max(0, g.length - 1));
+    }
   }
   c.crazyJumping = somma;
-  if (somma > 0) c.crazyGiri = g; else delete c.crazyGiri;
+  if (somma > 0) { c.crazyGiri = g; giroScelto = i; } else { delete c.crazyGiri; giroScelto = 99; }
+}
+
+/* IL GIRO SCELTO: quello su cui lavorano il piu' e il meno della
+   card. Di suo e' l'ultimo -- si segna quasi sempre quello che sta
+   succedendo adesso -- e si cambia toccando un giro nello storico.
+   Non e' un dato dell'ingresso ma un fatto dello schermo: si azzera
+   quando il pannello cambia gruppo. */
+let giroScelto = 99;
+function giroOra(c) {
+  const g = giriCrazy(c || C());
+  return g.length ? clamp(giroScelto, 0, g.length - 1) : 0;
 }
 
 /* Mette o toglie una salita da UN giro preciso. Quando un giro resta
@@ -425,6 +448,9 @@ function giroNuovo(c) {
   const g = giriCrazy(c).concat([1]);
   c.crazyGiri = g;
   c.crazyJumping = g.reduce((a, b) => a + b, 0);
+  /* il giro appena aperto diventa quello che si sta segnando: gli
+     altri che salgono con lui si aggiungono col piu' di sempre */
+  giroScelto = g.length - 1;
 }
 /* i minuti regalati: quelli di TUTTI i giri messi insieme */
 function minutiCrazy(e) {
@@ -744,12 +770,12 @@ function costruisciPannello() {
       aggiornaPannello();
       return;
     }
-    /* il piu' e il meno di UN giro: si comanda quello, non "l'ultimo" */
-    if (d.gpiu !== undefined || d.gmeno !== undefined) {
+    /* si tocca un giro nello storico: da li' in poi il piu' e il meno
+       della card lavorano su QUELLO. E' il modo di correggere un giro
+       vecchio senza avere due file di tasti a video. */
+    if (d.sel !== undefined) {
+      giroScelto = parseInt(d.sel, 10);
       tocchi.id = 'crazy';
-      cambiaGiro(C(), parseInt(d.gpiu !== undefined ? d.gpiu : d.gmeno, 10),
-        d.gpiu !== undefined ? 1 : -1);
-      pcSalva();
       aggiornaPannello();
       return;
     }
@@ -957,6 +983,9 @@ function applicaContoSu() {
 /* Sposta il pannello dentro un contenitore e gli dice su che cosa
    lavorare. E' l'unico modo di cambiargli padrone. */
 function montaPannello(host, conto, opz) {
+  /* gruppo nuovo, storia nuova: il giro scelto torna a essere
+     l'ultimo, se no si correggerebbe il giro di un altro */
+  giroScelto = 99;
   opz = opz || {};
   const p = costruisciPannello();
   PAN.conto = conto;
@@ -1019,7 +1048,7 @@ function firmaGriglia() {
 /* i numeri di UNA card: se non cambiano, la card non si tocca */
 function firmaVoce(id) {
   return bcQ(id) + '/' + bcPag(id) +
-    (id === 'crazy' ? '/' + giriCrazy().join('.') : '');
+    (id === 'crazy' ? '/' + giriCrazy().join('.') + '>' + giroOra() : '');
 }
 
 /* IL BANCONE DICE QUANDO C'E' DELL'ALTRO SOTTO.
@@ -3459,10 +3488,15 @@ function bcCard(v, sempre) {
   const q = bcQ(v.id), pg = bcPag(v.id);
   const saldata = q > 0 && pg >= q;
   const aperta = sempre || q > 0;
-  return '<div class="bc-card' + (saldata ? ' saldata' : (q ? ' presa' : '')) +
+  return '<div class="bc-card' + (v.id === 'crazy' && q > 0 ? ' con-storico' : '') +
+    (saldata ? ' saldata' : (q ? ' presa' : '')) +
     (tocchi.id === v.id ? ' tocca' : '') +
     (tocchi.nato === v.id ? ' nato' : '') +
     '" data-id="' + v.id + '">' +
+    /* LA CARD DEL CRAZY E' LA STESSA DELLE ALTRE: tutta quanta -- la
+       testa e le due file -- sta in una colonna sua, e le si mette
+       ACCANTO lo storico dei giri. Cosi' dentro non cambia niente. */
+    (v.id === 'crazy' && q > 0 ? '<div class="bc-lato">' : '') +
     '<button class="bc-su" data-add="' + v.id + '">' +
       (q > 0 ? '<span class="bc-fant">' + q + '</span>' : '') +
       iconaBar(v.name, v.em) +
@@ -3472,47 +3506,42 @@ function bcCard(v, sempre) {
          facevano comparire la barra di scorrimento. Qui non costano
          niente: la riga del prezzo era mezza vuota. */
       '<span class="bc-testi"><span class="bc-pr">' + eur(v.price) +
-        (v.id === 'crazy' && q > 0 ? '<i class="bc-gi">' + bcGiriTesto() + '</i>' : '') +
+          (v.id === 'crazy' && q > 0 ? '<i class="bc-gi">' + bcGiriTesto() + '</i>' : '') +
       '</span>' +
       '<span class="bc-nm">' + esc(v.name) + '</span></span></button>' +
     (aperta
-      /* IL TASTO DEL GIRO STA IN RIGA COL PIU' E COL MENO, non sotto:
-         una riga in piu' nella card sono quaranta pixel, e in quella
-         schermata non ci sono. Qui invece non costa niente. */
-      ? (v.id === 'crazy' && q > 0
-        /* IL CRAZY NON HA UNA QUANTITA' SOLA: ha dei GIRI, e ognuno ha
-           i suoi. La fila della quantita' diventa la fila dei giri --
-           stesso posto, stessa altezza -- e ogni giro ha il suo meno e
-           il suo piu'. Il totale delle salite resta scritto sulla riga
-           del prezzo, che e' dove si guarda quanto costa. */
-        ? zonaGiri()
-        : '<div class="bc-zone"><span class="bc-chip">' + q + '</span>' +
-          '<button data-meno="' + v.id + '"' + (q <= 0 ? ' disabled' : '') + '>\u2212</button>' +
-          '<button data-add="' + v.id + '">+</button></div>') +
+      ? '<div class="bc-zone"><span class="bc-chip">' + q + '</span>' +
+        '<button data-meno="' + v.id + '"' + (q <= 0 ? ' disabled' : '') + '>\u2212</button>' +
+        '<button data-add="' + v.id + '">+</button></div>' +
         '<div class="bc-zone v"><span class="bc-chip">' + pg + '/' + q + '</span>' +
         '<button data-pmeno="' + v.id + '"' + (pg <= 0 ? ' disabled' : '') + '>\u2212</button>' +
         '<button data-ppiu="' + v.id + '"' + (pg >= q ? ' disabled' : '') + '>+</button></div>'
       : '') +
+    (v.id === 'crazy' && q > 0 ? '</div>' + storicoGiri() : '') +
   '</div>';
 }
 
-/* LA FILA DEI GIRI: uno per giro, col suo meno e il suo piu'.
-   Prima c'era un piu' solo che lavorava sull'ultimo giro: per togliere
-   un bambino dal PRIMO giro non c'era strada. Adesso ogni giro si
-   comanda per conto suo, e il tasto in fondo ne apre un altro.
-   Sta al posto della vecchia fila della quantita': stessa altezza,
-   nessuna riga in piu' -- e la card e' larga il doppio, che e' lo
-   spazio che accanto restava vuoto. */
-function zonaGiri() {
-  const g = giriCrazy(C());
-  return '<div class="bc-zone giri">' +
-    g.map((n, i) =>
-      '<span class="gz"><span class="gk">' + (i + 1) + 'º</span>' +
-      '<button data-gmeno="' + i + '" aria-label="uno in meno dal giro ' + (i + 1) + '">−</button>' +
-      '<b>' + n + '</b>' +
-      '<button data-gpiu="' + i + '" aria-label="uno in piu nel giro ' + (i + 1) + '">+</button></span>').join('') +
-    '<button class="gz-piu" data-giro="crazy" aria-label="un altro giro">' +
-      '<b>+</b><span>giro</span></button>' +
+/* LO STORICO DEI GIRI, a destra della card.
+   Una pastiglia per giro, col numero di chi e' salito quella volta.
+   Quella accesa e' il giro che si sta segnando: il piu' e il meno
+   della card -- quelli di sempre, non ne servono altri -- lavorano su
+   quella. Toccarne un'altra la accende, e cosi' si corregge un giro
+   vecchio senza avere due file di tasti a video.
+   In fondo il tasto che apre un giro nuovo, e i minuti che tutti i
+   giri hanno regalato. */
+function storicoGiri() {
+  const c = C();
+  const g = giriCrazy(c);
+  const ora = giroOra(c);
+  return '<div class="bc-storico">' +
+    '<span class="st-k">giri</span>' +
+    '<span class="st-lista">' +
+      g.map((n, i) => '<button class="st-g' + (i === ora ? ' on' : '') + '" data-sel="' + i + '"' +
+        ' aria-label="giro ' + (i + 1) + ', ' + n + ' saliti">' +
+        '<span class="st-n">' + (i + 1) + 'º</span><b>' + n + '</b></button>').join('') +
+      '<button class="st-piu" data-giro="crazy" aria-label="un altro giro">+</button>' +
+    '</span>' +
+    '<span class="st-min">+' + minutiCrazy(c) + '′</span>' +
   '</div>';
 }
 
@@ -3527,10 +3556,9 @@ function bcGiriTesto() {
   if (!g.length) return '';
   const min = minutiCrazy(c);
   /* stretto: sta accanto al prezzo, e se va a capo la card cresce.
-     Quanti sono saliti in ogni giro si legge nella fila qui sotto,
-     quindi qui basta il totale e i minuti che ne vengono. */
-  const salite = g.reduce((a, b) => a + b, 0);
-  return salite + (salite === 1 ? ' salita' : ' salite') + ' <b>+' + min + '′</b>';
+     Chi e' salito in ogni giro si legge nello storico qui a destra,
+     quindi qui basta quanti giri sono. */
+  return g.length + (g.length === 1 ? ' giro' : ' giri');
 }
 
 /* Il velo: un pannello sovrapposto, incollato in basso, con dietro il

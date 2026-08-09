@@ -322,23 +322,30 @@ gruppo('I giri del Crazy stanno nella sua card');
   prova('i giri sono una lista, non un numero', /function giriCrazy/.test(APP));
   prova('e i minuti si contano sui giri',
     /function minutiCrazy[\s\S]{0,160}turniCrazy\(e\) \* /.test(APP));
-  /* OGNI GIRO HA I SUOI TASTI. Prima ce n'era un paio solo, che
-     lavorava sull'ultimo giro: per togliere un bambino dal PRIMO giro
-     non c'era strada. */
-  prova('ogni giro ha il suo meno e il suo piu',
-    APP.includes('data-gmeno="') && APP.includes('data-gpiu="'));
-  prova('e i comandi arrivano a QUEL giro, non all ultimo',
-    /function cambiaGiro[\s\S]{0,300}g\[i\] = Math\.max\(0, g\[i\] \+ num\(delta/.test(APP));
-  prova('un giro svuotato sparisce, coi suoi minuti',
-    /function cambiaGiro[\s\S]{0,400}filter\(n => n > 0\)/.test(APP));
+  /* LA CARD RESTA QUELLA DELLE ALTRE: il piu' e il meno di sempre.
+     Quello che cambiano dentro e' il GIRO SCELTO, e il giro si sceglie
+     toccandolo nello storico qui accanto. Cosi' si corregge un giro
+     vecchio senza una seconda fila di tasti a video. */
+  prova('la card tiene i tasti di sempre',
+    /'<div class="bc-zone"><span class="bc-chip">' \+ q/.test(APP) && !/function zonaGiri/.test(APP));
+  prova('c e uno storico dei giri, a destra', /function storicoGiri/.test(APP) &&
+    /\.bc-storico \{[^}]*width/.test(CSS));
+  prova('ogni giro si tocca per sceglierlo', APP.includes('data-sel="'));
+  prova('e il piu e il meno lavorano su QUELLO',
+    /function metteCrazy[\s\S]{0,700}clamp\(giroScelto, 0, g\.length - 1\)/.test(APP));
+  prova('quello scelto si vede acceso', /\.bc-storico \.st-g\.on \{/.test(CSS));
   prova('e c e un tasto per aprirne un altro', APP.includes('data-giro="crazy"'));
   prova('che ci fa salire (e pagare) il primo',
-    /function giroNuovo[\s\S]{0,200}concat\(\[1\]\)/.test(APP));
-  prova('la fila dei giri prende il posto di quella della quantita: nessuna riga in piu',
-    /\.bc-zone\.giri \{[^}]*display:\s*flex/.test(CSS) && /function zonaGiri/.test(APP));
+    /function giroNuovo[\s\S]{0,300}concat\(\[1\]\)/.test(APP));
+  prova('un giro svuotato sparisce, coi suoi minuti',
+    /function metteCrazy[\s\S]{0,900}g\.splice\(i, 1\)/.test(APP));
+  prova('lo storico sta ACCANTO, non sotto: la card non cresce',
+    /\.bc-card\.con-storico \{[^}]*flex-direction:\s*row/.test(CSS));
   prova('e la card si prende lo spazio che restava vuoto accanto',
-    /\.pc-due\.con-giri \{[^}]*grid-template-columns/.test(CSS) &&
+    /\.bc-griglia\.pc-due\.con-giri \{[^}]*grid-template-columns/.test(CSS) &&
     /classList\.toggle\('con-giri'/.test(APP));
+  prova('cambiando gruppo si riparte dall ultimo giro',
+    /giroScelto = 99/.test(APP));
   prova('e la composizione si legge sulla riga del prezzo',
     /\.bc-gi \{[^}]*margin-left/.test(CSS) && APP.includes('bcGiriTesto'));
   /* i soldi restano a testa: e' il tempo che non si moltiplica */
