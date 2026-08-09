@@ -325,7 +325,13 @@ gruppo('Estendi tempo: una sezione sua, e i prezzi veri');
   prova('e ha il suo aspetto nel foglio di stile', /\.tp-est \{/.test(CSS));
   prova('compare solo su chi e gia dentro', /classList\.toggle\('hidden', !suUno\)/.test(APP));
   prova('i tasti aggiungono, non sostituiscono',
-    /d\.a === 'est'[\s\S]{0,400}durationMinutes = clamp\(m \+ num\(d\.v/.test(APP));
+    /d\.a === 'est'[\s\S]{0,500}durationMinutes = clamp\(m \+ quanti/.test(APP));
+  prova('e ogni vendita di tempo resta scritta',
+    /d\.a === 'est'[\s\S]{0,700}c\.aggiunte = lista\(c\.aggiunte\)\.concat/.test(APP));
+  prova('il prezzo e quello del cartello per QUEL blocco',
+    /vendute\.reduce\(\(a, m\) => a \+ priceFor\(up5\(m\)\), 0\)/.test(APP));
+  prova('e le vendite non possono valere piu del tempo che c e',
+    /function sistemaAggiunte/.test(APP) && (APP.match(/sistemaAggiunte\(/g) || []).length >= 4);
 
   /* il prezzo scritto sul tasto non e' una tabella a parte: e' il
      costo di dopo meno quello di adesso, con la stessa costOf() che fa

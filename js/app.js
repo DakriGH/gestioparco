@@ -334,6 +334,25 @@ function braceletFor(ts) {
   }
   return null;
 }
+/* Le vendite di tempo devono stare dentro il tempo che c'e'. Se
+   l'orario di uscita viene tirato indietro a mano, l'ultimo blocco
+   venduto si accorcia (e sparisce, se non ci sta piu'): se no
+   resterebbe un pezzo di tempo pagato che non esiste. */
+function sistemaAggiunte(e) {
+  if (!e) return;
+  e.aggiunte = lista(e.aggiunte)
+    .map(m => Math.max(0, Math.round(num(m, 0)))).filter(m => m > 0);
+  const tot = Math.max(0, Math.round(num(e.durationMinutes, 0)));
+  let somma = e.aggiunte.reduce((a, b) => a + b, 0);
+  while (somma > tot && e.aggiunte.length) {
+    const ultima = e.aggiunte[e.aggiunte.length - 1];
+    const troppo = somma - tot;
+    if (ultima > troppo) { e.aggiunte[e.aggiunte.length - 1] = ultima - troppo; somma -= troppo; }
+    else { e.aggiunte.pop(); somma -= ultima; }
+  }
+  if (!e.aggiunte.length) delete e.aggiunte;
+}
+
 function endTimeOf(e) {
   return e.startTime + (num(e.durationMinutes, 0) + num(e.crazyJumping, 0) * settings.crazyExtraMinutes) * 60000;
 }
@@ -366,14 +385,30 @@ function costOf(entry) {
     base = priceFor(up5(stato));
   } else {
     const totMin = clamp(entry.durationMinutes, 0, 1e6);
+    /* IL TEMPO VENDUTO DOPO SI PAGA AL SUO PREZZO.
+       Estendere non e' ricalcolare: e' vendere un altro pezzo di
+       tempo. Contando la differenza sul totale, da mezz'ora sia
+       "+15m" sia "+30m" finivano nello stesso scaglione e costavano
+       LO STESSO -- due tasti diversi, un prezzo solo, e mezz'ora
+       regalata senza accorgersene.
+       Adesso ogni blocco venduto resta scritto in `aggiunte` e si paga
+       il prezzo del cartello per QUEL blocco: mezz'ora costa mezz'ora,
+       la seconda mezz'ora pure. Il tempo iniziale continua a pagarsi
+       sul totale, come ha sempre fatto: chi entra per un'ora paga
+       l'ora, non due mezze. */
+    const vendute = lista(entry.aggiunte)
+      .map(m => Math.max(0, Math.round(num(m, 0)))).filter(m => m > 0);
+    const sommaVendute = Math.min(vendute.reduce((a, b) => a + b, 0), totMin);
+    const iniziale = Math.max(0, totMin - sommaVendute);
+    const prezzoVendute = vendute.reduce((a, m) => a + priceFor(up5(m)), 0);
     if (settings.tariffaSuTotale === false) {
       // a scaglioni: la durata iniziale al suo prezzo, il tempo aggiunto al suo
-      const iniz = clamp(num(entry.baseMinutes, entry.durationMinutes), 0, 1e6);
-      const agg = Math.max(0, totMin - iniz);
-      base = priceFor(up5(iniz)) + (agg > 0 ? priceFor(up5(agg)) : 0);
+      const iniz = clamp(num(entry.baseMinutes, iniziale), 0, 1e6);
+      const agg = Math.max(0, iniziale - iniz);
+      base = priceFor(up5(iniz)) + (agg > 0 ? priceFor(up5(agg)) : 0) + prezzoVendute;
     } else {
       // sul totale: chi resta un'ora paga la tariffa dell'ora, non 30'+30'
-      base = priceFor(up5(totMin));
+      base = priceFor(up5(iniziale)) + prezzoVendute;
     }
   }
   return {
@@ -682,6 +717,7 @@ function costruisciPannello() {
       const resto = (uscita.getHours() * 60 + uscita.getMinutes()) % 15;
       const passo = num(d.v, 0) > 0 ? 15 - resto : (resto || 15);
       c.durationMinutes = clamp(num(d.v, 0) > 0 ? min + passo : min - passo, 5, 100000);
+      sistemaAggiunte(c);
       pcSalva();
       aggiornaPannello();
       return;
@@ -699,6 +735,9 @@ function costruisciPannello() {
       const m = clamp(c.durationMinutes, 1, 99999);
       c.durationMinutes = d.v === '-5' ? Math.max(5, m - 5)
         : d.v === '+5' ? Math.min(99999, m + 5) : clamp(parseInt(d.v, 10), 1, 99999);
+      /* i tagli rapidi SCRIVONO la durata: quello che era stato
+         venduto prima non c'entra piu' niente */
+      delete c.aggiunte;
       c.payLater = false;
       pcSalva(); aggiornaPannello(); return;
     }
@@ -710,7 +749,26 @@ function costruisciPannello() {
     if (d.a === 'est') {
       if (c.payLater) return;
       const m = clamp(num(c.durationMinutes, 60), 0, 1e6);
-      c.durationMinutes = clamp(m + num(d.v, 0), 5, 100000);
+      const quanti = num(d.v, 0);
+      c.durationMinutes = clamp(m + quanti, 5, 100000);
+      /* quello che si e' venduto resta scritto: e' quello che fa il
+         prezzo. Il meno toglie dall'ultima vendita, non dal tempo
+         iniziale -- se no si sarebbe reso un pezzo di tempo che il
+         cliente non aveva comprato in quel momento. */
+      if (quanti > 0) { c.aggiunte = lista(c.aggiunte).concat([quanti]); }
+      else {
+        /* si disdice l'ULTIMA vendita, non il tempo d'ingresso: e' quella
+           che si sta rimangiando */
+        let togli = -quanti;
+        const vendite = lista(c.aggiunte);
+        while (togli > 0 && vendite.length) {
+          const ultima = num(vendite[vendite.length - 1], 0);
+          if (ultima > togli) { vendite[vendite.length - 1] = ultima - togli; togli = 0; }
+          else { vendite.pop(); togli -= ultima; }
+        }
+        c.aggiunte = vendite;
+      }
+      sistemaAggiunte(c);
       pcSalva();
       aggiornaPannello();
       return;
@@ -1006,6 +1064,20 @@ function minutiPagati(c) {
        tenessero il conto dei loro soldi */
     : Math.max(0, Math.max(0, num(c.paidPark, 0)) - costoCrazy);
   if (!bimbi) return 0;
+  /* SE IL PARCO E' COPERTO, IL TEMPO E' PAGATO TUTTO.
+     Qui sotto i minuti si ricavano dal cartello: si cerca lo scaglione
+     piu' alto che quei soldi coprono. Ma il cartello FINISCE -- alle
+     due ore -- e il tempo no: un gruppo dentro da due ore e mezza,
+     anche a conto saldato, non arrivava mai oltre i centoventi minuti.
+     Risultato: la barra si fermava all'ottantanove per cento e la
+     pastiglia diceva "pagato fino alle 18:50" invece di "pagato
+     tutto", cioe' chiedeva soldi gia' incassati. Stessa cosa da quando
+     il tempo aggiunto si vende a blocchi: i soldi non corrispondono
+     piu' a un solo scaglione del cartello.
+     La domanda vera e' un'altra ed e' semplice: il parco e' coperto?
+     Se si', il tempo e' pagato per intero, e il cartello non c'entra. */
+  const dovutoBimbi = r2(costOf(c).parkTotal);
+  if (soldiBimbi + 0.005 >= dovutoBimbi) return tempoTotale(c);
   const perBambino = soldiBimbi / bimbi;
   let coperti = 0;
   for (const t of tariffs()) if (t.p <= perBambino + 1e-9) coperti = t.m;
@@ -1069,8 +1141,11 @@ const ESTENDI_TAGLI = [15, 30, 60];
    listino a scaglioni, dei minuti regalati e del "paga a parte". */
 function costoEstensione(c, minuti) {
   const ora = costOf(c).parkTotal;
+  /* si simula la vendita per intero -- minuti E blocco venduto -- se
+     no il tasto direbbe un prezzo e la cassa ne chiederebbe un altro */
   const poi = costOf(Object.assign({}, c, {
-    durationMinutes: clamp(num(c.durationMinutes, 60), 0, 1e6) + minuti
+    durationMinutes: clamp(num(c.durationMinutes, 60), 0, 1e6) + minuti,
+    aggiunte: lista(c.aggiunte).concat([minuti])
   })).parkTotal;
   return Math.max(0, r2(poi - ora));
 }
@@ -5475,6 +5550,10 @@ function riparaConto(o) {
   o.crazyJumping = int(o.crazyJumping, 9999);
   o.durationMinutes = Math.max(1, int(o.durationMinutes, 99999) || 60);
   o.baseMinutes = Math.max(1, int(o.baseMinutes, 99999) || o.durationMinutes);
+  /* le vendite di tempo: una lista di numeri buoni, e mai piu' lunga
+     del tempo che c'e' davvero */
+  o.aggiunte = lista(o.aggiunte).map(m => int(m, 99999)).filter(m => m > 0);
+  sistemaAggiunte(o);
   o.barItems = (Array.isArray(o.barItems) ? o.barItems : [])
     .filter(b => b && b.id)
     .map(b => ({ id: String(b.id), name: String(b.name || 'Voce'), price: sold(b.price), qty: int(b.qty, 9999) }))

@@ -348,6 +348,116 @@ gruppo('Il tempo DA PAGARE e solo quello del parco', () => {
   ok('e il tempo di parco risulta coperto', ctx.minutiPagati(d) >= ctx.tempoTotale(d), true);
 });
 
+gruppo('Allungare e VENDERE tempo, non ricalcolarlo', () => {
+  /* IL GUASTO CHE C'ERA. Il prezzo dell'allungamento era la differenza
+     sul totale: partendo da mezz'ora, "+15m" e "+30m" finivano nello
+     stesso scaglione del cartello e costavano LO STESSO -- due tasti
+     diversi, un prezzo solo, e mezz'ora regalata senza accorgersene.
+     Adesso ogni blocco venduto si paga al prezzo del cartello per quel
+     blocco, e resta scritto in `aggiunte`. */
+  const T = ctx.settings.tariffs;
+  const p30 = T.find(t => t.m === 30).p, p15 = T.find(t => t.m === 15).p;
+  const r2 = v => Math.round(v * 100) / 100;
+
+  const vendi = (c, m) => {
+    c.durationMinutes = c.durationMinutes + m;
+    if (m > 0) c.aggiunte = (c.aggiunte || []).concat([m]);
+    ctx.sistemaAggiunte(c);
+  };
+
+  const c = conto({ children: 3, crazyJumping: 0, durationMinutes: 30, baseMinutes: 30, barItems: [] });
+  const partenza = ctx.dueOf(c).park;
+  ok('mezz ora per tre bambini', partenza, r2(p30 * 3));
+
+  ok('il tasto +30m dice il prezzo di mezz ora', ctx.costoEstensione(c, 30), r2(p30 * 3));
+  ok('e il +15m dice quello di un quarto d ora', ctx.costoEstensione(c, 15), r2(p15 * 3));
+  ok('quindi i due tasti NON dicono piu la stessa cifra',
+     ctx.costoEstensione(c, 30) !== ctx.costoEstensione(c, 15), true);
+
+  /* quello che dice il tasto e quello che entra in cassa devono essere
+     lo stesso numero, se no il tasto e' una promessa e basta */
+  const scritto = ctx.costoEstensione(c, 30);
+  vendi(c, 30);
+  ok('e quello che dice e quello che chiede', r2(ctx.dueOf(c).park - partenza), scritto);
+
+  /* la seconda mezz'ora si paga come la prima */
+  const prima2 = ctx.dueOf(c).park;
+  const scritto2 = ctx.costoEstensione(c, 30);
+  vendi(c, 30);
+  ok('la seconda mezz ora costa come la prima', r2(ctx.dueOf(c).park - prima2), r2(p30 * 3));
+  ok('e il tasto lo aveva detto', scritto2, r2(p30 * 3));
+  ok('due mezz ore vendute, scritte una per una', c.aggiunte, [30, 30]);
+
+  /* disdire toglie dall'ULTIMA vendita */
+  const c2 = conto({ children: 2, crazyJumping: 0, durationMinutes: 60, baseMinutes: 60, barItems: [] });
+  vendi(c2, 30);
+  const conVendita = ctx.dueOf(c2).park;
+  c2.durationMinutes -= 30;
+  c2.aggiunte = [];
+  ctx.sistemaAggiunte(c2);
+  ok('disdetta la vendita, il prezzo torna quello di prima',
+     ctx.dueOf(c2).park, r2(conVendita - p30 * 2));
+
+  /* i tagli rapidi riscrivono la durata: le vendite non c entrano piu */
+  const c3 = conto({ children: 1, crazyJumping: 0, durationMinutes: 60, baseMinutes: 60, barItems: [] });
+  vendi(c3, 30);
+  delete c3.aggiunte;
+  c3.durationMinutes = 60;
+  ok('col taglio rapido si torna al prezzo dell ora piena',
+     ctx.dueOf(c3).park, r2(ctx.priceFor(60)));
+
+  /* le vendite non possono valere piu del tempo che c e */
+  const c4 = conto({ children: 1, durationMinutes: 60, baseMinutes: 30, barItems: [] });
+  c4.aggiunte = [30, 30, 30];
+  ctx.sistemaAggiunte(c4);
+  ok('vendite tagliate al tempo che esiste',
+     (c4.aggiunte || []).reduce((a, b) => a + b, 0) <= c4.durationMinutes, true);
+
+  /* e il Crazy non c entra: regala minuti, non compra tempo */
+  const c5 = conto({ children: 2, crazyJumping: 3, durationMinutes: 60, baseMinutes: 60, barItems: [] });
+  const senzaCrazy = conto({ children: 2, crazyJumping: 0, durationMinutes: 60, baseMinutes: 60, barItems: [] });
+  ok('il prezzo di allungare non cambia col Crazy',
+     ctx.conConto(c5, () => ctx.costoEstensione(c5, 30)),
+     ctx.conConto(senzaCrazy, () => ctx.costoEstensione(senzaCrazy, 30)));
+});
+
+gruppo('A conto saldato il tempo risulta pagato TUTTO', () => {
+  /* IL GUASTO CHE C'ERA. I minuti pagati si ricavavano dal cartello --
+     lo scaglione piu' alto che quei soldi coprono -- ma il cartello
+     finisce alle due ore e il tempo no. Un gruppo dentro da due ore e
+     mezza, a conto saldato, restava fermo a centoventi minuti: la
+     barra all'ottantanove per cento e la pastiglia che diceva "pagato
+     fino alle 18:50", cioe' chiedeva soldi gia' presi. */
+  const lungo = conto({ children: 2, crazyJumping: 0, durationMinutes: 150, baseMinutes: 150, barItems: [] });
+  ctx.pagaTutto();
+  ok('due ore e mezza, conto chiuso', ctx.contoResta() <= 0.005, true);
+  ok('e il tempo risulta pagato per intero', ctx.minutiPagati(lungo), ctx.tempoTotale(lungo));
+
+  /* col Crazy: i suoi minuti sono regalati, quindi non entrano nel
+     tempo da pagare -- ma nemmeno devono impedire il "pagato tutto" */
+  const conCrazy = conto({ children: 3, crazyJumping: 2, durationMinutes: 150, baseMinutes: 150, barItems: [] });
+  ctx.pagaTutto();
+  ok('col Crazy il conto si chiude lo stesso', ctx.contoResta() <= 0.005, true);
+  ok('e il tempo e coperto per intero', ctx.minutiPagati(conCrazy), ctx.tempoTotale(conCrazy));
+  ok('i minuti regalati restano fuori dal tempo pagato',
+     ctx.tempoTotale(conCrazy), 150);
+
+  /* e dopo aver VENDUTO tempo, che non corrisponde a uno scaglione */
+  const venduto = conto({ children: 3, crazyJumping: 1, durationMinutes: 60, baseMinutes: 60, barItems: [] });
+  venduto.durationMinutes = 90;
+  venduto.aggiunte = [30];
+  ctx.pagaTutto();
+  ok('anche dopo una vendita di tempo il conto si chiude', ctx.contoResta() <= 0.005, true);
+  ok('e il tempo risulta pagato tutto', ctx.minutiPagati(venduto), 90);
+
+  /* mezzo pagato deve restare mezzo pagato: la scorciatoia non deve
+     dire "tutto" a chi ha dato solo una parte */
+  const mezzo = conto({ children: 2, crazyJumping: 0, durationMinutes: 60, baseMinutes: 60, barItems: [] });
+  ctx.segnaPagate('bimbi', 1);
+  ok('con un bambino pagato su due, il tempo non e coperto',
+     ctx.minutiPagati(mezzo) < ctx.tempoTotale(mezzo), true);
+});
+
 gruppo('Bombardamento: mille tocchi a caso', () => {
   let seme = 12345;
   const caso = (n) => { seme = (seme * 1103515245 + 12345) % 2147483648; return seme % n; };
