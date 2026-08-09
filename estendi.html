@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="dark">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Estendere il tempo — proposte per la card Tempo</title>
+<link rel="stylesheet" href="./css/fonts.css">
+<link rel="stylesheet" href="./css/app.css?v=245">
+<style>
+  html, body { overflow: auto !important; height: auto !important; overscroll-behavior: auto !important; }
+  body { margin: 0; background: #0B0B10; color: #E9E9F2; padding: 22px 16px 90px;
+    font-family: 'Inter', system-ui, sans-serif; user-select: text; }
+  .foglio { max-width: 1000px; margin: 0 auto; }
+  .occhiello { color: #E8B44C; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; margin: 0 0 8px; }
+  h1.tit { font-family: 'Fredoka', sans-serif; font-size: 27px; margin: 0 0 10px; }
+  .intro { color: #A8A8BD; font-size: 15px; line-height: 1.65; margin: 0 0 10px; max-width: 82ch; }
+  .intro b { color: #E8B44C; font-weight: 600; }
+
+  /* i guasti di adesso, numerati */
+  .guasti { counter-reset: g; display: flex; flex-direction: column; gap: 9px; margin: 18px 0 0;
+    padding: 15px 17px; background: #14141B; border-radius: 16px; border: 1px solid rgba(255,255,255,.08); }
+  .guasti .g { position: relative; padding-left: 34px; font-size: 14.5px; line-height: 1.6; color: #C9CFDA; }
+  .guasti .g::before { counter-increment: g; content: counter(g); position: absolute; left: 0; top: 1px;
+    width: 23px; height: 23px; border-radius: 50%; background: rgba(228,87,79,.2); color: #F09A94;
+    font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; }
+  .guasti .g b { color: #F2F2F8; }
+
+  /* le tre domande */
+  .tre-dom { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 16px 0 0; }
+  .tre-dom .d { background: #14141B; border: 1px solid rgba(255,255,255,.08); border-radius: 16px; padding: 14px 16px; }
+  .tre-dom .d .n { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #E8B44C; }
+  .tre-dom .d h4 { font-family: 'Fredoka', sans-serif; font-size: 17px; margin: 5px 0 6px; }
+  .tre-dom .d p { margin: 0; font-size: 13.5px; line-height: 1.6; color: #A8A8BD; }
+
+  .barra { position: sticky; top: 0; z-index: 50; background: rgba(11,11,16,.94);
+    backdrop-filter: blur(8px); padding: 10px 0; margin: 20px 0 0;
+    border-bottom: 1px solid rgba(255,255,255,.08); display: flex; gap: 11px;
+    align-items: center; flex-wrap: wrap; }
+  .barra label { display: inline-flex; align-items: center; gap: 7px; font-size: 13px;
+    font-weight: 700; color: #C9CFDA; cursor: pointer; }
+  .barra input[type=checkbox] { width: 18px; height: 18px; accent-color: #E8B44C; }
+  .barra .grp { display: inline-flex; align-items: center; gap: 6px; background: #1A1A24;
+    border-radius: 20px; padding: 4px 6px 4px 12px; font-size: 13px; font-weight: 700; color: #C9CFDA; }
+  .barra .grp button { width: 30px; height: 30px; border: none; border-radius: 50%; background: #2A2A38;
+    color: #E9E9F2; font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 700; cursor: pointer; }
+  .barra .salta { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; }
+  .barra .salta a { font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 700;
+    background: #23232F; color: #E8B44C; border-radius: 20px; padding: 4px 12px; text-decoration: none; }
+
+  .testa { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 44px 0 4px;
+    scroll-margin-top: 70px; }
+  .lett { font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 700; background: #23232F;
+    color: #E8B44C; border-radius: 20px; padding: 4px 12px; }
+  .testa h3 { font-family: 'Fredoka', sans-serif; font-size: 19px; margin: 0; }
+  .perche { color: #8F8FA6; font-size: 13.5px; margin: 0 0 8px; line-height: 1.62; max-width: 80ch; }
+  .perche b { color: #C9CFDA; }
+  .mis { margin-left: auto; font-size: 11px; font-weight: 800; letter-spacing: .04em;
+    text-transform: uppercase; border-radius: 20px; padding: 4px 10px; color: #C9CFDA;
+    background: rgba(0,0,0,.55); }
+  .mis.giu { background: rgba(106,220,175,.16); color: #7BE0A8; }
+  .mis.su { background: rgba(228,87,79,.16); color: #F09A94; }
+
+  .tavoletta { background: #14141B; border-radius: 18px; border: 1px solid rgba(255,255,255,.08);
+    padding: 10px 12px 12px; width: 806px; max-width: 100%; }
+  .tavoletta .pan-conto { --bg: #14141B; display: flex; flex-direction: column; gap: 9px; }
+  .pc-parco { display: flex; flex-direction: column; gap: 8px; }
+
+  .nota { background: #181A22; border: 1px solid rgba(255,255,255,.08); border-left: 3px solid #E8B44C;
+    border-radius: 0 14px 14px 0; padding: 15px 17px; margin: 44px 0 0; color: #B9BFC9;
+    font-size: 14.5px; line-height: 1.68; }
+  .nota b { color: #E9E9F2; }
+
+  /* ═══════════ i pezzi che le proposte si giocano ═══════════ */
+
+  /* LA RIGA GRANDE: fin quando restano, scritta come si dice a voce */
+  .fin { display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,.26);
+    border-radius: 14px; padding: 5px 11px; }
+  .fin .txt { flex: 1; min-width: 0; }
+  .fin .k { display: block; font-size: 11.5px; font-weight: 800; letter-spacing: .07em;
+    text-transform: uppercase; color: rgba(255,255,255,.6); }
+  .fin .v { display: block; font-family: 'Fredoka', sans-serif; font-size: 27px; font-weight: 700;
+    line-height: 1.06; }
+  .fin .sotto { display: block; font-size: 12.5px; color: rgba(255,255,255,.72); margin-top: 1px; }
+  .fin .sotto em { font-style: normal; color: #8DEBBB; }
+  .fin .mini { display: flex; gap: 5px; }
+  .fin .mini button { width: 44px; height: 42px; border: none; border-radius: 11px; cursor: pointer;
+    background: rgba(255,255,255,.1); color: #fff; font-family: 'Fredoka', sans-serif;
+    font-size: 21px; font-weight: 700; }
+  .fin .mini button:active { background: rgba(255,255,255,.24); }
+
+  /* I TASTI CHE AGGIUNGONO: dicono i minuti e quello che costano */
+  .agg { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .agg > .k { font-size: 11.5px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase;
+    color: #F0CE8A; }
+  .agg button { border: none; border-radius: 12px; cursor: pointer; min-height: 42px; padding: 0 11px;
+    background: rgba(232,180,76,.16); box-shadow: inset 0 0 0 1.5px rgba(232,180,76,.42);
+    color: #F6DCA6; font: inherit; display: flex; align-items: center;
+    justify-content: center; gap: 6px; line-height: 1; }
+  .agg button:active { background: rgba(232,180,76,.3); }
+  .agg button .m { font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 700; color: #FBEBC8; }
+  .agg button .p { font-size: 12px; font-weight: 700; opacity: .9; }
+  .agg button.meno { background: rgba(255,255,255,.07); box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.16);
+    color: #C9CFDA; }
+  .agg button.meno .m { color: #E4E4EE; }
+  .agg button:disabled { opacity: .32; cursor: default; }
+
+  /* LA RIGA DEI SOLDI: un tasto solo che dice quanto incassa */
+  .sld { display: flex; align-items: center; gap: 8px; background: rgba(106,220,175,.13);
+    border: 1px solid rgba(106,220,175,.28); border-radius: 13px; padding: 4px 4px 4px 11px; }
+  /* la stessa riga, ma stretta: sta accanto ai tagli invece che sotto */
+  .sld.corta { flex: 0 0 auto; }
+  .sld.corta .k { white-space: nowrap; }
+  .sld .k { flex: 1; min-width: 0; font-size: 13px; font-weight: 700; color: #A9EFD3; line-height: 1.35; }
+  .sld .k b { color: #DFF7EC; }
+  .sld .tondo { width: 44px; height: 40px; border: none; border-radius: 12px; cursor: pointer;
+    background: rgba(255,255,255,.08); color: #A9EFD3; font-family: 'Fredoka', sans-serif;
+    font-size: 24px; font-weight: 700; }
+  .sld .inc { border: none; border-radius: 11px; cursor: pointer; min-height: 40px; padding: 0 15px;
+    background: linear-gradient(180deg, #57D69C, #2E9E6D); color: #06251A;
+    font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 700; }
+  .sld .inc:disabled, .sld .tondo:disabled { opacity: .3; cursor: default; }
+  .sld.tutto { background: rgba(106,220,175,.26); }
+
+  /* IL NASTRO: il tempo si vede lungo */
+  .nas { position: relative; height: 44px; border-radius: 12px; background: rgba(0,0,0,.42);
+    overflow: hidden; cursor: pointer; box-shadow: inset 0 1px 3px rgba(0,0,0,.45); }
+  .nas .pag { position: absolute; left: 0; top: 0; bottom: 0;
+    background: linear-gradient(180deg, rgba(87,214,156,.85), rgba(46,158,109,.85)); transition: width .18s ease; }
+  .nas .cra { position: absolute; top: 0; bottom: 0; transition: left .18s ease, width .18s ease;
+    background: repeating-linear-gradient(115deg, rgba(182,158,255,.5) 0 8px, rgba(182,158,255,.22) 8px 16px); }
+  .nas .tac { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,.13); }
+  .nas .tac b { position: absolute; top: 3px; left: 3px; font-size: 9.5px; font-weight: 800;
+    color: rgba(255,255,255,.45); }
+  .nas .eti { position: absolute; inset: 0; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 12px; pointer-events: none; }
+  .nas .eti span { font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 700; color: #fff;
+    text-shadow: 0 1px 4px rgba(0,0,0,.75); }
+  .nas .eti .mezzo { font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 700;
+    color: rgba(255,255,255,.9); }
+  .nas.aperta { background: repeating-linear-gradient(115deg, rgba(255,255,255,.09) 0 12px, rgba(0,0,0,.34) 12px 24px); }
+  .nas-sotto { display: flex; justify-content: space-between; font-size: 11.5px; font-weight: 700;
+    color: rgba(255,255,255,.55); padding: 3px 2px 0; }
+
+  /* LO SCONTRINO */
+  .scn { background: rgba(0,0,0,.26); border-radius: 13px; padding: 5px 11px 6px; }
+  .scn .r { display: flex; align-items: center; gap: 9px; padding: 2px 0; font-size: 13.5px; }
+  .scn .r .d { flex: 1; min-width: 0; color: rgba(255,255,255,.9); }
+  .scn .r .d small { font-size: 11.5px; color: rgba(255,255,255,.5); margin-left: 6px; }
+  .scn .r .n { font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 700;
+    font-variant-numeric: tabular-nums; }
+  .scn .r.plus .d, .scn .r.plus .n { color: #F6DCA6; }
+  .scn .r .via { width: 32px; height: 32px; border: none; border-radius: 9px; cursor: pointer;
+    background: rgba(255,255,255,.09); color: #C9CFDA; font-size: 15px; }
+  .scn .filo { height: 1px; background: rgba(255,255,255,.13); margin: 3px 0; }
+  .scn .r.res .inc { border: none; border-radius: 10px; cursor: pointer; min-height: 36px; padding: 0 13px;
+    background: linear-gradient(180deg, #57D69C, #2E9E6D); color: #06251A;
+    font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 700; }
+  .scn .r.res .inc:disabled { opacity: .3; cursor: default; }
+  .scn .r.tot .d { font-weight: 700; }
+  .scn .r.tot .n { font-size: 20px; }
+  .scn .r.res .d { color: #A9EFD3; font-weight: 700; }
+  .scn .r.res .n { color: #DFF7EC; font-size: 22px; }
+  .scn .r.res.zero .d, .scn .r.res.zero .n { color: #8DEBBB; }
+
+  /* i due gruppi della E: "resta" e "allunga", che non si somigliano */
+  .due-g { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+  .due-g .et { font-size: 11px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase;
+    color: rgba(255,255,255,.55); }
+  .due-g .sep { width: 1px; align-self: stretch; background: rgba(255,255,255,.14); margin: 0 2px; }
+
+  .dx { margin-left: auto; }
+  .righe { display: flex; flex-direction: column; gap: 8px; }
+  .nuda { background: rgba(0,0,0,.2); border-radius: 15px; padding: 8px 10px; }
+</style>
+
+<div class="foglio">
+  <p class="occhiello">GestioParco · proposte</p>
+  <h1 class="tit">La card «Tempo», e cosa vuol dire estendere</h1>
+  <p class="intro">
+    Le proposte qui sotto <b>funzionano davvero</b>: i tasti muovono i minuti e i soldi come nell’app,
+    col listino vero (10′ 3,00 · 30′ 7,00 · 1h 12,00 · 1h30 19,00 · 2h 24,00) e col Crazy che regala
+    8 minuti a testa <b>senza farli pagare</b>. Cambia i bambini quassù e guarda i prezzi muoversi.
+    In fondo a ogni proposta c’è quanto è alta rispetto a oggi.
+  </p>
+
+  <h2 style="font-family:'Fredoka',sans-serif;font-size:19px;margin:28px 0 0">Cosa non funziona adesso</h2>
+  <div class="guasti">
+    <div class="g"><b>Quattro «− +» che si somigliano e fanno quattro mestieri diversi.</b>
+      Uno sposta l’ora d’ingresso, uno l’ora d’uscita, uno muove i <b>soldi</b>, e i tagli rapidi
+      cambiano la durata. Stessa forma, stesso colore, conseguenze diversissime.</div>
+    <div class="g"><b>I tagli rapidi SOSTITUISCONO, ma al banco si CHIEDE DI AGGIUNGERE.</b>
+      «Un’altra mezz’ora» non è «30m»: se premi 30m su un’ora già passata, il tempo si accorcia.
+      È il vero nodo, e nessuna scritta avverte.</div>
+    <div class="g"><b>La parola «estendere» non c’è.</b> Si estende premendo il più sull’orario
+      d’uscita — bisogna saperlo — e <b>nessun tasto dice quanto costa</b>. Il prezzo cambia dopo,
+      da solo, nella cifra in fondo.</div>
+    <div class="g"><b>La pastiglia verde sembra tempo e invece è cassa.</b> Sta in fila coi tagli,
+      dice «da pagare 12,00 €» e il suo più <b>incassa dei soldi</b>.</div>
+    <div class="g"><b>Il filo verde non si presenta.</b> Dice fin dove arrivano i soldi, ma è una
+      striscia alta sette pixel senza una parola: chi non lo sa non lo scopre.</div>
+  </div>
+
+  <h2 style="font-family:'Fredoka',sans-serif;font-size:19px;margin:34px 0 0">Le tre domande da tenere separate</h2>
+  <div class="tre-dom">
+    <div class="d"><span class="n">l’orologio</span><h4>Fino a che ora restano?</h4>
+      <p>Un orario. Ci entrano i minuti regalati dal Crazy, che allungano la permanenza ma non il conto.</p></div>
+    <div class="d"><span class="n">il listino</span><h4>Quanto tempo hanno comprato?</h4>
+      <p>Una durata, e quindi un prezzo. <b>Estendere vive qui</b>: comprare altro tempo, e sapere subito quanto costa.</p></div>
+    <div class="d"><span class="n">la cassa</span><h4>Quanto hanno già dato?</h4>
+      <p>Soldi. Non è tempo: è l’unica riga che muove la cassa, e deve avere una faccia sua.</p></div>
+  </div>
+
+  <div class="barra">
+    <span class="grp">bambini <button data-a="bimbi" data-v="-1">−</button><b id="nBimbi">3</b><button data-a="bimbi" data-v="1">+</button></span>
+    <span class="grp">crazy <button data-a="crazy" data-v="-1">−</button><b id="nCrazy">0</b><button data-a="crazy" data-v="1">+</button></span>
+    <label><input type="checkbox" id="dentro" checked> sono già dentro (scheda che vola)</label>
+    <label><input type="checkbox" id="aperto"> tempo aperto</label>
+    <label><input type="checkbox" id="scaglioni"> ogni aggiunta si paga a parte</label>
+    <label><input type="checkbox" id="stretto"> tavoletta stretta</label>
+    <span class="salta">
+      <a href="#pOGGI">oggi</a><a href="#pA">A</a><a href="#pB">B</a><a href="#pC">C</a><a href="#pD">D</a><a href="#pE">E</a>
+    </span>
+  </div>
+
+  <div id="proposte"></div>
+
+  <div class="nota" id="scelta"></div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════
+   I CONTI, gli stessi dell'app
+   Il listino a scaglioni, il Crazy che regala minuti senza farli
+   pagare, e i soldi che si muovono una volta sola al prezzo di quel
+   momento. Se qui i numeri fossero finti la proposta non varrebbe
+   niente: si sceglie una card guardando quello che dice, e quello che
+   dice sono i prezzi.
+   ══════════════════════════════════════════════════════════ */
+const TAR = [{m:10,p:3},{m:15,p:4.5},{m:20,p:6},{m:30,p:7},{m:40,p:10},{m:50,p:12},{m:60,p:12},
+  {m:70,p:15},{m:80,p:16.5},{m:90,p:19},{m:100,p:22},{m:110,p:24},{m:120,p:24}];
+const CRAZY_PREZZO = 4, CRAZY_MIN = 8;
+const TAGLI = [15, 30, 60, 90];
+const AGGIUNTE = [15, 30, 60];
+
+const oggi = new Date(); oggi.setHours(14, 30, 0, 0);
+const S = { inizio: oggi.getTime(), durata: 60, base: 60, aperto: false,
+  bimbi: 3, crazy: 0, soldi: 0, brac: 'auto', scaglioni: false,
+  /* IL MOMENTO CAMBIA LA DOMANDA. Mentre registri decidi quanto tempo
+     comprano; quando sono gia' dentro, allunghi. Sono due domande
+     diverse fatte in due momenti diversi -- e l'app SA in quale dei
+     due si trova: "+ Nuovo" e' l'una, la scheda che vola e' l'altra. */
+  dentro: true };
+
+const r2 = v => Math.round(v * 100) / 100;
+const up5 = m => Math.ceil(m / 5) * 5;
+const eur = v => (Math.round(v * 100) / 100).toFixed(2).replace('.', ',') + ' €';
+const ore = ts => { const d = new Date(ts); return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); };
+const fmtMin = m => m % 60 === 0 ? (m / 60) + 'h' : (m < 60 ? m + 'm' : Math.floor(m/60) + 'h' + String(m%60).padStart(2,'0'));
+
+function prezzoUno(min) {
+  min = up5(Math.max(0, min));
+  for (const t of TAR) if (min <= t.m) return t.p;
+  return TAR[TAR.length - 1].p;
+}
+/* quanto costa UN bambino con la durata che ha adesso: sul totale, o
+   sommando l'aggiunta a parte -- e' l'interruttore delle impostazioni */
+function unoOra(dur) {
+  dur = dur === undefined ? S.durata : dur;
+  if (!S.scaglioni) return prezzoUno(dur);
+  const agg = Math.max(0, dur - S.base);
+  return prezzoUno(S.base) + (agg > 0 ? prezzoUno(agg) : 0);
+}
+const costoParco = () => r2(unoOra() * S.bimbi);
+const costoCrazy = () => r2(S.crazy * CRAZY_PREZZO);
+const costo = () => r2(costoParco() + costoCrazy());
+const dovuto = () => Math.max(0, r2(costo() - S.soldi));
+/* quanto costa AGGIUNGERE tot minuti: la differenza vera, non una
+   tariffa a se' -- e' il numero che va scritto sul tasto */
+const costaAgg = dm => Math.max(0, r2((unoOra(S.durata + dm) - unoOra(S.durata)) * S.bimbi));
+/* i minuti regalati non entrano nel prezzo, ma entrano nell'uscita */
+const regalati = () => S.crazy * CRAZY_MIN;
+const fine = () => S.inizio + (S.durata + regalati()) * 60000;
+/* fin dove arrivano i soldi: lo scaglione piu' alto che quei soldi
+   coprono, esattamente come minutiPagati() */
+function minPagati() {
+  if (!S.bimbi) return 0;
+  const perUno = Math.max(0, S.soldi - costoCrazy()) / S.bimbi;
+  let cop = 0;
+  for (const t of TAR) if (t.p <= perUno + 1e-9) cop = t.m;
+  return Math.min(cop, S.durata);
+}
+const pagFino = () => S.inizio + minPagati() * 60000;
+const saldato = () => !S.aperto && dovuto() <= 0.005 && S.bimbi > 0;
+const quotaPag = () => S.durata ? Math.min(1, minPagati() / S.durata) : 0;
+
+/* ══════════════════════════════════════════════════════════
+   I PEZZI, che le proposte rimescolano
+   ══════════════════════════════════════════════════════════ */
+function grOra() {
+  return '<span class="tp-gr"><span class="em">🕒</span>' +
+    '<button data-a="ora" data-v="-5">−</button><span class="v">' + ore(S.inizio) + '</span>' +
+    '<button data-a="ora" data-v="5">+</button>' +
+    '<button class="txt" data-a="ora" data-v="adesso"><span class="em">📍</span> ora</button></span>';
+}
+function grFine() {
+  return '<span class="tp-gr' + (S.aperto ? ' spento' : '') + '"><span class="em">🚪</span>' +
+    '<button data-a="durd" data-v="-15"' + (S.aperto ? ' disabled' : '') + '>−</button>' +
+    '<span class="v">' + (S.aperto ? '—' : ore(fine())) + '</span>' +
+    '<button data-a="durd" data-v="15"' + (S.aperto ? ' disabled' : '') + '>+</button></span>';
+}
+let bracAperto = false;
+const BRAC = [['auto','Auto','#8A8AA0'],['senza','Senza',null],['rosso','Rosso','#E23D4B'],
+  ['verde','Verde','#3FBF7F'],['giallo','Giallo','#F2C744'],['blu','Blu','#3B7DE0']];
+function bracPast() {
+  const b = BRAC.find(x => x[0] === S.brac) || BRAC[0];
+  return '<span class="brc"><button class="brc-b" data-a="bracapri">' +
+    '<span class="pallo" style="background:' + (b[2] || 'transparent') + ';border-style:' + (b[2] ? 'solid' : 'dashed') + '"></span>' +
+    '<span>' + b[1] + '</span></button>' +
+    (bracAperto ? '<span class="brc-menu" style="position:static;display:inline-flex">' +
+      '<span class="wrist-row">' + BRAC.map(x =>
+        '<button class="wrist-dot' + (x[2] ? '' : ' senza') + (S.brac === x[0] ? ' on' : '') + '" data-a="brac" data-v="' + x[0] + '"' +
+        (x[2] ? ' style="background:' + x[2] + '"' : '') + '>' + (x[2] ? '' : x[1]) + '</button>').join('') +
+      '</span></span>' : '') + '</span>';
+}
+/* i tagli: SOSTITUISCONO la durata (e rimettono a zero la base, cosi'
+   "a scaglioni" riparte da li') */
+function chipsSet() {
+  return '<span class="chips" style="margin:0">' + TAGLI.map(m =>
+    '<button class="chip' + (!S.aperto && S.durata === m ? ' on' : '') + '" data-a="set" data-v="' + m + '">' +
+    fmtMin(m) + '</button>').join('') +
+    '<button class="chip later' + (S.aperto ? ' on' : '') + '" data-a="aperto">⏳ Tempo aperto</button></span>';
+}
+/* i tasti che AGGIUNGONO: sopra i minuti, sotto quello che costano */
+/* TRE TASTI, STRETTI. Il quarto ("torna indietro") l'ho tolto: quel
+   mestiere lo fa gia' il meno sull'ora d'uscita, e una riga che va a
+   capo costa cinquanta pixel -- cioe' piu' di quanto valga il tasto.
+   Il prezzo e' quello DELL'AGGIUNTA, non il totale: col listino a
+   scaglioni da 1h a 1h30 non e' "mezz'ora", sono sette euro a
+   bambino, e nessuno lo indovina. */
+function rigaAgg(etichetta) {
+  return '<span class="agg">' + (etichetta === false ? '' : '<span class="k">allunga</span>') +
+    AGGIUNTE.map(m => '<button data-a="add" data-v="' + m + '"' + (S.aperto ? ' disabled' : '') + '>' +
+      '<span class="m">+' + fmtMin(m) + '</span><span class="p">' +
+      (S.aperto ? '—' : '+' + eur(costaAgg(m)).replace(' €', '')) + '</span></button>').join('') +
+    '</span>';
+}
+/* la cassa: un tasto solo che DICE quanto incassa */
+function rigaSoldi() {
+  const d = dovuto();
+  let t;
+  if (!S.bimbi) t = 'nessun bambino';
+  else if (S.aperto) t = 'si conta all’uscita · finora <b>' + eur(costo()) + '</b>';
+  else if (d <= 0.005) t = '✓ tutto incassato · <b>' + eur(S.soldi) + '</b>';
+  else if (S.soldi > 0) t = 'incassati ' + eur(S.soldi) + ' · pagato fino alle <b>' + ore(pagFino()) + '</b>';
+  else t = 'da incassare';
+  return '<div class="sld' + (d <= 0.005 && S.bimbi ? ' tutto' : '') + '">' +
+    '<span class="k">' + t + '</span>' +
+    '<button class="tondo" data-a="reso"' + (S.soldi <= 0 ? ' disabled' : '') + ' title="rimetti indietro">↩</button>' +
+    '<button class="inc" data-a="incassa"' + (d <= 0.005 || !S.bimbi ? ' disabled' : '') + '>' +
+    (d > 0.005 ? 'Incassa ' + eur(d) : 'Incassato') + '</button></div>';
+}
+/* la prima riga, uguale in quasi tutte: quando entrano, quando
+   escono, il bracciale */
+function riga1(conFine) {
+  return '<div class="tp-riga">' + grOra() + (conFine === false ? '' : grFine()) +
+    '<span class="tp-dx">' + bracPast() + '</span></div>';
+}
+/* il filo del pagato, com'e' adesso */
+function filo() {
+  return '<div class="tp-filo' + (S.aperto ? ' aperta' : '') + '"><i style="width:' +
+    (S.aperto ? 0 : Math.round(quotaPag() * 100)) + '%"></i></div>';
+}
+/* la cassa in versione stretta: sta in fondo a una riga gia' occupata,
+   come la pastiglia di adesso, ma il tasto DICE la cifra */
+function sldCorta() {
+  const d = dovuto();
+  let t;
+  if (!S.bimbi) t = 'nessun bambino';
+  else if (S.aperto) t = 'si conta all’uscita';
+  else if (d <= 0.005) t = '✓ tutto incassato';
+  else if (S.soldi > 0) t = 'pagato fino alle <b>' + ore(pagFino()) + '</b>';
+  else t = 'da incassare';
+  return '<span class="sld corta' + (d <= 0.005 && S.bimbi ? ' tutto' : '') + '">' +
+    '<span class="k">' + t + '</span>' +
+    '<button class="tondo" data-a="reso"' + (S.soldi <= 0 ? ' disabled' : '') + ' title="rimetti indietro">↩</button>' +
+    '<button class="inc" data-a="incassa"' + (d <= 0.005 || !S.bimbi ? ' disabled' : '') + '>' +
+    (d > 0.005 ? 'Incassa ' + eur(d).replace(' €', '') : 'Incassato') + '</button></span>';
+}
+/* LA SECONDA RIGA CAMBIA COL MOMENTO: i tagli mentre registri, i tasti
+   che allungano quando sono gia' dentro. Non e' un risparmio furbo, e'
+   che le due domande non si fanno mai insieme. */
+function rigaMomento() {
+  return S.dentro ? rigaAgg(false) : chipsSet();
+}
+function blk(colore, titolo, dentro, em) {
+  return '<div class="card blk ' + colore + '"><h2><span class="em">' + em + '</span> ' + titolo + '</h2>' +
+    '<div class="blk-in"><div class="righe">' + dentro + '</div></div></div>';
+}
+
+/* IL NASTRO: la permanenza vista lunga. Verde = coperto dai soldi,
+   tratteggio viola = i minuti regalati dal Crazy, che sono dentro il
+   tempo ma fuori dal conto. Si tocca dove si vuole finire. */
+function nastro() {
+  const tot = S.durata + regalati();
+  const q = tot ? (S.durata / tot) : 1;
+  const pag = tot ? Math.min(1, minPagati() / tot) : 0;
+  const tacche = [];
+  for (let m = 30; m < tot; m += 30) tacche.push(
+    '<span class="tac" style="left:' + (m / tot * 100) + '%"><b>' + ore(S.inizio + m * 60000) + '</b></span>');
+  return '<div><div class="nas' + (S.aperto ? ' aperta' : '') + '" data-a="nastro">' +
+    (S.aperto ? '' :
+      '<span class="pag" style="width:' + (pag * 100) + '%"></span>' +
+      (regalati() ? '<span class="cra" style="left:' + (q * 100) + '%;width:' + ((1 - q) * 100) + '%"></span>' : '') +
+      tacche.join('')) +
+    '<span class="eti"><span>' + ore(S.inizio) + '</span>' +
+    '<span class="mezzo">' + (S.aperto ? 'tempo aperto · si conta all’uscita'
+      : (fmtMin(S.durata) + ' comprata' + (regalati() ? ' + ' + regalati() + 'm dal Crazy' : ''))) + '</span>' +
+    '<span>' + (S.aperto ? '∞' : ore(fine())) + '</span></span></div>' +
+    '<div class="nas-sotto"><span>' + (S.aperto ? '' :
+      (minPagati() > 0 ? 'pagato fino alle ' + ore(pagFino()) : 'ancora niente incassato')) + '</span>' +
+    '<span>' + (S.aperto ? 'tocca un taglio per chiudere il tempo' : 'tocca il nastro per finire a quell’ora') + '</span></div></div>';
+}
+
+/* ══════════════════════════════════════════════════════════
+   LE PROPOSTE
+   ══════════════════════════════════════════════════════════ */
+const V = [
+{ l: 'OGGI', t: 'Com’è adesso', p: 'La fascia che c’è in app, per confronto. Tutto quello che sa fare c’è anche in ognuna delle proposte. Il numero a destra è l’altezza: è il metro con cui vanno giudicate, perché nel pannello non avanza niente.',
+  fai: () => blk('c-blu', 'Tempo',
+    riga1() + filo() +
+    '<div class="tp-riga">' + chipsSet() + '<span class="tp-dx"><span class="pgl' +
+      (saldato() ? ' tutto' : minPagati() > 0 ? '' : ' vuota') + '"><span class="k">' +
+      (!S.bimbi ? 'nessun bambino' : S.aperto ? 'si conta all’uscita'
+        : saldato() ? '✓ pagato tutto'
+        : minPagati() > 0 ? 'pagato fino alle <b>' + ore(pagFino()) + '</b>'
+        : 'da pagare <b>' + eur(dovuto()) + '</b>') + '</span>' +
+      '<button data-a="reso"' + (S.soldi <= 0 ? ' disabled' : '') + '>−</button>' +
+      '<button data-a="incassa"' + (saldato() || !S.bimbi || S.aperto ? ' disabled' : '') + '>+</button></span></span></div>',
+    '⏱️') },
+
+{ l: 'A', t: 'Allunga prende il posto dei tagli',
+  p: 'Stesse due righe di oggi, <b>zero pixel in più</b>. La seconda riga cambia col momento: ' +
+     'mentre <b>registri</b> ci sono i tagli bianchi — quanto tempo comprano; quando sono ' +
+     '<b>già dentro</b> ci sono i tasti ambrati che <b>aggiungono</b> e dicono quanto costa ' +
+     'l’aggiunta prima che tu la faccia. Le due domande non si fanno mai nello stesso momento, ' +
+     'quindi non devono stare a video insieme. Per correggere un errore d’ingresso c’è sempre ' +
+     'il − e + sull’ora d’uscita. Prova l’interruttore «sono già dentro» qui sopra.',
+  fai: () => blk('c-blu', 'Tempo',
+    riga1() + filo() +
+    '<div class="tp-riga">' + rigaMomento() + '<span class="tp-dx">' + sldCorta() + '</span></div>', '⏱️') },
+
+{ l: 'B', t: 'Il nastro: il tempo si vede lungo',
+  p: 'Il nastro <b>si mangia l’ora d’uscita e il filo verde</b>, quindi costa meno di quel che ' +
+     'sembra. <b>Verde</b> fin dove arrivano i soldi, <b>tratteggio viola</b> i minuti regalati ' +
+     'dal Crazy: si vede a colpo d’occhio che restano di più senza pagare di più — oggi non lo ' +
+     'dice niente. E <b>si tocca il nastro dove si vuole finire</b>: è l’unica in cui allungare ' +
+     'è un gesto e non un calcolo.',
+  fai: () => blk('c-blu', 'Tempo',
+    nastro() +
+    '<div class="tp-riga">' + grOra() + bracPast() + '<span class="tp-dx">' + sldCorta() + '</span></div>' +
+    '<div class="tp-riga">' + rigaMomento() + '</div>', '⏱️') },
+
+{ l: 'C', t: 'Le righe di conto',
+  p: 'Il tempo diventa <b>righe di scontrino</b>, e prendono il posto del filo verde e della ' +
+     'pastiglia: l’ingresso, l’allungamento (con la sua <b>✕</b> per disdirlo), il Crazy, e in ' +
+     'fondo quello che resta da incassare col suo tasto. È la più esplicita di tutte — quello ' +
+     'che stai facendo lo <b>vedi scritto</b> — ed è l’unica in cui puoi disfare l’ultima ' +
+     'aggiunta senza ricordarti di quanto era. La riga in più compare <b>solo quando allunghi</b>.',
+  fai: () => {
+    const agg = Math.max(0, S.durata - S.base);
+    const pAgg = r2(costoParco() - r2(unoOra(S.base) * S.bimbi));
+    const d = dovuto();
+    return blk('c-blu', 'Tempo',
+      riga1() +
+      '<div class="scn">' +
+        '<div class="r"><span class="d">' + (S.aperto ? 'Tempo aperto' : fmtMin(S.base) + ' × ' + S.bimbi + (S.bimbi === 1 ? ' bambino' : ' bambini')) +
+          '<small>' + (S.aperto ? 'si conta all’uscita'
+            : ore(S.inizio) + ' → ' + ore(S.inizio + S.base * 60000)) + '</small></span>' +
+          '<span class="n">' + (S.aperto ? '—' : eur(r2(unoOra(S.base) * S.bimbi))) + '</span></div>' +
+        (agg > 0 && !S.aperto ? '<div class="r plus"><span class="d">+ ' + fmtMin(agg) + ' allungato' +
+          '<small>fino alle ' + ore(S.inizio + S.durata * 60000) + '</small></span>' +
+          '<span class="n">+' + eur(pAgg) + '</span>' +
+          '<button class="via" data-a="disfa" title="togli l’allungamento">✕</button></div>' : '') +
+        (S.crazy ? '<div class="r"><span class="d">Crazy × ' + S.crazy +
+          '<small>' + regalati() + ' minuti regalati</small></span>' +
+          '<span class="n">' + eur(costoCrazy()) + '</span></div>' : '') +
+        '<div class="filo"></div>' +
+        '<div class="r res' + (d <= 0.005 ? ' zero' : '') + '"><span class="d">' +
+          (!S.bimbi ? 'nessun bambino' : d <= 0.005 ? '✓ saldato · ' + eur(S.soldi) + ' incassati'
+            : S.soldi > 0 ? 'incassati ' + eur(S.soldi) + ' · resta' : 'da incassare') + '</span>' +
+          '<span class="n">' + eur(d) + '</span>' +
+          '<button class="inc" data-a="incassa"' + (d <= 0.005 || !S.bimbi ? ' disabled' : '') + '>Incassa</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="tp-riga">' + rigaMomento() + '</div>', '⏱️');
+  } },
+
+{ l: 'D', t: 'Due card: l’orologio e il listino',
+  p: 'La divisione presa alla lettera: <b>una card per l’orologio</b> (quando entrano, quando ' +
+     'escono, il bracciale) e <b>una per il tempo comprato</b> (quanto, quanto costa, quanto ' +
+     'hanno dato). Due colori, due domande, nessun modo di confonderle. Si paga in altezza: ' +
+     'un titolo e una cornice in più.',
+  fai: () => blk('c-blu', 'Orario', riga1() +
+      '<div class="nas-sotto" style="padding-top:0"><span>' +
+        (S.aperto ? 'nessuna ora d’uscita: si conta all’uscita'
+          : 'restano ' + fmtMin(S.durata + regalati()) +
+            (regalati() ? ' · ' + regalati() + ' regalati dal Crazy' : '')) + '</span></div>', '🕒') +
+    blk('c-ambra', 'Tempo comprato',
+      '<div class="tp-riga">' + rigaMomento() + '<span class="tp-dx">' + sldCorta() + '</span></div>', '🎫') },
+
+{ l: 'E', t: 'Come oggi, con le parole giuste',
+  p: 'Il cambio più piccolo possibile: la fascia di oggi, ma i due mestieri <b>si separano a ' +
+     'vista</b> — «resta» coi tagli bianchi, un filo in mezzo, «allunga» coi tasti ambrati che ' +
+     'dicono il prezzo. Nessuno deve reimparare niente, sparisce solo l’equivoco. In cambio la ' +
+     'riga è piena: sulla tavoletta stretta va a capo, e quella è una riga in più.',
+  fai: () => blk('c-blu', 'Tempo',
+    riga1() + filo() +
+    '<div class="tp-riga"><span class="due-g"><span class="et">resta</span>' + chipsSet() +
+      '<span class="sep"></span>' + rigaAgg() + '</span></div>' +
+    '<div class="tp-riga"><span class="tp-dx">' + sldCorta() + '</span></div>', '⏱️') }
+];
+
+/* ══════════════════════════════════════════════════════════
+   I comandi, uno per tutta la pagina
+   ══════════════════════════════════════════════════════════ */
+function tocca(a, v, ev) {
+  if (a === 'ora') {
+    if (v === 'adesso') { const d = new Date(); d.setSeconds(0,0); d.setMinutes(Math.round(d.getMinutes()/5)*5); S.inizio = d.getTime(); }
+    else S.inizio += parseInt(v, 10) * 60000;
+  }
+  /* i tagli SOSTITUISCONO: rimettono anche la base, cosi' "ogni
+     aggiunta si paga a parte" riparte da qui */
+  if (a === 'set') { S.durata = parseInt(v, 10); S.base = S.durata; S.aperto = false; }
+  if (a === 'durd') { S.durata = Math.max(5, S.durata + parseInt(v, 10)); S.aperto = false; }
+  if (a === 'add') { S.durata = Math.max(5, S.durata + parseInt(v, 10)); S.aperto = false; }
+  if (a === 'disfa') { S.durata = S.base; }
+  if (a === 'aperto') { S.aperto = !S.aperto; }
+  if (a === 'bracapri') { bracAperto = !bracAperto; disegna(); return; }
+  if (a === 'brac') { S.brac = v; bracAperto = false; }
+  if (a === 'bimbi') { S.bimbi = Math.max(0, Math.min(9, S.bimbi + parseInt(v, 10))); S.soldi = Math.min(S.soldi, costo()); }
+  if (a === 'crazy') { S.crazy = Math.max(0, Math.min(9, S.crazy + parseInt(v, 10))); }
+  /* la cassa: si incassa quello che manca, e il reso rimette tutto
+     indietro. Sono gli STESSI soldi della card dei bambini. */
+  if (a === 'incassa') { S.soldi = costo(); }
+  if (a === 'reso') { S.soldi = 0; }
+  if (a === 'nastro' && ev) {
+    if (S.aperto) return;
+    const r = ev.currentTarget.getBoundingClientRect();
+    const tot = S.durata + regalati();
+    const min = Math.round(((ev.clientX - r.left) / r.width) * tot / 5) * 5;
+    S.durata = Math.max(5, min - regalati());
+  }
+  disegna();
+}
+document.addEventListener('click', ev => {
+  const b = ev.target.closest('[data-a]');
+  if (!b) return;
+  tocca(b.dataset.a, b.dataset.v, ev.target.closest('.nas') ? { clientX: ev.clientX, currentTarget: b } : null);
+});
+document.getElementById('dentro').onchange = e => { S.dentro = e.target.checked; disegna(); };
+document.getElementById('aperto').onchange = e => { S.aperto = e.target.checked; disegna(); };
+document.getElementById('scaglioni').onchange = e => { S.scaglioni = e.target.checked; disegna(); };
+document.getElementById('stretto').onchange = e => {
+  document.querySelectorAll('.tavoletta').forEach(t => { t.style.width = e.target.checked ? '430px' : ''; });
+  setTimeout(misura, 30);
+};
+
+function disegna() {
+  document.getElementById('nBimbi').textContent = S.bimbi;
+  document.getElementById('nCrazy').textContent = S.crazy;
+  document.getElementById('aperto').checked = S.aperto;
+  document.getElementById('proposte').innerHTML = V.map(v =>
+    '<div class="testa" id="p' + v.l + '"><span class="lett">' + v.l + '</span><h3>' + v.t + '</h3>' +
+    '<span class="mis"></span></div>' +
+    '<p class="perche">' + v.p + '</p>' +
+    '<div class="tavoletta"><div class="pan-conto"><div class="pc-parco">' + v.fai() + '</div></div></div>').join('');
+  misura();
+}
+function misura() {
+  const t = document.querySelectorAll('.tavoletta');
+  if (!t.length) return;
+  const h0 = Math.round(t[0].getBoundingClientRect().height);
+  document.querySelectorAll('.mis').forEach((b, i) => {
+    const h = Math.round(t[i].getBoundingClientRect().height);
+    const d = h - h0;
+    b.textContent = (i === 0 ? 'oggi · ' : (d === 0 ? 'uguale · ' : (d > 0 ? '+' + d : d) + 'px · ')) + h + 'px';
+    b.className = 'mis' + (i === 0 ? '' : d < -4 ? ' giu' : d > 4 ? ' su' : '');
+  });
+}
+disegna();
+
+document.getElementById('scelta').innerHTML =
+  '<b>Se devo consigliarti: la A. E la C se vuoi che l’allungamento resti scritto.</b><br><br>' +
+  '<b>Il vincolo vero è l’altezza.</b> Quella card sta in una schermata che non scorre, e col ' +
+  'guardaroba aperto avanzano otto pixel. Una proposta bella che non ci sta non è una proposta: ' +
+  'per questo qui sopra ogni card ha la sua misura, e le ho rifatte finché non sono rientrate.<br><br>' +
+  'Tutte fanno la stessa cosa nuova: <b>separano il sostituire dall’aggiungere</b>. I tagli ' +
+  'bianchi decidono quanto tempo comprano; i tasti ambrati <b>aggiungono</b> e dicono quanto ' +
+  'costa quell’aggiunta <i>prima</i> che tu la faccia. Oggi non lo dice nessuno: premi il più ' +
+  'sull’uscita e il prezzo cambia dietro le quinte.<br><br>' +
+  'La <b>A</b> è quella che consiglio perché non costa niente e toglie l’equivoco alla radice: ' +
+  'la seconda riga mostra <b>i tagli mentre registri</b> e <b>allunga quando sono già dentro</b>. ' +
+  'Le due domande non si fanno mai insieme — «quanto restano?» si chiede all’ingresso, «me lo ' +
+  'tieni un’altra mezz’ora?» si chiede dopo — e l’app sa già in quale dei due momenti si trova. ' +
+  'Provala con l’interruttore «sono già dentro».<br><br>' +
+  'La <b>B</b> è l’unica in cui allungare è un <b>gesto</b>: tocchi il nastro dove vuoi finire. ' +
+  'Ed è l’unica che fa vedere che i minuti del Crazy sono tempo regalato (il tratteggio viola in ' +
+  'fondo): oggi quei minuti spostano l’ora d’uscita e non lo dice niente. Va provata col dito.<br><br>' +
+  'La <b>C</b> è la più esplicita: ogni allungamento è <b>una riga di conto</b> con la sua ✕, e ' +
+  'le righe prendono il posto del filo verde e della pastiglia, quindi costa meno di quanto ' +
+  'sembri. Se ti capita spesso di allungare e poi disdire, è questa.<br><br>' +
+  'La <b>D</b> divide in due card. È la più chiara da spiegare a qualcuno che non ha mai visto ' +
+  'l’app, ed è la più cara: una cornice e un titolo in più dove l’altezza è tutto.<br><br>' +
+  'La <b>E</b> tiene tutto a video insieme, separato da un filo. Sulla tavoletta larga sta in ' +
+  'riga; su quella stretta va a capo — e una riga in più lì dentro si paga.<br><br>' +
+  '<b>Due cose valgono per tutte.</b> Il tasto verde <b>dice la cifra</b> («Incassa 36,00 €») ' +
+  'invece di essere un più accanto a un prezzo: è l’unico comando che muove la cassa, e non deve ' +
+  'somigliare a un comando del tempo. E i tasti ambrati mostrano il prezzo <b>dell’aggiunta</b>, ' +
+  'che col listino a scaglioni non è mai ovvio: da 1h a 1h30 non sono «mezz’ora in più», sono ' +
+  '<b>7,00 € a bambino</b>. Con l’interruttore «ogni aggiunta si paga a parte» vedi come cambia.';
+</script>
+</html>
