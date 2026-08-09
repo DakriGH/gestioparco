@@ -375,21 +375,25 @@ function sistemaAggiunte(e) {
 function giriCrazy(e) {
   e = e || C();
   const q = clamp(num(e.crazyJumping, 0), 0, 1e6);
-  if (!q) return [];
-  const g = lista(e.crazyGiri)
-    .map(n => Math.max(0, Math.round(num(n, 0)))).filter(n => n > 0);
-  if (!g.length) return [q];
+  /* UN GIRO PUO' ESSERE APERTO E VUOTO: e' quello appena aperto, dove
+     stai per contare chi sale. Uno zero in lista non e' spazzatura, e'
+     un giro che sta cominciando -- e infatti non regala minuti finche'
+     non ci sale qualcuno. */
+  const g = lista(e.crazyGiri).map(n => Math.max(0, Math.round(num(n, 0))));
+  if (!g.length) return q ? [q] : [];
   /* se la somma non torna -- dati vecchi, cloud, un ripristino -- si
      riallinea sull'ULTIMO giro, che e' quello che si sta segnando */
   let somma = g.reduce((a, b) => a + b, 0);
   while (somma < q) { g[g.length - 1]++; somma++; }
-  while (somma > q && g.length) {
-    if (g[g.length - 1] > 1) { g[g.length - 1]--; somma--; }
-    else { somma -= g.pop(); }
+  for (let i = g.length - 1; i >= 0 && somma > q; i--) {
+    const giu = Math.min(g[i], somma - q);
+    g[i] -= giu; somma -= giu;
   }
   return g;
 }
-function turniCrazy(e) { return giriCrazy(e).length; }
+/* i giri che CONTANO per il tempo: quelli in cui e' salito qualcuno.
+   Un giro aperto e ancora vuoto non ha regalato niente. */
+function turniCrazy(e) { return giriCrazy(e).filter(n => n > 0).length; }
 
 /* Mette o toglie salite, sempre dall'ULTIMO giro: e' quello aperto,
    quello che stai segnando adesso. Quando un giro resta senza nessuno
@@ -437,20 +441,36 @@ function cambiaGiro(c, i, delta) {
   const g = giriCrazy(c);
   if (i < 0 || i >= g.length) return;
   g[i] = Math.max(0, g[i] + num(delta, 0));
-  const puliti = g.filter(n => n > 0);
-  c.crazyJumping = puliti.reduce((a, b) => a + b, 0);
-  if (c.crazyJumping > 0) c.crazyGiri = puliti; else delete c.crazyGiri;
+  /* i giri VUOTI restano: quello in fondo e' aperto e lo stai
+     riempiendo, e gli altri li cancella il suo tasto, non il meno --
+     che se no farebbe sparire una riga sotto le dita */
+  c.crazyJumping = g.reduce((a, b) => a + b, 0);
+  c.crazyGiri = g;
 }
 
-/* Un altro giro: ci sale (e paga) il primo, gli altri si aggiungono
-   col piu' del suo giro. */
+/* APRE UN GIRO, E BASTA. Non ci fa salire nessuno: chi sale lo conti
+   tu col piu' della card, che riparte da zero. Prima ci metteva dentro
+   una salita di sua iniziativa -- e quindi quattro euro sul conto che
+   nessuno aveva chiesto. */
 function giroNuovo(c) {
-  const g = giriCrazy(c).concat([1]);
+  const g = giriCrazy(c);
+  /* un giro vuoto c'e' gia': non se ne apre un altro sopra */
+  if (!g.length || g[g.length - 1] > 0) g.push(0);
   c.crazyGiri = g;
   c.crazyJumping = g.reduce((a, b) => a + b, 0);
-  /* il giro appena aperto diventa quello che si sta segnando: gli
-     altri che salgono con lui si aggiungono col piu' di sempre */
+  /* quello appena aperto e' quello che si sta segnando */
   giroScelto = g.length - 1;
+}
+
+/* Cancella un giro intero: chi c'era dentro esce dal conto e i suoi
+   minuti se ne vanno con lui. */
+function viaGiro(c, i) {
+  const g = giriCrazy(c);
+  if (i < 0 || i >= g.length) return;
+  g.splice(i, 1);
+  c.crazyJumping = g.reduce((a, b) => a + b, 0);
+  if (g.length) c.crazyGiri = g; else delete c.crazyGiri;
+  giroScelto = Math.min(giroScelto, Math.max(0, g.length - 1));
 }
 /* i minuti regalati: quelli di TUTTI i giri messi insieme */
 function minutiCrazy(e) {
@@ -773,6 +793,14 @@ function costruisciPannello() {
     /* si tocca un giro nello storico: da li' in poi il piu' e il meno
        della card lavorano su QUELLO. E' il modo di correggere un giro
        vecchio senza avere due file di tasti a video. */
+    /* cancella un giro intero: chi c'era dentro esce dal conto */
+    if (d.gvia !== undefined) {
+      tocchi.id = 'crazy';
+      viaGiro(C(), parseInt(d.gvia, 10));
+      pcSalva();
+      aggiornaPannello();
+      return;
+    }
     if (d.sel !== undefined) {
       giroScelto = parseInt(d.sel, 10);
       tocchi.id = 'crazy';
@@ -784,7 +812,16 @@ function costruisciPannello() {
     const voce = d.add || d.meno || d.ppiu || d.pmeno;
     if (voce) {
       tocchi.id = voce;
-      if (d.add !== undefined) {
+      /* IL CRAZY SI CONTA DENTRO UN GIRO. Il piu' e il meno sono quelli
+         di sempre, ma quello che muovono e' il giro scelto: e' li' che
+         sta salendo qualcuno adesso. Senza, il numero sulla card
+         diceva il totale di tutti i giri e aprire un giro nuovo non lo
+         faceva ripartire da zero. */
+      if (voce === 'crazy' && (d.add !== undefined || d.meno !== undefined)) {
+        const c2 = C();
+        if (!giriCrazy(c2).length) giroNuovo(c2);
+        cambiaGiro(c2, giroOra(c2), d.add !== undefined ? 1 : -1);
+      } else if (d.add !== undefined) {
         if (bcQ(voce) === 0 && voce !== 'bimbi' && voce !== 'crazy') tocchi.nato = voce;
         bcSetQ(voce, bcQ(voce) + 1);
       } else if (d.meno !== undefined) bcSetQ(voce, bcQ(voce) - 1);
@@ -3486,8 +3523,13 @@ function bcCard(v, sempre) {
       '</span>' +
       '<span class="bc-nm">' + esc(v.name) + '</span></span></button>' +
     (aperta
-      ? '<div class="bc-zone"><span class="bc-chip">' + q + '</span>' +
-        '<button data-meno="' + v.id + '"' + (q <= 0 ? ' disabled' : '') + '>\u2212</button>' +
+      /* IL NUMERO E' QUELLO DEL GIRO CHE SI STA SEGNANDO, non il totale
+         di tutti i giri: sono il piu' e il meno qui accanto a muoverlo,
+         e aprendo un giro nuovo riparte da zero. Il totale delle salite
+         sta scritto sopra, sulla riga del prezzo. */
+      ? '<div class="bc-zone"><span class="bc-chip">' + (v.id === 'crazy' ? quantiOra() : q) + '</span>' +
+        '<button data-meno="' + v.id + '"' +
+          ((v.id === 'crazy' ? quantiOra() : q) <= 0 ? ' disabled' : '') + '>\u2212</button>' +
         '<button data-add="' + v.id + '">+</button></div>' +
         '<div class="bc-zone v"><span class="bc-chip">' + pg + '/' + q + '</span>' +
         '<button data-pmeno="' + v.id + '"' + (pg <= 0 ? ' disabled' : '') + '>\u2212</button>' +
@@ -3505,6 +3547,12 @@ function bcCard(v, sempre) {
    vecchio senza avere due file di tasti a video.
    In fondo il tasto che apre un giro nuovo, e i minuti che tutti i
    giri hanno regalato. */
+/* quanti sono saliti nel giro che si sta segnando */
+function quantiOra() {
+  const g = giriCrazy(C());
+  return g.length ? num(g[giroOra()], 0) : 0;
+}
+
 function storicoGiri() {
   const c = C();
   const g = giriCrazy(c);
@@ -3522,12 +3570,15 @@ function storicoGiri() {
        riga con scritto tutto, e quando sono tanti si scorre -- dentro
        la sua colonna, senza far crescere la card di un pixel. */
     '<div class="st-lista">' +
-      g.map((n, i) => '<button class="st-g' + (i === ora ? ' on' : '') + '" data-sel="' + i + '"' +
+      g.map((n, i) => '<span class="st-riga' + (i === ora ? ' on' : '') + '">' +
+        '<button class="st-g" data-sel="' + i + '"' +
         ' aria-label="giro ' + (i + 1) + ', ' + n + (n === 1 ? ' salito' : ' saliti') + '">' +
         '<span class="st-n">' + (i + 1) + 'º</span>' +
         '<b>' + n + '</b>' +
-        '<span class="st-q">' + (n === 1 ? 'salito' : 'saliti') + '</span>' +
-        '<span class="st-m">+' + extra + '′</span></button>').join('') +
+        '<span class="st-q">' + (n === 0 ? 'da contare' : n === 1 ? 'salito' : 'saliti') + '</span>' +
+        '<span class="st-m">' + (n > 0 ? '+' + extra + '′' : '') + '</span></button>' +
+        '<button class="st-via" data-gvia="' + i + '" aria-label="cancella il giro ' + (i + 1) + '">' +
+        '✕</button></span>').join('') +
     '</div>' +
     '<button class="st-piu" data-giro="crazy">+ giro</button>' +
   '</div></div>';
@@ -3544,9 +3595,12 @@ function bcGiriTesto() {
   if (!g.length) return '';
   const min = minutiCrazy(c);
   /* stretto: sta accanto al prezzo, e se va a capo la card cresce.
-     Chi e' salito in ogni giro si legge nello storico qui a destra,
-     quindi qui basta quanti giri sono. */
-  return g.length + (g.length === 1 ? ' giro' : ' giri');
+     Qui il TOTALE -- che sulla fila del piu' e del meno non c'e' piu',
+     li' c'e' il giro che si sta segnando -- e quanti giri sono. */
+  const salite = g.reduce((a, b) => a + b, 0);
+  const pieni = g.filter(n => n > 0).length;
+  return salite + (salite === 1 ? ' salita' : ' salite') +
+    ' · ' + pieni + (pieni === 1 ? ' giro' : ' giri');
 }
 
 /* Il velo: un pannello sovrapposto, incollato in basso, con dietro il

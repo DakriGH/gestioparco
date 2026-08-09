@@ -81,26 +81,39 @@ gruppo('Il Crazy Jumping', () => {
 
   ok('e sono scritti uno per uno', ctx.giriCrazy(c), [3]);
 
-  /* IN GIRI DIVERSI SALE CHI VUOLE. Il secondo giro comincia con uno
-     -- quello che ci sale e paga -- e gli altri si aggiungono col piu'
-     della card, che lavora sempre sul giro APERTO. */
+  /* IL GIRO NUOVO NASCE VUOTO. Non ci sale nessuno da solo: chi sale
+     lo conti col piu' della card, che riparte da zero. Prima ci
+     metteva dentro una salita di sua iniziativa, cioe' quattro euro
+     sul conto che nessuno aveva chiesto. */
   ctx.giroNuovo(c);
-  ok('un altro giro: ci sale il primo', ctx.giriCrazy(c), [3, 1]);
-  ok('e le salite pagate diventano quattro', c.crazyJumping, 4);
-  ok('due giri, due blocchi di minuti',
+  ok('un altro giro, e nasce vuoto', ctx.giriCrazy(c), [3, 0]);
+  ok('nessuno e salito: le salite restano tre', c.crazyJumping, 3);
+  ok('e un giro vuoto non regala minuti',
+     Math.round((ctx.endTimeOf(c) - c.startTime) / 60000), 60 + extra);
+  ok('ne costa un euro', ctx.contoCrazy(), 3 * ctx.settings.crazyJumpingPrice);
+
+  /* adesso ci sale qualcuno: il piu' lavora sul giro aperto */
+  ctx.cambiaGiro(c, 1, 1);
+  ok('sale il primo del secondo giro', ctx.giriCrazy(c), [3, 1]);
+  ok('quattro salite pagate', c.crazyJumping, 4);
+  ok('e adesso i blocchi di minuti sono due',
      Math.round((ctx.endTimeOf(c) - c.startTime) / 60000), 60 + 2 * extra);
-  ok('e i soldi seguono le salite, non i giri',
+  ok('i soldi seguono le salite, non i giri',
      ctx.contoCrazy(), 4 * ctx.settings.crazyJumpingPrice);
 
-  ctx.metteCrazy(c, 5);
-  ok('il piu’ aggiunge al giro aperto', ctx.giriCrazy(c), [3, 2]);
-  ok('sempre due giri', ctx.turniCrazy(c), 2);
+  ctx.cambiaGiro(c, 1, 1);
+  ok('un altro nel secondo giro', ctx.giriCrazy(c), [3, 2]);
   ok('cinque salite: tre la prima volta, due la seconda', c.crazyJumping, 5);
 
-  /* il meno svuota il giro aperto, e quando resta vuoto sparisce --
-     e con lui i suoi minuti */
-  ctx.metteCrazy(c, 3);
-  ok('svuotato il secondo giro, resta il primo', ctx.giriCrazy(c), [3]);
+  /* si puo' correggere un giro VECCHIO senza toccare gli altri */
+  ctx.cambiaGiro(c, 0, -1);
+  ok('tolto uno dal PRIMO giro', ctx.giriCrazy(c), [2, 2]);
+  ok('quattro salite', c.crazyJumping, 4);
+
+  /* e si puo' cancellare un giro intero */
+  ctx.viaGiro(c, 1);
+  ok('cancellato il secondo giro', ctx.giriCrazy(c), [2]);
+  ok('chi c era dentro esce dal conto', c.crazyJumping, 2);
   ok('e i minuti tornano a un blocco solo',
      Math.round((ctx.endTimeOf(c) - c.startTime) / 60000), 60 + extra);
 

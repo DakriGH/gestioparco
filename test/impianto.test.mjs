@@ -342,18 +342,22 @@ gruppo('I giri del Crazy stanno nella sua card');
      toccandolo nello storico qui accanto. Cosi' si corregge un giro
      vecchio senza una seconda fila di tasti a video. */
   prova('la card tiene i tasti di sempre',
-    /'<div class="bc-zone"><span class="bc-chip">' \+ q/.test(APP) && !/function zonaGiri/.test(APP));
+    /'<div class="bc-zone"><span class="bc-chip">'/.test(APP) && !/function zonaGiri/.test(APP));
+  prova('e il numero e quello del GIRO che si sta segnando',
+    /function quantiOra/.test(APP) && /bc-chip">' \+ \(v\.id === 'crazy' \? quantiOra\(\)/.test(APP));
   prova('c e uno storico dei giri, a destra', /function storicoGiri/.test(APP) &&
     /\.bc-storico \{[^}]*width/.test(CSS));
   prova('ogni giro si tocca per sceglierlo', APP.includes('data-sel="'));
   prova('e il piu e il meno lavorano su QUELLO',
     /function metteCrazy[\s\S]{0,700}clamp\(giroScelto, 0, g\.length - 1\)/.test(APP));
-  prova('quello scelto si vede acceso', /\.bc-storico \.st-g\.on \{/.test(CSS));
+  prova('quello scelto si vede acceso', /\.bc-storico \.st-riga\.on \.st-g \{/.test(CSS));
   prova('e c e un tasto per aprirne un altro', APP.includes('data-giro="crazy"'));
-  prova('che ci fa salire (e pagare) il primo',
-    /function giroNuovo[\s\S]{0,300}concat\(\[1\]\)/.test(APP));
-  prova('un giro svuotato sparisce, coi suoi minuti',
-    /function metteCrazy[\s\S]{0,900}g\.splice\(i, 1\)/.test(APP));
+  prova('che apre un giro VUOTO: non fa salire nessuno da solo',
+    /function giroNuovo[\s\S]{0,400}g\.push\(0\)/.test(APP) &&
+    !/function giroNuovo[\s\S]{0,400}concat\(\[1\]\)/.test(APP));
+  prova('ogni giro si puo cancellare', APP.includes('data-gvia="') && /function viaGiro/.test(APP));
+  prova('e la crocetta ha un tasto suo, staccato dalla riga',
+    /\.bc-storico \.st-via \{/.test(CSS));
   prova('lo storico sta ACCANTO, non sotto: la card non cresce',
     /\.bc-card\.con-storico \{[^}]*flex-direction:\s*row/.test(CSS));
   prova('la parte normale resta larga come le altre card',
