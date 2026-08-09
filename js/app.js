@@ -3053,39 +3053,17 @@ function entryCard(entry) {
     apriConto('Parco');
     accendiPersone();
   };
-  if (!people.length) {
-    avBox.classList.add('manca');
-    avBox.title = 'Nessun riferimento \u2014 tocca per metterlo';
-    avBox.appendChild(el('div', 'segno', '\u2795'));
-    avBox.appendChild(el('div', 'dillo', 'metti chi \u00e8'));
-    avBox.onclick = apriParco;
-  } else {
-    people.slice(0, 2).forEach(p => {
-      const a = el('div', 'av');
-      a.innerHTML = AV.build(p.avatar);
-      a.title = 'Com\u2019\u00e8 vestito ' + nameOf(p);
-      a.onclick = apriParco;
-      avBox.appendChild(a);
-    });
-  }
   riga.appendChild(avBox);
 
   const chi = el('div', 'e-chi');
   const nome = el('b');
-  nome.textContent = people.length
-    ? people.map(p => roleOf(p.role).em + ' ' + nameOf(p)).join(' \u00b7 ')
-    : 'Nessun riferimento';
   chi.appendChild(nome);
   const tratti = el('div', 'e-tr');
-  if (people.length === 1) {
-    tratti.textContent = AV.traits(people[0].avatar, 3, true).map(t => t.txt).join(' \u00b7 ');
-  } else if (people.length) {
-    tratti.textContent = people.slice(0, 2)
-      .map(p => (AV.traits(p.avatar, 1, true)[0] || {}).txt || '').filter(Boolean).join(' \u00b7 ');
-  } else {
-    tratti.textContent = '\u26a0\ufe0f all\'uscita non avrai riferimenti';
-  }
   chi.appendChild(tratti);
+  /* la figura, il nome e i tratti si riempiono qui e si RIFANNO da qui
+     ogni volta che qualcuno cambia vestito: prima erano scritti una
+     volta sola, alla nascita della scheda */
+  vestiRiga({ avBox, nome, tratti, apriParco }, entry);
   const sotto = el('div', 'e-sotto');
   const range = el('div', 'e-orari');
   sotto.appendChild(range);
@@ -3260,7 +3238,9 @@ function entryCard(entry) {
   cardRefs.set(entry.id, {
     card, count, range, sKids, sCrazy, sTime,
     dueVal: soldiV, soldiK, soldi, wrist, bimbiV, crzV, crz, countK,
-    payPanel, payBtn
+    payPanel, payBtn,
+    /* servono a rivestire la riga quando cambia un vestito */
+    avBox, nome, tratti, apriParco, sigGente: firmaGente(entry)
   });
   syncCard(entry);
   return card;
@@ -4419,6 +4399,57 @@ function soldiDi(r, entry, due) {
   r.soldi.classList.toggle('pagato', resta <= 0);
 }
 
+/* CHI C'E' E COM'E' VESTITO, nella riga della lista.
+   Sta in una funzione sua perche' va rifatta: cambiare un vestito dal
+   conto non cambiava la figura piccola qui: si usciva guardando un
+   avatar vecchio, che e' esattamente la cosa per cui la figura esiste.
+   Rifa' anche il nome e i tratti ("Camicia rossa \u00b7 Jeans neri"),
+   che vengono dallo stesso posto e invecchiavano insieme. */
+function vestiRiga(r, entry) {
+  if (!r || !r.avBox) return;
+  const people = lista(entry.people);
+  const avBox = r.avBox;
+  avBox.innerHTML = '';
+  avBox.classList.toggle('multi', people.length > 1);
+  avBox.classList.toggle('manca', !people.length);
+  avBox.onclick = r.apriParco;
+  if (!people.length) {
+    avBox.title = 'Nessun riferimento \u2014 tocca per metterlo';
+    avBox.appendChild(el('div', 'segno', '\u2795'));
+    avBox.appendChild(el('div', 'dillo', 'metti chi \u00e8'));
+  } else {
+    avBox.title = '';
+    people.slice(0, 2).forEach(p => {
+      const a = el('div', 'av');
+      a.innerHTML = AV.build(p.avatar);
+      a.title = 'Com\u2019\u00e8 vestito ' + nameOf(p);
+      a.onclick = r.apriParco;
+      avBox.appendChild(a);
+    });
+  }
+  if (r.nome) {
+    r.nome.textContent = people.length
+      ? people.map(p => roleOf(p.role).em + ' ' + nameOf(p)).join(' \u00b7 ')
+      : 'Nessun riferimento';
+  }
+  if (r.tratti) {
+    r.tratti.textContent = people.length === 1
+      ? AV.traits(people[0].avatar, 3, true).map(t => t.txt).join(' \u00b7 ')
+      : people.length
+        ? people.slice(0, 2).map(p => (AV.traits(p.avatar, 1, true)[0] || {}).txt || '')
+          .filter(Boolean).join(' \u00b7 ')
+        : '\u26a0\ufe0f all\'uscita non avrai riferimenti';
+  }
+}
+
+/* la firma di chi c'e': se cambia, la riga va rivestita. Ci sta dentro
+   anche l'avatar per intero -- il vestito e' proprio quello che
+   cambiava senza che si vedesse. */
+function firmaGente(entry) {
+  return lista(entry.people).map(p =>
+    p.id + '|' + p.role + '|' + (p.name || '') + '|' + JSON.stringify(p.avatar)).join('\u00a7');
+}
+
 function syncCard(entry) {
   const r = cardRefs.get(entry.id);
   if (!r) return;
@@ -4434,6 +4465,17 @@ function syncCard(entry) {
   r.sKids.minus.disabled = kids <= 0;
   r.sCrazy.minus.disabled = crazy <= 0;
   r.sTime.minus.disabled = num(entry.durationMinutes, 0) <= 5;
+
+  /* IL VESTITO CAMBIATO SI VEDE SUBITO. syncCard() gira a ogni tocco
+     del conto -- anche mentre si veste qualcuno -- e prima guardava
+     solo i numeri: la figura piccola restava quella di prima finche'
+     non si ricaricava l'app. Adesso, se chi c'e' o com'e' vestito e'
+     cambiato, la riga si riveste. Costa una firma da confrontare. */
+  const firma = firmaGente(entry);
+  if (r.sigGente !== firma) {
+    r.sigGente = firma;
+    vestiRiga(r, entry);
+  }
 
   soldiDi(r, entry, due);
 

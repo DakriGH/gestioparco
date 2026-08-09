@@ -314,6 +314,21 @@ gruppo("L'aria che avanza va al guardaroba, e non schiaccia nessuno");
     /\.testa-viola h2 \{[^}]*margin:\s*0/.test(CSS));
 }
 
+gruppo('Il vestito cambiato si vede subito anche nella lista');
+{
+  /* Si vestiva qualcuno dal conto e la figura piccola della scheda "In
+     corso" restava quella di prima: si usciva guardando un avatar
+     vecchio, che e' esattamente la cosa per cui la figura esiste.
+     syncCard() girava a ogni tocco ma guardava solo i numeri. */
+  prova('la riga sa rivestirsi', /function vestiRiga/.test(APP));
+  prova('e la firma di chi c e comprende il vestito',
+    /function firmaGente[\s\S]{0,220}JSON\.stringify\(p\.avatar\)/.test(APP));
+  prova('syncCard se ne accorge e la riveste',
+    /function syncCard[\s\S]{0,1400}sigGente !== firma[\s\S]{0,120}vestiRiga\(r, entry\)/.test(APP));
+  prova('la scheda si tiene i pezzi da rivestire',
+    /cardRefs\.set\([\s\S]{0,320}avBox, nome, tratti, apriParco, sigGente/.test(APP));
+}
+
 gruppo('I giri del Crazy stanno nella sua card');
 {
   /* Il tempo del Crazy si conta a giri, non a teste: tre che salgono
