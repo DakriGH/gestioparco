@@ -3354,7 +3354,7 @@ function entryCard(entry) {
   };
   const sKids = mkCella('\ud83e\uddd2', 'children', 1);
   const sTime = mkCella(null, 'durationMinutes', 5);
-  const sPag = mkCellaPagate(entry, fila, 'bimbi', '\u2713');
+  const sPag = mkCellaPagate(entry, sKids.box, 'bimbi', 'pagati');
   if (entry.payLater) {
     sTime.box.classList.add('hidden');
     fila.appendChild(el('div', 'e-later-tag', '\u23f3 Tempo aperto'));
@@ -4739,12 +4739,16 @@ function giroDiLista(entry) {
    E' la STESSA cassa: passa da segnaPagate(), come la fascia verde e
    come il "paga" della striscia in fondo. Qui cambia il posto in cui
    si preme, non la cassa. */
-function mkCellaPagate(entry, fila, voce, emoji) {
-  const box = el('div', 'e-cella e-pag');
-  const minus = el('button', null, '\u2212');
-  const kk = el('span', 'k', emoji);
-  const val = el('span', 'v num', '0/0');
-  const plus = el('button', null, '+');
+/* Si attacca DENTRO la cella di quello che si sta pagando -- i
+   bambini, le salite -- dopo un filo che le divide. Cosi' non e' "una
+   pastiglia verde della fascetta" ma "quanti di QUESTI hanno pagato",
+   e la parola sopra lo dice a voce. */
+function mkCellaPagate(entry, box, voce, parola) {
+  const sep = el('span', 'pg-sep');
+  const eti = el('span', 'pg-k', parola);
+  const minus = el('button', 'pg-b', '\u2212');
+  const val = el('span', 'v num pg-v', '0/0');
+  const plus = el('button', 'pg-b', '+');
   const tocca = (d) => (ev) => {
     ev.stopPropagation();
     conConto(entry, () => segnaPagate(voce, bcPag(voce) + d));
@@ -4754,12 +4758,13 @@ function mkCellaPagate(entry, fila, voce, emoji) {
   };
   minus.onclick = tocca(-1);
   plus.onclick = tocca(1);
+  box.appendChild(sep);
+  box.appendChild(eti);
   box.appendChild(minus);
-  box.appendChild(kk);
   box.appendChild(val);
   box.appendChild(plus);
-  fila.appendChild(box);
-  return { box, val, minus, plus };
+  box.classList.add('con-pagate');
+  return { box, val, minus, plus, eti };
 }
 
 function mkCellaCrazy(entry, fila) {
@@ -4791,22 +4796,10 @@ function mkCellaCrazy(entry, fila) {
   const via = el('button', 'crz-via', '\u2715');
   box.appendChild(nuovo);
   box.appendChild(via);
-  /* e quante salite hanno gia' pagato: stessa fascia verde delle card,
-     perche' e' la stessa cosa */
-  const pag = el('span', 'crz-pag');
-  const pMeno = el('button', null, '\u2212');
-  const pVal = el('b', null, '0/0');
-  const pPiu = el('button', null, '+');
-  pag.appendChild(el('span', 'k', '\u2713'));
-  pag.appendChild(pMeno); pag.appendChild(pVal); pag.appendChild(pPiu);
-  box.appendChild(pag);
-  const pagaCrazy = (d) => (ev) => {
-    ev.stopPropagation();
-    conConto(entry, () => segnaPagate('crazy', bcPag('crazy') + d));
-    saveEntries(); syncCard(entry); tick();
-  };
-  pMeno.onclick = pagaCrazy(-1);
-  pPiu.onclick = pagaCrazy(1);
+  /* e quante SALITE hanno gia' pagato: stessa coda dei bambini, con
+     la sua parola -- qui si paga a testa, non a giro */
+  const pagate = mkCellaPagate(entry, box, 'crazy', 'salite pagate');
+  const pVal = pagate.val, pMeno = pagate.minus, pPiu = pagate.plus;
   /* la scritta sta IN RIGA, non sotto: sotto faceva la cella piu'
      alta delle altre e la fascetta veniva storta */
   const nota = el('span', 'e-crz-k', 'nuovo giro');
@@ -4899,14 +4892,14 @@ function syncCard(entry) {
   if (r.sPag) {
     const pg = conConto(entry, () => bcPag('bimbi'));
     r.sPag.val.textContent = pg + '/' + kids;
-    r.sPag.box.classList.toggle('tutte', kids > 0 && pg >= kids);
-    r.sPag.box.classList.toggle('spenta', kids <= 0);
+    r.sPag.box.classList.toggle('pagata', kids > 0 && pg >= kids);
     r.sPag.minus.disabled = pg <= 0;
     r.sPag.plus.disabled = kids <= 0 || pg >= kids;
   }
   if (r.sCrazy.pVal) {
     const pc = conConto(entry, () => bcPag('crazy'));
     r.sCrazy.pVal.textContent = pc + '/' + crazy;
+    r.sCrazy.box.classList.toggle('pagata', crazy > 0 && pc >= crazy);
     r.sCrazy.pMeno.disabled = pc <= 0;
     r.sCrazy.pPiu.disabled = crazy <= 0 || pc >= crazy;
   }

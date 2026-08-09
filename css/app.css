@@ -1541,6 +1541,47 @@ main {
 .e-fila > .e-azioni { justify-self: end; align-self: center; }
 .e-cella.e-crz { grid-column: 1 / -1; gap: 6px; }
 
+/* LE TESTE GIA' PAGATE, attaccate a quello che si sta pagando.
+   Due pastiglie verdi uguali, una accanto ai bambini e una in fondo
+   alla riga del Crazy, non dicevano a chi si riferivano: sembravano
+   due comandi della fascetta. Adesso stanno DENTRO la cella della
+   loro cosa, dopo un filo che le divide, con la parola sopra --
+   "pagati" per i bambini, "salite pagate" per il Crazy.
+   Verde come la fascia delle card, che e' la stessa cassa. */
+.e-cella.con-pagate { padding-right: 7px; }
+.e-cella .pg-sep { width: 1px; align-self: stretch; margin: 0 3px 0 5px;
+  background: rgba(255, 255, 255, 0.18); }
+.e-cella .pg-k { font-size: 9px; font-weight: 800; letter-spacing: .05em;
+  text-transform: uppercase; color: rgba(141, 235, 187, 0.85); max-width: 44px;
+  line-height: 1.05; }
+.e-cella .pg-v { color: #DFF7EC; font-size: 15px; min-width: 32px; }
+.e-cella button.pg-b { background: rgba(106, 220, 175, 0.16); color: #A9EFD3;
+  min-width: 34px; }
+.e-cella button.pg-b:active { background: rgba(106, 220, 175, 0.34); }
+.e-cella button.pg-b:disabled { opacity: .3; }
+/* quando hanno pagato tutti la coda si accende: si vede da lontano
+   quali gruppi sono a posto */
+.e-cella.pagata .pg-v { color: #08301F; }
+.e-cella.pagata .pg-k { color: #6ADCAF; }
+.e-cella.pagata .pg-v { background: var(--ok, #6ADCAF); border-radius: 8px; padding: 0 6px; }
+
+/* LA CELLA DEL CRAZY DICE IN CHE GIRO SEI.
+   Qui il piu' apre un giro NUOVO -- la scheda si riapre al volo
+   perche' sono tornati a saltare, non per correggere il numero di
+   prima -- e senza scritta uno regalerebbe otto minuti credendo di
+   aggiustare un numero. La riga sotto e' piccola e spenta finche' il
+   giro e' vuoto, e si accende quando ci sale il primo. */
+/* LA FASCETTA E' UNA GRIGLIA, non roba che va a capo dove capita.
+   Prima riga: bambini, minuti e i due tasti a destra. Seconda riga: il
+   Crazy, che si prende tutta la larghezza perche' ha dentro il totale,
+   il giro e i suoi tasti. Cosi' le celle sono alte uguali e allineate,
+   e la fascetta non cambia forma a seconda di quanto c'e' scritto. */
+.e-fila { display: grid; grid-template-columns: auto auto auto 1fr; gap: 8px;
+  align-items: stretch; }
+.e-fila > .e-cella { align-self: stretch; }
+.e-fila > .e-azioni { justify-self: end; align-self: center; }
+.e-cella.e-crz { grid-column: 1 / -1; gap: 6px; }
+
 /* LE TESTE GIA' PAGATE, verdi come la fascia delle card: e' la stessa
    cosa, e la stessa cassa. Verde pieno quando hanno pagato tutti. */
 .e-cella.e-pag { background: rgba(106, 220, 175, 0.16);
