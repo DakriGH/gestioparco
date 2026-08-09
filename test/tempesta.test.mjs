@@ -217,9 +217,9 @@ gruppo('I minuti pagati non promettono mai piu' + '’' + ' di quello che i sold
     const v = vivo();                       // una mossa puo' aver cambiato conto
     const mp = ctx.minutiPagati(v);
     const perBambino = v.children ? Math.max(0, ctx.importoRiga('bimbi')) / v.children : 0;
-    const regalo = (ctx.importoRiga('crazy') >= v.crazyJumping * ctx.settings.crazyJumpingPrice - 0.005)
-      ? v.crazyJumping * ctx.settings.crazyExtraMinutes : 0;
-    if (!v.children) { if (mp !== regalo) male.push('n' + n + ': senza bambini promette ' + mp); continue; }
+    /* i minuti del Crazy sono REGALATI: non compaiono qui, mai */
+    const regalo = 0;
+    if (!v.children) { if (mp !== 0) male.push('n' + n + ': senza bambini promette ' + mp); continue; }
     /* i minuti "comprati" col tempo di parco, tolti quelli in regalo,
        devono costare meno o uguale a quello che ogni bambino ha pagato */
     const comprati = Math.max(0, mp - regalo);

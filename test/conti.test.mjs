@@ -250,15 +250,28 @@ gruppo('I minuti pagati: si leggono e basta', () => {
   ok('i minuti coperti sono davvero pagati', ctx.priceFor(coperti) <= perBambino + 1e-9, true);
 });
 
-gruppo('Il Crazy regala minuti solo se e stato pagato', () => {
+gruppo('I minuti del Crazy sono REGALATI: non sono tempo pagato', () => {
+  /* Il Crazy si paga a parte, col suo prezzo, e in cambio si sta
+     dentro di piu'. Quei minuti in piu' pero' NON si pagano: contarli
+     fra i "minuti pagati" faceva dire alla fascia che mancava del
+     tempo da saldare anche a conto chiuso -- cioe' chiedeva soldi non
+     dovuti. Qui si risponde a una domanda sola: quanto tempo di PARCO
+     hanno pagato. */
   const c = conto({ children: 1, crazyJumping: 1, durationMinutes: 60, barItems: [] });
-  ok('Crazy non pagato, nessun minuto in regalo', ctx.minutiPagati(c), 0);
+  ok('senza un euro, zero minuti', ctx.minutiPagati(c), 0);
+
   ctx.segnaPagate('crazy', 1);
-  ok('Crazy pagato, arrivano i suoi minuti',
-     ctx.minutiPagati(c), ctx.settings.crazyExtraMinutes);
-  /* e i soldi del Crazy non comprano tempo di parco */
-  ok('ma non comprano scaglioni di parco',
-     ctx.minutiPagati(c) < 60, true);
+  ok('pagato il Crazy, i minuti di parco restano zero', ctx.minutiPagati(c), 0);
+
+  ctx.segnaPagate('bimbi', 1);
+  ok('pagato il bambino, il tempo di parco e coperto tutto', ctx.minutiPagati(c) >= 60, true);
+  ok('e non un minuto di piu del tempo comprato',
+     ctx.minutiPagati(c) <= 60 + 1e-9, true);
+
+  /* i minuti regalati restano dove devono stare: nell'ora di uscita */
+  ok('l ora di uscita invece li comprende',
+     ctx.endTimeOf(c) - c.startTime,
+     (60 + ctx.settings.crazyExtraMinutes) * 60000);
 });
 
 gruppo('Pagare il tempo E pagare i bambini: stessa cassa', () => {
@@ -316,16 +329,23 @@ gruppo('A tempo aperto non si incassa in anticipo', () => {
   ok('fino a svuotare', c.paidPark, 0);
 });
 
-gruppo('Il tempo totale comprende i minuti del Crazy', () => {
-  /* E' il numero che sta dietro all'ora di uscita scritta nella
-     fascia: se il metro fosse la sola durata, un gruppo col Crazy
-     risulterebbe "pagato tutto" con dentro dei minuti scoperti. */
+gruppo('Il tempo DA PAGARE e solo quello del parco', () => {
+  /* Due numeri diversi che prima erano uno solo:
+       tempoTotale  = quanto tempo si e' comprato  → si paga
+       endTimeOf    = a che ora escono davvero     → comprende i regali
+     Tenerli separati e' tutto il senso della correzione. */
   const c = conto({ children: 1, crazyJumping: 0, durationMinutes: 60, barItems: [] });
-  ok('senza Crazy e la durata e basta', ctx.tempoTotale(c), 60);
+  ok('senza Crazy sono la stessa cosa', ctx.tempoTotale(c), 60);
+
   const d = conto({ children: 1, crazyJumping: 2, durationMinutes: 60, barItems: [] });
-  ok('con due Crazy si allunga', ctx.tempoTotale(d), 60 + 2 * ctx.settings.crazyExtraMinutes);
-  ok('e coincide con l ora di uscita',
-     ctx.endTimeOf(d) - d.startTime, ctx.tempoTotale(d) * 60000);
+  ok('col Crazy il tempo da pagare NON cambia', ctx.tempoTotale(d), 60);
+  ok('ma l ora di uscita si sposta piu in la',
+     ctx.endTimeOf(d) - d.startTime, (60 + 2 * ctx.settings.crazyExtraMinutes) * 60000);
+
+  /* e pagando tutto non deve restare del tempo "scoperto" */
+  ctx.pagaTutto();
+  ok('pagato tutto, il conto e chiuso', ctx.contoResta() <= 0.005, true);
+  ok('e il tempo di parco risulta coperto', ctx.minutiPagati(d) >= ctx.tempoTotale(d), true);
 });
 
 gruppo('Bombardamento: mille tocchi a caso', () => {

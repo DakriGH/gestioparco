@@ -232,6 +232,40 @@ gruppo('Ogni funzione chiamata esiste davvero');
     'chiamate ma non definite: ' + fantasmi.join(', '));
 }
 
+gruppo('Le azioni che fanno danno si possono rimangiare');
+{
+  /* A una cassa si sbaglia in fretta: il dito prende "Paga tutto"
+     invece di "Resto", l'ingresso accanto invece di quello giusto. Le
+     quattro azioni che tolgono o spostano davvero qualcosa devono
+     lasciare un tasto per tornare indietro. */
+  prova('il messaggio sa portare un tasto', /function toast\(msg, annulla\)/.test(APP));
+  prova('e resta piu a lungo quando c e', /annulla \? 6000 : 2000/.test(APP));
+  /* si guarda dentro il pezzo di codice che segue l'azione: se non
+     c'e' un `fatto(` li' vicino, quell'azione non si puo' rimangiare */
+  [['Ingresso eliminato', 'eliminare un ingresso'],
+   ['Uscita registrata', 'far uscire un gruppo'],
+   ['Incassati ', 'incassare tutto'],
+   ["fatto('Svuotato'", 'svuotare la bozza']].forEach(([che, nome]) => {
+    const i = APP.indexOf(che);
+    prova('si puo annullare: ' + nome,
+      i > 0 && APP.slice(Math.max(0, i - 300), i + 500).includes('fatto('));
+  });
+  prova('si rimette una fotografia, non si ricalcola al contrario',
+    /function fotografia\(c\)/.test(APP) && /function rimetti\(c, foto\)/.test(APP));
+}
+
+gruppo('L’avviso di chi sfora viene a cercarti');
+{
+  prova('guarda anche fuori dalla lista',
+    /L'AVVISO GUARDA SEMPRE|lista\(entries\)\.forEach\(e => \{[\s\S]{0,200}avvisaSforato/.test(APP));
+  prova('una volta sola per gruppo', /gaAvvisati\.has\(entry\.id\)/.test(APP));
+  prova('chi era gia sforato all avvio non e una notizia',
+    /function avvisiGiaVisti\(\)/.test(APP) && APP.includes('avvisiGiaVisti();'));
+  prova('toccandolo si va li e la scheda batte',
+    /function mostraSforato[\s\S]{0,400}evidenzia/.test(APP));
+  prova('e se ne va da solo', /setTimeout\(\(\) => \{[\s\S]{0,120}a\.classList\.remove\('su'\)/.test(APP));
+}
+
 gruppo('Le liste lunghe non si disegnano tutte in un colpo');
 {
   /* A fine stagione l'archivio ha migliaia di ingressi: disegnarli

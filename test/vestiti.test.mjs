@@ -612,13 +612,15 @@ gruppo('La fascia del tempo: una sola, e dice fin quando e pagato');
   prova('senza bambini lo dice invece di sembrare rotta', /nessun bambino/.test(h));
   prova('e i tasti sono spenti', /data-v="1" disabled/.test(h));
 
-  /* i minuti del Crazy stanno dentro l'ora di uscita, quindi anche
-     dentro il metro del pagato: se no un gruppo col Crazy risulterebbe
-     a posto con dei minuti scoperti */
+  /* IL CRAZY NON C'ENTRA COL TEMPO PAGATO: i suoi minuti sono
+     regalati. Pagato il tempo di parco, la fascia dice "pagato tutto"
+     anche se il Crazy e' ancora da saldare -- perche' quello e'
+     un'altra riga, con la sua fascia verde sulla sua card. */
   c = mettiSotto(conto({ children: 1, crazyJumping: 1 }));
   app.segnaPagate('bimbi', 1);
   h = app.pastigliaPagato(c);
-  prova('col Crazy non pagato non e "tutto pagato"', !/pagato tutto/.test(h));
+  prova('pagato il tempo di parco, la fascia dice pagato tutto', /pagato tutto/.test(h));
+  prova('e il Crazy resta dovuto per conto suo', app.contoResta() > 0);
 
 }
 

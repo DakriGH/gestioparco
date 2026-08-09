@@ -65,8 +65,25 @@ function fmtMin(m) {
    sola si perde al massimo un dato, mai una schermata. */
 function lista(x) { return Array.isArray(x) ? x : []; }
 
+/* L'ANNULLA.
+   A una cassa si sbaglia, e si sbaglia in fretta: il dito prende
+   "Paga tutto" invece di "Resto", l'ingresso giusto invece di quello
+   accanto. Finora l'unica strada era rifare tutto a mano -- e per un
+   ingresso eliminato non c'era proprio strada.
+   Adesso ogni azione che tocca i soldi o cancella qualcosa lascia per
+   sei secondi un tasto per rimangiarsela. Sei secondi sono la
+   distanza fra "l'ho fatto" e "aspetta": dopo, o e' giusta o te ne sei
+   gia' accorto.
+   Si rimette a posto una FOTOGRAFIA presa prima -- non si prova a
+   ricalcolare al contrario: un'operazione inversa sbagliata farebbe
+   danni peggiori di quelli che ripara. */
+let annullaT = null;
+function fatto(msg, ripristina) {
+  toast(msg, ripristina);
+}
+
 let toastT = null;
-function toast(msg) {
+function toast(msg, annulla) {
   const t = $('#toast');
   /* Se la targhetta non c'e' ancora, si tace e si va avanti.
      Non e' pignoleria: toast() viene chiamata anche DENTRO il recupero
@@ -74,10 +91,31 @@ function toast(msg) {
      avviso in un salvataggio interrotto a meta'. Chi avvisa non deve
      mai poter fare piu' danni di quello di cui avvisa. */
   if (!t) return;
-  t.textContent = msg;
-  t.classList.add('show');
+  t.innerHTML = '';
+  t.appendChild(el('span', 'tx', msg));
   clearTimeout(toastT);
-  toastT = setTimeout(() => t.classList.remove('show'), 2000);
+  clearTimeout(annullaT);
+  if (annulla) {
+    const b = el('button', 'annulla', '\u21a9\ufe0e Annulla');
+    b.onclick = () => {
+      clearTimeout(toastT);
+      t.classList.remove('show');
+      annulla();
+    };
+    t.appendChild(b);
+  }
+  t.classList.toggle('con-annulla', !!annulla);
+  t.classList.add('show');
+  /* con l'annulla resta piu' a lungo: due secondi non bastano ad
+     accorgersi di uno sbaglio, e sono proprio i secondi che servono */
+  toastT = setTimeout(() => t.classList.remove('show'), annulla ? 6000 : 2000);
+}
+
+/* una fotografia dell'ingresso o della bozza, per rimetterla com'era */
+function fotografia(c) { return JSON.parse(JSON.stringify(c)); }
+function rimetti(c, foto) {
+  Object.keys(c).forEach(k => { if (!(k in foto)) delete c[k]; });
+  Object.assign(c, fotografia(foto));
 }
 
 /* LA GIORNATA FINISCE ALLE QUATTRO DEL MATTINO.
@@ -644,8 +682,9 @@ function costruisciPannello() {
        fascia: rifarla lo richiuderebbe a ogni colore provato */
     if (d.a === 'bracapri') {
       const men = p.querySelector('.brc-menu');
+      const chiuso = men.classList.contains('hidden');
       men.classList.toggle('hidden');
-      if (!men.classList.contains('hidden')) chiudiFuori(men, p.querySelector('.brc'));
+      if (chiuso) { alzaMenu(men, b); chiudiFuori(men, p.querySelector('.brc')); }
       return;
     }
     if (d.a === 'min') {
@@ -667,7 +706,21 @@ function costruisciPannello() {
     /* --- i tasti del conto --- */
     if (d.sez !== undefined)   { bcSegna(d.sez, true); pcSalva(); aggiornaPannello(); return; }
     if (d.desez !== undefined) { bcSegna(d.desez, false); pcSalva(); aggiornaPannello(); return; }
-    if (d.tutto !== undefined) { pagaTutto(); pcSalva(); aggiornaPannello(); return; }
+    if (d.tutto !== undefined) {
+      const foto = fotografia(C());
+      const prima = r2(contoPagatoParco() + contoPagatoCrazy() + contoPagatoBar());
+      pagaTutto(); pcSalva(); aggiornaPannello();
+      const entrati = r2(r2(C().paidPark + C().paidBar) - r2(foto.paidPark + foto.paidBar));
+      if (entrati > 0.005) {
+        fatto('Incassati ' + eur(entrati), () => {
+          rimetti(C(), foto);
+          pcSalva();
+          aggiornaPannello();
+          toast('Incasso annullato \u21a9\ufe0e');
+        });
+      }
+      return;
+    }
     if (d.reg !== undefined)   {
       if (PAN.ingresso) { posa(cardRefs.get(PAN.ingresso.id) && cardRefs.get(PAN.ingresso.id).card); return; }
       commitEntry(); return;
@@ -766,8 +819,8 @@ function primaCategoriaBar() {
    Adesso, quando la struttura e' la stessa, si ritocca solo la card
    che e' cambiata davvero. */
 function firmaGriglia() {
-  return PAN.cat + '\u00a7' + bcVociDi(PAN.cat).map(v =>
-    v.id + ':' + v.price + ':' + v.name).join(',');
+  return 'bar\u00a7' + lista(settings.barMenu).map(v =>
+    v.id + ':' + v.price + ':' + v.name + ':' + (v.cat || '')).join(',');
 }
 /* i numeri di UNA card: se non cambiano, la card non si tocca */
 function firmaVoce(id) { return bcQ(id) + '/' + bcPag(id); }
@@ -775,10 +828,21 @@ function firmaVoce(id) { return bcQ(id) + '/' + bcPag(id); }
 function pcGriglia() {
   const g = pcRif('.pc-bar');
   if (!g) return;
-  const voci = bcVociDi(PAN.cat);
+  const voci = lista(settings.barMenu);
   if (g.dataset.sig !== firmaGriglia()) {
     g.dataset.sig = firmaGriglia();
-    g.innerHTML = voci.map(v => bcCard(v)).join('');
+    /* UNA LISTA SOLA, CON I TITOLETTI IN MEZZO.
+       Le voci restano nell'ordine del listino -- e' quello che lui ha
+       messo in ordine di quanto si vendono -- e quando cambia scaffale
+       si mette una riga col nome sopra. Cosi' si scorre una volta
+       invece di cambiare linguetta quattro volte. */
+    let scaffale = null;
+    g.innerHTML = voci.map(v => {
+      const c = (v.cat || 'Altro').trim() || 'Altro';
+      const titolo = c !== scaffale ? '<div class="bc-scaffale">' + esc(c) + '</div>' : '';
+      scaffale = c;
+      return titolo + bcCard(v);
+    }).join('');
     g.querySelectorAll('.bc-card').forEach(c => { c.dataset.n = firmaVoce(c.dataset.id); });
     tocchi.id = null; tocchi.nato = null;
     return;
@@ -842,10 +906,19 @@ function pagaTempo(delta) {
 /* Quanto dura in tutto, minuti regalati dal Crazy compresi: e' il
    numero che sta dietro all'ora di uscita scritta nella fascia, e
    quindi anche il metro su cui si misura quanto e' pagato. */
+/* IL TEMPO DA PAGARE E' SOLO QUELLO DEL PARCO.
+   I minuti del Crazy Jumping sono REGALATI: si resta dentro di piu',
+   ma quei minuti non si pagano -- il Crazy si paga a parte, col suo
+   prezzo, e quella e' un'altra riga del conto.
+   Contarli qui era un errore che si vedeva: la barra del pagato non
+   arrivava mai in fondo e la fascia diceva "pagato fino alle 18:20"
+   anche a conto saldato, cioe' chiedeva soldi che non erano dovuti.
+   L'ora di USCITA invece i minuti regalati li comprende, ed e' giusto:
+   e' l'ora in cui escono davvero. Sono due cose diverse -- fin quando
+   hanno pagato, e fino a quando restano -- e adesso lo dicono. */
 function tempoTotale(c) {
   c = c || C();
-  return clamp(num(c.durationMinutes, 60), 0, 1e6) +
-    clamp(num(c.crazyJumping, 0), 0, 1e6) * num(settings.crazyExtraMinutes, 0);
+  return clamp(num(c.durationMinutes, 60), 0, 1e6);
 }
 
 function minutiPagati(c) {
@@ -860,21 +933,22 @@ function minutiPagati(c) {
      conto dei loro soldi. */
   const amt = c.paidAmt || {};
   const rigaBimbi = num(amt.bimbi, NaN);
-  let soldiBimbi, crazyPagato;
-  if (isFinite(rigaBimbi)) {
-    soldiBimbi = Math.max(0, rigaBimbi);
-    crazyPagato = crazy === 0 || Math.max(0, num(amt.crazy, 0)) >= costoCrazy - 0.005;
-  } else {
-    const presi = Math.max(0, num(c.paidPark, 0));
-    crazyPagato = presi >= costoCrazy - 0.005;
-    soldiBimbi = Math.max(0, presi - costoCrazy);
-  }
-  const regalati = crazyPagato ? crazy * num(settings.crazyExtraMinutes, 0) : 0;
-  if (!bimbi) return regalati;
+  /* I MINUTI REGALATI DAL CRAZY NON ENTRANO QUI.
+     Sono gratis: non sono tempo comprato, e sommarli faceva dire
+     "pagati 8 minuti" a chi non aveva ancora dato un euro per il
+     parco. Qui si risponde a una domanda sola -- QUANTO TEMPO DI PARCO
+     HANNO PAGATO -- e la risposta la danno solo i soldi della riga dei
+     bambini. Il Crazy ha la sua card, con la sua fascia verde. */
+  const soldiBimbi = isFinite(rigaBimbi)
+    ? Math.max(0, rigaBimbi)
+    /* ripiego per gli ingressi vecchi, salvati prima che le righe
+       tenessero il conto dei loro soldi */
+    : Math.max(0, Math.max(0, num(c.paidPark, 0)) - costoCrazy);
+  if (!bimbi) return 0;
   const perBambino = soldiBimbi / bimbi;
   let coperti = 0;
   for (const t of tariffs()) if (t.p <= perBambino + 1e-9) coperti = t.m;
-  return coperti + regalati;
+  return coperti;
 }
 
 /* LA FASCIA DEL TEMPO, riempita a mano e non rifatta da capo: qui
@@ -1260,28 +1334,6 @@ function syncPeople(container, people, onChange) {
       const people = elenco();
       const p = people.find(x => x.id === container.dataset.apri);
       if (!p) return;
-      /* le RUOTE dei colori sono <input type="color">: mandano input,
-         non click, e vanno prese qui. Ridisegnano subito, perche' il
-         colore lo si guarda addosso alla figura mentre lo si sceglie. */
-      if (t.dataset.ruota !== undefined) {
-        p.avatar[t.dataset.ruota].color = t.value;
-        segna(p, t.dataset.ruota === 'top' ? 'maglietta' : 'pantaloni');
-        container.dataset.sig = '';
-        avvisa();
-        syncPeople(container, people, container.__cambia);
-        return;
-      }
-      if (t.dataset.accruota !== undefined) {
-        /* la tavolozza resta APERTA: la ruota manda un evento a ogni
-           spostamento del dito, e chiuderla al primo la strapperebbe
-           via mentre la si sta ancora usando */
-        accMetti(p.avatar, t.dataset.accruota, t.value);
-        segna(p, t.dataset.accruota);
-        container.dataset.sig = '';
-        avvisa();
-        syncPeople(container, people, container.__cambia);
-        return;
-      }
       if (!t.dataset.campo) return;
       p[t.dataset.campo] = t.value;
       /* la firma si aggiorna a mano: ridisegnare mentre scrive gli
@@ -1297,6 +1349,35 @@ function syncPeople(container, people, onChange) {
       const d = b.dataset;
       const people = elenco();
       const p = people.find(x => x.id === container.dataset.apri);
+      /* LA RUOTA. Prima era il selettore del sistema, quello con
+         saturazione, luminosita' e i valori esadecimali: al banco e'
+         una schermata da tecnico per una domanda da bambino ("di che
+         colore era la maglietta?"). Adesso e' un cerchio: si gira il
+         dito e si prende il colore, punto. */
+      if (d.ruota !== undefined) {
+        apriRuota(b, av && av[d.ruota] ? av[d.ruota].color : '#8A8AA0', (colore) => {
+          const q = elenco().find(x => x.id === container.dataset.apri);
+          if (!q) return;
+          q.avatar[d.ruota].color = colore;
+          segna(q, d.ruota === 'top' ? 'maglietta' : 'pantaloni');
+          container.dataset.sig = '';
+          avvisa();
+          syncPeople(container, elenco(), container.__cambia);
+        });
+        return;
+      }
+      if (d.accruota !== undefined) {
+        apriRuota(b, ACC_DOVE[d.accruota] && p ? ACC_DOVE[d.accruota](p.avatar) : null, (colore) => {
+          const q = elenco().find(x => x.id === container.dataset.apri);
+          if (!q) return;
+          accMetti(q.avatar, d.accruota, colore);
+          segna(q, d.accruota);
+          container.dataset.sig = '';
+          avvisa();
+          syncPeople(container, elenco(), container.__cambia);
+        });
+        return;
+      }
       if (d.ruolo !== undefined) {
         /* IL RIFERIMENTO E' UNO SOLO. Serve a riconoscere il gruppo
            all'uscita, e otto figurine non aiutano a riconoscere
@@ -1452,8 +1533,7 @@ function armadioDi(p, tavolozzaAperta) {
     AV.COLORS.map(c => '<button data-col="' + campo + '|color|' + c.c + '" style="background:' + c.c +
       '" title="' + esc(c.n[0]) + '"' +
       (av[campo].color.toLowerCase() === c.c.toLowerCase() ? ' class="on"' : '') + '></button>').join('') +
-    '<span class="ruota" title="scegli tu"><input type="color" data-ruota="' + campo +
-      '" value="' + av[campo].color + '"></span></div>';
+    '<button class="ruota" data-ruota="' + campo + '" title="scegli tu"></button></div>';
 
   const capiSopra = '<div class="capi" style="' + colonne(AV.TOP.length) + '">' +
     AV.TOP.map(t => '<button class="capo' + (av.top.style === t.key ? ' on' : '') +
@@ -1522,8 +1602,7 @@ function tavolozza(av, acc) {
   return '<div class="volante">' +
     AV.COLORS.map(c => '<button data-acccol="' + acc + '|' + c.c + '" style="background:' + c.c + '"' +
       (ora && ora.toLowerCase() === c.c.toLowerCase() ? ' class="on"' : '') + '></button>').join('') +
-    '<span class="ruota"><input type="color" data-accruota="' + acc + '" value="' +
-      (ora || '#8A8AA0') + '"></span>' +
+    '<button class="ruota" data-accruota="' + acc + '" title="scegli tu"></button>' +
     '<button class="via" data-accvia="' + acc + '">togli</button></div>';
 }
 
@@ -1957,6 +2036,8 @@ function traitChip(t) {
    "Birre" mostra una birra senza doverlo scrivere da nessuna parte */
 function iconaCat(cat) {
   if (cat === 'Parco') return typeof ICONE !== 'undefined' && ICONE.bimbi ? ICONE.bimbi() : '';
+  /* il bar e' uno solo adesso: il bicchiere basta e avanza */
+  if (cat === 'Bar') return '<span class="em">🥤</span>';
   const v = lista(settings.barMenu).find(it => ((it.cat || 'Altro').trim() || 'Altro') === cat);
   return v ? iconaBar(v.name, v.em) : '';
 }
@@ -3013,8 +3094,19 @@ function pagaTutto() {
 }
 
 /* le categorie: il Parco davanti/* le categorie: il Parco davanti, poi quelle vere del menu */
-function bcCategorie() {
-  const out = ['Parco'];
+/* DUE LINGUETTE, NON SEI.
+   Prima ce n'era una per categoria -- Bevande, Snack, Birre, Alcolici
+   -- e per due birre e un caffe' bisognava cambiare linguetta tre
+   volte, ogni volta con la griglia che si ridisegnava. Le categorie
+   non sono posti diversi: sono scaffali dello stesso bancone.
+   Adesso il bancone e' uno solo e le categorie sono titoletti dentro,
+   in una lista che scorre. */
+function bcCategorie() { return ['Parco', 'Bar']; }
+
+/* le categorie vere, nell'ordine in cui compaiono nel listino: sono i
+   divisori dentro il bar, non delle destinazioni */
+function bcScaffali() {
+  const out = [];
   lista(settings.barMenu).forEach(it => {
     const c = (it.cat || 'Altro').trim() || 'Altro';
     if (out.indexOf(c) < 0) out.push(c);
@@ -3236,6 +3328,8 @@ function adattaPannello(p, limiteSotto, cimaVoluta, largaVoluta) {
      un riquadro tagliato a meta' sul bordo sembra un errore, non
      "c'e' dell'altro" -- e ci pensa la sfumatura, dalla parte giusta. */
   sfuma(su);
+  /* il bancone del bar ha la sua sfumatura: scorre lui, non il vano */
+  if (bar) bar.classList.toggle('scorre', bar.scrollHeight > bar.clientHeight + 2);
 
   if (cambio) { parco.classList.add('hidden'); bar.classList.remove('hidden'); }
   return 1;
@@ -3529,6 +3623,125 @@ function chiudiSchede(tranne) {
 
 /* Le scelte del bracciale, aperte accanto al pallino.
    Il colore giusto per l'ORA D'INGRESSO e' gia' segnalato. */
+/* LA RUOTA DEI COLORI.
+   Un cerchio con tutte le tinte in giro e i grigi in mezzo: si tocca
+   dove serve e il colore e' quello. Niente cursori di saturazione,
+   niente numeri esadecimali, niente "personalizza" -- al banco la
+   domanda e' "di che colore era la maglietta?", non "che valore HSL
+   aveva".
+   Il cerchio e' disegnato dal browser (due sfumature sovrapposte) e il
+   colore si RICAVA dal punto toccato con la stessa formula: quello che
+   si vede e quello che si prende sono la stessa cosa per costruzione,
+   non due conti che potrebbero divergere. */
+function coloreDelPunto(dx, dy, raggio) {
+  const dist = Math.min(1, Math.sqrt(dx * dx + dy * dy) / raggio);
+  let ang = Math.atan2(dy, dx) * 180 / Math.PI + 90;   // 0 in cima, come il disegno
+  if (ang < 0) ang += 360;
+  const h = Math.round(ang) % 360;
+  const s = Math.round(dist * 100);
+  return hslInEsa(h, s, 50);
+}
+function hslInEsa(h, s, l) {
+  s /= 100; l /= 100;
+  const k = n => (n + h / 30) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const f = n => Math.round(255 * (l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)))));
+  const due = v => v.toString(16).padStart(2, '0');
+  return '#' + due(f(0)) + due(f(8)) + due(f(4));
+}
+
+function apriRuota(tasto, coloreOra, scegli) {
+  document.querySelectorAll('.ruota-box').forEach(x => x.remove());
+  const box = el('div', 'ruota-box');
+  const cerchio = el('div', 'ruota-cerchio');
+  const punta = el('span', 'ruota-punta');
+  cerchio.appendChild(punta);
+  box.appendChild(cerchio);
+
+  /* la striscia del chiaro-scuro: la ruota da sola non sa fare il
+     bianco, il nero e i grigi, che sui vestiti servono sempre */
+  const scala = el('div', 'ruota-scala');
+  [0, 18, 35, 50, 65, 82, 100].forEach(l => {
+    const b = el('button');
+    b.style.background = hslInEsa(0, 0, l);
+    b.onclick = () => { metti(hslInEsa(0, 0, l)); };
+    scala.appendChild(b);
+  });
+  box.appendChild(scala);
+
+  const anteprima = el('div', 'ruota-ora');
+  const pastiglia = el('span', 'p');
+  anteprima.appendChild(pastiglia);
+  const nome = el('b');
+  anteprima.appendChild(nome);
+  box.appendChild(anteprima);
+
+  let scelto = coloreOra || '#8A8AA0';
+  const metti = (colore) => {
+    scelto = colore;
+    pastiglia.style.background = colore;
+    nome.textContent = (typeof AV !== 'undefined' && AV.colorName) ? AV.colorName(colore, 0) : colore;
+    scegli(colore);
+  };
+  metti(scelto);
+
+  const prendi = (ev) => {
+    const r = cerchio.getBoundingClientRect();
+    const x = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left - r.width / 2;
+    const y = (ev.touches ? ev.touches[0].clientY : ev.clientY) - r.top - r.height / 2;
+    punta.style.left = (r.width / 2 + Math.max(-r.width / 2, Math.min(x, r.width / 2))) + 'px';
+    punta.style.top = (r.height / 2 + Math.max(-r.height / 2, Math.min(y, r.height / 2))) + 'px';
+    metti(coloreDelPunto(x, y, r.width / 2));
+  };
+  let giu = false;
+  cerchio.addEventListener('pointerdown', (ev) => { giu = true; cerchio.setPointerCapture(ev.pointerId); prendi(ev); });
+  cerchio.addEventListener('pointermove', (ev) => { if (giu) prendi(ev); });
+  cerchio.addEventListener('pointerup', () => { giu = false; });
+
+  document.body.appendChild(box);
+  alzaMenu(box, tasto);
+  chiudiFuoriDel(box, tasto);
+}
+
+/* come chiudiFuori, ma butta via l'elemento invece di nasconderlo */
+function chiudiFuoriDel(chi, tasto) {
+  const via = (ev) => {
+    if (chi.contains(ev.target) || tasto.contains(ev.target)) return;
+    chi.remove();
+    document.removeEventListener('pointerdown', via, true);
+  };
+  setTimeout(() => document.addEventListener('pointerdown', via, true), 0);
+}
+
+/* SOPRA TUTTO, NON DENTRO.
+   Il menu nasce dentro la fascia del tempo, che sta dentro il vano che
+   scorre: e li' dentro un riquadro che sborda viene TAGLIATO dal bordo
+   del vano, e mezza tavolozza dei bracciali spariva sotto il taglio.
+   Non si puo' risolvere con lo z-index -- un contenitore che ritaglia
+   ritaglia e basta -- quindi il menu esce dal vano: diventa `fixed` e
+   si mette da solo sotto il tasto che l'ha aperto, in coordinate di
+   schermo. Resta dov'e' nel codice (e' roba del bracciale, non della
+   pagina), cambia solo il sistema di riferimento.
+   Si rimette in riga se lo schermo e' stretto, e se sotto non ci sta
+   si apre verso l'alto. */
+function alzaMenu(men, tasto) {
+  men.style.position = 'fixed';
+  men.style.right = 'auto';
+  men.style.top = '0px';
+  men.style.left = '0px';
+  /* si misura DOPO averlo messo a video, se no e' largo zero */
+  const t = tasto.getBoundingClientRect();
+  const m = men.getBoundingClientRect();
+  const margine = 8;
+  let x = t.right - m.width;                       // allineato a destra col tasto
+  x = Math.max(margine, Math.min(x, window.innerWidth - m.width - margine));
+  let y = t.bottom + 6;
+  if (y + m.height > window.innerHeight - margine) y = t.top - m.height - 6;
+  y = Math.max(margine, y);
+  men.style.left = Math.round(x) + 'px';
+  men.style.top = Math.round(y) + 'px';
+}
+
 /* Chiude `chi` al primo tocco fuori da `zona`. Sta a parte perche'
    e' il gesto che ci si aspetta da qualunque cosa che si apre: senza,
    resta aperta finche' non si ritocca il tasto, e chi la lascia aperta
@@ -3608,7 +3821,18 @@ function chiudiIngresso(entry) {
        dentro la scheda, verrebbe buttato via col resto -- lasciando per
        giunta il velo sfocato appeso sullo schermo */
     if (volante) posaSubito(volante.card);
-    const dopo = () => { buildActiveView(); updateBadge(); toast('Uscita registrata \u2705'); };
+    const dopo = () => {
+      buildActiveView(); updateBadge();
+      fatto('Uscita registrata \u2705', () => {
+        entry.status = 'active';
+        delete entry.closedAt;
+        delete entry.costoFinale;      // il prezzo torna a muoversi col listino
+        saveEntries();
+        buildActiveView();
+        updateBadge();
+        toast('Rimesso dentro \u21a9\ufe0e');
+      });
+    };
     if (r && r.card.isConnected && anima() && !volante) {
       r.card.style.height = r.card.getBoundingClientRect().height + 'px';
       requestAnimationFrame(() => {
@@ -3818,9 +4042,87 @@ function redrawCard(entry) {
   tick();
 }
 /* ridisegna ma lascia aperto il pannello che si stava usando */
+/* ══════════════════════════════════════════════════════════
+   L'AVVISO CHE VIENE A CERCARTI
+   Finora un gruppo che sforava diventava rosso nella lista -- e se in
+   quel momento stavi registrando un ingresso o battendo una birra, non
+   lo sapevi. Il colore aspetta che tu guardi; qui e' il contrario.
+   Regole che si e' dato:
+     - compare IN ALTO, sopra ogni cosa, e se ne va da solo dopo otto
+       secondi: e' un avviso, non una domanda. Non blocca niente e non
+       chiede di essere chiuso.
+     - dice CHI, non "un gruppo": al banco serve il nome, se no si
+       guardano quindici schede una per una.
+     - toccandolo ti porta li' e la scheda BATTE: la stessa
+       evidenziazione che c'e' gia' quando si tocca la figura, che e'
+       un linguaggio che l'app parla di suo.
+     - una volta per gruppo. Un avviso che si ripete ogni secondo si
+       impara a ignorare, e allora tanto vale non metterlo.
+   ══════════════════════════════════════════════════════════ */
+const gaAvvisati = new Set();
+/* CHI ERA GIA' SFORATO PRIMA CHE APRISSI L'APP NON E' UNA NOTIZIA.
+   Riaprendo la tavoletta la mattina dopo, o dopo un ricaricamento, i
+   gruppi rimasti aperti sono tutti fuori tempo: mostrarli come "appena
+   sforato" sarebbe una bugia e una raffica di avvisi. Si segnano come
+   gia' visti, e da li' in poi si avvisa solo chi sfora davvero adesso. */
+function avvisiGiaVisti() {
+  const ora = Date.now();
+  lista(entries).forEach(e => {
+    if (e.status === 'active' && !e.payLater && endTimeOf(e) - ora <= 0) gaAvvisati.add(e.id);
+  });
+}
+
+function avvisaSforato(entry) {
+  if (gaAvvisati.has(entry.id)) return;
+  gaAvvisati.add(entry.id);
+  document.querySelectorAll('.avviso').forEach(x => x.remove());
+
+  const a = el('button', 'avviso');
+  const em = el('span', 'av-em', '\u23f0');
+  a.appendChild(em);
+  const t = el('span', 'av-tx');
+  t.appendChild(el('b', null, nomiDi(entry)));
+  const q = clamp(entry.children, 0, 1e6);
+  t.appendChild(el('span', null, 'ha sforato il tempo \u00b7 ' + q + (q === 1 ? ' bambino' : ' bambini')));
+  a.appendChild(t);
+  a.appendChild(el('span', 'av-vai', 'vai \u203a'));
+
+  a.onclick = () => {
+    a.remove();
+    mostraSforato(entry);
+  };
+  document.body.appendChild(a);
+  requestAnimationFrame(() => a.classList.add('su'));
+  setTimeout(() => {
+    a.classList.remove('su');
+    setTimeout(() => a.remove(), 320);
+  }, 8000);
+}
+
+/* portalo a vista e faglielo capire QUALE */
+function mostraSforato(entry) {
+  if (tab !== 'active' || showArchive) { showArchive = false; switchTab('active'); }
+  setTimeout(() => {
+    const r = cardRefs.get(entry.id);
+    if (!r || !r.card.isConnected) return;
+    r.card.scrollIntoView({ block: 'center', behavior: anima() ? 'smooth' : 'auto' });
+    r.card.classList.remove('evidenzia');
+    void r.card.offsetWidth;
+    r.card.classList.add('evidenzia');
+    setTimeout(() => r.card.classList.remove('evidenzia'), 3000);
+  }, 120);
+}
+
 function tick() {
-  if (tab !== 'active' || showArchive) return;
   const now = Date.now();
+  /* L'AVVISO GUARDA SEMPRE, anche mentre sei in "+ Nuovo" o nel bar.
+     E' proprio quello il momento in cui il colore rosso della lista
+     non lo vedi -- se guardassi la lista, non servirebbe un avviso. */
+  lista(entries).forEach(e => {
+    if (e.status !== 'active' || e.payLater) return;
+    if (endTimeOf(e) - now <= 0) avvisaSforato(e);
+  });
+  if (tab !== 'active' || showArchive) return;
   cardRefs.forEach((r, id) => {
     const entry = entries.find(e => e.id === id);
     if (!entry || !r.card.isConnected) return;
@@ -3915,6 +4217,7 @@ function foglioSvuota() {
    cassa senza piu' niente a cui riferirsi. */
 function svuotaScelto(scelte) {
   const c = draft;
+  const foto = fotografia(C());
   const tutto = scelte.numeri && scelte.bar && scelte.persone && scelte.tempo && scelte.soldi;
   if (tutto) {
     const cat = PAN.cat;
@@ -3949,7 +4252,14 @@ function svuotaScelto(scelte) {
   if (box) { box.dataset.apri = ''; box.dataset.sig = ''; box.dataset.tav = ''; }
   pcSalva();
   aggiornaPannello();
-  toast('Svuotato');
+  fatto('Svuotato', () => {
+    rimetti(C(), foto);
+    const box2 = pcRif('.pc-people');
+    if (box2) { box2.dataset.apri = ''; box2.dataset.sig = ''; box2.dataset.tav = ''; }
+    pcSalva();
+    aggiornaPannello();
+    toast('Rimesso com\u2019era \u21a9\ufe0e');
+  });
 }
 
 /* IL REGISTRO DELLA GIORNATA.
@@ -4404,11 +4714,21 @@ function fogliUscita(entry, d, esci) {
    devono restare in cassa. */
 function eliminaIngresso(entry) {
   if (volante) posaSubito(volante.card);
+  const foto = fotografia(entry);
+  const dovEra = lista(entries).indexOf(entry);
   entries = lista(entries).filter(e => e.id !== entry.id);
   saveEntries();
   buildActiveView();
   updateBadge();
-  toast('Ingresso eliminato \ud83d\uddd1\ufe0f');
+  fatto('Ingresso eliminato \ud83d\uddd1\ufe0f', () => {
+    /* torna al SUO posto nell'elenco, non in fondo: la lista e' in
+       ordine di arrivo e ritrovarselo altrove confonde */
+    entries.splice(Math.max(0, Math.min(dovEra, entries.length)), 0, foto);
+    saveEntries();
+    buildActiveView();
+    updateBadge();
+    toast('Rimesso a posto \u21a9\ufe0e');
+  });
 }
 
 function confirmSheet(title, text, onYes) {
@@ -5089,6 +5409,7 @@ function init() {
   clearInterval(clockT);
   clockT = setInterval(clock, 10000);
   clearInterval(tickT);
+  avvisiGiaVisti();          // chi era gia' fuori tempo non e' una notizia
   tickT = setInterval(tick, 1000);
 
   document.addEventListener('visibilitychange', () => {
