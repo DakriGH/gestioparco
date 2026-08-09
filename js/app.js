@@ -1403,10 +1403,19 @@ function disegnaFascia(p, c) {
   if (om) {
     const q = omaggioDi(c);
     const comprato = clamp(num(c.durationMinutes, 0), 0, 1e6);
+    const bimbi = clamp(num(c.children, 0), 0, 1e6);
+    /* "SOLO CRAZY" SI DICE SOLO SE E' VERO: senza bambini in sala e
+       senza tempo di parco comprato. Appena arriva un bambino non lo
+       e' piu' -- e il cartellone che diceva "nessun tempo di parco
+       comprato" restava li' a raccontare una cosa vecchia. I dieci
+       minuti in omaggio invece restano: quelli sono regalati e basta,
+       e la riga corta serve a spiegare perche' l'uscita e' piu' in
+       la' di quello che si e' venduto. */
+    const daSolo = q > 0 && comprato <= 0 && bimbi <= 0;
     om.classList.toggle('hidden', q <= 0);
-    om.classList.toggle('grande', q > 0 && comprato <= 0);
+    om.classList.toggle('grande', daSolo);
     if (q <= 0) om.innerHTML = '';
-    else if (comprato <= 0) {
+    else if (daSolo) {
       om.innerHTML = '<b class="om-k"><span class="em">\ud83e\udd38</span> Solo Crazy</b>' +
         '<span class="om-tx">Nessun tempo di parco comprato: si paga solo il salto. ' +
         'Restano dentro <b>' + q + ' minuti in omaggio</b>, che non si pagano.</span>' +
@@ -1414,7 +1423,9 @@ function disegnaFascia(p, c) {
         'si paga quello, e i ' + q + ' minuti restano regalati.</span>';
     } else {
       om.innerHTML = '\ud83c\udf81 <b>+' + q + '\u2032</b> in omaggio' +
-        '<small>dal solo Crazy: non entrano nel prezzo</small>';
+        '<small>' + (comprato <= 0
+          ? 'tocca un taglio per vendere il tempo di parco'
+          : 'non entrano nel prezzo') + '</small>';
     }
   }
   p.querySelector('.pc-pag').innerHTML = pastigliaPagato(c);
@@ -3039,7 +3050,19 @@ function commitEntry() {
     paidAmt: JSON.parse(JSON.stringify(draft.paidAmt || {})),
     paidPark: r2(draft.paidPark), paidBar: r2(draft.paidBar),
     barPaid: 0, parkPaid: false,
-    baseMinutes: draft.durationMinutes
+    baseMinutes: draft.durationMinutes,
+    /* QUELLO CHE NASCE NEL MODULO DEVE ARRIVARE INTERO.
+       Questo elenco e' scritto a mano, campo per campo, e chi ne
+       aggiunge uno nuovo se lo scorda: e' successo con tutti e tre
+       questi. I minuti in OMAGGIO sparivano -- un solo-Crazy
+       registrato usciva otto minuti dopo invece di diciotto -- e la
+       composizione dei GIRI tornava a un giro solo con tutti dentro,
+       cioe' due giri fatti al banco diventavano otto minuti invece di
+       sedici. Roba di tempo e di soldi, persa fra il modulo e la
+       lista. */
+    omaggio: clamp(num(draft.omaggio, 0), 0, 1e6) || undefined,
+    crazyGiri: lista(draft.crazyGiri).slice(),
+    aggiunte: lista(draft.aggiunte).slice()
   });
   toast('Ingresso registrato \u2705');
   saveEntries();

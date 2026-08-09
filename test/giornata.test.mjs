@@ -43,6 +43,7 @@ function caso(n) {
   return Math.floor((seme >>> 15) / 65536 * n) % n;
 }
 const r2 = (x) => Math.round(x * 100) / 100;
+const clampNum = (x) => Math.max(0, Math.round(typeof x === 'number' && Number.isFinite(x) ? x : 0));
 const num = (x) => typeof x === 'number' && Number.isFinite(x);
 
 function nuovoConto(extra) {
@@ -137,6 +138,114 @@ gruppo('Cento gruppi entrano, consumano, pagano ed escono', () => {
               daPrendere.toFixed(2) + ' € ancora da prendere)');
 });
 
+gruppo('Una giornata coi solo-Crazy, i giri e il tempo venduto', () => {
+  /* La giornata vera non e' fatta solo di gruppi normali: c'e' chi
+     passa solo per saltare (niente tempo di parco, dieci minuti in
+     omaggio), chi torna a saltare una seconda volta, chi allunga, e
+     chi si ferma al parco dopo essere entrato solo per il Crazy.
+     Qui dentro ci sono tutti insieme, e alla fine la cassa deve
+     tornare: quello che si e' venduto sta nelle mani o e' ancora da
+     incassare, e non ci puo' essere un terzo posto. */
+  const omaggio = ctx.settings.crazySoloMinuti;
+  const extra = ctx.settings.crazyExtraMinutes;
+  ctx.entries = [];
+  const fatti = [];
+  let attesoVenduto = 0;
+
+  for (let i = 0; i < 60; i++) {
+    const tipo = caso(4);
+    const c = nuovoConto({ startTime: Date.now() - caso(120) * 60000 });
+    ctx.PAN.conto = c; ctx.PAN.ingresso = c;
+
+    if (tipo === 0) {
+      /* solo Crazy */
+      ctx.bcSetQ('crazy', 1 + caso(3));
+      if (ctx.omaggioDi(c) !== omaggio) return ok('solo Crazy senza omaggio al giro ' + i, false, true);
+      if (c.durationMinutes !== 0) return ok('solo Crazy con tempo comprato al giro ' + i, false, true);
+    } else if (tipo === 1) {
+      /* solo Crazy, e poi si fermano */
+      ctx.bcSetQ('crazy', 1 + caso(2));
+      ctx.bcSetQ('bimbi', 1 + caso(4));
+      c.durationMinutes = [15, 30, 60][caso(3)];
+      c.baseMinutes = c.durationMinutes;
+      /* i minuti in omaggio NON devono entrare nel prezzo */
+      const conOmaggio = ctx.r2(ctx.priceFor(c.durationMinutes + omaggio) * c.children);
+      const senza = ctx.r2(ctx.priceFor(c.durationMinutes) * c.children);
+      if (conOmaggio !== senza && ctx.costOf(c).parkTotal !== senza)
+        return ok('l omaggio e finito nel prezzo al giro ' + i, ctx.costOf(c).parkTotal, senza);
+    } else if (tipo === 2) {
+      /* gruppo normale che allunga */
+      ctx.bcSetQ('bimbi', 1 + caso(5));
+      c.durationMinutes = 30; c.baseMinutes = 30;
+      const q = [15, 30, 60][caso(3)];
+      const scritto = ctx.costoEstensione(c, q);
+      const prima = ctx.dueOf(c).park;
+      c.durationMinutes += q;
+      c.aggiunte = (c.aggiunte || []).concat([q]);
+      ctx.sistemaAggiunte(c);
+      const salito = ctx.r2(ctx.dueOf(c).park - prima);
+      if (Math.abs(salito - scritto) > 0.005)
+        return ok('il tasto ha mentito al giro ' + i, salito, scritto);
+    } else {
+      /* gruppo normale, con qualche giro di Crazy e roba dal bar */
+      ctx.bcSetQ('bimbi', 1 + caso(4));
+      c.durationMinutes = [30, 60, 90][caso(3)];
+      c.baseMinutes = c.durationMinutes;
+      const giri = caso(3);
+      for (let g = 0; g < giri; g++) {
+        ctx.giroNuovo(c);
+        ctx.cambiaGiro(c, ctx.giriCrazy(c).length - 1, 1 + caso(3));
+      }
+      const voci = ctx.settings.barMenu;
+      const quante = caso(3);
+      for (let b = 0; b < quante; b++) {
+        const v = voci[caso(voci.length)];
+        ctx.bcSetQ(v.id, 1 + caso(2));
+      }
+    }
+
+    /* l'ora d'uscita comprende SEMPRE tutto: comprato + giri + omaggio */
+    const dentro = Math.round((ctx.endTimeOf(c) - c.startTime) / 60000);
+    const atteso = clampNum(c.durationMinutes) + ctx.turniCrazy(c) * extra + ctx.omaggioDi(c);
+    if (dentro !== atteso) return ok('permanenza sbagliata al giro ' + i, dentro, atteso);
+
+    attesoVenduto = r2(attesoVenduto + ctx.dueOf(c).park + ctx.dueOf(c).bar);
+    /* meta' pagano tutto, gli altri restano a meta' */
+    if (caso(2)) ctx.pagaTutto();
+    else if (c.children > 0) ctx.segnaPagate('bimbi', caso(c.children + 1));
+    fatti.push(c);
+  }
+
+  ok('sessanta gruppi passati senza un guaio', fatti.length, 60);
+
+  /* la cassa: quello che si e' venduto o e' stato incassato o e'
+     ancora da incassare. Un terzo posto non esiste. */
+  let venduto = 0, incassato = 0, resta = 0;
+  fatti.forEach(c => {
+    ctx.PAN.conto = c; ctx.PAN.ingresso = c;
+    const d = ctx.dueOf(c);
+    venduto = r2(venduto + d.park + d.bar);
+    incassato = r2(incassato + Math.min(d.paidPark, d.park) + Math.min(d.paidBar, d.bar));
+    resta = r2(resta + d.total);
+  });
+  ok('la cassa torna: venduto = incassato + resta', venduto, r2(incassato + resta));
+  ok('e il venduto e quello che ci aspettavamo', venduto, attesoVenduto);
+
+  /* e tutto quello che e' passato di qui deve sopravvivere a un
+     salvataggio e a una rilettura, omaggio e giri compresi */
+  const riletti = ctx.normalizeEntries(JSON.parse(JSON.stringify(fatti)));
+  let guai = '';
+  riletti.forEach((r, i) => {
+    const o = fatti[i];
+    if (ctx.omaggioDi(r) !== ctx.omaggioDi(o)) guai = guai || (i + ': omaggio perso');
+    if (JSON.stringify(ctx.giriCrazy(r)) !== JSON.stringify(ctx.giriCrazy(o)))
+      guai = guai || (i + ': giri diversi');
+    if (r.durationMinutes !== o.durationMinutes) guai = guai || (i + ': durata cambiata');
+    if (ctx.endTimeOf(r) !== ctx.endTimeOf(o)) guai = guai || (i + ': ora d uscita cambiata');
+  });
+  ok('salvati e riletti, non cambia niente', guai, '');
+});
+
 gruppo('Il giro completo di un ingresso: registra, riapri, correggi, esci', () => {
   /* Il percorso vero di un gruppo, con in mezzo tutte le cose che
      succedono davvero al banco. Ogni passaggio deve lasciare i conti
@@ -176,6 +285,70 @@ gruppo('Il giro completo di un ingresso: registra, riapri, correggi, esci', () =
   const cassa = r2(c.paidPark + c.paidBar);
   const finale = ctx.dueOf(c);
   ok('e in cassa c’e’ esattamente il prezzo pieno', cassa, r2(finale.park + finale.bar));
+});
+
+gruppo('Registrando non si perde niente per strada', () => {
+  /* IL GUASTO CHE HA INSEGNATO QUESTA PROVA. commitEntry() copia un
+     elenco di campi scritto a mano, e chi ne aggiunge uno nuovo se lo
+     scorda: e' successo con tutti e tre quelli nati dopo. I minuti in
+     omaggio sparivano -- un solo-Crazy registrato usciva otto minuti
+     dopo invece di diciotto -- e i giri tornavano a uno solo con tutti
+     dentro: due giri fatti al banco diventavano otto minuti invece di
+     sedici. Roba di tempo e di soldi, persa fra il modulo e la lista. */
+  /* commitEntry() cambia anche schermata: qui lo schermo non c'e', e
+     il finto DOM non ha la vista da accendere. Si mette da parte la
+     funzione e si rimette dopo. */
+  const veroSwitch = ctx.mondo.switchTab;
+  ctx.mondo.switchTab = () => {};
+  ctx.entries = [];
+  const d = ctx.draft;
+  d.startTime = Date.now();
+  d.children = 2;
+  d.durationMinutes = 30;
+  d.payLater = false;
+  d.barItems = [];
+  d.paidLines = {}; d.paidAmt = {}; d.paidPark = 0; d.paidBar = 0;
+  d.people = [];
+  ctx.PAN.conto = d; ctx.PAN.ingresso = null;
+  /* due giri di Crazy: tre saliti la prima volta, due la seconda */
+  d.crazyJumping = 0; delete d.crazyGiri; delete d.omaggio;
+  ctx.bcSetQ('crazy', 3);
+  ctx.giroNuovo(d);
+  ctx.cambiaGiro(d, 1, 2);
+  const primaGiri = ctx.giriCrazy(d).slice();
+  const primaFine = ctx.endTimeOf(d);
+  const primaDovuto = ctx.dueOf(d).total;
+
+  ctx.commitEntry();
+  const e = ctx.entries[ctx.entries.length - 1];
+  ctx.PAN.conto = e; ctx.PAN.ingresso = e;
+
+  ok('i giri arrivano interi', ctx.giriCrazy(e), primaGiri);
+  ok('e con loro i minuti regalati', ctx.endTimeOf(e) - e.startTime, primaFine - d.startTime);
+  ok('il conto non cambia registrando', ctx.dueOf(e).total, primaDovuto);
+
+  /* e il solo-Crazy: dieci minuti in omaggio che devono sopravvivere */
+  ctx.entries = [];
+  const d2 = ctx.draft;
+  d2.startTime = Date.now();
+  d2.children = 0; d2.crazyJumping = 0;
+  delete d2.crazyGiri; delete d2.omaggio; delete d2.aggiunte;
+  d2.durationMinutes = 30; d2.barItems = [];
+  d2.paidLines = {}; d2.paidAmt = {}; d2.paidPark = 0; d2.paidBar = 0; d2.people = [];
+  ctx.PAN.conto = d2; ctx.PAN.ingresso = null;
+  ctx.bcSetQ('crazy', 1);
+  ok('nel modulo e un solo-Crazy', ctx.omaggioDi(d2), ctx.settings.crazySoloMinuti);
+  const dentroPrima = Math.round((ctx.endTimeOf(d2) - d2.startTime) / 60000);
+
+  ctx.commitEntry();
+  const e2 = ctx.entries[ctx.entries.length - 1];
+  ctx.PAN.conto = e2; ctx.PAN.ingresso = e2;
+  ok('i minuti in omaggio arrivano anche loro', ctx.omaggioDi(e2), ctx.settings.crazySoloMinuti);
+  ok('e la permanenza e la stessa',
+     Math.round((ctx.endTimeOf(e2) - e2.startTime) / 60000), dentroPrima);
+  ok('nessun ingresso registrato con una permanenza di niente',
+     ctx.endTimeOf(e2) > e2.startTime, true);
+  ctx.mondo.switchTab = veroSwitch;
 });
 
 gruppo('Il registro salvato e riletto dice le stesse cifre', () => {

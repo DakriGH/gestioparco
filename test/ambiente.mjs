@@ -95,6 +95,11 @@ export function caricaApp() {
        let non si affacciano da sole sul contesto (niente apici
        inversi qui dentro: siamo dentro un template) */
     get giroScelto() { return giroScelto; }, set giroScelto(v) { giroScelto = v; },
+    /* il contesto stesso: serve ai test per mettere da parte una
+       funzione che tocca lo schermo (switchTab) e rimetterla dopo.
+       Sostituirla sull'oggetto esportato non basta: l'app chiama la
+       SUA, che vive qui dentro. */
+    mondo: window,
     AV: AV, CAPI: CAPI,
     PAN: PAN, C: C, r2: r2, tocchi: tocchi,
     contoParco: contoParco, contoCrazy: contoCrazy, contoBar: contoBar,
