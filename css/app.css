@@ -2883,39 +2883,64 @@ html:not(.anima) .view.entra-dx { animation: none; }
 .bc-card.presa .bc-gi, .bc-card.saldata .bc-gi { color: rgba(255, 255, 255, 0.7); }
 
 /* LO STORICO DEI GIRI, a destra della card del Crazy.
-   La card resta quella di tutte le altre -- stessa fila del piu' e del
-   meno, stessa fascia verde del pagato -- e le si mette ACCANTO una
-   colonna con la storia: una pastiglia per giro, col numero di chi e'
-   salito quella volta.
-   Quella accesa e' il giro che si sta segnando: il piu' e il meno
-   della card lavorano su quella. Toccarne un'altra la accende, e cosi'
-   si corregge un giro vecchio senza una seconda fila di tasti.
-   Lo spazio e' quello che accanto restava vuoto: la card non cresce di
-   un pixel in altezza. */
-.bc-card.con-storico { flex-direction: row; }
-.bc-card.con-storico .bc-lato { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
-.bc-storico { flex: 0 0 auto; width: 178px; display: flex; flex-direction: column;
-  gap: 3px; padding: 6px 8px 7px; background: rgba(0, 0, 0, 0.3);
-  border-left: 2px solid rgba(0, 0, 0, 0.45); }
+   LA PARTE NORMALE RESTA LARGA COME TUTTE LE ALTRE CARD: la card del
+   Crazy si prende DUE caselle della griglia -- la seconda era vuota --
+   e dentro la prima meta' e' la card di sempre, identica a quella dei
+   Bambini e delle bibite, tasti compresi. Nell'altra meta' c'e' la
+   storia.
+   Un giro per RIGA, e le righe scorrono: in fila le pastiglie si
+   leggevano male gia' al terzo giro. Lo scorrimento sta dentro la sua
+   colonna, quindi la card non cresce di un pixel.
+   La riga accesa e' il giro che si sta segnando: il piu' e il meno
+   della card lavorano su quella. Toccarne un'altra la accende. */
+.bc-card.con-storico { grid-column: span 2; flex-direction: row; }
+/* meta' esatta della card larga: cosi' viene identica alle altre --
+   dodici pixel e' il vuoto fra le caselle della griglia */
+.bc-card.con-storico .bc-lato { flex: 0 0 calc((100% - 12px) / 2); min-width: 0;
+  display: flex; flex-direction: column; }
+/* LA STORIA NON DECIDE L'ALTEZZA DELLA CARD. Il suo contenuto sta
+   APPOGGIATO sopra la colonna -- posizione assoluta -- quindi la card
+   resta alta quanto la parte normale accanto e i giri in piu' si
+   scorrono. Senza questo, al quinto giro la lista tirava la card da
+   156 a 260 pixel: cresceva la riga, e con lei tutta la schermata. */
+.bc-storico { flex: 1 1 auto; min-width: 0; position: relative;
+  background: rgba(0, 0, 0, 0.3); border-left: 2px solid rgba(0, 0, 0, 0.45); }
+.bc-storico .st-dentro { position: absolute; inset: 0; display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto; }
+.bc-storico .st-testa { display: flex; align-items: baseline; justify-content: space-between;
+  padding: 5px 10px 3px; }
 .bc-storico .st-k { font-size: 9.5px; font-weight: 800; letter-spacing: .09em;
   text-transform: uppercase; color: rgba(255, 255, 255, 0.5); }
-.bc-storico .st-lista { flex: 1 1 auto; display: flex; flex-wrap: wrap; align-content: flex-start;
-  gap: 4px; overflow: hidden; }
-.bc-storico .st-g { display: flex; align-items: baseline; gap: 4px; min-width: 46px; height: 34px;
-  padding: 0 8px; border: none; border-radius: 10px; cursor: pointer;
-  background: rgba(182, 158, 255, 0.16); color: #EDE6FF; font: inherit; }
-.bc-storico .st-g .st-n { font-size: 9.5px; font-weight: 800; color: rgba(255, 255, 255, 0.5); }
-.bc-storico .st-g b { font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 700; }
+.bc-storico .st-min { font-family: 'Fredoka', sans-serif; font-size: 14px; font-weight: 700;
+  color: #C9B6FF; }
+.bc-storico .st-lista { min-height: 0; overflow-y: auto;
+  overscroll-behavior: contain; display: flex; flex-direction: column; gap: 3px;
+  padding: 0 8px 4px; }
+.bc-storico .st-g { flex: 0 0 auto; display: flex; align-items: center; gap: 7px;
+  height: 34px; padding: 0 10px; border: none; border-radius: 10px; cursor: pointer;
+  background: rgba(182, 158, 255, 0.16); color: #EDE6FF; font: inherit; text-align: left; }
+.bc-storico .st-g .st-n { font-size: 10px; font-weight: 800; color: rgba(255, 255, 255, 0.5); }
+.bc-storico .st-g b { font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 700; }
+.bc-storico .st-g .st-q { font-size: 11.5px; font-weight: 700; color: rgba(255, 255, 255, 0.6); }
+.bc-storico .st-g .st-m { margin-left: auto; font-size: 11.5px; font-weight: 700;
+  color: rgba(255, 255, 255, 0.45); }
 /* il giro che si sta segnando: e' quello che il piu' e il meno toccano */
 .bc-storico .st-g.on { background: #B69EFF; color: #1A1230; }
-.bc-storico .st-g.on .st-n { color: rgba(0, 0, 0, 0.45); }
-.bc-storico .st-piu { min-width: 40px; height: 34px; border: none; border-radius: 10px;
-  cursor: pointer; background: rgba(232, 180, 76, 0.22);
+.bc-storico .st-g.on .st-n, .bc-storico .st-g.on .st-q { color: rgba(0, 0, 0, 0.5); }
+.bc-storico .st-g.on .st-m { color: rgba(0, 0, 0, 0.42); }
+.bc-storico .st-piu { flex: 0 0 auto; height: 38px; margin: 0 8px 8px; border: none;
+  border-radius: 10px; cursor: pointer; background: rgba(232, 180, 76, 0.2);
   box-shadow: inset 0 0 0 1.5px rgba(232, 180, 76, 0.45); color: #F6DCA6;
-  font-family: 'Fredoka', sans-serif; font-size: 20px; font-weight: 700; }
+  font-family: 'Fredoka', sans-serif; font-size: 14px; font-weight: 700; }
 .bc-storico .st-piu:active { background: rgba(232, 180, 76, 0.4); }
-.bc-storico .st-min { font-family: 'Fredoka', sans-serif; font-size: 14px; font-weight: 700;
-  color: #C9B6FF; text-align: right; }
+/* schermi stretti: la card non puo' prendersi due caselle, e la storia
+   si stringe invece di mandare i Bambini a capo */
+@media (max-width: 759px) {
+  .bc-card.con-storico { grid-column: auto; }
+  .bc-card.con-storico .bc-lato { flex: 1 1 auto; }
+  .bc-storico { flex: 0 0 118px; }
+  .bc-storico .st-g .st-q, .bc-storico .st-g .st-m { display: none; }
+}
 
 /* le due card non sono piu' gemelle quando c'e' il Crazy: la sua tiene
    la fila dei giri e si prende il posto che restava vuoto accanto */
@@ -3556,11 +3581,7 @@ html:not(.anima) .card.evidenzia::after { animation: none; }
    peggio di due file diverse: si guarda due volte per capire se e' la
    stessa cosa. */
 .bc-griglia.pc-due { grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); }
-/* ...MA col Crazy in ballo no: la sua card tiene la fila dei giri e si
-   prende il posto che accanto restava vuoto. Due colonne invece di
-   tre, e la seconda larga il doppio: e' spazio che c'era gia', non
-   costa un pixel di altezza. */
-.bc-griglia.pc-due.con-giri { grid-template-columns: minmax(140px, 1fr) minmax(232px, 1.9fr); }
+
 /* La parte alta delle due card aveva un respiro da schermo grande.
    Qui ogni riga conta: dentro la scheda che vola devono starci queste,
    la fascia del tempo e il guardaroba aperto, tutto insieme. */

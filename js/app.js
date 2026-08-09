@@ -1383,10 +1383,6 @@ function aggiornaPannello(opz) {
          anche l'ora di uscita, e i minuti pagati si leggono come un
          orario ("fino alle 13:40") invece che come una frazione. */
       due.innerHTML = bcCard(bcVoce('bimbi'), true) + bcCard(bcVoce('crazy'), true);
-      /* col Crazy in ballo la sua card si prende lo spazio che accanto
-         restava vuoto: serve alla fila dei giri, e non costa un pixel
-         di altezza */
-      due.classList.toggle('con-giri', bcQ('crazy') > 0);
       tocchi.id = null; tocchi.nato = null;
     }
 
@@ -3533,16 +3529,28 @@ function storicoGiri() {
   const c = C();
   const g = giriCrazy(c);
   const ora = giroOra(c);
-  return '<div class="bc-storico">' +
-    '<span class="st-k">giri</span>' +
-    '<span class="st-lista">' +
+  const extra = clamp(num(settings.crazyExtraMinutes, 0), 0, 1e6);
+  /* IL DENTRO E' STACCATO DALLA CARD: sta appoggiato sopra la colonna
+     (posizione assoluta) e quindi non ha voce in capitolo sull'altezza.
+     Senza, al quinto giro la lista tirava la card da 156 a 260 pixel
+     invece di scorrere. */
+  return '<div class="bc-storico"><div class="st-dentro">' +
+    '<div class="st-testa"><span class="st-k">giri</span>' +
+      '<span class="st-min">+' + minutiCrazy(c) + '′</span></div>' +
+    /* UNA RIGA PER GIRO, e scorrono. Con le pastiglie in fila si
+       leggeva male gia' al terzo giro; in colonna ogni giro ha la sua
+       riga con scritto tutto, e quando sono tanti si scorre -- dentro
+       la sua colonna, senza far crescere la card di un pixel. */
+    '<div class="st-lista">' +
       g.map((n, i) => '<button class="st-g' + (i === ora ? ' on' : '') + '" data-sel="' + i + '"' +
-        ' aria-label="giro ' + (i + 1) + ', ' + n + ' saliti">' +
-        '<span class="st-n">' + (i + 1) + 'º</span><b>' + n + '</b></button>').join('') +
-      '<button class="st-piu" data-giro="crazy" aria-label="un altro giro">+</button>' +
-    '</span>' +
-    '<span class="st-min">+' + minutiCrazy(c) + '′</span>' +
-  '</div>';
+        ' aria-label="giro ' + (i + 1) + ', ' + n + (n === 1 ? ' salito' : ' saliti') + '">' +
+        '<span class="st-n">' + (i + 1) + 'º</span>' +
+        '<b>' + n + '</b>' +
+        '<span class="st-q">' + (n === 1 ? 'salito' : 'saliti') + '</span>' +
+        '<span class="st-m">+' + extra + '′</span></button>').join('') +
+    '</div>' +
+    '<button class="st-piu" data-giro="crazy">+ giro</button>' +
+  '</div></div>';
 }
 
 /* I GIRI SCRITTI IN BREVE: "3 + 2 · +16′".

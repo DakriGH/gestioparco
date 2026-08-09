@@ -341,9 +341,13 @@ gruppo('I giri del Crazy stanno nella sua card');
     /function metteCrazy[\s\S]{0,900}g\.splice\(i, 1\)/.test(APP));
   prova('lo storico sta ACCANTO, non sotto: la card non cresce',
     /\.bc-card\.con-storico \{[^}]*flex-direction:\s*row/.test(CSS));
-  prova('e la card si prende lo spazio che restava vuoto accanto',
-    /\.bc-griglia\.pc-due\.con-giri \{[^}]*grid-template-columns/.test(CSS) &&
-    /classList\.toggle\('con-giri'/.test(APP));
+  prova('la parte normale resta larga come le altre card',
+    /\.bc-card\.con-storico \.bc-lato \{[^}]*flex:\s*0 0 calc\(\(100% - 12px\) \/ 2\)/.test(CSS));
+  prova('e la card si prende la casella vuota accanto',
+    /\.bc-card\.con-storico \{[^}]*grid-column:\s*span 2/.test(CSS));
+  prova('i giri sono righe che scorrono',
+    /\.bc-storico \.st-lista \{[^}]*overflow-y:\s*auto/.test(CSS) &&
+    /\.bc-storico \.st-lista \{[^}]*flex-direction:\s*column/.test(CSS));
   prova('cambiando gruppo si riparte dall ultimo giro',
     /giroScelto = 99/.test(APP));
   prova('e la composizione si legge sulla riga del prezzo',
