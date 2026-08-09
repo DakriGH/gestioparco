@@ -3354,6 +3354,7 @@ function entryCard(entry) {
   };
   const sKids = mkCella('\ud83e\uddd2', 'children', 1);
   const sTime = mkCella(null, 'durationMinutes', 5);
+  const sPag = mkCellaPagate(entry, fila, 'bimbi', '\u2713');
   if (entry.payLater) {
     sTime.box.classList.add('hidden');
     fila.appendChild(el('div', 'e-later-tag', '\u23f3 Tempo aperto'));
@@ -3438,7 +3439,7 @@ function entryCard(entry) {
   aperta.onclick = (ev) => ev.stopPropagation();
 
   cardRefs.set(entry.id, {
-    card, count, range, sKids, sCrazy, sTime, solo,
+    card, count, range, sKids, sCrazy, sTime, sPag, solo,
     dueVal: soldiV, soldiK, soldi, wrist, bimbiV, crzV, crz, countK,
     payPanel, payBtn,
     /* servono a rivestire la riga quando cambia un vestito */
@@ -4730,6 +4731,37 @@ function giroDiLista(entry) {
   return { i: scelto, n: g[scelto], aperto: true };
 }
 
+/* QUANTE TESTE HANNO GIA' PAGATO, dalla fascetta.
+   Sulla card del conto c'e' da sempre la fascia verde "0/3": qui
+   invece si poteva contare i bambini e i minuti ma non segnare chi
+   aveva gia' pagato, e per una cosa che al banco si fa venti volte al
+   giorno bisognava aprire il conto.
+   E' la STESSA cassa: passa da segnaPagate(), come la fascia verde e
+   come il "paga" della striscia in fondo. Qui cambia il posto in cui
+   si preme, non la cassa. */
+function mkCellaPagate(entry, fila, voce, emoji) {
+  const box = el('div', 'e-cella e-pag');
+  const minus = el('button', null, '\u2212');
+  const kk = el('span', 'k', emoji);
+  const val = el('span', 'v num', '0/0');
+  const plus = el('button', null, '+');
+  const tocca = (d) => (ev) => {
+    ev.stopPropagation();
+    conConto(entry, () => segnaPagate(voce, bcPag(voce) + d));
+    saveEntries();
+    syncCard(entry);
+    tick();
+  };
+  minus.onclick = tocca(-1);
+  plus.onclick = tocca(1);
+  box.appendChild(minus);
+  box.appendChild(kk);
+  box.appendChild(val);
+  box.appendChild(plus);
+  fila.appendChild(box);
+  return { box, val, minus, plus };
+}
+
 function mkCellaCrazy(entry, fila) {
   /* DUE NUMERI DIVERSI, E VANNO DETTI TUTT'E DUE.
      "5" puo' voler dire cinque salite in tutto o cinque saliti in
@@ -4759,6 +4791,22 @@ function mkCellaCrazy(entry, fila) {
   const via = el('button', 'crz-via', '\u2715');
   box.appendChild(nuovo);
   box.appendChild(via);
+  /* e quante salite hanno gia' pagato: stessa fascia verde delle card,
+     perche' e' la stessa cosa */
+  const pag = el('span', 'crz-pag');
+  const pMeno = el('button', null, '\u2212');
+  const pVal = el('b', null, '0/0');
+  const pPiu = el('button', null, '+');
+  pag.appendChild(el('span', 'k', '\u2713'));
+  pag.appendChild(pMeno); pag.appendChild(pVal); pag.appendChild(pPiu);
+  box.appendChild(pag);
+  const pagaCrazy = (d) => (ev) => {
+    ev.stopPropagation();
+    conConto(entry, () => segnaPagate('crazy', bcPag('crazy') + d));
+    saveEntries(); syncCard(entry); tick();
+  };
+  pMeno.onclick = pagaCrazy(-1);
+  pPiu.onclick = pagaCrazy(1);
   /* la scritta sta IN RIGA, non sotto: sotto faceva la cella piu'
      alta delle altre e la fascetta veniva storta */
   const nota = el('span', 'e-crz-k', 'nuovo giro');
@@ -4810,7 +4858,7 @@ function mkCellaCrazy(entry, fila) {
     dopo();
   };
   fila.appendChild(box);
-  return { box, val, minus, nota, totN, via, gruppo };
+  return { box, val, minus, nota, totN, via, gruppo, pVal, pMeno, pPiu };
 }
 
 function syncCard(entry) {
@@ -4846,6 +4894,22 @@ function syncCard(entry) {
     r.sCrazy.nota.classList.toggle('acceso', gl.aperto && gl.n > 0);
   }
   if (r.sCrazy.via) r.sCrazy.via.disabled = !gl.aperto;
+  /* le teste pagate: quelle dei bambini nella prima riga, quelle del
+     Crazy in fondo alla sua */
+  if (r.sPag) {
+    const pg = conConto(entry, () => bcPag('bimbi'));
+    r.sPag.val.textContent = pg + '/' + kids;
+    r.sPag.box.classList.toggle('tutte', kids > 0 && pg >= kids);
+    r.sPag.box.classList.toggle('spenta', kids <= 0);
+    r.sPag.minus.disabled = pg <= 0;
+    r.sPag.plus.disabled = kids <= 0 || pg >= kids;
+  }
+  if (r.sCrazy.pVal) {
+    const pc = conConto(entry, () => bcPag('crazy'));
+    r.sCrazy.pVal.textContent = pc + '/' + crazy;
+    r.sCrazy.pMeno.disabled = pc <= 0;
+    r.sCrazy.pPiu.disabled = crazy <= 0 || pc >= crazy;
+  }
   if (r.sCrazy.gruppo) r.sCrazy.gruppo.classList.toggle('spento', !gl.aperto);
   r.sTime.val.textContent = entry.payLater ? '\u2014' : entry.durationMinutes + '\u2032';
   r.sKids.minus.disabled = kids <= 0;

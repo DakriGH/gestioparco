@@ -378,8 +378,17 @@ gruppo('Il vestito cambiato si vede subito anche nella lista');
     /function firmaGente[\s\S]{0,220}JSON\.stringify\(p\.avatar\)/.test(APP));
   prova('syncCard se ne accorge e la riveste',
     /sigGente !== firma[\s\S]{0,140}vestiRiga\(r, entry\)/.test(APP));
-  prova('e ritinge anche il pallino del bracciale',
-    /function syncCard[\s\S]{0,2600}aggiornaPallino\(entry\)/.test(APP));
+  prova('e ritinge anche il pallino del bracciale', (() => {
+    const i = APP.indexOf('function syncCard(entry) {');
+    if (i < 0) return false;
+    const fine = APP.indexOf('\nfunction ', i + 10);
+    return APP.slice(i, fine > 0 ? fine : undefined).indexOf('aggiornaPallino(entry);') > 0;
+  })());
+  /* e il tasto delle teste pagate, che prima c era solo nel conto */
+  prova('la fascetta sa segnare chi ha pagato',
+    /function mkCellaPagate/.test(APP) && /\.e-cella\.e-pag \{/.test(CSS));
+  prova('e passa dalla cassa di sempre',
+    /function mkCellaPagate[\s\S]{0,900}segnaPagate\(voce, bcPag\(voce\) \+ d\)/.test(APP));
   prova('la scheda si tiene i pezzi da rivestire',
     /cardRefs\.set\([\s\S]{0,320}avBox, nome, tratti, apriParco, sigGente/.test(APP));
 }
