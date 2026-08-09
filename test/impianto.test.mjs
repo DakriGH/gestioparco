@@ -314,6 +314,32 @@ gruppo("L'aria che avanza va al guardaroba, e non schiaccia nessuno");
     /\.testa-viola h2 \{[^}]*margin:\s*0/.test(CSS));
 }
 
+gruppo('Estendi tempo: una sezione sua, e i prezzi veri');
+{
+  /* I tagli rapidi SOSTITUISCONO la durata; questi tasti la
+     AGGIUNGONO. Sono due domande diverse -- "quanto restano?" quando
+     entrano, "quanto ancora?" quando sono dentro -- e finche' erano
+     gli stessi quattro pulsanti, premere "30m" su un'ora gia' passata
+     ACCORCIAVA il tempo senza che niente avvertisse. */
+  prova('la sezione c e nel pannello', APP.includes('tp-est'));
+  prova('e ha il suo aspetto nel foglio di stile', /\.tp-est \{/.test(CSS));
+  prova('compare solo su chi e gia dentro', /classList\.toggle\('hidden', !suUno\)/.test(APP));
+  prova('i tasti aggiungono, non sostituiscono',
+    /d\.a === 'est'[\s\S]{0,400}durationMinutes = clamp\(m \+ num\(d\.v/.test(APP));
+
+  /* il prezzo scritto sul tasto non e' una tabella a parte: e' il
+     costo di dopo meno quello di adesso, con la stessa costOf() che fa
+     il conto vero. Se un domani cambia il listino, cambia da sola. */
+  prova('il prezzo dell aggiunta passa da costOf', /function costoEstensione[\s\S]{0,300}costOf\(/.test(APP));
+  prova('e si spegne a tempo aperto', /if \(c\.payLater\) return;[\s\S]{0,200}durationMinutes = clamp\(m \+/.test(APP));
+
+  /* il posto per la sezione e' stato preso dove c'era una COPIA */
+  prova('la riga di comandi sparisce mentre la scheda vola',
+    /\.entry\.vola \.e-fila \{[^}]*display:\s*none/.test(CSS));
+  prova('e l uscita e finita nella barra del conto', APP.includes('data-uscita'));
+  prova('col suo tasto che funziona', /d\.uscita !== undefined[\s\S]{0,120}chiudiIngresso\(PAN\.ingresso\)/.test(APP));
+}
+
 gruppo('Il conto sopra o sotto, a scelta');
 {
   /* Non c'e' una risposta giusta: sotto e' dove arriva il pollice,

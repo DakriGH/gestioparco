@@ -769,6 +769,53 @@ main {
   font-size: 15px; border-width: 2px; }
 .tp-riga .chip.later { font-size: 15px; }
 
+/* LA RIGA DI COMANDI SPARISCE MENTRE LA SCHEDA VOLA.
+   Dentro c'erano i meno e i piu' dei bambini, del Crazy e dei minuti,
+   piu' i due tasti. Col pannello aperto quelle tre coppie sono una
+   copia in piccolo delle card qui sotto -- stessi numeri, stessi
+   effetti -- e "Bar & Conto" e' il tasto che ti ha portato qui. Restava
+   solo l'uscita, che e' scesa nella barra del conto.
+   Sono cinquantasette pixel che tornano al pannello: e' esattamente il
+   posto in cui sta la sezione "Estendi". */
+.entry.vola .e-fila { display: none; }
+
+/* ══════════════════════════════════════════════════════════
+   ESTENDI TEMPO: la sezione a parte
+   Sta dentro la card del Tempo ma non le somiglia: fondo ambrato e un
+   contorno suo, cosi' si vede che e' un'altra cosa. I tasti sono i
+   piu' grandi della card perche' sono quelli che si premono di corsa,
+   col cliente davanti che chiede un'altra mezz'ora -- e sotto ai
+   minuti c'e' scritto quanto costa, che e' l'informazione che serve
+   PRIMA di premere.
+   ══════════════════════════════════════════════════════════ */
+.tp-est { display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin-top: 4px; padding: 3px 8px; border-radius: 13px;
+  background: rgba(232, 180, 76, 0.10);
+  box-shadow: inset 0 0 0 1.5px rgba(232, 180, 76, 0.32); }
+.tp-est .est-k { display: flex; align-items: center; gap: 6px; font-size: 11.5px;
+  font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: #F0CE8A; }
+.tp-est .est-k .em { font-size: 15px; }
+.est-b { display: flex; align-items: center; justify-content: center;
+  gap: 7px; min-width: 84px; min-height: 42px; padding: 0 11px; border: none;
+  border-radius: 12px; cursor: pointer; font: inherit; color: #FBEBC8;
+  background: linear-gradient(180deg, rgba(232, 180, 76, 0.34), rgba(232, 180, 76, 0.2));
+  box-shadow: inset 0 0 0 1.5px rgba(232, 180, 76, 0.5);
+  transition: transform var(--speed), background var(--speed); }
+.est-b b { font-family: 'Fredoka', sans-serif; font-size: 16.5px; font-weight: 700; line-height: 1; }
+.est-b i { font-style: normal; font-size: 12.5px; font-weight: 700; opacity: .92; }
+.est-b:active { transform: scale(.95); }
+.est-b:disabled { opacity: .34; cursor: default; }
+.tp-est .est-dx { margin-left: auto; display: flex; align-items: center; gap: 9px; }
+.est-meno { min-width: 56px; height: 42px; border: none; border-radius: 11px; cursor: pointer;
+  background: rgba(255, 255, 255, 0.1); color: var(--txt);
+  font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 700; }
+.est-meno:active { background: rgba(255, 255, 255, 0.22); }
+.est-meno:disabled { opacity: .3; cursor: default; }
+.est-fine { font-size: 11.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.62); text-align: right; line-height: 1.2; }
+.est-fine b { display: block; font-family: 'Fredoka', sans-serif; font-size: 21px;
+  font-weight: 700; letter-spacing: 0; text-transform: none; color: #fff; }
+
 /* la pastiglia del pagato */
 .pgl { display: flex; align-items: center; gap: 6px; padding: 4px 4px 4px 11px;
   border-radius: 13px; background: rgba(106, 220, 175, 0.15);
@@ -2971,6 +3018,13 @@ html:not(.anima) .entry.appena::before { animation: none; opacity: 1; }
    dall'INTESTAZIONE e dal pannello interno: la card in se' ha gia'
    padding zero, e mettercelo la farebbe CRESCERE invece di accorciarla. */
 .pan-conto .card.blk { margin-bottom: 8px; }
+/* IL RESPIRO CONTATO DUE VOLTE. Nella colonna del Parco fra una card e
+   l'altra c'era il gap della colonna PIU' il margine sotto di ognuna:
+   quattordici pixel che nessuno aveva scelto -- due regole scritte in
+   momenti diversi che si sommavano -- e otto in fondo all'ultima, che
+   non separano da niente. Il respiro lo mette la colonna, uno solo. */
+.pan-conto .pc-parco > .card.blk { margin-bottom: 0; }
+.pan-conto .pc-parco { gap: 7px; }
 .pan-conto .card.blk > h2,
 .pan-conto .card.blk > .testa-viola > h2 { font-size: 15px; padding: 3px 14px; }
 .pan-conto .blk-in { padding: 5px 12px 6px; }
@@ -3021,7 +3075,7 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
 /* i posti vuoti non devono occupare il loro giro di gap: la fascia
    della modifica e la riga del suo annulla ci sono solo quando servono */
 
-.pan-conto .bc-cat { padding: 4px 0 6px; }
+.pan-conto .bc-cat { padding: 3px 0 4px; }
 
 .bc-cat button { display: flex; align-items: center; gap: 7px; }
 .bc-cat button svg { width: 21px; height: 21px; }
@@ -3092,7 +3146,7 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
    erano tutte in fondo si sbagliava capo un tocco su tre.
    In fondo, a tutta larghezza, la riga libera: al banco e' quella che
    si usa di corsa, quindi e' la piu' grande e la piu' visibile. */
-.armadio { display: grid; grid-template-columns: 112px 1fr; gap: 5px 9px;
+.armadio { display: grid; grid-template-columns: 112px 1fr; gap: 4px 9px;
   margin-top: 5px; align-items: stretch; }
 .armadio .largo { grid-column: span 2; display: flex; flex-direction: column; gap: 4px; }
 .armadio .figura { background: rgba(0,0,0,.24); border-radius: 14px; display: flex;
@@ -3115,7 +3169,7 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
    sparpagliata.
    ══════════════════════════════════════════════════════════ */
 .armadio .roba { min-width: 0; display: flex; flex-direction: column; gap: 0; }
-.armadio .stacco { display: block; flex: 1.4 1 auto; min-height: 6px; max-height: 30px; }
+.armadio .stacco { display: block; flex: 1.4 1 auto; min-height: 5px; max-height: 30px; }
 /* forte = qui sotto e sopra ci sono due file di pulsanti diversi e
    nessuna scritta a dividerle: e' il posto dove si sbagliava */
 .armadio .stacco.forte { min-height: 11px; }
@@ -3173,7 +3227,14 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
 /* anche le due file dei capi, con misura: un pulsante alto cento pixel
    e' comodo, uno alto centocinquanta e' un cartellone. Il disegno e il
    nome restano in mezzo mentre il pulsante cresce. */
-.armadio .roba > .capi, .armadio .roba > .sottoblocco { flex: 1 1 auto; max-height: 100px; }
+/* IL MINIMO, e non "quanto vuole il contenuto". Serve quando sotto
+   c'e' anche la sezione Estendi: le file dei capi si stringono di nove
+   pixel l'una invece di far comparire una barra di scorrimento, e il
+   disegno dentro si rimpicciolisce in proporzione senza tagliarsi.
+   Dove il posto c'e' -- in "+ Nuovo", o su uno schermo alto -- crescono
+   come prima fino a cento. */
+.armadio .roba > .capi, .armadio .roba > .sottoblocco { flex: 1 1 auto;
+  min-height: 68px; max-height: 100px; }
 .armadio .sottoblocco > .capi { height: 100%; }
 .armadio .capo { justify-content: center; }
 .armadio .roba > .fant { min-height: 27px; max-height: 33px; }
@@ -3319,7 +3380,7 @@ html:not(.anima) .card.evidenzia::after { animation: none; }
   border-radius: 12px; background: rgba(0,0,0,.3); color: #fff; font: inherit; font-size: 15px;
   padding: 10px 13px; min-height: 46px; }
 /* la riga libera e' grande e ambrata: e' la piu' usata di tutte */
-.armadio .libero.grosso { font-size: 15.5px; min-height: 40px;
+.armadio .libero.grosso { font-size: 15.5px; min-height: 36px;
   border-color: rgba(232,180,76,.55); background: rgba(232,180,76,.09); }
 /* La figura e' una colonna: senza azzerare il flex, il flex-basis
    diventava l'ALTEZZA e il campo del nome cresceva a dismisura. */

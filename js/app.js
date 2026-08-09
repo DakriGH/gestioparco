@@ -577,6 +577,14 @@ function costruisciPannello() {
           <div class="chips pc-dur"></div>
           <span class="tp-dx pc-pag"></span>
         </div>
+        <!-- ESTENDI TEMPO: una sezione sua, che compare solo per chi e'
+             GIA' DENTRO. Mentre registri non c'e' niente da estendere --
+             li' si decide quanto tempo comprano, ed e' quello che fanno i
+             tagli. Dopo invece la domanda cambia: "me lo tieni un'altra
+             mezz'ora?", e quella e' un'ALTRA cosa. I tagli sostituiscono
+             la durata; questi tasti la AGGIUNGONO, e dicono quanto costa
+             l'aggiunta prima che tu la faccia. -->
+        <div class="tp-est hidden"></div>
         </div>
       </div>
 
@@ -694,6 +702,19 @@ function costruisciPannello() {
       c.payLater = false;
       pcSalva(); aggiornaPannello(); return;
     }
+    /* ALLUNGARE E' UN'ALTRA COSA DAL SOSTITUIRE. I tagli qui sopra
+       scrivono la durata; questo la SOMMA a quella che c'e' gia'. Il
+       prezzo lo rifa' costOf da se': se il listino e' "ogni aggiunta
+       si paga a parte", baseMinutes e' rimasto quello dell'ingresso e
+       la differenza viene contata come scaglione a se'. */
+    if (d.a === 'est') {
+      if (c.payLater) return;
+      const m = clamp(num(c.durationMinutes, 60), 0, 1e6);
+      c.durationMinutes = clamp(m + num(d.v, 0), 5, 100000);
+      pcSalva();
+      aggiornaPannello();
+      return;
+    }
     if (d.a === 'dopo') { c.payLater = !c.payLater; pcSalva(); aggiornaPannello(); return; }
     if (d.a === 'butta') {
       /* il riferimento e' uno solo: il cestino lo toglie e basta */
@@ -719,6 +740,10 @@ function costruisciPannello() {
           toast('Incasso annullato \u21a9\ufe0e');
         });
       }
+      return;
+    }
+    if (d.uscita !== undefined) {
+      if (PAN.ingresso) chiudiIngresso(PAN.ingresso);
       return;
     }
     if (d.reg !== undefined)   {
@@ -1019,6 +1044,66 @@ function disegnaFascia(p, c) {
   sincronizzaBracciali(p.querySelector('.pc-brac'), c.startTime, c.braceletColor, c.braceletCustom);
 
   p.querySelector('.pc-pag').innerHTML = pastigliaPagato(c);
+  disegnaEstendi(p, c);
+}
+
+/* ══════════════════════════════════════════════════════════
+   ESTENDI TEMPO
+   Compare solo su un ingresso GIA' REGISTRATO: mentre lo stai
+   registrando non c'e' niente da estendere, e i tagli fanno gia' il
+   loro mestiere.
+   Ogni tasto scrive QUANTO COSTA L'AGGIUNTA, e il numero non e'
+   inventato: e' il costo di dopo meno il costo di adesso, calcolato
+   con la stessa costOf() che fa il conto vero. Col listino a scaglioni
+   quella cifra non e' mai ovvia -- da un'ora a un'ora e mezza non e'
+   "mezz'ora", sono sette euro a bambino, e oltre le due ore e' zero
+   perche' il cartello si ferma li'.
+   A tempo aperto i tasti si SPENGONO ma restano al loro posto: se
+   sparissero, la card cambierebbe altezza ogni volta -- e' la stessa
+   regola del gruppo dell'uscita qui sopra.
+   ══════════════════════════════════════════════════════════ */
+const ESTENDI_TAGLI = [15, 30, 60];
+
+/* quanto costa allungare di tot: il prezzo di dopo meno quello di
+   adesso, per tutto il gruppo. Passa da costOf, che sa gia' del
+   listino a scaglioni, dei minuti regalati e del "paga a parte". */
+function costoEstensione(c, minuti) {
+  const ora = costOf(c).parkTotal;
+  const poi = costOf(Object.assign({}, c, {
+    durationMinutes: clamp(num(c.durationMinutes, 60), 0, 1e6) + minuti
+  })).parkTotal;
+  return Math.max(0, r2(poi - ora));
+}
+
+function disegnaEstendi(p, c) {
+  const box = p.querySelector('.tp-est');
+  if (!box) return;
+  /* solo su chi e' gia' dentro */
+  const suUno = !!PAN.ingresso;
+  box.classList.toggle('hidden', !suUno);
+  if (!suUno) { box.innerHTML = ''; box.dataset.sig = ''; return; }
+
+  const aperto = !!c.payLater;
+  const firma = [aperto ? 'x' : c.durationMinutes, c.children, c.crazyJumping,
+    ESTENDI_TAGLI.map(m => aperto ? 0 : costoEstensione(c, m)).join('/')].join('|');
+  if (box.dataset.sig === firma) return;
+  box.dataset.sig = firma;
+
+  box.innerHTML =
+    '<span class="est-k"><span class="em">\u23e9</span> Estendi</span>' +
+    ESTENDI_TAGLI.map(m => {
+      const costo = aperto ? 0 : costoEstensione(c, m);
+      return '<button class="est-b" data-a="est" data-v="' + m + '"' + (aperto ? ' disabled' : '') + '>' +
+        '<b>+' + fmtMin(m) + '</b><i>' + (aperto ? '\u2014' : costo > 0 ? '+' + eur(costo) : 'gratis') +
+        '</i></button>';
+    }).join('') +
+    '<span class="est-dx">' +
+      '<button class="est-meno" data-a="est" data-v="-15"' +
+        (aperto || clamp(num(c.durationMinutes, 60), 0, 1e6) <= 15 ? ' disabled' : '') +
+        ' aria-label="togli un quarto d\u2019ora">\u2212 15m</button>' +
+      '<span class="est-fine">' + (aperto ? 'tempo aperto' : 'fino alle') +
+        '<b>' + (aperto ? '\u2014' : fmtTime(endTimeOf(c))) + '</b></span>' +
+    '</span>';
 }
 
 /* Fin quando ha pagato, in una pastiglia. Il verde vuol dire "pagato":
@@ -2153,6 +2238,14 @@ function pcFondo() {
         : '') +
       (resta > 0 ? '<button class="btn" data-resto>\ud83e\uddee Resto</button>' +
         '<button class="btn" data-tutto>Paga tutto</button>' : '') +
+      /* L'USCITA STA QUI, su un ingresso gia' dentro. Prima viveva
+         nella riga di comandi sopra il pannello -- quella con i meno e
+         i piu' dei bambini, del Crazy e dei minuti -- che a pannello
+         aperto e' una COPIA di quello che c'e' dentro: le stesse tre
+         cose, piu' piccole. Toglierla fa posto senza togliere niente,
+         ma l'uscita non era una copia e andava messa al sicuro. E'
+         anche il posto giusto: si esce dopo aver guardato il conto. */
+      (PAN.ingresso ? '<button class="btn bc-uscita" data-uscita>\ud83d\udeaa Uscita</button>' : '') +
       '<button class="btn btn-ok" data-reg>' +
         (PAN.ingresso ? '\u2713 Fatto' : tot > 0 && resta <= 0 ? '\u2705 Registra e incassa' : 'Registra') +
       '</button>' +
