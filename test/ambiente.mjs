@@ -91,6 +91,10 @@ export function caricaApp() {
     get settings() { return settings; }, set settings(v) { settings = v; },
     get entries() { return entries; }, set entries(v) { entries = v; },
     get draft() { return draft; }, set draft(v) { draft = v; },
+    /* il giro di Crazy che si sta segnando: e' una let dell'app, e le
+       let non si affacciano da sole sul contesto (niente apici
+       inversi qui dentro: siamo dentro un template) */
+    get giroScelto() { return giroScelto; }, set giroScelto(v) { giroScelto = v; },
     AV: AV, CAPI: CAPI,
     PAN: PAN, C: C, r2: r2, tocchi: tocchi,
     contoParco: contoParco, contoCrazy: contoCrazy, contoBar: contoBar,

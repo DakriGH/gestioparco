@@ -314,6 +314,35 @@ gruppo("L'aria che avanza va al guardaroba, e non schiaccia nessuno");
     /\.testa-viola h2 \{[^}]*margin:\s*0/.test(CSS));
 }
 
+gruppo('Nessuna funzione scritta e poi dimenticata');
+{
+  /* IL GUASTO CHE HA INSEGNATO QUESTO CONTROLLO. `redrawCard()` era
+     scritta apposta per ridisegnare la scheda quando cambia il
+     vestito, e non la chiamava NESSUNO: la figura piccola nella lista
+     restava vecchia e nessun test se ne accorgeva -- il controllo dei
+     fantasmi guarda le funzioni CHIAMATE e non trovate, non quelle
+     trovate e mai chiamate.
+     Le sette qui sotto sono resti di disegni passati: restano lì per
+     ora (le casse sono in servizio, non è il momento di potare), ma da
+     adesso una NUOVA funzione dimenticata fa fallire la prova. */
+  const restiNoti = ['fmtDate', 'fmtDur', 'conAlfa', 'pickRole', 'bcScaffali', 'bcVociDi', 'redrawCard'];
+  const pulito = APP
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/(^|[^:])\/\/[^\n]*/g, '$1 ')
+    .replace(/'(?:[^'\\\n]|\\.)*'/g, "''")
+    .replace(/"(?:[^"\\\n]|\\.)*"/g, '""')
+    .replace(/`(?:[^`\\]|\\.)*`/g, '``');
+  const definite = [...pulito.matchAll(/function\s+([A-Za-z_$][\w$]*)\s*\(/g)].map(m => m[1]);
+  const morte = definite.filter(n =>
+    (pulito.match(new RegExp('\\b' + n + '\\b', 'g')) || []).length <= 1);
+  const nuove = morte.filter(n => restiNoti.indexOf(n) < 0);
+  prova(definite.length + ' funzioni, nessuna NUOVA scritta e mai chiamata',
+    nuove.length === 0, 'mai chiamate: ' + nuove.join(', '));
+  /* e i resti noti non devono moltiplicarsi */
+  prova('i resti da potare sono ancora ' + restiNoti.length,
+    morte.length <= restiNoti.length, 'adesso sono ' + morte.length + ': ' + morte.join(', '));
+}
+
 gruppo('Il vestito cambiato si vede subito anche nella lista');
 {
   /* Si vestiva qualcuno dal conto e la figura piccola della scheda "In
