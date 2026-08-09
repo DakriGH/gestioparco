@@ -86,7 +86,14 @@ function guai(_, dove) {
   if (!num(c.paidBar) || c.paidBar < -0.005) g.push('bar incassato ' + c.paidBar);
   if (!num(c.children) || c.children < 0) g.push('bambini ' + c.children);
   if (!num(c.crazyJumping) || c.crazyJumping < 0) g.push('crazy ' + c.crazyJumping);
-  if (!num(c.durationMinutes) || c.durationMinutes <= 0) g.push('durata ' + c.durationMinutes);
+  /* LA DURATA PUO' VALERE ZERO, adesso: e' chi non ha comprato tempo
+     di parco -- solo Crazy -- e la sua permanenza sta nei minuti in
+     omaggio. Quello che non puo' succedere e' restare senza NIENTE:
+     ne' tempo comprato, ne' omaggio, ne' giri. */
+  const dur = num(c.durationMinutes, -1);
+  if (!(dur >= 0)) g.push('durata ' + c.durationMinutes);
+  else if (dur === 0 && ctx.omaggioDi(c) <= 0 && ctx.minutiCrazy(c) <= 0 && !c.payLater)
+    g.push('permanenza di niente: durata 0 senza omaggio ne giri');
 
   /* 3. le righe devono fare i totali: e' l'invariante piu' importante
      di tutta l'app -- se salta, la cassa dice una cifra e le card ne

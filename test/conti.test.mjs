@@ -523,6 +523,59 @@ gruppo('A conto saldato il tempo risulta pagato TUTTO', () => {
      ctx.minutiPagati(mezzo) < ctx.tempoTotale(mezzo), true);
 });
 
+gruppo('Solo Crazy: dieci minuti in omaggio, e non si pagano mai', () => {
+  /* Chi entra solo per saltare non compra tempo di parco: gli si da'
+     la permanenza che serve -- salire, saltare, uscire -- e non si
+     paga. E se DOPO decide di fermarsi anche al parco, quei dieci
+     minuti restano gratis: si paga solo quello che compra da li' in
+     poi. Prima quei minuti finivano dentro la durata, e al primo
+     bambino aggiunto diventavano tempo da pagare. */
+  const omaggio = ctx.settings.crazySoloMinuti;
+  const extra = ctx.settings.crazyExtraMinutes;
+  const c = conto({ children: 1, crazyJumping: 0, durationMinutes: 30,
+    baseMinutes: 30, barItems: [] });
+
+  /* si toglie il bambino e si mette un Crazy: diventa "solo Crazy" */
+  ctx.bcSetQ('bimbi', 0);
+  ctx.bcSetQ('crazy', 1);
+  ok('niente tempo di parco comprato', c.durationMinutes, 0);
+  ok('e dieci minuti in omaggio', ctx.omaggioDi(c), omaggio);
+  ok('si paga solo il Crazy', ctx.dueOf(c).park, ctx.settings.crazyJumpingPrice);
+  ok('ma dentro ci resta', Math.round((ctx.endTimeOf(c) - c.startTime) / 60000),
+     omaggio + extra);
+
+  /* adesso arrivano anche al parco: mezz'ora */
+  ctx.bcSetQ('bimbi', 2);
+  ok('col bambino aggiunto e ancora zero tempo comprato', c.durationMinutes, 0);
+  ok('e il parco NON si paga: non hanno comprato minuti',
+     ctx.dueOf(c).park, ctx.settings.crazyJumpingPrice);
+
+  c.durationMinutes = 30;
+  ok('venduta mezz ora, si paga la MEZZ ORA',
+     ctx.dueOf(c).park,
+     ctx.r2(ctx.priceFor(30) * 2 + ctx.settings.crazyJumpingPrice));
+  ok('i dieci minuti in omaggio non entrano nel prezzo',
+     ctx.dueOf(c).park !== ctx.r2(ctx.priceFor(40) * 2 + ctx.settings.crazyJumpingPrice), true);
+  ok('ma restano nella permanenza',
+     Math.round((ctx.endTimeOf(c) - c.startTime) / 60000), 30 + omaggio + extra);
+
+  /* e il tasto che allunga dice il prezzo del blocco, non dell'omaggio */
+  ok('allungare di mezz ora costa la mezz ora',
+     ctx.costoEstensione(c, 30), ctx.r2(ctx.priceFor(30) * 2));
+
+  /* se il Crazy se ne va, se ne vanno i minuti regalati */
+  ctx.bcSetQ('crazy', 0);
+  ok('via il Crazy, via l omaggio', ctx.omaggioDi(c), 0);
+  ok('e resta la mezz ora comprata', c.durationMinutes, 30);
+
+  /* nessuno resta mai con una permanenza di niente */
+  const d = conto({ children: 0, crazyJumping: 0, durationMinutes: 30, barItems: [] });
+  ctx.bcSetQ('crazy', 1);
+  ok('solo Crazy da capo: zero comprati', d.durationMinutes, 0);
+  ctx.bcSetQ('crazy', 0);
+  ok('e togliendolo torna la mezz ora, non zero minuti', d.durationMinutes, 30);
+});
+
 gruppo('Il colore della scheda dice l orologio', () => {
   /* verde finche' c'e' tempo, giallo negli ultimi minuti, ROSSO appena
      e' scaduto. Prima il rosso aspettava anche la tolleranza: per

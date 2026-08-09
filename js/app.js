@@ -237,6 +237,12 @@ function spingiMeta(nome, dato) {
 function defaultSettings() {
   return {
     crazyExtraMinutes: 8,
+    /* chi fa SOLO il Crazy, senza bambini in sala, resta dentro questi
+       minuti: il tempo di salire, saltare e uscire. Sono in OMAGGIO --
+       non si pagano -- e restano tali anche se poi il gruppo decide di
+       fermarsi al parco: quello che si vende dopo si paga per intero,
+       questi no. */
+    crazySoloMinuti: 10,
     toleranceMinutes: 10,
     /* il giallo si accende negli ultimi cinque minuti: dieci erano
        troppi -- con una fila di gruppi restavano gialli meta' del
@@ -346,6 +352,12 @@ function priceFor(mins) {
   mins = Math.max(0, num(mins, 0));
   const list = tariffs();
   if (!list.length) return 0;
+  /* ZERO MINUTI VENDUTI, ZERO EURO. Senza questa riga il primo
+     scaglione del cartello si applicava anche a chi non ha comprato
+     nemmeno un minuto -- e chi fa solo il Crazy, che di tempo di parco
+     non ne compra, si vedeva addebitare tre euro a testa appena
+     aggiungeva un bambino. */
+  if (mins <= 0) return 0;
   for (const t of list) if (mins <= t.m) return t.p;
   /* Oltre l'ultimo scaglione il prezzo NON sale piu': dopo le 2 ore
      sono 24 euro e basta. Prima proseguiva in proporzione e a 3 ore
@@ -449,6 +461,7 @@ function metteCrazy(c, n) {
   }
   c.crazyJumping = somma;
   if (somma > 0) { c.crazyGiri = g; giroScelto = i; } else { delete c.crazyGiri; giroScelto = 99; }
+  soloCrazy(c);
 }
 
 /* IL GIRO SCELTO: quello su cui lavorano il piu' e il meno della
@@ -474,6 +487,36 @@ function cambiaGiro(c, i, delta) {
      che se no farebbe sparire una riga sotto le dita */
   c.crazyJumping = g.reduce((a, b) => a + b, 0);
   c.crazyGiri = g;
+  soloCrazy(c);
+}
+
+/* SOLO CRAZY: dieci minuti in omaggio, e niente tempo comprato.
+   Chi entra solo per saltare non compra tempo di parco: gli si da' la
+   permanenza che serve -- salire, saltare, uscire -- e non si paga.
+   Il tempo comprato va a zero, se no il primo bambino aggiunto dopo si
+   sarebbe portato dietro il prezzo di quei minuti.
+   Al contrario, se il Crazy sparisce spariscono anche i minuti: erano
+   suoi. E se dopo arrivano i bambini l'omaggio RESTA: quello che
+   comprano da li' in poi si paga per intero, questi no. */
+function soloCrazy(c) {
+  c = c || C();
+  const bimbi = clamp(num(c.children, 0), 0, 1e6);
+  const crazy = clamp(num(c.crazyJumping, 0), 0, 1e6);
+  const quanti = clamp(num(settings.crazySoloMinuti, 0), 0, 1e6);
+  if (!crazy) {
+    delete c.omaggio;
+    /* se se ne va il Crazy e non c'era tempo comprato, l'ingresso
+       resterebbe con una permanenza di ZERO minuti: gli si rimette la
+       mezz'ora di serie, che e' quello che avrebbe avuto se fosse nato
+       come un ingresso normale */
+    if (clamp(num(c.durationMinutes, 0), 0, 1e6) <= 0) c.durationMinutes = 30;
+    return;
+  }
+  if (!bimbi && !omaggioDi(c)) {
+    c.omaggio = quanti;
+    c.durationMinutes = 0;
+    delete c.aggiunte;
+  }
 }
 
 /* APRE UN GIRO, E BASTA. Non ci fa salire nessuno: chi sale lo conti
@@ -488,6 +531,7 @@ function giroNuovo(c) {
   c.crazyJumping = g.reduce((a, b) => a + b, 0);
   /* quello appena aperto e' quello che si sta segnando */
   giroScelto = g.length - 1;
+  soloCrazy(c);
 }
 
 /* Cancella un giro intero: chi c'era dentro esce dal conto e i suoi
@@ -499,14 +543,26 @@ function viaGiro(c, i) {
   c.crazyJumping = g.reduce((a, b) => a + b, 0);
   if (g.length) c.crazyGiri = g; else delete c.crazyGiri;
   giroScelto = Math.min(giroScelto, Math.max(0, g.length - 1));
+  soloCrazy(c);
 }
+/* I MINUTI IN OMAGGIO: permanenza regalata che NON e' tempo comprato.
+   Li prende chi entra solo per il Crazy -- il tempo di salire e
+   saltare -- e se li tiene anche se dopo decide di fermarsi al parco:
+   quello che compra dopo lo paga per intero, questi restano gratis.
+   Stanno in un campo loro apposta: dentro `durationMinutes` sarebbero
+   diventati tempo da pagare al primo bambino aggiunto. */
+function omaggioDi(e) {
+  e = e || C();
+  return clamp(Math.round(num(e.omaggio, 0)), 0, 1e6);
+}
+
 /* i minuti regalati: quelli di TUTTI i giri messi insieme */
 function minutiCrazy(e) {
   return turniCrazy(e) * clamp(num(settings.crazyExtraMinutes, 0), 0, 1e6);
 }
 
 function endTimeOf(e) {
-  return e.startTime + (num(e.durationMinutes, 0) + minutiCrazy(e)) * 60000;
+  return e.startTime + (num(e.durationMinutes, 0) + minutiCrazy(e) + omaggioDi(e)) * 60000;
 }
 /* IL COLORE DELLA SCHEDA E' L'OROLOGIO, e cambia quando cambia
    davvero qualcosa:
@@ -542,7 +598,7 @@ function costOf(entry) {
   /* I minuti REGALATI dal Crazy Jumping non si pagano: restano dentro
      piu' a lungo, ma lo scaglione si calcola sul tempo del parco. Il
      Crazy si paga a parte, col suo prezzo. */
-  const regalati = minutiCrazy(entry);
+  const regalati = minutiCrazy(entry) + omaggioDi(entry);
   let base;
   if (entry.payLater) {
     // paga il tempo passato dentro, meno quello regalato dal Crazy
@@ -772,6 +828,7 @@ function costruisciPannello() {
             </span>
           </span>
         </div>
+        <span class="tp-om hidden"></span>
         <div class="tp-filo"><i class="pc-filo"></i></div>
         <div class="tp-riga">
           <div class="chips pc-dur"></div>
@@ -1327,6 +1384,16 @@ function disegnaFascia(p, c) {
     senza ? 'Senza' : c.braceletCustom ? (AV.colorName(col, 0) || 'Bracciale') : 'Auto';
   sincronizzaBracciali(p.querySelector('.pc-brac'), c.startTime, c.braceletColor, c.braceletCustom);
 
+  /* i minuti in omaggio si vedono: se no l'ora d'uscita sembra
+     sbagliata (dieci minuti in piu' che nessuno ha comprato) */
+  const om = p.querySelector('.tp-om');
+  if (om) {
+    const q = omaggioDi(c);
+    om.classList.toggle('hidden', q <= 0);
+    om.innerHTML = q > 0
+      ? '\ud83c\udf81 <b>+' + q + '\u2032</b> in omaggio<small>solo Crazy: non si pagano</small>'
+      : '';
+  }
   p.querySelector('.pc-pag').innerHTML = pastigliaPagato(c);
   disegnaEstendi(p, c);
 }
@@ -3470,6 +3537,7 @@ function bcSetQ(id, n) {
   /* se toglie roba dal conto non puo' restare "pagata" piu' di quanta
      ce n'e' rimasta, e quei soldi tornano indietro */
   if (bcPagGrezzo(id) > n) segnaPagate(id, n);
+  if (id === 'bimbi' || id === 'crazy') soloCrazy(c);
 }
 
 /* ---------- quanto viene, adesso ----------
@@ -6115,10 +6183,15 @@ function riparaConto(o) {
   o.crazyGiri = lista(o.crazyGiri).map(n => int(n, 9999)).filter(n => n > 0);
   if (o.crazyJumping > 0) o.crazyGiri = giriCrazy(o);
   else delete o.crazyGiri;
-  o.durationMinutes = Math.max(1, int(o.durationMinutes, 99999) || 60);
+  /* ZERO E' UN VALORE BUONO: e' chi non ha comprato tempo di parco --
+     solo Crazy -- e la sua permanenza sta nei minuti in omaggio */
+  o.durationMinutes = int(o.durationMinutes, 99999);
+  if (!o.omaggio && !o.durationMinutes) o.durationMinutes = 60;
   o.baseMinutes = Math.max(1, int(o.baseMinutes, 99999) || o.durationMinutes);
   /* le vendite di tempo: una lista di numeri buoni, e mai piu' lunga
      del tempo che c'e' davvero */
+  o.omaggio = int(o.omaggio, 99999);
+  if (!o.omaggio) delete o.omaggio;
   o.aggiunte = lista(o.aggiunte).map(m => int(m, 99999)).filter(m => m > 0);
   sistemaAggiunte(o);
   o.barItems = (Array.isArray(o.barItems) ? o.barItems : [])
