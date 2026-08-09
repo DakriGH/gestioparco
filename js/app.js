@@ -310,7 +310,12 @@ function freshDraft() {
        lo dice, e un tocco sui tagli rapidi basta. */
     durationMinutes: 30,
     payLater: false,
-    children: 1,
+    /* SI PARTE DA ZERO BAMBINI. Uno di serie voleva dire che ogni
+       ingresso nasceva gia' con un cliente dentro e un prezzo sul
+       conto: chi passava solo per il bar o solo per il Crazy doveva
+       prima TOGLIERE, e chi ne aveva tre ne aggiungeva due. Da zero
+       si conta e basta, e il conto parte da zero come deve. */
+    children: 0,
     crazyJumping: 0,
     people: [],
     barItems: [],
@@ -1386,13 +1391,31 @@ function disegnaFascia(p, c) {
 
   /* i minuti in omaggio si vedono: se no l'ora d'uscita sembra
      sbagliata (dieci minuti in piu' che nessuno ha comprato) */
+  /* SOLO CRAZY, DETTO IN CHIARO.
+     Un ingresso senza tempo di parco comprato e' una cosa che non si
+     era mai vista in questa schermata: senza scriverlo, si vede solo
+     un'ora d'uscita che nessuno ha scelto e nessun taglio acceso, e
+     sembra un modulo a meta'. Qui c'e' scritto cos'e' e cosa fare per
+     cambiarlo.
+     Quando invece il tempo lo hanno comprato dopo, resta la riga corta:
+     serve solo a spiegare i dieci minuti in piu' sull'uscita. */
   const om = p.querySelector('.tp-om');
   if (om) {
     const q = omaggioDi(c);
+    const comprato = clamp(num(c.durationMinutes, 0), 0, 1e6);
     om.classList.toggle('hidden', q <= 0);
-    om.innerHTML = q > 0
-      ? '\ud83c\udf81 <b>+' + q + '\u2032</b> in omaggio<small>solo Crazy: non si pagano</small>'
-      : '';
+    om.classList.toggle('grande', q > 0 && comprato <= 0);
+    if (q <= 0) om.innerHTML = '';
+    else if (comprato <= 0) {
+      om.innerHTML = '<b class="om-k"><span class="em">\ud83e\udd38</span> Solo Crazy</b>' +
+        '<span class="om-tx">Nessun tempo di parco comprato: si paga solo il salto. ' +
+        'Restano dentro <b>' + q + ' minuti in omaggio</b>, che non si pagano.</span>' +
+        '<span class="om-come">Se poi vogliono restare, tocca un taglio qui sotto: ' +
+        'si paga quello, e i ' + q + ' minuti restano regalati.</span>';
+    } else {
+      om.innerHTML = '\ud83c\udf81 <b>+' + q + '\u2032</b> in omaggio' +
+        '<small>dal solo Crazy: non entrano nel prezzo</small>';
+    }
   }
   p.querySelector('.pc-pag').innerHTML = pastigliaPagato(c);
   disegnaEstendi(p, c);
