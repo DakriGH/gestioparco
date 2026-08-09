@@ -322,13 +322,23 @@ gruppo('I giri del Crazy stanno nella sua card');
   prova('i giri sono una lista, non un numero', /function giriCrazy/.test(APP));
   prova('e i minuti si contano sui giri',
     /function minutiCrazy[\s\S]{0,160}turniCrazy\(e\) \* /.test(APP));
-  prova('il piu e il meno della card lavorano sul giro aperto',
-    /function metteCrazy[\s\S]{0,600}g\[g\.length - 1\]\+\+/.test(APP));
+  /* OGNI GIRO HA I SUOI TASTI. Prima ce n'era un paio solo, che
+     lavorava sull'ultimo giro: per togliere un bambino dal PRIMO giro
+     non c'era strada. */
+  prova('ogni giro ha il suo meno e il suo piu',
+    APP.includes('data-gmeno="') && APP.includes('data-gpiu="'));
+  prova('e i comandi arrivano a QUEL giro, non all ultimo',
+    /function cambiaGiro[\s\S]{0,300}g\[i\] = Math\.max\(0, g\[i\] \+ num\(delta/.test(APP));
+  prova('un giro svuotato sparisce, coi suoi minuti',
+    /function cambiaGiro[\s\S]{0,400}filter\(n => n > 0\)/.test(APP));
   prova('e c e un tasto per aprirne un altro', APP.includes('data-giro="crazy"'));
   prova('che ci fa salire (e pagare) il primo',
     /function giroNuovo[\s\S]{0,200}concat\(\[1\]\)/.test(APP));
-  prova('il tasto sta in riga col piu, non sotto: la card non cresce',
-    /\.bc-riga-q \{[^}]*display:\s*flex/.test(CSS) && APP.includes('bc-riga-q'));
+  prova('la fila dei giri prende il posto di quella della quantita: nessuna riga in piu',
+    /\.bc-zone\.giri \{[^}]*display:\s*flex/.test(CSS) && /function zonaGiri/.test(APP));
+  prova('e la card si prende lo spazio che restava vuoto accanto',
+    /\.pc-due\.con-giri \{[^}]*grid-template-columns/.test(CSS) &&
+    /classList\.toggle\('con-giri'/.test(APP));
   prova('e la composizione si legge sulla riga del prezzo',
     /\.bc-gi \{[^}]*margin-left/.test(CSS) && APP.includes('bcGiriTesto'));
   /* i soldi restano a testa: e' il tempo che non si moltiplica */

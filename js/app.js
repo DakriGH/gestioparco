@@ -407,8 +407,20 @@ function metteCrazy(c, n) {
   if (somma > 0) c.crazyGiri = g; else delete c.crazyGiri;
 }
 
+/* Mette o toglie una salita da UN giro preciso. Quando un giro resta
+   senza nessuno sparisce, e con lui i suoi minuti regalati: un giro a
+   cui non e' salito nessuno non e' mai esistito. */
+function cambiaGiro(c, i, delta) {
+  const g = giriCrazy(c);
+  if (i < 0 || i >= g.length) return;
+  g[i] = Math.max(0, g[i] + num(delta, 0));
+  const puliti = g.filter(n => n > 0);
+  c.crazyJumping = puliti.reduce((a, b) => a + b, 0);
+  if (c.crazyJumping > 0) c.crazyGiri = puliti; else delete c.crazyGiri;
+}
+
 /* Un altro giro: ci sale (e paga) il primo, gli altri si aggiungono
-   col piu' della card. */
+   col piu' del suo giro. */
 function giroNuovo(c) {
   const g = giriCrazy(c).concat([1]);
   c.crazyGiri = g;
@@ -728,6 +740,15 @@ function costruisciPannello() {
     if (d.giro !== undefined) {
       tocchi.id = 'crazy';
       giroNuovo(C());
+      pcSalva();
+      aggiornaPannello();
+      return;
+    }
+    /* il piu' e il meno di UN giro: si comanda quello, non "l'ultimo" */
+    if (d.gpiu !== undefined || d.gmeno !== undefined) {
+      tocchi.id = 'crazy';
+      cambiaGiro(C(), parseInt(d.gpiu !== undefined ? d.gpiu : d.gmeno, 10),
+        d.gpiu !== undefined ? 1 : -1);
       pcSalva();
       aggiornaPannello();
       return;
@@ -1333,6 +1354,10 @@ function aggiornaPannello(opz) {
          anche l'ora di uscita, e i minuti pagati si leggono come un
          orario ("fino alle 13:40") invece che come una frazione. */
       due.innerHTML = bcCard(bcVoce('bimbi'), true) + bcCard(bcVoce('crazy'), true);
+      /* col Crazy in ballo la sua card si prende lo spazio che accanto
+         restava vuoto: serve alla fila dei giri, e non costa un pixel
+         di altezza */
+      due.classList.toggle('con-giri', bcQ('crazy') > 0);
       tocchi.id = null; tocchi.nato = null;
     }
 
@@ -3454,17 +3479,40 @@ function bcCard(v, sempre) {
       /* IL TASTO DEL GIRO STA IN RIGA COL PIU' E COL MENO, non sotto:
          una riga in piu' nella card sono quaranta pixel, e in quella
          schermata non ci sono. Qui invece non costa niente. */
-      ? '<div class="bc-riga-q"><div class="bc-zone"><span class="bc-chip">' + q + '</span>' +
-        '<button data-meno="' + v.id + '"' + (q <= 0 ? ' disabled' : '') + '>\u2212</button>' +
-        '<button data-add="' + v.id + '">+</button></div>' +
-        (v.id === 'crazy'
-          ? '<button class="bc-giro" data-giro="crazy" title="un altro giro di Crazy">' +
-            '<b>+</b><span>giro</span></button>'
-          : '') + '</div>' +
+      ? (v.id === 'crazy' && q > 0
+        /* IL CRAZY NON HA UNA QUANTITA' SOLA: ha dei GIRI, e ognuno ha
+           i suoi. La fila della quantita' diventa la fila dei giri --
+           stesso posto, stessa altezza -- e ogni giro ha il suo meno e
+           il suo piu'. Il totale delle salite resta scritto sulla riga
+           del prezzo, che e' dove si guarda quanto costa. */
+        ? zonaGiri()
+        : '<div class="bc-zone"><span class="bc-chip">' + q + '</span>' +
+          '<button data-meno="' + v.id + '"' + (q <= 0 ? ' disabled' : '') + '>\u2212</button>' +
+          '<button data-add="' + v.id + '">+</button></div>') +
         '<div class="bc-zone v"><span class="bc-chip">' + pg + '/' + q + '</span>' +
         '<button data-pmeno="' + v.id + '"' + (pg <= 0 ? ' disabled' : '') + '>\u2212</button>' +
         '<button data-ppiu="' + v.id + '"' + (pg >= q ? ' disabled' : '') + '>+</button></div>'
       : '') +
+  '</div>';
+}
+
+/* LA FILA DEI GIRI: uno per giro, col suo meno e il suo piu'.
+   Prima c'era un piu' solo che lavorava sull'ultimo giro: per togliere
+   un bambino dal PRIMO giro non c'era strada. Adesso ogni giro si
+   comanda per conto suo, e il tasto in fondo ne apre un altro.
+   Sta al posto della vecchia fila della quantita': stessa altezza,
+   nessuna riga in piu' -- e la card e' larga il doppio, che e' lo
+   spazio che accanto restava vuoto. */
+function zonaGiri() {
+  const g = giriCrazy(C());
+  return '<div class="bc-zone giri">' +
+    g.map((n, i) =>
+      '<span class="gz"><span class="gk">' + (i + 1) + 'º</span>' +
+      '<button data-gmeno="' + i + '" aria-label="uno in meno dal giro ' + (i + 1) + '">−</button>' +
+      '<b>' + n + '</b>' +
+      '<button data-gpiu="' + i + '" aria-label="uno in piu nel giro ' + (i + 1) + '">+</button></span>').join('') +
+    '<button class="gz-piu" data-giro="crazy" aria-label="un altro giro">' +
+      '<b>+</b><span>giro</span></button>' +
   '</div>';
 }
 
@@ -3478,9 +3526,11 @@ function bcGiriTesto() {
   const g = giriCrazy(c);
   if (!g.length) return '';
   const min = minutiCrazy(c);
-  /* stretto: sta accanto al prezzo, e se va a capo la card cresce */
-  const quali = g.length <= 3 ? g.join('+') : g.length + ' giri';
-  return quali + ' <b>+' + min + '′</b>';
+  /* stretto: sta accanto al prezzo, e se va a capo la card cresce.
+     Quanti sono saliti in ogni giro si legge nella fila qui sotto,
+     quindi qui basta il totale e i minuti che ne vengono. */
+  const salite = g.reduce((a, b) => a + b, 0);
+  return salite + (salite === 1 ? ' salita' : ' salite') + ' <b>+' + min + '′</b>';
 }
 
 /* Il velo: un pannello sovrapposto, incollato in basso, con dietro il
