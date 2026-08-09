@@ -144,6 +144,23 @@ function nomeGiornata(inizio) {
   return GIORNI[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth() + 1);
 }
 
+/* ══════════════════════════════════════════════════════════
+   CHE VERSIONE HA QUESTA CASSA
+   Non c'era modo di saperlo, e quando una tavoletta restava indietro
+   -- succede: la copia offline si scambia solo quando l'app torna in
+   primo piano o passano venti minuti -- non si poteva nemmeno dire se
+   era rimasta indietro o se era il sito a non essere aggiornato.
+   Il numero non si scrive a mano: si legge dall'indirizzo con cui e'
+   stato caricato questo file (`app.js?v=256`), che e' gia' quello che
+   si alza a ogni pubblicazione. Cosi' non puo' mentire. */
+const VERSIONE = (() => {
+  try {
+    const tag = document.querySelector('script[src*="app.js"]');
+    const m = tag && String(tag.src).match(/[?&]v=(\d+)/);
+    return m ? m[1] : '?';
+  } catch (e) { return '?'; }
+})();
+
 /* ---------- archivio dati ---------- */
 const SK = { settings: 'gp_settings', entries: 'gp_entries', presets: 'gp_presets' };
 function load(k) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
@@ -5475,11 +5492,51 @@ function buildSettingsView() {
       <button class="btn btn-sm btn-danger btn-block" id="sReset">Cancella tutto</button>
       <div class="hint" style="margin:10px 0 0; text-align:center;">Le modifiche qui si salvano da sole.</div>
       </div>
+    </div>
+
+    <div class="card blk c-grigio">
+      <h2><span class="em">\ud83d\udd04</span> Versione</h2>
+      <div class="blk-in">
+      <div class="ver-riga">
+        <span class="ver-k">questa cassa ha la versione</span>
+        <b class="ver-n" id="sVersione">\u2014</b>
+      </div>
+      <div class="hint">Serve quando due tavolette non si comportano uguale: se il numero &egrave; diverso, una &egrave; rimasta indietro. La copia offline si scambia da sola quando l\u2019app torna in primo piano, ma con questo tasto la si cerca subito.</div>
+      <button class="btn btn-sm btn-block" id="sCerca">Cerca aggiornamenti adesso</button>
+      <div class="hint" id="sCercaEsito" style="margin:8px 0 0; text-align:center;"></div>
+      </div>
     </div>`;
 
   aggiornaCartaCloud();
   aggiornaCartaSicurezza();
   $('#sRegistro').onclick = () => fogliRegistro();
+
+  /* la versione, e il tasto per andarsela a cercare senza aspettare */
+  $('#sVersione').textContent = 'v' + VERSIONE;
+  const esito = $('#sCercaEsito');
+  $('#sCerca').onclick = () => {
+    esito.textContent = 'Sto guardando\u2026';
+    if (!('serviceWorker' in navigator) || !location.protocol.startsWith('http')) {
+      esito.textContent = 'Qui non c\u2019\u00e8 la copia offline: ricarica la pagina e basta.';
+      return;
+    }
+    navigator.serviceWorker.getRegistration().then(reg => {
+      if (!reg) { esito.textContent = 'Nessuna copia offline registrata: ricarica la pagina.'; return; }
+      return reg.update().then(() => {
+        if (reg.waiting) {
+          esito.textContent = 'Trovata una versione nuova: la sto mettendo\u2026';
+          pronto(reg);
+          setTimeout(applicaVersione, 400);
+        } else if (reg.installing) {
+          esito.textContent = 'Sto scaricando la versione nuova\u2026';
+        } else {
+          esito.textContent = 'Sei gi\u00e0 all\u2019ultima: v' + VERSIONE + '.';
+        }
+      });
+    }).catch(() => {
+      esito.textContent = 'Non riesco a controllare: la tavoletta \u00e8 senza rete?';
+    });
+  };
 
   /* tema */
   const an = $('#setAnima');
