@@ -352,9 +352,15 @@ gruppo('Nella fascetta della lista il Crazy apre un giro nuovo');
      correggere il numero di prima e regala otto minuti. */
   prova('la cella del Crazy e una cosa sua', /function mkCellaCrazy/.test(APP));
   prova('il primo tocco apre un giro',
-    /function mkCellaCrazy[\s\S]{0,900}if \(!stato\.aperto\) \{[\s\S]{0,120}giroNuovo\(entry\)/.test(APP));
+    /function mkCellaCrazy[\s\S]{0,2600}if \(!stato\.aperto\) \{[\s\S]{0,140}giroNuovo\(entry\)/.test(APP));
   prova('e i tocchi dopo contano in QUEL giro',
-    /function mkCellaCrazy[\s\S]{0,1100}cambiaGiro\(entry, stato\.i, 1\)/.test(APP));
+    /function mkCellaCrazy[\s\S]{0,2900}cambiaGiro\(entry, stato\.i, 1\)/.test(APP));
+  /* i due numeri sono cose diverse e vanno detti tutt e due: il
+     totale fa i soldi, il giro fa i minuti regalati */
+  prova('la cella dice anche il TOTALE delle salite',
+    /crz-tot/.test(APP) && /\.e-crz \.crz-tot \{/.test(CSS));
+  prova('con un tasto per aprire un giro e uno per cancellarlo',
+    /crz-nuovo/.test(APP) && /crz-via/.test(APP) && /function viaGiro/.test(APP));
   prova('la fascetta scrive in che giro sei', APP.includes('nuovo giro') && APP.includes('e-crz-k'));
   prova('e la scritta ha il suo aspetto', /\.e-crz-k \{/.test(CSS));
   prova('riaprendo la scheda il giro si chiude',

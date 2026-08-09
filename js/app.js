@@ -3216,7 +3216,6 @@ function entryCard(entry) {
   const sKids = mkCella('\ud83e\uddd2', 'children', 1);
   const sCrazy = mkCellaCrazy(entry, fila);
   const sTime = mkCella(null, 'durationMinutes', 5);
-  const sBrac = mkCellaBracciale(entry, fila);
   if (entry.payLater) {
     sTime.box.classList.add('hidden');
     fila.appendChild(el('div', 'e-later-tag', '\u23f3 Tempo aperto'));
@@ -3301,7 +3300,7 @@ function entryCard(entry) {
   aperta.onclick = (ev) => ev.stopPropagation();
 
   cardRefs.set(entry.id, {
-    card, count, range, sKids, sCrazy, sTime, sBrac,
+    card, count, range, sKids, sCrazy, sTime,
     dueVal: soldiV, soldiK, soldi, wrist, bimbiV, crzV, crz, countK,
     payPanel, payBtn,
     /* servono a rivestire la riga quando cambia un vestito */
@@ -4263,13 +4262,32 @@ function apriMenuBracciale(ancora, entry) {
   });
   sincronizzaBracciali(riga, entry.startTime, entry.braceletColor, entry.braceletCustom);
 
-  ancora.appendChild(menu);
+  /* LA TENDINA NON PUO' STARE DENTRO IL BOTTONE DEL PALLINO.
+     Era li' dentro, e col DITO non funzionava: un tasto annidato
+     dentro un altro tasto, sui browser dei tablet, non riceve il
+     tocco -- lo prende quello di fuori. Cioe' toccando un colore si
+     riapriva la tendina invece di scegliere, e sembrava rotta. Col
+     mouse (e coi test) andava, che e' il modo peggiore di avere un
+     guasto.
+     Adesso e' appoggiata sopra la pagina e piazzata sotto il pallino,
+     esattamente come quella del pannello -- e cosi' non la taglia
+     nemmeno il bordo della scheda. */
+  document.body.appendChild(menu);
+  alzaMenu(menu, ancora);
   const chiudi = (ev) => {
-    if (menu.contains(ev.target)) return;
+    if (menu.contains(ev.target) || ancora.contains(ev.target)) return;
     menu.remove();
     document.removeEventListener('pointerdown', chiudi, true);
+    window.removeEventListener('scroll', viaCol, true);
   };
-  setTimeout(() => document.addEventListener('pointerdown', chiudi, true), 0);
+  /* scorrendo la lista la tendina resterebbe appesa a mezz'aria: sta
+     sopra la pagina, non dentro la scheda */
+  const viaCol = () => { menu.remove(); document.removeEventListener('pointerdown', chiudi, true);
+    window.removeEventListener('scroll', viaCol, true); };
+  setTimeout(() => {
+    document.addEventListener('pointerdown', chiudi, true);
+    window.addEventListener('scroll', viaCol, true);
+  }, 0);
 }
 
 /* Ritinge il pallino sulla riga senza rifare la scheda: se la
@@ -4567,39 +4585,39 @@ function giroDiLista(entry) {
   return { i: -1, n: 0, aperto: false };
 }
 
-/* IL BRACCIALE, DENTRO LA FASCETTA.
-   C'era solo il pallino nella riga, che apre un menu a comparsa: un
-   bersaglio da trentaquattro pixel e una tendina che si chiude al
-   primo tocco fuori. Al banco, con la fila davanti, non e' un tasto:
-   e' un tiro al bersaglio.
-   Qui invece la fila dei colori sta APERTA dentro la scheda, grande
-   come le altre celle: si apre la scheda e si tocca il colore. Il
-   pallino nella riga resta -- e' lui che si guarda da lontano -- e i
-   due si tengono allineati da soli. */
-function mkCellaBracciale(entry, fila) {
-  const box = el('div', 'e-cella e-brc-cella');
-  box.appendChild(el('span', 'k', '\ud83c\udf97\ufe0f'));
-  const riga = el('span', 'wrist-row');
-  box.appendChild(riga);
-  costruisciBracciali(riga, (hex, custom) => {
-    entry.braceletColor = hex;
-    entry.braceletCustom = custom;
-    saveEntries();
-    sincronizzaBracciali(riga, entry.startTime, entry.braceletColor, entry.braceletCustom);
-    aggiornaPallino(entry);
-  });
-  sincronizzaBracciali(riga, entry.startTime, entry.braceletColor, entry.braceletCustom);
-  fila.appendChild(box);
-  return { box, riga };
-}
-
 function mkCellaCrazy(entry, fila) {
+  /* DUE NUMERI DIVERSI, E VANNO DETTI TUTT'E DUE.
+     "5" puo' voler dire cinque salite in tutto o cinque saliti in
+     questo giro, e sono due conti diversi: uno fa i soldi, l'altro fa
+     i minuti regalati. Qui a sinistra c'e' il TOTALE (grigio, non si
+     tocca) e a destra il GIRO che stai contando, coi suoi tasti.
+     E i due mestieri hanno un tasto per uno: "+giro" ne apre uno
+     nuovo, la crocetta cancella quello aperto. */
   const box = el('div', 'e-cella e-crz');
+  box.appendChild(el('span', 'k', '\ud83e\udd38'));
+  const tot = el('span', 'crz-tot');
+  const totN = el('b', null, '0');
+  tot.appendChild(totN);
+  tot.appendChild(el('small', null, 'in tutto'));
+  box.appendChild(tot);
+
+  const gruppo = el('span', 'crz-giro');
   const minus = el('button', null, '\u2212');
-  const kk = el('span', 'k', '\ud83e\udd38');
   const val = el('span', 'v num', '0');
   const plus = el('button', null, '+');
+  gruppo.appendChild(minus);
+  gruppo.appendChild(val);
+  gruppo.appendChild(plus);
+  box.appendChild(gruppo);
+
+  const nuovo = el('button', 'crz-nuovo', '+ giro');
+  const via = el('button', 'crz-via', '\u2715');
+  box.appendChild(nuovo);
+  box.appendChild(via);
   const nota = el('span', 'e-crz-k', 'nuovo giro');
+  box.appendChild(nota);
+
+  const dopo = () => { saveEntries(); syncCard(entry); tick(); };
   const tocca = (d) => (ev) => {
     ev.stopPropagation();
     conConto(entry, () => {
@@ -4618,19 +4636,32 @@ function mkCellaCrazy(entry, fila) {
         if (giriCrazy(entry).length <= stato.i) giroLista = { id: null, i: -1 };
       }
     });
-    saveEntries();
-    syncCard(entry);
-    tick();
+    dopo();
   };
   minus.onclick = tocca(-1);
   plus.onclick = tocca(1);
-  box.appendChild(minus);
-  box.appendChild(kk);
-  box.appendChild(val);
-  box.appendChild(plus);
-  box.appendChild(nota);
+  /* apre un giro e basta: chi sale lo conti col piu' */
+  nuovo.onclick = (ev) => {
+    ev.stopPropagation();
+    conConto(entry, () => {
+      giroNuovo(entry);
+      giroLista = { id: entry.id, i: giriCrazy(entry).length - 1 };
+    });
+    dopo();
+  };
+  /* cancella il giro aperto: chi c'era dentro esce dal conto */
+  via.onclick = (ev) => {
+    ev.stopPropagation();
+    conConto(entry, () => {
+      const stato = giroDiLista(entry);
+      if (!stato.aperto) return;
+      viaGiro(entry, stato.i);
+      giroLista = { id: null, i: -1 };
+    });
+    dopo();
+  };
   fila.appendChild(box);
-  return { box, val, minus, nota };
+  return { box, val, minus, nota, totN, via, gruppo };
 }
 
 function syncCard(entry) {
@@ -4648,11 +4679,20 @@ function syncCard(entry) {
      muoverlo, e il totale sta nella pastiglia della riga sopra */
   const gl = giroDiLista(entry);
   r.sCrazy.val.textContent = gl.aperto ? gl.n : 0;
+  if (r.sCrazy.totN) {
+    const giri = conConto(entry, () => giriCrazy(entry));
+    const pieni = giri.filter(n => n > 0).length;
+    r.sCrazy.totN.textContent = crazy;
+    r.sCrazy.totN.title = crazy + ' salite in ' + pieni + (pieni === 1 ? ' giro' : ' giri');
+  }
   if (r.sCrazy.nota) {
-    r.sCrazy.nota.textContent = !gl.aperto ? 'nuovo giro'
-      : gl.n === 0 ? 'nuovo giro' : (gl.i + 1) + '\u00ba giro';
+    r.sCrazy.nota.textContent = !gl.aperto ? 'il piu\u2019 apre un giro nuovo'
+      : gl.n === 0 ? 'giro nuovo: conta chi sale'
+      : 'stai contando il ' + (gl.i + 1) + '\u00ba giro';
     r.sCrazy.nota.classList.toggle('acceso', gl.aperto && gl.n > 0);
   }
+  if (r.sCrazy.via) r.sCrazy.via.disabled = !gl.aperto;
+  if (r.sCrazy.gruppo) r.sCrazy.gruppo.classList.toggle('spento', !gl.aperto);
   r.sTime.val.textContent = entry.payLater ? '\u2014' : entry.durationMinutes + '\u2032';
   r.sKids.minus.disabled = kids <= 0;
   r.sCrazy.minus.disabled = !gl.aperto || gl.n <= 0;
@@ -4672,9 +4712,6 @@ function syncCard(entry) {
      d'ingresso, che si puo' spostare dal conto. E con lui la fila
      dentro la fascetta, che deve dire la stessa cosa. */
   aggiornaPallino(entry);
-  if (r.sBrac && r.sBrac.riga) {
-    sincronizzaBracciali(r.sBrac.riga, entry.startTime, entry.braceletColor, entry.braceletCustom);
-  }
 
   soldiDi(r, entry, due);
 
