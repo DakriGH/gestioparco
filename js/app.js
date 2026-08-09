@@ -238,7 +238,10 @@ function defaultSettings() {
   return {
     crazyExtraMinutes: 8,
     toleranceMinutes: 10,
-    warnBeforeMinutes: 10,
+    /* il giallo si accende negli ultimi cinque minuti: dieci erano
+       troppi -- con una fila di gruppi restavano gialli meta' del
+       tempo e il colore non diceva piu' niente */
+    warnBeforeMinutes: 5,
     crazyJumpingPrice: 4,
     theme: 'dark',
     tariffaSuTotale: true,
@@ -502,11 +505,24 @@ function minutiCrazy(e) {
 function endTimeOf(e) {
   return e.startTime + (num(e.durationMinutes, 0) + minutiCrazy(e)) * 60000;
 }
+/* IL COLORE DELLA SCHEDA E' L'OROLOGIO, e cambia quando cambia
+   davvero qualcosa:
+     verde   — c'e' tempo
+     giallo  — ultimi minuti (di serie cinque)
+     rosso   — SCADUTO, dal secondo dopo la fine
+   Prima il rosso aspettava anche la tolleranza -- dieci minuti -- e in
+   quei dieci minuti la scheda diceva "SFORATO DA 04:12" restando
+   gialla: il numero diceva una cosa e il colore un'altra, e a colpo
+   d'occhio (che e' il modo in cui questa lista si guarda) sembrava
+   ancora tutto a posto.
+   La tolleranza non sparisce: e' il tempo che si concede prima di
+   andare a chiamare qualcuno, e resta scritta sul countdown. Ma il
+   colore no: scaduto e' scaduto. */
 function stateOf(e, now) {
   if (e.payLater) return 'later';
   const r = endTimeOf(e) - now;
-  if (r < -settings.toleranceMinutes * 60000) return 'danger';
-  if (r < settings.warnBeforeMinutes * 60000) return 'warn';
+  if (r <= 0) return 'danger';
+  if (r < clamp(num(settings.warnBeforeMinutes, 5), 0, 1e6) * 60000) return 'warn';
   return 'ok';
 }
 function barTotal(e) {
@@ -6153,6 +6169,17 @@ function normalizeEntries(list) {
 function init() {
   settings = Object.assign(defaultSettings(), load(SK.settings) || {});
   aggiornaListinoFinto();
+  /* IL GIALLO A CINQUE MINUTI, ANCHE SU CHI HA GIA' L'APP.
+     Il valore di serie era dieci ed e' rimasto salvato su ogni
+     tavoletta: cambiare il valore di serie non tocca chi c'e' gia'.
+     Si sposta una volta sola -- e solo se e' ancora esattamente dieci,
+     cioe' quello vecchio di serie -- e si segna che e' stato fatto:
+     se poi qualcuno rimette dieci apposta, resta dieci. */
+  if (!settings.avvisoCinque) {
+    if (num(settings.warnBeforeMinutes, 10) === 10) settings.warnBeforeMinutes = 5;
+    settings.avvisoCinque = true;
+    save(SK.settings, settings);
+  }
   // migrazione dal vecchio interruttore darkMode
   if (typeof settings.darkMode === 'boolean' && !load(SK.settings)?.theme) {
     settings.theme = settings.darkMode ? 'dark' : 'light';

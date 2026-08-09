@@ -523,6 +523,38 @@ gruppo('A conto saldato il tempo risulta pagato TUTTO', () => {
      ctx.minutiPagati(mezzo) < ctx.tempoTotale(mezzo), true);
 });
 
+gruppo('Il colore della scheda dice l orologio', () => {
+  /* verde finche' c'e' tempo, giallo negli ultimi minuti, ROSSO appena
+     e' scaduto. Prima il rosso aspettava anche la tolleranza: per
+     dieci minuti la scheda diceva "SFORATO DA 04:12" restando gialla,
+     cioe' il numero e il colore raccontavano due cose diverse. */
+  const min = 60000;
+  const c = conto({ children: 1, durationMinutes: 60, crazyJumping: 0, barItems: [] });
+  const fine = ctx.endTimeOf(c);
+  ok('con tanto tempo davanti e verde', ctx.stateOf(c, fine - 30 * min), 'ok');
+  ok('a sei minuti e ancora verde', ctx.stateOf(c, fine - 6 * min), 'ok');
+  ok('a quattro minuti diventa giallo', ctx.stateOf(c, fine - 4 * min), 'warn');
+  ok('a un minuto e giallo', ctx.stateOf(c, fine - 1 * min), 'warn');
+  ok('scaduto e ROSSO subito', ctx.stateOf(c, fine + 1), 'danger');
+  ok('e resta rosso dopo un minuto', ctx.stateOf(c, fine + min), 'danger');
+  ok('anche dentro la tolleranza di dieci minuti',
+     ctx.stateOf(c, fine + 5 * min), 'danger');
+
+  /* i minuti regalati dal Crazy spostano la scadenza, quindi anche il
+     colore: sono tempo dentro, e la scheda deve saperlo */
+  const d = conto({ children: 1, durationMinutes: 60, crazyJumping: 2,
+    crazyGiri: [2], barItems: [] });
+  const fineD = ctx.endTimeOf(d);
+  ok('col Crazy la scadenza si sposta', Math.round((fineD - d.startTime) / min),
+     60 + ctx.settings.crazyExtraMinutes);
+  ok('e il rosso arriva alla scadenza NUOVA', ctx.stateOf(d, fineD + 1), 'danger');
+  ok('prima e ancora verde', ctx.stateOf(d, fineD - 20 * min), 'ok');
+
+  /* il tempo aperto non scade: e' un'altra cosa e ha il suo colore */
+  const e = conto({ children: 1, payLater: true, barItems: [] });
+  ok('il tempo aperto non diventa mai rosso', ctx.stateOf(e, Date.now() + 999 * min), 'later');
+});
+
 gruppo('Bombardamento: mille tocchi a caso', () => {
   let seme = 12345;
   const caso = (n) => { seme = (seme * 1103515245 + 12345) % 2147483648; return seme % n; };

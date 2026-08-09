@@ -78,6 +78,10 @@
   --blk-blu:    linear-gradient(150deg, #2261B6 0%, #17498D 100%);
   --blk-viola:  linear-gradient(150deg, #664BC5 0%, #4C3499 100%);
   --blk-ambra:  linear-gradient(150deg, #825819 0%, #64420F 100%);
+  /* il GIALLO della scheda che sta per scadere: e' un giallo vero, non
+     l'ambra bruciata delle card -- deve gridare "guarda l'orologio" da
+     tre metri, e restare leggibile col testo bianco sopra */
+  --blk-giallo: linear-gradient(150deg, #A98708 0%, #856A05 100%);
   --blk-verde:  linear-gradient(150deg, #156F53 0%, #0E5640 100%);
   --blk-rosso:  linear-gradient(150deg, #A64343 0%, #832E2E 100%);
   --blk-ciano:  linear-gradient(150deg, #1F6978 0%, #14515D 100%);
@@ -1237,7 +1241,7 @@ main {
 @keyframes cardIn { from { opacity: 0; } }
 
 .entry.s-ok     { --grad: var(--blk-verde); }
-.entry.s-warn   { --grad: var(--blk-ambra); }
+.entry.s-warn   { --grad: var(--blk-giallo); }
 .entry.s-danger { --grad: var(--blk-rosso); }
 .entry.s-later  { --grad: var(--blk-ciano); }
 
