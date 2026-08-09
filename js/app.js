@@ -299,7 +299,10 @@ let clockT = null, tickT = null;
 function freshDraft() {
   return {
     startTime: roundTo5(new Date()).getTime(),
-    durationMinutes: 60,
+    /* MEZZ'ORA DI SERIE: e' il taglio che si vende di piu', e partire
+       da un'ora voleva dire correggere quasi sempre. Chi resta di piu'
+       lo dice, e un tocco sui tagli rapidi basta. */
+    durationMinutes: 30,
     payLater: false,
     children: 1,
     crazyJumping: 0,
@@ -3155,6 +3158,13 @@ function entryCard(entry) {
   const crzV = el('span', 'num', '0');
   crz.appendChild(crzV);
   sotto.appendChild(crz);
+  /* SOLO CRAZY, senza bambini in sala: e' un ingresso di un altro tipo
+     -- non paga il parco, sta dentro solo i minuti del salto -- e
+     nella lista va riconosciuto senza leggere i numeri. Lo zero
+     accanto alla faccina non basta: si legge come "un gruppo qualunque
+     con zero bambini", che e' un'altra cosa. */
+  const solo = el('div', 'e-solocrz hidden', 'solo Crazy');
+  sotto.appendChild(solo);
   chi.appendChild(sotto);
   riga.appendChild(chi);
 
@@ -3315,7 +3325,7 @@ function entryCard(entry) {
   aperta.onclick = (ev) => ev.stopPropagation();
 
   cardRefs.set(entry.id, {
-    card, count, range, sKids, sCrazy, sTime,
+    card, count, range, sKids, sCrazy, sTime, solo,
     dueVal: soldiV, soldiK, soldi, wrist, bimbiV, crzV, crz, countK,
     payPanel, payBtn,
     /* servono a rivestire la riga quando cambia un vestito */
@@ -4699,6 +4709,11 @@ function syncCard(entry) {
   r.sKids.val.textContent = kids;
   if (r.bimbiV) r.bimbiV.textContent = kids;
   if (r.crzV) { r.crzV.textContent = crazy; r.crz.classList.toggle('hidden', crazy <= 0); }
+  /* niente bambini ma qualcuno sul Crazy: la pastiglia dei bambini
+     sparisce e al suo posto si legge di che ingresso si tratta */
+  const soloCrazy = kids <= 0 && crazy > 0;
+  if (r.solo) r.solo.classList.toggle('hidden', !soloCrazy);
+  if (r.card) r.card.classList.toggle('solo-crazy', soloCrazy);
   /* nella fascetta il numero e' quello del GIRO che si sta contando,
      non il totale delle salite: sono il piu' e il meno qui accanto a
      muoverlo, e il totale sta nella pastiglia della riga sopra */

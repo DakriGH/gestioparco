@@ -1345,6 +1345,23 @@ main {
 .e-orari .fr { font-size: 11px; line-height: normal; color: rgba(255, 255, 255, 0.6); margin: 0 2px; }
 .e-sotto { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
 /* quanti bambini, senza dover aprire niente */
+/* SOLO CRAZY: nessun bambino in sala, solo qualcuno che salta.
+   E' un ingresso di un altro tipo -- non paga il parco, sta dentro
+   solo i minuti regalati dal salto -- e nella lista si deve
+   riconoscere senza leggere i numeri: uno zero accanto alla faccina si
+   legge come "un gruppo qualunque", che e' un'altra cosa.
+   Viola come tutto quello che riguarda il Crazy nell'app. */
+.e-solocrz {
+  display: inline-flex; align-items: center; margin-top: 4px; height: 22px;
+  padding: 0 10px; border-radius: 20px;
+  background: rgba(182, 158, 255, 0.28);
+  box-shadow: inset 0 0 0 1.5px rgba(182, 158, 255, 0.5);
+  color: #EDE6FF; font-size: 11px; font-weight: 800;
+  letter-spacing: .06em; text-transform: uppercase; white-space: nowrap;
+}
+/* e la faccina dei bambini sparisce: uno zero li' non dice niente */
+.entry.solo-crazy .e-bimbi:not(.e-crazy) { display: none; }
+
 .e-bimbi {
   display: inline-flex;
   align-items: center;
