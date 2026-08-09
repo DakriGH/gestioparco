@@ -2658,8 +2658,18 @@ html:not(.anima) .view.entra-dx { animation: none; }
 /* `.pan-conto .pc-bar` e non `.pc-bar`: piu' su c'e'
    `.pan-conto .bc-griglia { flex: 0 0 auto }`, che con una classe in
    piu' vinceva e teneva il bancone alto quanto il listino. */
+/* `grid-auto-rows: min-content` E' LA RIGA CHE CONTA.
+   Il bancone ha un'altezza decisa dal pannello, e una griglia con
+   altezza definita ACCORCIA le sue righe per farci stare tutto: le
+   card si schiacciavano a sessanta pixel e il disegno, il prezzo e i
+   tasti finivano tagliati sotto il bordo -- sembrava che non si
+   aprissero piu'. Con `min-content` le righe restano della loro
+   misura e a scorrere e' il bancone, che e' il patto: scorre la lista,
+   non si rimpicciolisce quello che c'e' dentro.
+   `align-items: stretch` resta: due card sulla stessa riga devono
+   restare alte uguali, se no la fila sembra sbilenca. */
 .pan-conto .pc-bar { flex: 1 1 auto; min-height: 0; overflow-y: auto;
-  overscroll-behavior: contain; align-content: start; }
+  overscroll-behavior: contain; align-content: start; grid-auto-rows: min-content; }
 .pc-bar.scorre {
   -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent);
   mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent);

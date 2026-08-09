@@ -825,9 +825,23 @@ function firmaGriglia() {
 /* i numeri di UNA card: se non cambiano, la card non si tocca */
 function firmaVoce(id) { return bcQ(id) + '/' + bcPag(id); }
 
+/* IL BANCONE DICE QUANDO C'E' DELL'ALTRO SOTTO.
+   Va deciso qui e non dove si misura il pannello: li' il bar e'
+   nascosto -- si misura col Parco a vista -- e un elemento nascosto e'
+   alto zero, quindi la sfumatura non si accendeva mai. */
+function sfumaBancone(g) {
+  if (g) g.classList.toggle('scorre', g.scrollHeight > g.clientHeight + 2);
+}
+
 function pcGriglia() {
   const g = pcRif('.pc-bar');
   if (!g) return;
+  if (!g.__ascolta) {
+    g.__ascolta = true;
+    g.addEventListener('scroll', () => sfumaBancone(g), { passive: true });
+  }
+  /* dopo il disegno: prima le misure sono ancora quelle vecchie */
+  requestAnimationFrame(() => sfumaBancone(g));
   const voci = lista(settings.barMenu);
   if (g.dataset.sig !== firmaGriglia()) {
     g.dataset.sig = firmaGriglia();
@@ -870,7 +884,20 @@ function pcVoce(id) {
   nuova.dataset.n = firmaVoce(id);
   vecchia.replaceWith(nuova);
   const g = pcRif('.pc-bar');
-  if (g) g.dataset.sig = firmaGriglia();
+  if (g) {
+    g.dataset.sig = firmaGriglia();
+    /* LA CARD CRESCE QUANDO LA PRENDI -- da 82 a 178 pixel, perche'
+       spuntano le due fasce dei tasti. Se stavi in fondo al bancone,
+       quella crescita finisce sotto il bordo e i tasti appena comparsi
+       non si vedono: si scorre del minimo per rimetterli a galla, come
+       fa il guardaroba. Nessun salto se ci stavano gia'. */
+    requestAnimationFrame(() => {
+      const r = nuova.getBoundingClientRect(), v = g.getBoundingClientRect();
+      const sotto = Math.round(r.bottom - v.bottom);
+      if (sotto > 1) g.scrollTop += sotto + 8;
+      sfumaBancone(g);
+    });
+  }
 }
 /* QUANTI MINUTI SONO GIA' PAGATI.
    Dai soldi presi per il parco si toglie il Crazy -- che si paga a
@@ -3328,8 +3355,7 @@ function adattaPannello(p, limiteSotto, cimaVoluta, largaVoluta) {
      un riquadro tagliato a meta' sul bordo sembra un errore, non
      "c'e' dell'altro" -- e ci pensa la sfumatura, dalla parte giusta. */
   sfuma(su);
-  /* il bancone del bar ha la sua sfumatura: scorre lui, non il vano */
-  if (bar) bar.classList.toggle('scorre', bar.scrollHeight > bar.clientHeight + 2);
+
 
   if (cambio) { parco.classList.add('hidden'); bar.classList.remove('hidden'); }
   return 1;

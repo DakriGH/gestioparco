@@ -266,6 +266,22 @@ gruppo('L’avviso di chi sfora viene a cercarti');
   prova('e se ne va da solo', /setTimeout\(\(\) => \{[\s\S]{0,120}a\.classList\.remove\('su'\)/.test(APP));
 }
 
+gruppo('Il bancone scorre, ma le card non si schiacciano');
+{
+  /* Una griglia con un'altezza decisa da fuori ACCORCIA le sue righe
+     per farci stare tutto: le card del bar si schiacciavano a sessanta
+     pixel e disegno, prezzo e tasti finivano tagliati sotto il bordo
+     -- sembrava che non si aprissero piu'. E' il difetto piu' subdolo
+     di una lista che scorre, perche' il codice "funziona". */
+  const dove = CSS.indexOf('.pan-conto .pc-bar {');
+  const css = CSS.slice(dove, dove + 400);
+  prova('le righe del bancone non si accorciano', /grid-auto-rows:\s*min-content/.test(css));
+  prova('e il bancone si prende lo spazio che avanza', /flex:\s*1 1 auto/.test(css));
+  prova('scorrendo lo dice', /\.pc-bar\.scorre/.test(CSS) && APP.includes('sfumaBancone'));
+  prova('e la card appena presa si porta a vista',
+    /LA CARD CRESCE QUANDO LA PRENDI[\s\S]{0,600}scrollTop \+= sotto/.test(APP));
+}
+
 gruppo('Le liste lunghe non si disegnano tutte in un colpo');
 {
   /* A fine stagione l'archivio ha migliaia di ingressi: disegnarli
