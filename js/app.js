@@ -1355,7 +1355,7 @@ function syncPeople(container, people, onChange) {
          colore era la maglietta?"). Adesso e' un cerchio: si gira il
          dito e si prende il colore, punto. */
       if (d.ruota !== undefined) {
-        apriRuota(b, av && av[d.ruota] ? av[d.ruota].color : '#8A8AA0', (colore) => {
+        apriRuota(b, p && p.avatar && p.avatar[d.ruota] ? p.avatar[d.ruota].color : '#8A8AA0', (colore) => {
           const q = elenco().find(x => x.id === container.dataset.apri);
           if (!q) return;
           q.avatar[d.ruota].color = colore;
@@ -1367,7 +1367,7 @@ function syncPeople(container, people, onChange) {
         return;
       }
       if (d.accruota !== undefined) {
-        apriRuota(b, ACC_DOVE[d.accruota] && p ? ACC_DOVE[d.accruota](p.avatar) : null, (colore) => {
+        apriRuota(b, p && p.avatar && ACC_DOVE[d.accruota] ? ACC_DOVE[d.accruota](p.avatar) : null, (colore) => {
           const q = elenco().find(x => x.id === container.dataset.apri);
           if (!q) return;
           accMetti(q.avatar, d.accruota, colore);
@@ -3694,7 +3694,15 @@ function apriRuota(tasto, coloreOra, scegli) {
     metti(coloreDelPunto(x, y, r.width / 2));
   };
   let giu = false;
-  cerchio.addEventListener('pointerdown', (ev) => { giu = true; cerchio.setPointerCapture(ev.pointerId); prendi(ev); });
+  cerchio.addEventListener('pointerdown', (ev) => {
+    giu = true;
+    /* la cattura del dito serve a non perdere il colore se si esce dal
+       cerchio trascinando -- ma se il browser la rifiuta non deve
+       portarsi via anche la scelta: prima si prende il colore, poi si
+       prova a catturare */
+    prendi(ev);
+    try { cerchio.setPointerCapture(ev.pointerId); } catch (e) { /* pazienza */ }
+  });
   cerchio.addEventListener('pointermove', (ev) => { if (giu) prendi(ev); });
   cerchio.addEventListener('pointerup', () => { giu = false; });
 
