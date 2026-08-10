@@ -3676,9 +3676,24 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
 .pc-scontrino .sc-voce.saldata .sc-txt b { color: #8DEBBB; }
 .pc-scontrino .sc-voce.aperta { background: rgba(255, 255, 255, .09);
   box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .14); }
-.pc-scontrino .sc-riga { display: flex; align-items: center; gap: 9px; width: 100%;
-  padding: 7px 10px; border: none; background: none; color: var(--txt); font: inherit;
+.pc-scontrino .sc-linea { display: flex; align-items: center; gap: 6px; padding-right: 8px; }
+.pc-scontrino .sc-riga { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 0;
+  padding: 7px 4px 7px 10px; border: none; background: none; color: var(--txt); font: inherit;
   text-align: left; cursor: pointer; border-radius: 12px; }
+/* I TRE TASTI DI TUTTI I GIORNI, sulla riga: uno in piu', uno in meno,
+   pagata. Al bar si fa questo venti volte a sera, e farlo passare da
+   «apri la riga, tocca, richiudi» e' tre gesti per uno. */
+.pc-scontrino .sc-veloci { flex: 0 0 auto; display: flex; align-items: center; gap: 4px; }
+.pc-scontrino .sc-veloci button { width: 40px; height: 40px; border: none; border-radius: 11px;
+  background: rgba(255, 255, 255, .1); color: var(--txt);
+  font-family: 'Fredoka', sans-serif; font-size: 20px; font-weight: 700; cursor: pointer; }
+.pc-scontrino .sc-veloci button:active:not(:disabled) { background: rgba(255, 255, 255, .26); }
+.pc-scontrino .sc-veloci button:disabled { opacity: .3; cursor: default; }
+/* la spunta e' verde di contorno finche' non e' pagata, piena dopo:
+   si vede da lontano quali righe sono a posto */
+.pc-scontrino .sc-veloci .sc-sp { background: rgba(106, 220, 175, .14); color: #8DEBBB;
+  box-shadow: inset 0 0 0 1.5px rgba(106, 220, 175, .34); font-size: 18px; }
+.pc-scontrino .sc-veloci .sc-sp.on { background: #6ADCAF; color: #08301F; box-shadow: none; }
 .pc-scontrino .sc-riga:active { background: rgba(255, 255, 255, .06); }
 /* QUANTE, davanti a tutto: e' la prima cosa che si legge su uno
    scontrino, e qui era nascosta dentro una riga di frecce */

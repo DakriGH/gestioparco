@@ -148,10 +148,16 @@ gruppo('Lo scontrino: tutto quello che hanno preso, in una lista sola', () => {
      un menu da compilare, non un conto da leggere. */
   const riga = (id) => { ctx.scAperta = null; return ctx.scontrinoRiga(c, id); };
   const rigaAperta = (id) => { ctx.scAperta = id; const h = ctx.scontrinoRiga(c, id); ctx.scAperta = null; return h; };
-  prova('a riposo la riga non ha comandi',
-    riga('bimbi').indexOf('data-scpq') < 0 && riga('bimbi').indexOf('data-scpiu') < 0,
-    riga('bimbi').slice(0, 200));
-  prova('ma si puo aprire', riga('bimbi').indexOf('data-scapri="bimbi"') > 0);
+  /* SULLA RIGA CI SONO I TRE TASTI DI TUTTI I GIORNI -- uno in piu',
+     uno in meno, pagata -- e basta quelli: al bar si fa questo venti
+     volte a sera, e farlo passare da «apri, tocca, richiudi» sarebbero
+     tre gesti per uno. Nel cassetto resta quello che si fa di rado. */
+  prova('sulla riga il meno, il piu e la spunta',
+    /data-scmq="bimbi"/.test(riga('bimbi')) && /data-scpq="bimbi"/.test(riga('bimbi')) &&
+    /data-sctutta="bimbi"/.test(riga('bimbi')));
+  prova('e niente altro: il pagato a meta sta nel cassetto',
+    riga('bimbi').indexOf('data-scpiu') < 0, riga('bimbi').slice(0, 260));
+  prova('che si apre toccando la riga', riga('bimbi').indexOf('data-scapri="bimbi"') > 0);
   prova('la riga dei bambini dice il totale', riga('bimbi').indexOf(ctx.eur(ctx.totaleRiga('bimbi'))) > 0,
     riga('bimbi').slice(0, 160));
   prova('e quante ne sono pagate, una volta aperta',

@@ -4240,15 +4240,31 @@ function scontrinoRiga(c, id) {
   const bollo = saldo ? '<span class="sc-ok">\u2713</span>'
     : preso > 0 ? '<span class="sc-meta">restano ' + eur(resta) + '</span>' : '';
 
+  /* I TRE TASTI CHE SI USANO SEMPRE, sulla riga: una in piu', una in
+     meno, pagata. Al bar sono il gesto di tutti i giorni -- venti
+     volte a sera -- e farli passare da «apri, tocca, richiudi» e' tre
+     gesti per uno. Nel cassetto resta quello che si fa di rado:
+     pagare a meta', il tempo, le volte del Crazy. */
+  const avanti = id === 'bimbi' && !!c.payLater;
   return '<div class="sc-voce' + (aperta ? ' aperta' : '') + (saldo ? ' saldata' : '') + '">' +
-    '<button class="sc-riga" data-scapri="' + esc(id) + '">' +
-      '<span class="sc-n">' + q + '</span>' +
-      '<span class="sc-em">' + iconaBar(v.name, v.em) + '</span>' +
-      '<span class="sc-txt"><b>' + esc(v.name) + '</b><span>' + sotto + '</span></span>' +
-      bollo +
-      '<span class="sc-eu">' + eur(totaleRiga(id)) + '</span>' +
-      '<span class="sc-frec">' + (aperta ? '\u2303' : '\u2304') + '</span>' +
-    '</button>' +
+    '<div class="sc-linea">' +
+      '<button class="sc-riga" data-scapri="' + esc(id) + '">' +
+        '<span class="sc-n">' + q + '</span>' +
+        '<span class="sc-em">' + iconaBar(v.name, v.em) + '</span>' +
+        '<span class="sc-txt"><b>' + esc(v.name) + '</b><span>' + sotto + '</span></span>' +
+        bollo +
+        '<span class="sc-eu">' + eur(tot) + '</span>' +
+        '<span class="sc-frec">' + (aperta ? '\u2303' : '\u2304') + '</span>' +
+      '</button>' +
+      '<span class="sc-veloci">' +
+        '<button data-scmq="' + esc(id) + '"' + (q <= 0 ? ' disabled' : '') +
+          ' aria-label="uno in meno">\u2212</button>' +
+        '<button data-scpq="' + esc(id) + '" aria-label="uno in piu\u2019">+</button>' +
+        '<button class="sc-sp' + (saldo ? ' on' : '') + '" data-sctutta="' + esc(id) + '"' +
+          (avanti ? ' disabled' : '') + ' aria-label="' + (saldo ? 'togli il pagato' : 'segna pagata') +
+          '">\u2713</button>' +
+      '</span>' +
+    '</div>' +
     (aperta ? scontrinoComandi(c, id, q, pg) : '') +
   '</div>';
 }
@@ -4260,12 +4276,11 @@ function scontrinoComandi(c, id, q, pg) {
   const avanti = id === 'bimbi' && !!c.payLater;
   const tot = totaleRiga(id), preso = importoRiga(id);
   const saldo = tot > 0 && preso + 0.005 >= tot;
+  /* nel cassetto ci va quello che si fa di RADO: pagare a meta'. Il
+     meno, il piu' e la spunta stanno sulla riga, dove servono. */
   let out = '<div class="sc-apri"><div class="sc-comandi">' +
-    '<span class="sc-gr"><i>' + (id === 'bimbi' ? 'bambini' : id === 'crazy' ? 'crazy' : 'quante') + '</i>' +
-      '<button data-scmq="' + esc(id) + '"' + (q <= 0 ? ' disabled' : '') + '>\u2212</button>' +
-      '<b>' + q + '</b>' +
-      '<button data-scpq="' + esc(id) + '">+</button></span>' +
-    '<span class="sc-gr verde"><i>pagate</i>' +
+    '<span class="sc-gr verde"><i>' +
+      (id === 'bimbi' ? 'bambini pagati' : id === 'crazy' ? 'giri pagati' : 'pagate') + '</i>' +
       '<button data-scmeno="' + esc(id) + '"' + (pg <= 0 ? ' disabled' : '') + '>\u2212</button>' +
       '<b>' + pg + '/' + q + '</b>' +
       '<button data-scpiu="' + esc(id) + '"' + (pg >= q || avanti ? ' disabled' : '') + '>+</button></span>' +
