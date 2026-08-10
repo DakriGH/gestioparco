@@ -523,6 +523,62 @@ gruppo('A conto saldato il tempo risulta pagato TUTTO', () => {
      ctx.minutiPagati(mezzo) < ctx.tempoTotale(mezzo), true);
 });
 
+gruppo('Il ritocco da cinque minuti non e una vendita', () => {
+  /* I TRE TAGLI VENDONO un blocco, e ogni blocco si paga al prezzo del
+     cartello per la SUA misura -- e' quello che si vuole: mezz'ora
+     costa mezz'ora, la seconda mezz'ora pure.
+     Il piu' e il meno da cinque minuti no: quelli sono un RITOCCO, e
+     trattarli da vendita apriva un blocco da cinque minuti, che sul
+     cartello sta nello scaglione minimo. Tre euro a tocco: cinque
+     tocchi su una mezz'ora facevano ventidue euro invece di dodici, e
+     il prezzo a testa sulla card sembrava uscito a caso. */
+  const c = conto({ children: 1, durationMinutes: 30, baseMinutes: 30 });
+  ok('mezz ora costa la mezz ora', ctx.costOf(c).unit, ctx.priceFor(30));
+
+  for (let i = 0; i < 5; i++) ctx.ritoccaTempo(c, 5);
+  ok('cinque ritocchi fanno cinquantacinque minuti', c.durationMinutes, 55);
+  ok('e non hanno aperto nessun blocco', ctx.lista(c.aggiunte).length, 0);
+  ok('il prezzo e quello del cartello per il tempo che stanno dentro',
+     ctx.costOf(c).unit, ctx.priceFor(60));
+  vero('e non e la somma di cinque scaglioni minimi',
+     ctx.costOf(c).unit < ctx.priceFor(30) + 5 * ctx.priceFor(10));
+
+  for (let i = 0; i < 5; i++) ctx.ritoccaTempo(c, -5);
+  ok('tornati a mezz ora', c.durationMinutes, 30);
+  ok('e al suo prezzo', ctx.costOf(c).unit, ctx.priceFor(30));
+
+  /* IL RITOCCO ENTRA NELL'ULTIMA VENDITA, non ne apre una nuova */
+  const d = conto({ children: 1, durationMinutes: 45, baseMinutes: 30 });
+  d.aggiunte = [15];
+  ok('venduto un quarto d ora a parte', ctx.costOf(d).unit,
+     ctx.r2(ctx.priceFor(30) + ctx.priceFor(15)));
+  ctx.ritoccaTempo(d, 5);
+  ok('il ritocco cresce il blocco venduto', JSON.stringify(ctx.lista(d.aggiunte)), '[20]');
+  ok('e si paga il blocco da venti, non due blocchi',
+     ctx.costOf(d).unit, ctx.r2(ctx.priceFor(30) + ctx.priceFor(20)));
+
+  /* i tagli grossi continuano a fare quello che facevano */
+  const e = conto({ children: 1, durationMinutes: 75, baseMinutes: 30 });
+  e.aggiunte = [15, 30];
+  ok('mezz ora piu un quarto piu mezz ora, ognuno al suo prezzo',
+     ctx.costOf(e).unit, ctx.r2(ctx.priceFor(30) + ctx.priceFor(15) + ctx.priceFor(30)));
+
+  /* a tempo aperto non si ritocca: non c e una durata da ritoccare */
+  const f = conto({ children: 1, durationMinutes: 30, baseMinutes: 30, payLater: true });
+  ctx.ritoccaTempo(f, 5);
+  ok('a tempo aperto il ritocco non tocca niente', f.durationMinutes, 30);
+
+  /* e il salvataggio si porta dietro i blocchi */
+  const g = conto({ children: 2, durationMinutes: 75, baseMinutes: 30 });
+  g.aggiunte = [15, 30];
+  const prezzo = ctx.costOf(g).parkTotal;
+  const riletto = ctx.normalizeEntries([JSON.parse(JSON.stringify(g))])[0];
+  ctx.PAN.conto = riletto;
+  ok('salvato e riletto, i blocchi ci sono ancora',
+     JSON.stringify(ctx.lista(riletto.aggiunte)), '[15,30]');
+  ok('e il prezzo e lo stesso', ctx.costOf(riletto).parkTotal, prezzo);
+});
+
 gruppo('Solo Crazy: dieci minuti in omaggio, e non si pagano mai', () => {
   /* Chi entra solo per saltare non compra tempo di parco: gli si da'
      la permanenza che serve -- salire, saltare, uscire -- e non si

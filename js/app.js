@@ -1203,6 +1203,24 @@ function costruisciPannello() {
       c.payLater = false;
       pcSalva(); aggiornaPannello(); return;
     }
+    /* RITOCCARE NON E' VENDERE.
+       I tre tagli vendono un blocco di tempo e ognuno si paga al prezzo
+       del cartello per la sua misura -- e' quello che si voleva: mezz'ora
+       costa mezz'ora, la seconda mezz'ora pure.
+       Ma il piu' e il meno da cinque minuti sono un RITOCCO: «no
+       aspetta, un altro quarto d'ora no, cinque minuti». Trattandoli
+       come vendite, ogni tocco apriva un blocco da cinque minuti e un
+       blocco da cinque minuti costa lo scaglione minimo -- tre euro.
+       Cinque tocchi su una mezz'ora facevano ventidue euro invece di
+       dodici, e il prezzo sulla card sembrava uscito a caso.
+       Il ritocco entra nell'ULTIMA vendita, se c'e'; se no allunga il
+       tempo iniziale, che si paga sul totale come ha sempre fatto. */
+    if (d.a === 'corr') {
+      ritoccaTempo(c, num(d.v, 0));
+      pcSalva();
+      aggiornaPannello();
+      return;
+    }
     /* ALLUNGARE E' UN'ALTRA COSA DAL SOSTITUIRE. I tagli qui sopra
        scrivono la durata; questo la SOMMA a quella che c'e' gia'. Il
        prezzo lo rifa' costOf da se': se il listino e' "ogni aggiunta
@@ -1655,6 +1673,36 @@ function disegnaFascia(p, c) {
    ══════════════════════════════════════════════════════════ */
 const ESTENDI_TAGLI = [15, 30, 60];
 
+/* IL RITOCCO DA CINQUE MINUTI.
+   I tre tagli VENDONO un blocco di tempo, e ogni blocco si paga al
+   prezzo del cartello per la sua misura: mezz'ora costa mezz'ora, la
+   seconda mezz'ora pure. Il piu' e il meno da cinque minuti invece
+   sono un RITOCCO -- «no aspetta, un altro quarto d'ora no, cinque
+   minuti» -- e trattarli da vendita voleva dire aprire un blocco da
+   cinque minuti, che sul cartello sta nello scaglione minimo: tre
+   euro. Cinque tocchi su una mezz'ora facevano ventidue euro invece
+   di dodici, e il prezzo a testa sulla card sembrava uscito a caso.
+   Il ritocco entra nell'ULTIMA vendita, se c'e'; se no allunga il
+   tempo iniziale, che si paga sul totale come ha sempre fatto.
+   Sta in una funzione con un nome suo, e non dentro il gestore dei
+   tocchi, perche' e' una regola dei soldi e le regole dei soldi si
+   provano. */
+function ritoccaTempo(c, delta) {
+  c = c || C();
+  if (c.payLater) return;
+  const m = clamp(num(c.durationMinutes, 60), 0, 1e6);
+  const dopo = clamp(m + num(delta, 0), 5, 100000);
+  const vero = dopo - m;                 /* quello che si e' mosso davvero */
+  if (!vero) return;
+  c.durationMinutes = dopo;
+  const vendite = lista(c.aggiunte).map(x => Math.max(0, Math.round(num(x, 0))));
+  if (vendite.length) {
+    vendite[vendite.length - 1] = Math.max(0, vendite[vendite.length - 1] + vero);
+    c.aggiunte = vendite.filter(x => x > 0);
+  }
+  sistemaAggiunte(c);
+}
+
 /* quanto costa allungare di tot: il prezzo di dopo meno quello di
    adesso, per tutto il gruppo. Passa da costOf, che sa gia' del
    listino a scaglioni, dei minuti regalati e del "paga a parte". */
@@ -1701,9 +1749,9 @@ function disegnaEstendi(p, c) {
   box.innerHTML =
     '<span class="est-k"><span class="em">\u23e9</span> Estendi</span>' +
     '<span class="est-cinque">' +
-      '<button data-a="est" data-v="-5"' + (aperto || corti <= 5 ? ' disabled' : '') +
+      '<button data-a="corr" data-v="-5"' + (aperto || corti <= 5 ? ' disabled' : '') +
         ' aria-label="cinque minuti in meno">\u2212 5m</button>' +
-      '<button data-a="est" data-v="5"' + (aperto ? ' disabled' : '') +
+      '<button data-a="corr" data-v="5"' + (aperto ? ' disabled' : '') +
         ' aria-label="cinque minuti in piu\u2019">+ 5m</button>' +
     '</span>' +
     ESTENDI_TAGLI.map(m => {
@@ -1713,7 +1761,14 @@ function disegnaEstendi(p, c) {
         '</i></button>';
     }).join('') +
     '<span class="est-dx">' +
-      '<span class="est-fine">' + (aperto ? 'tempo aperto' : 'fino alle') +
+      /* QUANTO TEMPO HANNO COMPRATO IN TUTTO. Senza, dopo un +5 o un
+         +30 nessun taglio e' piu' acceso e non si sa piu' a che punto
+         si e': si vede solo l'ora d'uscita, che pero' comprende anche i
+         minuti regalati dal Crazy e non dice quanto si e' venduto.
+         Questo e' il tempo di parco, quello che si paga. */
+      '<span class="est-fine">' + (aperto ? 'tempo aperto' : 'in tutto') +
+        '<b>' + (aperto ? '\u2014' : fmtMin(clamp(num(c.durationMinutes, 0), 0, 1e6))) + '</b></span>' +
+      '<span class="est-fine">' + (aperto ? '\u00a0' : 'fino alle') +
         '<b>' + (aperto ? '\u2014' : fmtTime(endTimeOf(c))) + '</b></span>' +
     '</span>';
 }
@@ -4108,7 +4163,17 @@ function scontrinoRiga(c, id) {
   let sotto = q + ' \u00d7 ' + eur(prezzoUnita(id));
   if (id === 'bimbi') {
     /* il tempo sta QUI: e' quello che comprano i bambini, e la domanda
-       vera e' «fin quando sono a posto», non «quante unita'» */
+       vera e' «fin quando sono a posto», non «quante unita'».
+       E SE E' STATO VENDUTO A PEZZI si scrive com'e' fatto: ogni
+       blocco si paga al prezzo del cartello per la SUA misura -- mezz'
+       ora costa mezz'ora, la seconda mezz'ora pure -- e senza vederli
+       scritti il prezzo a testa sembrava uscito a caso. */
+    const blocchi = lista(c.aggiunte).map(m => Math.max(0, Math.round(num(m, 0)))).filter(m => m > 0);
+    if (blocchi.length) {
+      const somma = blocchi.reduce((a2, b2) => a2 + b2, 0);
+      const iniz = Math.max(0, clamp(num(c.durationMinutes, 0), 0, 1e6) - somma);
+      sotto += ' \u00b7 ' + [iniz].concat(blocchi).filter(m => m > 0).map(m => fmtMin(m)).join(' + ');
+    }
     sotto += ' \u00b7 ' + fmtMin(tempoTotale(c)) +
       (c.payLater ? ' \u00b7 tempo aperto' : ' \u00b7 esce alle ' + fmtTime(endTimeOf(c)));
     const min = minutiPagati(c);
@@ -4169,9 +4234,9 @@ function scontrinoRiga(c, id) {
       /* la coppia da cinque minuti, a sinistra dei tagli: e' la stessa
          dell'Estendi, e sta dalla stessa parte */
       '<span class="sc-t-cinque">' +
-        '<button data-a="est" data-v="-5"' + (aperto || corti <= 5 ? ' disabled' : '') +
+        '<button data-a="corr" data-v="-5"' + (aperto || corti <= 5 ? ' disabled' : '') +
           '>\u2212 5m</button>' +
-        '<button data-a="est" data-v="5"' + (aperto ? ' disabled' : '') + '>+ 5m</button>' +
+        '<button data-a="corr" data-v="5"' + (aperto ? ' disabled' : '') + '>+ 5m</button>' +
       '</span>' +
       ESTENDI_TAGLI.map(m => {
         const costo = aperto ? 0 : costoEstensione(c, m);
