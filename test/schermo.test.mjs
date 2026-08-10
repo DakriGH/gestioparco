@@ -111,14 +111,52 @@ gruppo('Un giro aperto e vuoto si vede, e non regala niente', () => {
   const h = cardCrazy();
   uguale('il contatore riparte da zero', presi(h, /class="bc-chip">(\d+)</g)[0], '0');
   prova('la riga lo dice: "da contare"', h.indexOf('da contare') >= 0);
-  prova('e non scrive minuti su quella riga',
-    (h.match(/\+8′/g) || []).length === 1 + 1, // uno in cima (totale), uno sulla riga piena
-    'trovati ' + (h.match(/\+8′/g) || []).length);
+  prova('e la riga vuota non chiede soldi', h.indexOf('da contare') >= 0 &&
+    (h.match(/da pagare/g) || []).length === 1, 'una sola riga da pagare');
+  prova('i minuti totali stanno in cima, una volta sola',
+    (h.match(/\+8′/g) || []).length === 1);
   uguale('i soldi non si muovono per un giro vuoto',
     ctx.contoCrazy(), 3 * ctx.settings.crazyJumpingPrice);
   uguale('e nemmeno l ora d uscita',
     Math.round((ctx.endTimeOf(c) - c.startTime) / 60000),
     60 + ctx.settings.crazyExtraMinutes);
+});
+
+gruppo('Si vede QUALI giri sono pagati, e cancellarne uno rimette i soldi', () => {
+  /* La cassa conta le salite pagate, non i giri: da "tre su cinque"
+     non si capisce quale giro sia a posto. Le pagate si riempiono in
+     ordine, dal primo giro, e ogni riga dello storico lo dice. */
+  const c = conto({ children: 0, crazyJumping: 0, durationMinutes: 30, baseMinutes: 30 });
+  ctx.bcSetQ('crazy', 3);          // primo giro: tre saliti
+  ctx.giroNuovo(c);
+  ctx.cambiaGiro(c, 1, 2);         // secondo giro: due
+  uguale('due giri: tre e due', ctx.giriCrazy(c), [3, 2]);
+
+  ctx.segnaPagate('crazy', 3);     // pagato il primo giro
+  uguale('il primo giro risulta pagato', ctx.pagateDelGiro(c, 0), 3);
+  uguale('il secondo no', ctx.pagateDelGiro(c, 1), 0);
+  const h = cardCrazy();
+  prova('e lo storico lo scrive', /class="st-riga saldato"/.test(h) && h.indexOf('da pagare') > 0, h.slice(0, 200));
+
+  ctx.segnaPagate('crazy', 4);     // e una salita del secondo
+  uguale('mezzo secondo giro', ctx.pagateDelGiro(c, 1), 1);
+  prova('la riga a meta si vede', /class="st-riga[^"]*meta"/.test(cardCrazy()));
+
+  /* CANCELLARE UN GIRO GIA' PAGATO non deve lasciare soldi appesi:
+     un giro inserito per sbaglio non e' un debito verso il cliente. */
+  const presiPrima = ctx.importoRiga('crazy');
+  ctx.viaGiro(c, 1);               // via il secondo giro (uno pagato dentro)
+  uguale('resta un giro solo', ctx.giriCrazy(c), [3]);
+  uguale('e le spunte non superano le salite', ctx.bcPag('crazy') <= 3, true);
+  uguale('niente da restituire', ctx.dueOf(c).avanzo, 0);
+  uguale('e i soldi tornati indietro sono quelli della salita tolta',
+     ctx.r2(presiPrima - ctx.importoRiga('crazy')), ctx.r2(presiPrima / 4));
+
+  /* e cancellando anche l'ultimo, la cassa torna a zero */
+  ctx.viaGiro(c, 0);
+  uguale('niente giri, niente salite', ctx.giriCrazy(c), []);
+  uguale('e niente soldi appesi', ctx.importoRiga('crazy'), 0);
+  uguale('ne da restituire', ctx.dueOf(c).avanzo, 0);
 });
 
 gruppo('La pastiglia del tempo non chiede soldi gia presi', () => {

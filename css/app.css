@@ -1628,6 +1628,9 @@ main {
   text-transform: uppercase; color: rgba(255, 255, 255, 0.45); white-space: nowrap;
   padding-left: 2px; }
 .e-crz-k.acceso { color: #C9B6FF; }
+/* il giro che si sta toccando e' gia' pagato: si dice li', accanto al
+   suo numero, non solo nel totale verde in fondo alla riga */
+.e-crz-k.saldo { color: #8DEBBB; }
 .e-cella .v {
   font-family: 'Fredoka', sans-serif;
   font-size: 19px;
@@ -3087,6 +3090,17 @@ html:not(.anima) .view.entra-dx { animation: none; }
 .bc-storico .st-g .st-q { font-size: 11.5px; font-weight: 700; color: rgba(255, 255, 255, 0.6); }
 .bc-storico .st-g .st-m { margin-left: auto; font-size: 11.5px; font-weight: 700;
   color: rgba(255, 255, 255, 0.45); }
+/* QUALI GIRI SONO PAGATI. La cassa conta le salite, non i giri: "tre
+   su cinque" non dice quale giro e' a posto, e col gruppo davanti che
+   chiede "quello di prima l'ho pagato?" non si sapeva rispondere. Le
+   salite pagate si riempiono in ordine, dal primo giro. */
+.bc-storico .st-g .st-p { margin-left: auto; font-size: 11px; font-weight: 700;
+  color: rgba(255, 255, 255, 0.42); white-space: nowrap; }
+.bc-storico .st-riga.saldato .st-g { box-shadow: inset 3px 0 0 #6ADCAF; }
+.bc-storico .st-riga.saldato .st-p { color: #8DEBBB; }
+.bc-storico .st-riga.meta .st-g { box-shadow: inset 3px 0 0 rgba(106, 220, 175, .45); }
+.bc-storico .st-riga.meta .st-p { color: rgba(141, 235, 187, .8); }
+.bc-storico .st-riga.on .st-p { color: rgba(0, 0, 0, 0.55); }
 /* il giro che si sta segnando: e' quello che il piu' e il meno toccano */
 .bc-storico .st-riga.on .st-g { background: #B69EFF; color: #1A1230; }
 .bc-storico .st-riga.on .st-n, .bc-storico .st-riga.on .st-q { color: rgba(0, 0, 0, 0.5); }

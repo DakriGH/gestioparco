@@ -467,6 +467,7 @@ function metteCrazy(c, n) {
   c.crazyJumping = somma;
   if (somma > 0) { c.crazyGiri = g; giroScelto = i; } else { delete c.crazyGiri; giroScelto = 99; }
   soloCrazy(c);
+  rimettiSoldiCrazy(c);
 }
 
 /* IL GIRO SCELTO: quello su cui lavorano il piu' e il meno della
@@ -480,9 +481,39 @@ function giroOra(c) {
   return g.length ? clamp(giroScelto, 0, g.length - 1) : 0;
 }
 
+/* QUANTE SALITE HA GIA' PAGATO UN GIRO.
+   La cassa conta le salite pagate, non i giri: "tre pagate su cinque"
+   e' un numero solo, e da quello non si capisce QUALI giri siano a
+   posto -- col gruppo davanti che chiede "quello di prima l'ho gia'
+   pagato?" e nessuno che sappia rispondere.
+   Si riempiono IN ORDINE, dal primo giro: e' come vanno le cose al
+   banco, e non richiede di segnarsi altri dati. */
+function pagateDelGiro(c, i) {
+  c = c || C();
+  const g = giriCrazy(c);
+  if (i < 0 || i >= g.length) return 0;
+  let restano = conConto(c, () => bcPag('crazy'));
+  for (let k = 0; k < i; k++) restano -= g[k];
+  return clamp(restano, 0, g[i]);
+}
+
 /* Mette o toglie una salita da UN giro preciso. Quando un giro resta
    senza nessuno sparisce, e con lui i suoi minuti regalati: un giro a
    cui non e' salito nessuno non e' mai esistito. */
+/* I SOLDI SEGUONO LE SALITE. Se le salite calano -- un giro
+   cancellato, uno tolto per sbaglio -- la riga non puo' restare
+   "pagata" per roba che non c'e' piu': quei soldi tornano indietro,
+   esattamente come fa il meno della card (bcSetQ).
+   Senza, cancellando un giro gia' pagato il conto diceva "da
+   restituire 4,00 euro" a chi non aveva incassato niente: un giro
+   inserito per sbaglio diventava un debito verso il cliente. */
+function rimettiSoldiCrazy(c) {
+  conConto(c, () => {
+    const q = clamp(num(c.crazyJumping, 0), 0, 1e6);
+    if (bcPagGrezzo('crazy') > q) segnaPagate('crazy', q);
+  });
+}
+
 function cambiaGiro(c, i, delta) {
   const g = giriCrazy(c);
   if (i < 0 || i >= g.length) return;
@@ -493,6 +524,7 @@ function cambiaGiro(c, i, delta) {
   c.crazyJumping = g.reduce((a, b) => a + b, 0);
   c.crazyGiri = g;
   soloCrazy(c);
+  rimettiSoldiCrazy(c);
 }
 
 /* SOLO CRAZY: dieci minuti in omaggio, e niente tempo comprato.
@@ -549,6 +581,7 @@ function viaGiro(c, i) {
   if (g.length) c.crazyGiri = g; else delete c.crazyGiri;
   giroScelto = Math.min(giroScelto, Math.max(0, g.length - 1));
   soloCrazy(c);
+  rimettiSoldiCrazy(c);
 }
 /* I MINUTI IN OMAGGIO: permanenza regalata che NON e' tempo comprato.
    Li prende chi entra solo per il Crazy -- il tempo di salire e
@@ -3737,15 +3770,25 @@ function storicoGiri() {
        riga con scritto tutto, e quando sono tanti si scorre -- dentro
        la sua colonna, senza far crescere la card di un pixel. */
     '<div class="st-lista">' +
-      g.map((n, i) => '<span class="st-riga' + (i === ora ? ' on' : '') + '">' +
+      g.map((n, i) => {
+        const pg = pagateDelGiro(c, i);
+        const saldo = n > 0 && pg >= n;
+        return '<span class="st-riga' + (i === ora ? ' on' : '') +
+          (saldo ? ' saldato' : (pg > 0 ? ' meta' : '')) + '">' +
         '<button class="st-g" data-sel="' + i + '"' +
         ' aria-label="giro ' + (i + 1) + ', ' + n + (n === 1 ? ' salito' : ' saliti') + '">' +
         '<span class="st-n">' + (i + 1) + 'º</span>' +
         '<b>' + n + '</b>' +
         '<span class="st-q">' + (n === 0 ? 'da contare' : n === 1 ? 'salito' : 'saliti') + '</span>' +
-        '<span class="st-m">' + (n > 0 ? '+' + extra + '′' : '') + '</span></button>' +
+        /* QUALI GIRI SONO PAGATI, riga per riga: la spunta se e' a
+           posto, "1/2" se e' pagato a meta', "da pagare" se no */
+        '<span class="st-p">' + (n === 0 ? ''
+          : saldo ? '✓ pagato'
+          : pg > 0 ? pg + '/' + n + ' pagate'
+          : 'da pagare') + '</span></button>' +
         '<button class="st-via" data-gvia="' + i + '" aria-label="cancella il giro ' + (i + 1) + '">' +
-        '✕</button></span>').join('') +
+        '✕</button></span>';
+      }).join('') +
     '</div>' +
     '<button class="st-piu" data-giro="crazy">+ giro</button>' +
   '</div></div>';
@@ -4881,10 +4924,17 @@ function syncCard(entry) {
     r.sCrazy.totN.title = crazy + ' salite in ' + pieni + (pieni === 1 ? ' giro' : ' giri');
   }
   if (r.sCrazy.nota) {
+    /* e QUESTO giro, e' gia' pagato? Il numero verde in fondo alla
+       riga dice il totale; qui serve sapere se quello che si sta
+       toccando e' a posto o no. */
+    const pgGiro = gl.aperto ? conConto(entry, () => pagateDelGiro(entry, gl.i)) : 0;
+    const saldoGiro = gl.aperto && gl.n > 0 && pgGiro >= gl.n;
     r.sCrazy.nota.textContent = !gl.aperto ? 'il piu\u2019 apre il primo giro'
       : gl.n === 0 ? (gl.i + 1) + '\u00ba giro \u00b7 conta chi sale'
-      : (gl.i + 1) + '\u00ba giro';
+      : (gl.i + 1) + '\u00ba giro \u00b7 ' + (saldoGiro ? '\u2713 pagato'
+        : pgGiro > 0 ? pgGiro + '/' + gl.n + ' pagate' : 'da pagare');
     r.sCrazy.nota.classList.toggle('acceso', gl.aperto && gl.n > 0);
+    r.sCrazy.nota.classList.toggle('saldo', saldoGiro);
   }
   if (r.sCrazy.via) r.sCrazy.via.disabled = !gl.aperto;
   /* le teste pagate: quelle dei bambini nella prima riga, quelle del
