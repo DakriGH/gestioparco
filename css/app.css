@@ -268,9 +268,22 @@ h2 .ic, .e-panel-k .ic { width: 1.25em; height: 1.25em; }
 .ab-tot .num { font-family: 'Fredoka', sans-serif; font-size: 23px; font-weight: 700; color: var(--sel); }
 .actionbar .btn { min-width: 150px; min-height: 44px; font-size: 15px; border-radius: 14px; }
 
+/* ══════════════════════════════════════════════════════════
+   IL POSTO DELLA BARRA DI SCORRIMENTO E' SEMPRE RISERVATO
+   Un vano che scorre si mangia dieci pixel di larghezza per la sua
+   barra; uno che non scorre no. Cambiando linguetta -- il bar scorre,
+   il parco e lo scontrino no -- tutto quello che c'e' dentro si
+   allargava e si stringeva di dieci pixel a ogni passaggio: le card
+   cambiavano misura sotto gli occhi e sembrava un difetto
+   dell'animazione. Con `scrollbar-gutter: stable` il posto e'
+   riservato sempre, che la barra ci sia o no, e la larghezza non
+   cambia mai. Dove le barre sono a sovrapposizione -- il tablet -- non
+   costa niente.
+   ══════════════════════════════════════════════════════════ */
 main {
   flex: 1;
   overflow-y: auto;
+  scrollbar-gutter: stable;
   -webkit-overflow-scrolling: touch;
   padding: 12px 14px;
   padding-bottom: calc(24px + var(--safe-b));
@@ -1724,7 +1737,7 @@ main {
 .m-head { display: flex; align-items: center; gap: 12px; padding: 18px 18px 12px; flex-shrink: 0; }
 .m-head h3 { margin: 0; font-size: 24px; font-weight: 600; flex: 1; }
 .m-grip { display: none; }
-.m-body { padding: 0 18px; overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
+.m-body { padding: 0 18px; overflow-y: auto; scrollbar-gutter: stable; flex: 1; -webkit-overflow-scrolling: touch; }
 .m-foot { padding: 16px 18px; border-top: 1px solid var(--line); display: flex; gap: 12px; flex-shrink: 0; }
 .m-foot .btn { flex: 1; }
 
@@ -2803,8 +2816,21 @@ html:not(.anima) .view.entra-dx { animation: none; }
    conto qui sotto si muova di un pixel.
    Lo scorrimento e' l'ultima spiaggia: si vede solo se il contenuto e'
    talmente tanto che rimpicciolirlo ancora lo renderebbe illeggibile. */
+/* DENTRO IL PANNELLO LA BARRA DI SCORRIMENTO NON SI VEDE.
+   Non e' vezzo: un vano che scorre si mangia dieci pixel di larghezza,
+   uno che non scorre no -- e il bar scorre mentre il parco e lo
+   scontrino no. A ogni cambio di linguetta tutto quello che c'e'
+   dentro si allargava e si stringeva di dieci pixel: le card
+   cambiavano misura sotto gli occhi, e sembrava un difetto
+   dell'animazione. Che ci sia dell'altro lo dice gia' la sfumatura sul
+   bordo (`dasu`/`dagiu`, `sfumaBancone`), che e' li' apposta: la barra
+   non aggiungeva niente e costava un disallineamento continuo. */
+.pan-conto .pc-bar, .pan-conto .pc-scala { scrollbar-width: none; }
+.pan-conto .pc-scala::-webkit-scrollbar,
+.pan-conto .pc-bar::-webkit-scrollbar { width: 0; height: 0; }
 .pan-conto .pc-scala { display: flex; flex-direction: column; gap: 8px;
-  flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+  flex: 1 1 auto; min-height: 0; overflow-y: auto;
+  overscroll-behavior: contain; }
 /* quando tocca scorrere, il bordo sfuma: cosi' l'ultimo riquadro non
    sembra tagliato per sbaglio ma "continua sotto" */
 /* La sfumatura sta dalla parte in cui c'e' davvero dell'altro: sotto
@@ -3074,7 +3100,7 @@ html:not(.anima) .view.entra-dx { animation: none; }
 .bc-storico .st-vuoto { display: block; padding: 12px 12px 0; font-size: 12px;
   line-height: 1.5; color: rgba(255, 255, 255, 0.4); }
 .bc-storico .st-vuoto b { color: rgba(255, 255, 255, 0.7); }
-.bc-storico .st-lista { min-height: 0; overflow-y: auto;
+.bc-storico .st-lista { min-height: 0; overflow-y: auto; scrollbar-gutter: stable;
   overscroll-behavior: contain; display: flex; flex-direction: column; gap: 3px;
   padding: 0 8px 4px; }
 /* la riga di un giro: si tocca per sceglierlo, e ha la sua ✕ per
@@ -3464,7 +3490,12 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
    macchia colorata, e nessuna emoji sa dirti di che colore e' il capo
    che stai per mettere. Queste sono le stesse sagome che finiscono
    sulla figura, nel colore e nella fantasia scelti. */
-.armadio .capi { display: grid; gap: 4px; }
+.armadio .capi { display: grid; gap: 4px;
+  /* LA FILA VALE QUANTO IL SUO RIQUADRO. Con la riga a misura del
+     contenuto, un riquadro stretto non stringeva niente: i pulsanti
+     restavano alti uguale e sbordavano sotto, addosso all'etichetta
+     della fila dopo. */
+  grid-auto-rows: minmax(0, 1fr); }
 .armadio .capo { border: none; border-radius: 11px; background: rgba(0,0,0,.24); min-width: 0;
   color: rgba(255,255,255,.9); padding: 2px 1px 3px; cursor: pointer; font: inherit;
   display: flex; flex-direction: column; align-items: center; gap: 1px;
@@ -3479,7 +3510,13 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
    sei pixel per fila. E' l'unico posto in cui ho toccato la misura dei
    capi, e solo perche' senza quei dodici pixel il guardaroba non
    entrava: il nome sotto resta lo stesso. */
-.armadio .capo svg { display: block; width: 100%; height: auto; max-width: 48px; }
+/* IL DISEGNO E' QUELLO CHE CEDE. Il nome sotto no: quello si legge o
+   non serve a niente. Rimpicciolendo, il disegno resta intero e in
+   mezzo -- e' l'`viewBox` che lo scala, non un ritaglio. */
+.armadio .capo svg { display: block; width: 100%; height: auto; max-width: 48px;
+  flex: 0 1 auto; min-height: 0; }
+.armadio .capo { min-height: 0; }
+.armadio .capo .nm { flex: 0 0 auto; }
 .armadio .capo .nm { font-size: 10.5px; font-weight: 700; line-height: 1; text-align: center;
   letter-spacing: -.01em; color: rgba(255,255,255,.96); }
 .armadio .capo.on .nm { color: #221944; }
@@ -3535,6 +3572,14 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
    pulsanti resta della stessa misura.
    In "+ Nuovo" l'Estendi non c'e' e non cambia niente.
    ══════════════════════════════════════════════════════════ */
+/* Sessantasei e' quanto ce n'e': provato a dargliene settantotto -- i
+   settantasette che vuole un nome su due righe -- la colonna sfondava
+   di ventidue pixel e tornava la barra di scorrimento, che qui dentro
+   e' proprio la cosa da non far succedere. Quindi il riquadro resta
+   stretto, e a stringersi e' il disegno: con la riga a misura del
+   riquadro (`grid-auto-rows`) il pulsante ci sta dentro, il disegno
+   rimpicciolisce restando intero e il nome sotto si legge per intero,
+   anche quello che va a capo. */
 .pan-conto.con-estendi .armadio .roba > .capi,
 .pan-conto.con-estendi .armadio .roba > .sottoblocco { min-height: 60px; max-height: 66px; }
 .pan-conto.con-estendi .armadio .roba > .fant { min-height: 24px; max-height: 25px; }

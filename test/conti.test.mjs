@@ -579,6 +579,51 @@ gruppo('Il ritocco da cinque minuti non e una vendita', () => {
   ok('e il prezzo e lo stesso', ctx.costOf(riletto).parkTotal, prezzo);
 });
 
+gruppo('Lo stesso tempo costa lo stesso, da qualunque tasto passi', () => {
+  /* IL PIU' E IL MENO STANNO IN DUE POSTI: nel pannello e nella
+     striscia della scheda in lista. La striscia scriveva i minuti a
+     mano, senza toccare le vendite gia' segnate: un'ora con dentro un
+     quarto d'ora venduto a parte, riportata a mezz'ora col meno,
+     restava con quel quarto d'ora addosso e costava lo scaglione dei
+     quindici PIU' quello dei quindici -- diciotto euro invece di
+     quattordici. Stesso ingresso, stessi trenta minuti sull'orologio,
+     due prezzi diversi a seconda di dove avevi toccato.
+     La regola e' una sola: da qualunque tasto tu passi, quello che si
+     paga dipende da quanto tempo hanno comprato. */
+  const a = conto({ children: 2, durationMinutes: 60, baseMinutes: 45 });
+  a.aggiunte = [15];
+  for (let i = 0; i < 6; i++) ctx.ritoccaTempo(a, -5);
+  ok('sei meno riportano a mezz ora', a.durationMinutes, 30);
+  ok('e la vendita di mezzo se n e andata con loro', ctx.lista(a.aggiunte).length, 0);
+  ok('quindi si paga la mezz ora, non due quarti d ora',
+     ctx.costOf(a).parkTotal, ctx.r2(ctx.priceFor(30) * 2));
+
+  /* e nell'altro verso: quello che si aggiunge si ripaga uguale */
+  const b = conto({ children: 1, durationMinutes: 30, baseMinutes: 30 });
+  const prima = ctx.costOf(b).unit;
+  for (let i = 0; i < 6; i++) ctx.ritoccaTempo(b, 5);
+  for (let i = 0; i < 6; i++) ctx.ritoccaTempo(b, -5);
+  ok('avanti e indietro si torna ai minuti di partenza', b.durationMinutes, 30);
+  ok('e al prezzo di partenza', ctx.costOf(b).unit, prima);
+
+  /* la garanzia in generale: mille giri di piu' e meno a caso, e alla
+     fine il prezzo deve essere SOLO quello dei minuti che restano */
+  let seme = 20260810;
+  const caso = (n) => { seme = (seme * 1103515245 + 12345) % 2147483648; return seme % n; };
+  let storti = [];
+  for (let giro = 0; giro < 1000 && !storti.length; giro++) {
+    const c = conto({ children: 1, durationMinutes: [15, 30, 45, 60, 90][caso(5)] });
+    c.baseMinutes = c.durationMinutes;
+    c.aggiunte = caso(3) === 0 ? [] : caso(2) === 0 ? [15] : [30, 15];
+    for (let k = 0; k < 8; k++) ctx.ritoccaTempo(c, caso(2) ? 5 : -5);
+    const venduti = ctx.lista(c.aggiunte).reduce((x, y) => x + y, 0);
+    if (venduti > c.durationMinutes) storti.push('venduto piu del comprato: ' + venduti + ' su ' + c.durationMinutes);
+    if (!(ctx.costOf(c).unit >= 0)) storti.push('prezzo storto: ' + ctx.costOf(c).unit);
+    if (c.durationMinutes < 0) storti.push('minuti sotto zero');
+  }
+  ok('mille ritocchi a caso e nessun conto storto', storti.slice(0, 3), []);
+});
+
 gruppo('Solo Crazy: dieci minuti in omaggio, e non si pagano mai', () => {
   /* Chi entra solo per saltare non compra tempo di parco: gli si da'
      la permanenza che serve -- salire, saltare, uscire -- e non si

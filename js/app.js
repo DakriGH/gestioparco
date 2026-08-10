@@ -3964,6 +3964,14 @@ function entryCard(entry) {
           cambiaGiro(entry, giroOra(entry), d);
         });
       } else if (voce) conConto(entry, () => bcSetQ(voce, clamp(num(entry[key], 0) + d, 0, 99999)));
+      /* IL TEMPO PASSA DA UN POSTO SOLO. Scritto qui a mano, il meno
+         portava indietro i minuti ma lasciava in piedi le mezz'ore
+         gia' vendute: trenta minuti sull'orologio costavano diciotto
+         euro se il meno lo avevi toccato qui, quattordici se lo avevi
+         toccato nel pannello. `ritoccaTempo` e' l'unico che sa che un
+         ritocco entra nell'ultima vendita invece di aggiungersene una
+         nuova -- ed e' gia' quello che usa il pannello. */
+      else if (key === 'durationMinutes') conConto(entry, () => ritoccaTempo(entry, d));
       else entry[key] = clamp(num(entry[key], 0) + d, 0, 99999);
       saveEntries();
       syncCard(entry);
@@ -5640,7 +5648,10 @@ function syncCard(entry) {
     crazy > 0 && conConto(entry, () => bcPag('crazy')) >= crazy);
   r.sKids.box.classList.toggle('pagata',
     kids > 0 && conConto(entry, () => bcPag('bimbi')) >= kids);
-  r.sTime.val.textContent = entry.payLater ? '\u2014' : entry.durationMinutes + '\u2032';
+  /* gli stessi minuti che stanno nella fascia Tempo, scritti allo
+     stesso modo: un'ora e mezza e' "1h30" in tutte e due, non "1h30"
+     di la' e "90" di qua */
+  r.sTime.val.textContent = entry.payLater ? '\u2014' : fmtMin(entry.durationMinutes);
   r.sKids.minus.disabled = kids <= 0;
   r.sTime.minus.disabled = num(entry.durationMinutes, 0) <= 5;
 

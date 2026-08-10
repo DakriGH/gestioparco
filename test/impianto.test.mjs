@@ -566,6 +566,37 @@ gruppo('Il conto sopra o sotto, a scelta');
     /\.pan-conto\.conto-su \.bc-fondo \{[^}]*top:\s*0/.test(CSS));
 }
 
+gruppo('I capi restano dentro il loro riquadro');
+{
+  /* Col pannello aperto su chi e' gia' dentro c'e' anche l'Estendi, e
+     le file dei capi vengono strette a sessantasei pixel. I pulsanti
+     pero' ne volevano settantasette -- un nome lungo va a capo su due
+     righe -- e gli undici di troppo finivano SOTTO il riquadro,
+     addosso all'etichetta della fila dopo: «Maglietta» sbordava sulla
+     scritta «Fantasia».
+     Le due regole che lo impediscono: la riga della griglia vale
+     quanto il riquadro, e dentro il pulsante a cedere e' il disegno --
+     che rimpicciolisce restando intero -- non il nome. */
+  prova('la fila dei capi vale quanto il suo riquadro',
+    /\.armadio \.capi \{[^}]*grid-auto-rows: minmax\(0, 1fr\)/.test(CSS));
+  prova('il disegno puo’ stringersi',
+    /\.armadio \.capo svg \{[^}]*flex: 0 1 auto;\s*min-height: 0/.test(CSS));
+  prova('e il nome sotto no', /\.armadio \.capo \.nm \{ flex: 0 0 auto; \}/.test(CSS));
+}
+
+gruppo('Il tempo si muove da un posto solo');
+{
+  /* Due tasti che fanno la stessa cosa in due modi diversi sono un
+     prezzo che cambia a seconda di dove hai toccato. Il piu' e il meno
+     della striscia devono passare da `ritoccaTempo` come quelli del
+     pannello: e' l'unico che sa che un ritocco entra nell'ultima
+     vendita invece di lasciarla li' intera. */
+  prova('la striscia non scrive i minuti a mano',
+    /key === 'durationMinutes'\) conConto\(entry, \(\) => ritoccaTempo\(entry, d\)\)/.test(APP));
+  prova('e i minuti si leggono come nel pannello',
+    /r\.sTime\.val\.textContent = entry\.payLater \? '\\u2014' : fmtMin\(/.test(APP));
+}
+
 gruppo('Il bancone scorre, ma le card non si schiacciano');
 {
   /* Una griglia con un'altezza decisa da fuori ACCORCIA le sue righe
