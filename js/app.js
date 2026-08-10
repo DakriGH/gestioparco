@@ -505,6 +505,21 @@ function pagateDelGiro(c, i) {
   return clamp(restano, 0, g[i]);
 }
 
+/* PAGARE UN GIRO. Le salite pagate si riempiono in ordine, dal primo
+   giro: pagare il terzo vuol dire arrivare col conto fino alla fine del
+   terzo. Toccando un giro gia' pagato si torna indietro a prima di
+   quello -- che e' come si disfa uno sbaglio al banco. */
+function pagaFinoAlGiro(c, i) {
+  const g = giriCrazy(c);
+  if (i < 0 || i >= g.length) return;
+  let prima = 0, fino = 0;
+  g.forEach((n, k) => { if (k < i) prima += n; if (k <= i) fino += n; });
+  conConto(c, () => {
+    const ora = bcPag('crazy');
+    segnaPagate('crazy', ora >= fino ? prima : fino);
+  });
+}
+
 /* Mette o toglie una salita da UN giro preciso. Quando un giro resta
    senza nessuno sparisce, e con lui i suoi minuti regalati: un giro a
    cui non e' salito nessuno non e' mai esistito. */
@@ -963,6 +978,13 @@ function costruisciPannello() {
     </div>
 
     <div class="bc-griglia pc-bar hidden"></div>
+
+    <!-- LO SCONTRINO: quello che il gruppo ha preso, tutto in fila, e
+         accanto a ogni riga cosa e' gia' pagato. I due banconi
+         servono a SEGNARE, questo a INCASSARE: sono due mestieri
+         diversi, e finche' stavano insieme il secondo si faceva
+         scorrendo avanti e indietro fra le card. -->
+    <div class="pc-scontrino hidden"></div>
     </div>
     <div class="pc-fondo"></div>
   `;
@@ -1044,6 +1066,41 @@ function costruisciPannello() {
          fatto se l'e' presa, quindi qui si spegne. */
       tocchi.nato = null;
       return;
+    }
+
+    /* --- lo scontrino --- */
+    if (d.scpiu !== undefined || d.scmeno !== undefined || d.sctutta !== undefined) {
+      const id = d.scpiu || d.scmeno || d.sctutta;
+      tocchi.id = id;
+      /* IL TEMPO DI PARCO PASSA DA pagaTempo, non da qui: e' li' che
+         vive la regola del tempo aperto, e due strade sulla stessa
+         cassa sono la radice dei conti storti. */
+      const quante = (n) => { if (id === 'bimbi') pagaTempo(n - bcPag(id)); else segnaPagate(id, n); };
+      if (d.scpiu !== undefined) quante(bcPag(id) + 1);
+      else if (d.scmeno !== undefined) quante(bcPag(id) - 1);
+      else quante(bcPag(id) >= bcQ(id) ? 0 : bcQ(id));
+      pcSalva(); aggiornaPannello(); return;
+    }
+    if (d.scgiro !== undefined) {
+      pagaFinoAlGiro(c, parseInt(d.scgiro, 10));
+      pcSalva(); aggiornaPannello(); return;
+    }
+    if (d.screparto !== undefined) {
+      const k = scontrinoConti(c, d.screparto);
+      const pieno = !(k.resta <= 0.005 && k.vale > 0.005);
+      if (d.screparto === 'parco') { bcSegna('bimbi', pieno); bcSegna('crazy', pieno); }
+      else bcSegna('bar', pieno);
+      /* gli spiccioli che l'arrotondamento lascia scoperti: il conto si
+         chiude sull'importo, che e' quello che il cliente mette in mano */
+      if (pieno) {
+        const d2 = dueOf(c);
+        if (d.screparto === 'parco' && d2.parkDue > 0) muoviSoldi('bimbi', d2.parkDue);
+        if (d.screparto === 'bar' && d2.barDue > 0) {
+          const primo = lista(c.barItems)[0];
+          if (primo) muoviSoldi(primo.id, d2.barDue);
+        }
+      }
+      pcSalva(); aggiornaPannello(); return;
     }
 
     /* --- la navigazione --- */
@@ -1672,11 +1729,15 @@ function aggiornaPannello(opz) {
       '<button data-cat="' + esc(x) + '"' + (PAN.cat === x ? ' class="on"' : '') + '>' +
       iconaCat(x) + esc(x) + '</button>').join('');
   }
+  const inScontrino = PAN.cat === 'Scontrino';
   const inParco = PAN.cat === 'Parco';
   p.querySelector('.pc-parco').classList.toggle('hidden', !inParco);
-  p.querySelector('.pc-bar').classList.toggle('hidden', inParco);
+  p.querySelector('.pc-bar').classList.toggle('hidden', inParco || inScontrino);
+  p.querySelector('.pc-scontrino').classList.toggle('hidden', !inScontrino);
 
-  if (inParco) {
+  if (inScontrino) {
+    disegnaScontrino(p, c);
+  } else if (inParco) {
     /* le due card sopra l'orario: bambini e Crazy, sempre aperte */
     const due = p.querySelector('.pc-due');
     const firmaDue = ['bimbi', 'crazy'].map(k =>
@@ -1728,7 +1789,7 @@ function aggiornaPannello(opz) {
     dur.classList.toggle('solo', avviso);
     c.people = lista(c.people);
     syncPeople(p.querySelector('.pc-people'), c.people, () => { pcSalva(); });
-  } else {
+  } else if (!inScontrino) {
     pcGriglia();
   }
 
@@ -1739,7 +1800,8 @@ function aggiornaPannello(opz) {
   adattaTutto();
 
   if (opz.entra && anima()) {
-    const q = inParco ? p.querySelector('.pc-parco') : p.querySelector('.pc-bar');
+    const q = inScontrino ? p.querySelector('.pc-scontrino')
+      : inParco ? p.querySelector('.pc-parco') : p.querySelector('.pc-bar');
     q.classList.remove('entra'); void q.offsetWidth; q.classList.add('entra');
     setTimeout(() => q.classList.remove('entra'), 340);
   }
@@ -2846,6 +2908,7 @@ function iconaCat(cat) {
   if (cat === 'Parco') return typeof ICONE !== 'undefined' && ICONE.bimbi ? ICONE.bimbi() : '';
   /* il bar e' uno solo adesso: il bicchiere basta e avanza */
   if (cat === 'Bar') return '<span class="em">🥤</span>';
+  if (cat === 'Scontrino') return '<span class="em">🧾</span>';
   const v = lista(settings.barMenu).find(it => ((it.cat || 'Altro').trim() || 'Altro') === cat);
   return v ? iconaBar(v.name, v.em) : '';
 }
@@ -3930,7 +3993,12 @@ function pagaTutto() {
    non sono posti diversi: sono scaffali dello stesso bancone.
    Adesso il bancone e' uno solo e le categorie sono titoletti dentro,
    in una lista che scorre. */
-function bcCategorie() { return ['Parco', 'Bar']; }
+/* TRE LINGUETTE. Parco e Bar sono i due banconi dove si SEGNA quello
+   che il gruppo prende; lo Scontrino e' dove si guarda quello che ha
+   preso e si dice cosa ha pagato. Sono due mestieri diversi, e finche'
+   stavano insieme il secondo si faceva scorrendo avanti e indietro
+   fra le card, contando le pastiglie verdi a mente. */
+function bcCategorie() { return ['Parco', 'Bar', 'Scontrino']; }
 
 /* le categorie vere, nell'ordine in cui compaiono nel listino: sono i
    divisori dentro il bar, non delle destinazioni */
@@ -3944,6 +4012,121 @@ function bcScaffali() {
 }
 function bcVociDi(cat) {
   return lista(settings.barMenu).filter(it => ((it.cat || 'Altro').trim() || 'Altro') === cat);
+}
+
+/* ══════════════════════════════════════════════════════════
+   LO SCONTRINO
+   Quello che il gruppo ha preso, tutto in una lista, e accanto a ogni
+   riga cosa e' gia' pagato. Nei due banconi la stessa cosa si legge
+   scorrendo le card e contando le pastiglie verdi a mente -- e col
+   gruppo davanti che paga «solo le bibite» o «solo il mio bambino»
+   quel conto lo si sbaglia.
+   Qui si segna una RIGA (le due frecce, o la spunta per tutta), un
+   GIRO di Crazy, o un REPARTO intero. Il tempo di parco non e' una
+   riga a parte: e' quello che comprano i bambini, ed e' scritto sulla
+   loro riga -- quanti minuti e fin quando sono coperti.
+   ══════════════════════════════════════════════════════════ */
+function scontrinoVoci(c) {
+  const out = [];
+  if (bcQ('bimbi') > 0) out.push({ id: 'bimbi', dove: 'parco' });
+  if (bcQ('crazy') > 0) out.push({ id: 'crazy', dove: 'parco' });
+  lista(c.barItems).forEach(bi => {
+    if (clamp(bi.qty, 0, 9999) > 0) out.push({ id: bi.id, dove: 'bar' });
+  });
+  return out;
+}
+
+/* i soldi di un reparto: quanto vale, quanto e' entrato */
+function scontrinoConti(c, dove) {
+  const d = dueOf(c);
+  return dove === 'parco'
+    ? { vale: d.park, preso: Math.min(d.paidPark, d.park), resta: d.parkDue }
+    : { vale: d.bar, preso: Math.min(d.paidBar, d.bar), resta: d.barDue };
+}
+
+function scontrinoRiga(c, id) {
+  const v = bcVoce(id) || { id: id, name: id, em: '\u2022' };
+  const q = bcQ(id), pg = bcPag(id);
+  const stato = q > 0 && pg >= q ? ' saldata' : (pg > 0 ? ' meta' : '');
+  let sotto = q + ' \u00d7 ' + eur(prezzoUnita(id));
+  if (id === 'bimbi') {
+    /* il tempo sta QUI: e' quello che comprano i bambini, e la domanda
+       vera e' «fin quando sono a posto», non «quante unita'» */
+    sotto += ' \u00b7 ' + fmtMin(tempoTotale(c)) +
+      (c.payLater ? ' \u00b7 tempo aperto' : ' \u00b7 esce alle ' + fmtTime(endTimeOf(c)));
+    const min = minutiPagati(c);
+    if (!c.payLater && pg > 0 && pg < q && min > 0) {
+      sotto += ' \u00b7 pagato fino alle ' + fmtTime(c.startTime + min * 60000);
+    }
+  }
+  if (id === 'crazy') {
+    const giri = turniCrazy(c);
+    sotto += ' \u00b7 ' + giri + (giri === 1 ? ' giro' : ' giri') +
+      (minutiCrazy(c) > 0 ? ' \u00b7 +' + minutiCrazy(c) + '\u2032' : '');
+  }
+  /* A TEMPO APERTO NON SI INCASSA IN ANTICIPO: senza un'ora di uscita
+     non c'e' una durata, quindi non c'e' un prezzo da coprire. Il
+     divieto vive in pagaTempo(); qui si spegne il tasto, se no il
+     tasto direbbe una cosa che poi non succede. Il reso resta. */
+  const avanti = id === 'bimbi' && !!c.payLater;
+  let dentro = '<div class="sc-riga' + stato + '" data-scid="' + esc(id) + '">' +
+    '<span class="sc-em">' + iconaBar(v.name, v.em) + '</span>' +
+    '<span class="sc-txt"><b>' + esc(v.name) + '</b><span>' + sotto + '</span></span>' +
+    '<span class="sc-eu">' + eur(totaleRiga(id)) + '</span>' +
+    '<span class="sc-pag">' +
+      '<button data-scmeno="' + esc(id) + '"' + (pg <= 0 ? ' disabled' : '') + '>\u2212</button>' +
+      '<b>' + pg + '/' + q + '</b>' +
+      '<button data-scpiu="' + esc(id) + '"' + (pg >= q || avanti ? ' disabled' : '') + '>+</button>' +
+      '<button class="sc-tutta" data-sctutta="' + esc(id) + '"' + (avanti ? ' disabled' : '') +
+      ' title="tutta la riga">' + (pg >= q ? '\u21a9\ufe0e' : '\u2713') + '</button></span></div>';
+  /* I GIRI DEL CRAZY, uno per uno: al banco si paga «quello di prima»,
+     non «tre salite su cinque». */
+  if (id === 'crazy') {
+    const g = giriCrazy(c);
+    if (g.length) {
+      dentro += '<div class="sc-giri">' + g.map((n, i) => {
+        const pagate = pagateDelGiro(c, i);
+        const saldo = n > 0 && pagate >= n;
+        return '<button class="sc-giro' + (saldo ? ' on' : (pagate > 0 ? ' meta' : '')) +
+          '" data-scgiro="' + i + '">' + (i + 1) + '\u00ba \u00b7 ' + n +
+          (n === 1 ? ' salita' : ' salite') + ' \u00b7 ' +
+          (saldo ? '\u2713 pagato' : pagate > 0 ? pagate + '/' + n : 'da pagare') + '</button>';
+      }).join('') + '</div>';
+    }
+  }
+  return dentro;
+}
+
+function disegnaScontrino(p, c) {
+  const box = p.querySelector('.pc-scontrino');
+  if (!box) return;
+  const voci = scontrinoVoci(c);
+  if (!voci.length) {
+    box.innerHTML = '<div class="sc-vuoto"><span class="em">\ud83e\uddfe</span>' +
+      'Niente sul conto.<br>Segna quello che prendono da <b>Parco</b> e <b>Bar</b>: ' +
+      'qui torna tutto in fila.</div>';
+    return;
+  }
+  const reparto = (dove, nome) => {
+    const righe = voci.filter(v => v.dove === dove);
+    if (!righe.length) return '';
+    const k = scontrinoConti(c, dove);
+    const tutto = k.resta <= 0.005 && k.vale > 0.005;
+    return '<div class="sc-testa"><span class="sc-k">' + nome + '</span>' +
+      '<span class="sc-tot">' + eur(k.vale) + '</span>' +
+      '<button class="sc-rep' + (tutto ? ' on' : '') + '" data-screparto="' + dove + '">' +
+      (tutto ? '\u21a9\ufe0e togli le spunte' : '\u2713 paga tutto') + '</button></div>' +
+      righe.map(v => scontrinoRiga(c, v.id)).join('');
+  };
+  const d = dueOf(c);
+  box.innerHTML =
+    '<div class="sc-somma">' +
+      '<span><i>conto</i><b>' + eur(r2(d.park + d.bar)) + '</b></span>' +
+      '<span class="preso"><i>gi\u00e0 presi</i><b>' + eur(r2(d.paidPark + d.paidBar)) + '</b></span>' +
+      '<span class="' + (d.total > 0.005 ? 'resta' : 'ok') + '"><i>' +
+        (d.total > 0.005 ? 'restano' : 'saldato') + '</i><b>' + eur(d.total) + '</b></span>' +
+    '</div>' +
+    reparto('parco', 'Parco') + reparto('bar', 'Bar');
 }
 
 /* La card di una voce. Bambini e Crazy Jumping tengono le due fasce
@@ -4239,6 +4422,11 @@ function adattaPannello(p, limiteSotto, cimaVoluta, largaVoluta) {
   const parco = p.querySelector('.pc-parco');
   const bar = p.querySelector('.pc-bar');
   const cambio = parco && bar && parco.classList.contains('hidden');
+  /* COM'ERA IL BAR PRIMA DELLA MISURA. Rimetterlo a vista d'ufficio
+     valeva quando i vani erano due: nascosto il Parco, l'altro era per
+     forza il Bar. Con lo Scontrino in mezzo quel "rimetti" accendeva il
+     bancone SOPRA lo scontrino -- due schermate una sull'altra. */
+  const barEra = bar && bar.classList.contains('hidden');
   if (cambio) { bar.classList.add('hidden'); parco.classList.remove('hidden'); }
 
   /* il riquadro delle persone tiene il posto del guardaroba anche da
@@ -4259,7 +4447,7 @@ function adattaPannello(p, limiteSotto, cimaVoluta, largaVoluta) {
   sfuma(su);
 
 
-  if (cambio) { parco.classList.add('hidden'); bar.classList.remove('hidden'); }
+  if (cambio) { parco.classList.add('hidden'); bar.classList.toggle('hidden', barEra); }
   return 1;
 }
 

@@ -3651,6 +3651,78 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
 .pan-conto.veste .pc-people { display: flex; flex-direction: column; }
 .pan-conto.veste .armadio { flex: 1 0 auto; grid-template-rows: minmax(0, 1fr) auto; }
 
+/* ══════════════════════════════════════════════════════════
+   LO SCONTRINO
+   Una lista, non una griglia di card: qui non si sceglie niente, si
+   legge quello che c'e' sul conto e si dice cosa e' pagato. Le righe
+   sono basse e fitte come su uno scontrino vero, e la riga saldata si
+   spegne -- e' roba fatta, e l'occhio deve cadere su quello che manca.
+   ══════════════════════════════════════════════════════════ */
+.pc-scontrino { display: flex; flex-direction: column; gap: 4px; min-height: 0; }
+.pc-scontrino .sc-somma { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+  background: rgba(0, 0, 0, .28); border-radius: 14px; padding: 8px 10px; }
+.pc-scontrino .sc-somma span { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.pc-scontrino .sc-somma i { font-style: normal; font-size: 10px; font-weight: 800;
+  letter-spacing: .07em; text-transform: uppercase; color: var(--txt-3); }
+.pc-scontrino .sc-somma b { font-family: 'Fredoka', sans-serif; font-size: 20px; font-weight: 700; }
+.pc-scontrino .sc-somma .preso b { color: #6ADCAF; }
+.pc-scontrino .sc-somma .resta b { color: #F09A94; }
+.pc-scontrino .sc-somma .ok b { color: #6ADCAF; }
+
+/* il titolo del reparto, col suo tasto: «paga tutto il bar» e' la cosa
+   che si chiede piu' spesso dopo «paga tutto» */
+.pc-scontrino .sc-testa { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.pc-scontrino .sc-k { font-size: 10.5px; font-weight: 800; letter-spacing: .08em;
+  text-transform: uppercase; color: rgba(255, 255, 255, .62); }
+.pc-scontrino .sc-tot { font-family: 'Fredoka', sans-serif; font-size: 14px; font-weight: 700;
+  color: rgba(255, 255, 255, .5); }
+.pc-scontrino .sc-rep { margin-left: auto; border: none; border-radius: 20px;
+  background: rgba(106, 220, 175, .16); color: #8DEBBB; font: inherit; font-size: 12px;
+  font-weight: 700; padding: 6px 12px; min-height: 34px; cursor: pointer; }
+.pc-scontrino .sc-rep.on { background: rgba(255, 255, 255, .1); color: rgba(255, 255, 255, .7); }
+.pc-scontrino .sc-rep:active { transform: scale(.96); }
+
+.pc-scontrino .sc-riga { display: flex; align-items: center; gap: 9px; padding: 5px 9px;
+  background: rgba(255, 255, 255, .05); border-radius: 12px; }
+.pc-scontrino .sc-riga.saldata { background: rgba(106, 220, 175, .12); }
+.pc-scontrino .sc-riga.saldata .sc-txt b { color: #8DEBBB; }
+.pc-scontrino .sc-riga.meta { box-shadow: inset 3px 0 0 rgba(106, 220, 175, .5); }
+.pc-scontrino .sc-em { flex: 0 0 auto; width: 30px; height: 30px; display: grid; place-items: center; }
+.pc-scontrino .sc-em svg { width: 30px; height: 30px; display: block; }
+.pc-scontrino .sc-em .bc-em { font-size: 20px; }
+.pc-scontrino .sc-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.pc-scontrino .sc-txt b { font-size: 14px; font-weight: 700; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; }
+.pc-scontrino .sc-txt span { font-size: 11px; color: var(--txt-3); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; }
+.pc-scontrino .sc-eu { font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 700;
+  flex: 0 0 auto; }
+/* le stesse due frecce delle card, cosi' il gesto e' quello di sempre */
+.pc-scontrino .sc-pag { flex: 0 0 auto; display: flex; align-items: center; gap: 3px;
+  background: rgba(0, 0, 0, .3); border-radius: 11px; padding: 3px; }
+.pc-scontrino .sc-pag button { min-width: 36px; height: 34px; border: none; border-radius: 9px;
+  background: rgba(106, 220, 175, .18); color: #8DEBBB; font-family: 'Fredoka', sans-serif;
+  font-size: 19px; font-weight: 700; cursor: pointer; }
+.pc-scontrino .sc-pag button:disabled { opacity: .3; cursor: default; }
+.pc-scontrino .sc-pag button:active:not(:disabled) { background: rgba(106, 220, 175, .34); }
+.pc-scontrino .sc-pag b { font-family: 'Fredoka', sans-serif; font-size: 14px; font-weight: 700;
+  min-width: 34px; text-align: center; }
+.pc-scontrino .sc-pag .sc-tutta { font-size: 15px; }
+
+/* i giri del Crazy: al banco si paga «quello di prima», non «tre
+   salite su cinque» */
+.pc-scontrino .sc-giri { display: flex; flex-wrap: wrap; gap: 4px; padding: 0 9px 2px 48px; }
+.pc-scontrino .sc-giro { border: none; border-radius: 9px; background: rgba(255, 255, 255, .07);
+  color: rgba(255, 255, 255, .78); font: inherit; font-size: 11.5px; font-weight: 700;
+  padding: 6px 10px; min-height: 32px; cursor: pointer; }
+.pc-scontrino .sc-giro.on { background: rgba(106, 220, 175, .18); color: #8DEBBB; }
+.pc-scontrino .sc-giro.meta { box-shadow: inset 0 0 0 1.5px rgba(106, 220, 175, .4); }
+.pc-scontrino .sc-giro:active { transform: scale(.96); }
+
+.pc-scontrino .sc-vuoto { text-align: center; color: var(--txt-3); font-size: 13px;
+  line-height: 1.5; padding: 22px 16px; background: rgba(0, 0, 0, .22); border-radius: 16px; }
+.pc-scontrino .sc-vuoto .em { display: block; font-size: 30px; margin-bottom: 6px; }
+
 /* LA TAVOLOZZA SI APRE SOPRA LA FILA, non sotto.
    La fila degli accessori e' la penultima del riquadro, e il vano che
    la contiene ha i bordi tagliati: aprendola sotto finiva fuori dal

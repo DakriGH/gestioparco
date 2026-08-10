@@ -122,6 +122,77 @@ gruppo('Un giro aperto e vuoto si vede, e non regala niente', () => {
     60 + ctx.settings.crazyExtraMinutes);
 });
 
+gruppo('Lo scontrino: tutto quello che hanno preso, in una lista sola', () => {
+  /* I due banconi servono a SEGNARE quello che il gruppo prende; lo
+     scontrino a INCASSARE. Finche' erano la stessa schermata, «pago
+     solo le bibite» voleva dire scorrere le card e contare le
+     pastiglie verdi a mente. */
+  const c = conto({ children: 3, crazyJumping: 0, durationMinutes: 60, baseMinutes: 60,
+    barItems: [{ id: 'b3', name: 'Coca Cola', price: 2.5, qty: 2 }] });
+  ctx.bcSetQ('crazy', 3);
+  ctx.giroNuovo(c);
+  ctx.cambiaGiro(c, 1, 2);                       /* secondo giro: due salite */
+
+  uguale('la linguetta c e', ctx.bcCategorie(), ['Parco', 'Bar', 'Scontrino']);
+  uguale('le righe sono quelle prese davvero',
+    ctx.scontrinoVoci(c).map(v => v.id + ':' + v.dove),
+    ['bimbi:parco', 'crazy:parco', 'b3:bar']);
+
+  /* ogni riga dice il suo prezzo e quante ne sono pagate */
+  const riga = (id) => ctx.scontrinoRiga(c, id);
+  prova('la riga dei bambini dice il totale', riga('bimbi').indexOf(ctx.eur(ctx.totaleRiga('bimbi'))) > 0,
+    riga('bimbi').slice(0, 160));
+  prova('e quante ne sono pagate', riga('bimbi').indexOf('<b>0/3</b>') > 0);
+  prova('il tempo sta sulla riga dei bambini, non in una riga sua',
+    /1h/.test(riga('bimbi')) && /esce alle/.test(riga('bimbi')));
+  prova('la riga del Crazy porta i suoi giri',
+    (riga('crazy').match(/data-scgiro="/g) || []).length === 2);
+  prova('e ogni giro dice se e pagato', /da pagare/.test(riga('crazy')));
+
+  /* i conti dei due reparti sono quelli di dueOf, non un altro conto */
+  const d = ctx.dueOf(c);
+  uguale('il parco vale quanto dice il conto', ctx.scontrinoConti(c, 'parco').vale, d.park);
+  uguale('e il bar pure', ctx.scontrinoConti(c, 'bar').vale, d.bar);
+
+  /* PAGARE UN GIRO: le salite si riempiono in ordine, quindi pagare il
+     secondo vuol dire arrivare col conto fino alla fine del secondo. */
+  ctx.pagaFinoAlGiro(c, 1);
+  uguale('pagato fino al secondo giro, sono tutte e cinque', ctx.bcPag('crazy'), 5);
+  uguale('e i soldi sono quelli delle cinque salite',
+    ctx.importoRiga('crazy'), ctx.r2(5 * ctx.settings.crazyJumpingPrice));
+  ctx.pagaFinoAlGiro(c, 1);
+  uguale('ritoccandolo si torna a prima di quel giro', ctx.bcPag('crazy'), 3);
+  ctx.pagaFinoAlGiro(c, 0);
+  uguale('e il primo si disfa da solo', ctx.bcPag('crazy'), 0);
+  uguale('coi soldi che tornano indietro', ctx.importoRiga('crazy'), 0);
+
+  /* un reparto intero */
+  ctx.bcSegna('bimbi', true); ctx.bcSegna('crazy', true);
+  uguale('pagato il parco, non resta niente di parco', ctx.dueOf(c).parkDue, 0);
+  prova('ma il bar resta da pagare', ctx.dueOf(c).barDue > 0);
+  ctx.bcSegna('bar', true);
+  uguale('e pagato anche il bar il conto e chiuso', ctx.dueOf(c).total, 0);
+  uguale('senza avanzi', ctx.dueOf(c).avanzo, 0);
+
+  /* A TEMPO APERTO IL TEMPO SI CONTA ALL’USCITA: senza un’ora di
+     fine non c’e’ una durata, quindi non c’e’ un prezzo da coprire in
+     anticipo. Il tasto e’ spento, e il divieto non sta nel disegno. */
+  const aperto = conto({ children: 2, crazyJumping: 0, durationMinutes: 30, baseMinutes: 30,
+    payLater: true, barItems: [] });
+  prova('a tempo aperto il piu e spento',
+    /data-scpiu="bimbi" disabled/.test(ctx.scontrinoRiga(aperto, 'bimbi')),
+    ctx.scontrinoRiga(aperto, 'bimbi').slice(0, 200));
+  ctx.pagaTempo(1);
+  uguale('e nemmeno forzandolo si incassa in anticipo', ctx.bcPag('bimbi'), 0);
+  ctx.PAN.conto = c; ctx.PAN.ingresso = c;
+
+  /* e si puo' disfare tutto */
+  ctx.bcSegna('bimbi', false); ctx.bcSegna('crazy', false); ctx.bcSegna('bar', false);
+  uguale('tolte le spunte, i soldi sono tornati indietro',
+    ctx.r2(ctx.dueOf(c).paidPark + ctx.dueOf(c).paidBar), 0);
+  uguale('e il conto e quello di partenza', ctx.dueOf(c).total, ctx.r2(d.park + d.bar));
+});
+
 gruppo('Ogni amaro ha il suo disegno, e non sono tutti uguali', () => {
   /* IL DISEGNO SEGUE IL NOME. Se una voce non ha il suo, resta
      l'emoji -- e otto bicchierini identici in fila non servono a
