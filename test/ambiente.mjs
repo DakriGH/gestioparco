@@ -95,6 +95,9 @@ export function caricaApp() {
        let non si affacciano da sole sul contesto (niente apici
        inversi qui dentro: siamo dentro un template) */
     get giroScelto() { return giroScelto; }, set giroScelto(v) { giroScelto = v; },
+    /* la riga aperta nello scontrino: a riposo lo scontrino e' una
+       lista, e i comandi di una riga escono solo quando la si tocca */
+    get scAperta() { return scAperta; }, set scAperta(v) { scAperta = v; },
     /* il contesto stesso: serve ai test per mettere da parte una
        funzione che tocca lo schermo (switchTab) e rimetterla dopo.
        Sostituirla sull'oggetto esportato non basta: l'app chiama la

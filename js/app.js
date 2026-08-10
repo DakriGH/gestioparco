@@ -1080,6 +1080,14 @@ function costruisciPannello() {
     }
 
     /* --- lo scontrino --- */
+    /* UNA RIGA SI APRE, e con lei si chiude quella di prima: a riposo
+       lo scontrino e' una lista da leggere, i comandi escono dove
+       servono. E' lo stesso gesto delle card del bar. */
+    if (d.scapri !== undefined) {
+      scAperta = scAperta === d.scapri ? null : d.scapri;
+      aggiornaPannello();
+      return;
+    }
     if (d.scpq !== undefined || d.scmq !== undefined) {
       const id = d.scpq || d.scmq;
       const su = d.scpq !== undefined;
@@ -4156,83 +4164,88 @@ function scontrinoConti(c, dove) {
     : { vale: d.bar, preso: Math.min(d.paidBar, d.bar), resta: d.barDue };
 }
 
+/* la riga aperta adesso: una sola per volta, come le card del bar */
+let scAperta = null;
+
+/* UNA RIGA DELLO SCONTRINO, a riposo: quanti, cosa, quanto.
+   Niente comandi finche' non la si tocca. */
 function scontrinoRiga(c, id) {
   const v = bcVoce(id) || { id: id, name: id, em: '\u2022' };
   const q = bcQ(id), pg = bcPag(id);
-  const stato = q > 0 && pg >= q ? ' saldata' : (pg > 0 ? ' meta' : '');
-  let sotto = q + ' \u00d7 ' + eur(prezzoUnita(id));
+  const saldo = q > 0 && pg >= q;
+  const aperta = scAperta === id;
+
+  /* la riga sotto il nome dice la cosa che serve sapere di QUELLA voce:
+     del tempo fin quando, del Crazy in quante volte, del bar quanto
+     costa l'una */
+  let sotto = '';
   if (id === 'bimbi') {
-    /* il tempo sta QUI: e' quello che comprano i bambini, e la domanda
-       vera e' «fin quando sono a posto», non «quante unita'».
-       E SE E' STATO VENDUTO A PEZZI si scrive com'e' fatto: ogni
-       blocco si paga al prezzo del cartello per la SUA misura -- mezz'
-       ora costa mezz'ora, la seconda mezz'ora pure -- e senza vederli
-       scritti il prezzo a testa sembrava uscito a caso. */
     const blocchi = lista(c.aggiunte).map(m => Math.max(0, Math.round(num(m, 0)))).filter(m => m > 0);
-    if (blocchi.length) {
-      const somma = blocchi.reduce((a2, b2) => a2 + b2, 0);
-      const iniz = Math.max(0, clamp(num(c.durationMinutes, 0), 0, 1e6) - somma);
-      sotto += ' \u00b7 ' + [iniz].concat(blocchi).filter(m => m > 0).map(m => fmtMin(m)).join(' + ');
-    }
-    sotto += ' \u00b7 ' + fmtMin(tempoTotale(c)) +
+    const pezzi = blocchi.length
+      ? (() => {
+          const somma = blocchi.reduce((a2, b2) => a2 + b2, 0);
+          const iniz = Math.max(0, clamp(num(c.durationMinutes, 0), 0, 1e6) - somma);
+          return [iniz].concat(blocchi).filter(m => m > 0).map(m => fmtMin(m)).join(' + ') + ' \u00b7 ';
+        })()
+      : '';
+    sotto = pezzi + fmtMin(tempoTotale(c)) +
       (c.payLater ? ' \u00b7 tempo aperto' : ' \u00b7 esce alle ' + fmtTime(endTimeOf(c)));
-    const min = minutiPagati(c);
-    if (!c.payLater && pg > 0 && pg < q && min > 0) {
-      sotto += ' \u00b7 pagato fino alle ' + fmtTime(c.startTime + min * 60000);
-    }
-  }
-  if (id === 'crazy') {
-    /* quante VOLTE sono saliti, non quanti giri: i giri sono le
-       quantita' qui a sinistra, e ripetere la parola per due conti
-       diversi e' esattamente quello che confondeva */
+  } else if (id === 'crazy') {
     const volte = turniCrazy(c);
-    sotto += ' \u00b7 in ' + volte + (volte === 1 ? ' volta' : ' volte') +
-      (minutiCrazy(c) > 0 ? ' \u00b7 +' + minutiCrazy(c) + '\u2032' : '');
+    sotto = volte + (volte === 1 ? ' volta' : ' volte') +
+      (minutiCrazy(c) > 0 ? ' \u00b7 +' + minutiCrazy(c) + '\u2032 regalati' : '');
+  } else {
+    sotto = eur(prezzoUnita(id)) + ' l\u2019uno';
   }
-  /* A TEMPO APERTO NON SI INCASSA IN ANTICIPO: senza un'ora di uscita
-     non c'e' una durata, quindi non c'e' un prezzo da coprire. Il
-     divieto vive in pagaTempo(); qui si spegne il tasto, se no il
-     tasto direbbe una cosa che poi non succede. Il reso resta. */
+
+  /* il bollino del pagato: verde a posto, la frazione se e' a meta',
+     niente se non ha ancora pagato nessuno */
+  const bollo = saldo ? '<span class="sc-ok">\u2713</span>'
+    : pg > 0 ? '<span class="sc-meta">' + pg + '/' + q + '</span>' : '';
+
+  return '<div class="sc-voce' + (aperta ? ' aperta' : '') + (saldo ? ' saldata' : '') + '">' +
+    '<button class="sc-riga" data-scapri="' + esc(id) + '">' +
+      '<span class="sc-n">' + q + '</span>' +
+      '<span class="sc-em">' + iconaBar(v.name, v.em) + '</span>' +
+      '<span class="sc-txt"><b>' + esc(v.name) + '</b><span>' + sotto + '</span></span>' +
+      bollo +
+      '<span class="sc-eu">' + eur(totaleRiga(id)) + '</span>' +
+      '<span class="sc-frec">' + (aperta ? '\u2303' : '\u2304') + '</span>' +
+    '</button>' +
+    (aperta ? scontrinoComandi(c, id, q, pg) : '') +
+  '</div>';
+}
+
+/* I COMANDI DI UNA RIGA, quando la si apre.
+   Bianco quello che si toglie e si aggiunge, verde quello che si
+   paga: gli stessi due colori delle card del bar. */
+function scontrinoComandi(c, id, q, pg) {
   const avanti = id === 'bimbi' && !!c.payLater;
-  let dentro = '<div class="sc-riga' + stato + '" data-scid="' + esc(id) + '">' +
-    '<span class="sc-em">' + iconaBar(v.name, v.em) + '</span>' +
-    '<span class="sc-txt"><b>' + esc(v.name) + '</b><span>' + sotto + '</span></span>' +
-    /* QUANTE CE NE SONO, non solo quante sono pagate. Per togliere una
-       bibita battuta per sbaglio si tornava al bancone a cercarla fra
-       venti card: qui e' la stessa riga che si sta guardando.
-       Bianco la quantita', verde il pagato -- gli stessi due colori
-       delle card, cosi' non si scambiano. */
-    '<span class="sc-q">' +
+  let out = '<div class="sc-apri"><div class="sc-comandi">' +
+    '<span class="sc-gr"><i>quante</i>' +
       '<button data-scmq="' + esc(id) + '"' + (q <= 0 ? ' disabled' : '') + '>\u2212</button>' +
       '<b>' + q + '</b>' +
       '<button data-scpq="' + esc(id) + '">+</button></span>' +
-    '<span class="sc-eu">' + eur(totaleRiga(id)) + '</span>' +
-    '<span class="sc-pag">' +
+    '<span class="sc-gr verde"><i>pagate</i>' +
       '<button data-scmeno="' + esc(id) + '"' + (pg <= 0 ? ' disabled' : '') + '>\u2212</button>' +
       '<b>' + pg + '/' + q + '</b>' +
-      '<button data-scpiu="' + esc(id) + '"' + (pg >= q || avanti ? ' disabled' : '') + '>+</button>' +
-      '<button class="sc-tutta" data-sctutta="' + esc(id) + '"' + (avanti ? ' disabled' : '') +
-      ' title="tutta la riga">' + (pg >= q ? '\u21a9\ufe0e' : '\u2713') + '</button></span></div>';
-  /* IL TEMPO CHE RESTA, E QUANTO COSTA TENERLI ANCORA.
-     La riga dei bambini dice quanto vale il tempo comprato; ma la
-     domanda che arriva al banco e' l'altra -- «quanto manca?» e
-     «quanto mi costa un'altra mezz'ora?» -- e per rispondere si
-     tornava alla linguetta Parco. Qui c'e' tutto: quanto manca, fino a
-     che ora, e i tre tagli col loro prezzo gia' calcolato.
-     Solo su chi e' GIA' DENTRO: mentre lo registri il tempo lo scegli
-     coi tagli, e allungare una cosa che non e' ancora entrata non
-     vuol dire niente. */
+      '<button data-scpiu="' + esc(id) + '"' + (pg >= q || avanti ? ' disabled' : '') + '>+</button></span>' +
+    '<button class="sc-tutta" data-sctutta="' + esc(id) + '"' + (avanti ? ' disabled' : '') + '>' +
+      (pg >= q ? '\u21a9\ufe0e togli' : '\u2713 paga tutta') + '</button></div>';
+
+  /* IL TEMPO CHE RESTA, E QUANTO COSTA TENERLI ANCORA: sotto la riga
+     dei bambini, perche' il tempo e' quello che comprano loro. Solo su
+     chi e' gia' dentro -- mentre lo registri il tempo si sceglie coi
+     tagli. */
   if (id === 'bimbi' && PAN.ingresso) {
     const aperto = !!c.payLater;
     const manca = endTimeOf(c) - Date.now();
     const corti = clamp(num(c.durationMinutes, 60), 0, 1e6);
-    dentro += '<div class="sc-tempo">' +
+    out += '<div class="sc-tempo">' +
       '<span class="sc-t-k' + (!aperto && manca <= 0 ? ' scaduto' : '') + '">' +
         (aperto ? '\u23f3 tempo aperto'
           : manca > 0 ? '\u23f1\ufe0f restano ' + fmtDur(manca)
           : '\u23f1\ufe0f scaduto da ' + fmtDur(-manca)) + '</span>' +
-      /* la coppia da cinque minuti, a sinistra dei tagli: e' la stessa
-         dell'Estendi, e sta dalla stessa parte */
       '<span class="sc-t-cinque">' +
         '<button data-a="corr" data-v="-5"' + (aperto || corti <= 5 ? ' disabled' : '') +
           '>\u2212 5m</button>' +
@@ -4247,16 +4260,11 @@ function scontrinoRiga(c, id) {
       '</div>';
   }
 
-  /* I GIRI DEL CRAZY, uno per uno: al banco si paga «quello di prima»,
-     non «tre giri su cinque». */
+  /* LE VOLTE DEL CRAZY, una riga per una: quanti sono saliti, se e'
+     pagata, e la crocetta per buttarla via. */
   if (id === 'crazy') {
-    /* I GIRI SI GESTISCONO DA QUI, non solo si pagano. Per correggere
-       una volta contata male si tornava alla linguetta Parco a cercare
-       la colonna dello storico: adesso ogni volta ha la sua riga, coi
-       suoi tasti -- quanti sono saliti, se e' pagata, e la crocetta per
-       buttarla via -- e in fondo quello per aprirne una nuova. */
     const g = giriCrazy(c);
-    dentro += '<div class="sc-giri">' + g.map((n, i) => {
+    out += '<div class="sc-giri">' + g.map((n, i) => {
       const pagate = pagateDelGiro(c, i);
       const saldo = n > 0 && pagate >= n;
       return '<div class="sc-g-riga' + (saldo ? ' saldata' : '') + '">' +
@@ -4274,7 +4282,7 @@ function scontrinoRiga(c, id) {
     }).join('') +
       '<button class="sc-g-nuovo" data-giro="1">+ giro</button></div>';
   }
-  return dentro;
+  return out + '</div>';
 }
 
 function disegnaScontrino(p, c) {

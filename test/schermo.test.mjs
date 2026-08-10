@@ -142,15 +142,25 @@ gruppo('Lo scontrino: tutto quello che hanno preso, in una lista sola', () => {
     ['bimbi:parco', 'crazy:parco', 'b3:bar']);
 
   /* ogni riga dice il suo prezzo e quante ne sono pagate */
-  const riga = (id) => ctx.scontrinoRiga(c, id);
+  /* A RIPOSO E' UNA LISTA: quanti, cosa, quanto. I comandi di una riga
+     escono solo quando la si tocca -- una sola per volta, come le card
+     del bar. Prima ogni riga aveva addosso dieci pulsanti e sembrava
+     un menu da compilare, non un conto da leggere. */
+  const riga = (id) => { ctx.scAperta = null; return ctx.scontrinoRiga(c, id); };
+  const rigaAperta = (id) => { ctx.scAperta = id; const h = ctx.scontrinoRiga(c, id); ctx.scAperta = null; return h; };
+  prova('a riposo la riga non ha comandi',
+    riga('bimbi').indexOf('data-scpq') < 0 && riga('bimbi').indexOf('data-scpiu') < 0,
+    riga('bimbi').slice(0, 200));
+  prova('ma si puo aprire', riga('bimbi').indexOf('data-scapri="bimbi"') > 0);
   prova('la riga dei bambini dice il totale', riga('bimbi').indexOf(ctx.eur(ctx.totaleRiga('bimbi'))) > 0,
     riga('bimbi').slice(0, 160));
-  prova('e quante ne sono pagate', riga('bimbi').indexOf('<b>0/3</b>') > 0);
+  prova('e quante ne sono pagate, una volta aperta',
+    rigaAperta('bimbi').indexOf('<b>0/3</b>') > 0);
   prova('il tempo sta sulla riga dei bambini, non in una riga sua',
     /1h/.test(riga('bimbi')) && /esce alle/.test(riga('bimbi')));
-  prova('la riga del Crazy porta i suoi giri',
-    (riga('crazy').match(/data-scgiro="/g) || []).length === 2);
-  prova('e ogni giro dice se e pagato', /da pagare/.test(riga('crazy')));
+  prova('aperta, la riga del Crazy porta le sue volte',
+    (rigaAperta('crazy').match(/data-scgiro="/g) || []).length === 2);
+  prova('e ogni volta dice se e pagata', /da pagare/.test(rigaAperta('crazy')));
 
   /* i conti dei due reparti sono quelli di dueOf, non un altro conto */
   const d = ctx.dueOf(c);
@@ -182,9 +192,11 @@ gruppo('Lo scontrino: tutto quello che hanno preso, in una lista sola', () => {
      anticipo. Il tasto e’ spento, e il divieto non sta nel disegno. */
   const aperto = conto({ children: 2, crazyJumping: 0, durationMinutes: 30, baseMinutes: 30,
     payLater: true, barItems: [] });
+  ctx.scAperta = 'bimbi';
   prova('a tempo aperto il piu e spento',
     /data-scpiu="bimbi" disabled/.test(ctx.scontrinoRiga(aperto, 'bimbi')),
-    ctx.scontrinoRiga(aperto, 'bimbi').slice(0, 200));
+    ctx.scontrinoRiga(aperto, 'bimbi').slice(0, 260));
+  ctx.scAperta = null;
   ctx.pagaTempo(1);
   uguale('e nemmeno forzandolo si incassa in anticipo', ctx.bcPag('bimbi'), 0);
   ctx.PAN.conto = c; ctx.PAN.ingresso = c;
@@ -192,27 +204,24 @@ gruppo('Lo scontrino: tutto quello che hanno preso, in una lista sola', () => {
   /* NELLO SCONTRINO SI TOGLIE E SI AGGIUNGE, non solo si paga: per una
      bibita battuta per sbaglio si tornava al bancone a cercarla fra
      venti card. */
-  prova('ogni riga ha i tasti della quantita',
-    /data-scmq="b3"/.test(ctx.scontrinoRiga(c, 'b3')) &&
-    /data-scpq="b3"/.test(ctx.scontrinoRiga(c, 'b3')));
+  prova('aperta, la riga ha i tasti della quantita',
+    /data-scmq="b3"/.test(rigaAperta('b3')) && /data-scpq="b3"/.test(rigaAperta('b3')));
   prova('e quelli del pagato, che sono un’altra cosa',
-    /data-scpiu="b3"/.test(ctx.scontrinoRiga(c, 'b3')));
+    /data-scpiu="b3"/.test(rigaAperta('b3')));
 
   /* LA PAROLA E' UNA SOLA: giro. */
   prova('niente «salite» nello scontrino',
-    !/salit/i.test(ctx.scontrinoRiga(c, 'crazy')), ctx.scontrinoRiga(c, 'crazy').slice(0, 200));
-  prova('i giri del Crazy si chiamano giri', /<b>3<\/b>/.test(ctx.scontrinoRiga(c, 'crazy')) &&
-    />giri</.test(ctx.scontrinoRiga(c, 'crazy')));
+    !/salit/i.test(rigaAperta('crazy')), rigaAperta('crazy').slice(0, 200));
+  prova('i giri del Crazy si chiamano giri', /<b>3<\/b>/.test(rigaAperta('crazy')) &&
+    />giri</.test(rigaAperta('crazy')));
   /* e da qui si GESTISCONO: quanti sono saliti, cancellare la volta,
      aprirne una nuova. Prima si tornava alla linguetta Parco. */
   prova('ogni volta ha il suo piu e il suo meno',
-    /data-gmeno="1"/.test(ctx.scontrinoRiga(c, 'crazy')) &&
-    /data-gpiu="1"/.test(ctx.scontrinoRiga(c, 'crazy')));
-  prova('e la sua crocetta', /data-gvia="1"/.test(ctx.scontrinoRiga(c, 'crazy')));
-  prova('piu il tasto per aprirne una nuova',
-    /data-giro="1"/.test(ctx.scontrinoRiga(c, 'crazy')));
+    /data-gmeno="1"/.test(rigaAperta('crazy')) && /data-gpiu="1"/.test(rigaAperta('crazy')));
+  prova('e la sua crocetta', /data-gvia="1"/.test(rigaAperta('crazy')));
+  prova('piu il tasto per aprirne una nuova', /data-giro="1"/.test(rigaAperta('crazy')));
   prova('e le volte in cui sono saliti si chiamano volte',
-    /in 2 volte/.test(ctx.scontrinoRiga(c, 'crazy')));
+    /2 volte/.test(riga('crazy')));
 
   /* e si puo' disfare tutto */
   ctx.bcSegna('bimbi', false); ctx.bcSegna('crazy', false); ctx.bcSegna('bar', false);

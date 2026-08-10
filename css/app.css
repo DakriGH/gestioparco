@@ -3654,11 +3654,49 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
 .pc-scontrino .sc-rep.on { background: rgba(255, 255, 255, .1); color: rgba(255, 255, 255, .7); }
 .pc-scontrino .sc-rep:active { transform: scale(.96); }
 
-.pc-scontrino .sc-riga { display: flex; align-items: center; gap: 9px; padding: 5px 9px;
-  background: rgba(255, 255, 255, .05); border-radius: 12px; }
-.pc-scontrino .sc-riga.saldata { background: rgba(106, 220, 175, .12); }
-.pc-scontrino .sc-riga.saldata .sc-txt b { color: #8DEBBB; }
-.pc-scontrino .sc-riga.meta { box-shadow: inset 3px 0 0 rgba(106, 220, 175, .5); }
+/* A RIPOSO E' UNA LISTA: quanti, cosa, quanto. Ogni riga aveva addosso
+   dieci pulsanti -- due frecce per la quantita', due per il pagato, la
+   spunta, i tagli del tempo, le volte del Crazy -- e a colpo d'occhio
+   sembrava un menu da compilare, non un conto da leggere. I comandi
+   escono quando si tocca la riga, una per volta: e' lo stesso gesto
+   delle card del bar. */
+.pc-scontrino .sc-voce { border-radius: 12px; background: rgba(255, 255, 255, .05); }
+.pc-scontrino .sc-voce.saldata { background: rgba(106, 220, 175, .12); }
+.pc-scontrino .sc-voce.saldata .sc-txt b { color: #8DEBBB; }
+.pc-scontrino .sc-voce.aperta { background: rgba(255, 255, 255, .09);
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .14); }
+.pc-scontrino .sc-riga { display: flex; align-items: center; gap: 9px; width: 100%;
+  padding: 7px 10px; border: none; background: none; color: var(--txt); font: inherit;
+  text-align: left; cursor: pointer; border-radius: 12px; }
+.pc-scontrino .sc-riga:active { background: rgba(255, 255, 255, .06); }
+/* QUANTE, davanti a tutto: e' la prima cosa che si legge su uno
+   scontrino, e qui era nascosta dentro una riga di frecce */
+.pc-scontrino .sc-n { flex: 0 0 auto; min-width: 26px; text-align: center;
+  font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 700; }
+.pc-scontrino .sc-ok { flex: 0 0 auto; font-size: 15px; font-weight: 700; color: #6ADCAF; }
+.pc-scontrino .sc-meta { flex: 0 0 auto; font-size: 11.5px; font-weight: 700;
+  color: rgba(106, 220, 175, .85); }
+.pc-scontrino .sc-frec { flex: 0 0 auto; font-size: 15px; color: var(--txt-3);
+  width: 14px; text-align: center; }
+.pc-scontrino .sc-apri { padding: 0 10px 8px; display: flex; flex-direction: column; gap: 6px; }
+.pc-scontrino .sc-comandi { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }
+/* bianco quello che si toglie e si aggiunge, verde quello che si paga:
+   gli stessi due colori delle card del bar */
+.pc-scontrino .sc-gr { display: flex; align-items: center; gap: 4px;
+  background: rgba(0, 0, 0, .3); border-radius: 12px; padding: 3px 3px 3px 9px; }
+.pc-scontrino .sc-gr i { font-style: normal; font-size: 9.5px; font-weight: 800;
+  letter-spacing: .06em; text-transform: uppercase; color: var(--txt-3); margin-right: 3px; }
+.pc-scontrino .sc-gr button { min-width: 38px; height: 36px; border: none; border-radius: 9px;
+  background: rgba(255, 255, 255, .1); color: var(--txt);
+  font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 700; cursor: pointer; }
+.pc-scontrino .sc-gr button:disabled { opacity: .3; cursor: default; }
+.pc-scontrino .sc-gr button:active:not(:disabled) { background: rgba(255, 255, 255, .24); }
+.pc-scontrino .sc-gr b { font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 700;
+  min-width: 32px; text-align: center; }
+.pc-scontrino .sc-gr.verde { background: rgba(106, 220, 175, .12); }
+.pc-scontrino .sc-gr.verde i { color: rgba(141, 235, 187, .8); }
+.pc-scontrino .sc-gr.verde button { background: rgba(106, 220, 175, .18); color: #8DEBBB; }
+.pc-scontrino .sc-gr.verde b { color: #DFF7EC; }
 .pc-scontrino .sc-em { flex: 0 0 auto; width: 30px; height: 30px; display: grid; place-items: center; }
 .pc-scontrino .sc-em svg { width: 30px; height: 30px; display: block; }
 .pc-scontrino .sc-em .bc-em { font-size: 20px; }
@@ -3685,8 +3723,7 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
 /* IL TEMPO CHE RESTA, sotto la riga dei bambini: «quanto manca» e
    «quanto costa tenerli ancora» sono le due domande che arrivano al
    banco, e per rispondere si tornava alla linguetta Parco. */
-.pc-scontrino .sc-tempo { display: flex; align-items: center; flex-wrap: wrap; gap: 5px;
-  padding: 4px 9px 2px 48px; }
+.pc-scontrino .sc-tempo { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
 .pc-scontrino .sc-t-k { font-size: 11.5px; font-weight: 700; color: var(--txt-3);
   margin-right: auto; }
 .pc-scontrino .sc-t-k.scaduto { color: #F09A94; }
@@ -3714,8 +3751,7 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
    sistemava tornando alla linguetta Parco a cercare la colonna dello
    storico; qui ogni volta ha i suoi tasti, dove la si sta guardando.
    ══════════════════════════════════════════════════════════ */
-.pc-scontrino .sc-g-riga { display: flex; align-items: center; gap: 7px;
-  padding: 3px 9px 3px 48px; }
+.pc-scontrino .sc-g-riga { display: flex; align-items: center; gap: 7px; }
 .pc-scontrino .sc-g-n { font-family: 'Fredoka', sans-serif; font-size: 14px; font-weight: 700;
   color: var(--txt-3); min-width: 22px; }
 .pc-scontrino .sc-g-q { display: flex; align-items: center; gap: 3px;
@@ -3737,21 +3773,15 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
   border-radius: 9px; background: rgba(228, 87, 79, .16); color: #F09A94;
   font-size: 14px; font-weight: 700; cursor: pointer; }
 .pc-scontrino .sc-g-via:active { background: rgba(228, 87, 79, .3); }
-.pc-scontrino .sc-g-nuovo { margin: 2px 9px 2px 48px; border: none; border-radius: 10px;
+.pc-scontrino .sc-g-nuovo { margin: 2px 0; border: none; border-radius: 10px;
   background: rgba(232, 180, 76, .18); color: #F2C94C; font: inherit; font-size: 12.5px;
   font-weight: 700; padding: 7px 14px; min-height: 34px; cursor: pointer; align-self: flex-start; }
 .pc-scontrino .sc-g-nuovo:active { background: rgba(232, 180, 76, .34); }
-/* le stesse due frecce delle card, cosi' il gesto e' quello di sempre */
-.pc-scontrino .sc-pag { flex: 0 0 auto; display: flex; align-items: center; gap: 3px;
-  background: rgba(0, 0, 0, .3); border-radius: 11px; padding: 3px; }
-.pc-scontrino .sc-pag button { min-width: 36px; height: 34px; border: none; border-radius: 9px;
-  background: rgba(106, 220, 175, .18); color: #8DEBBB; font-family: 'Fredoka', sans-serif;
-  font-size: 19px; font-weight: 700; cursor: pointer; }
-.pc-scontrino .sc-pag button:disabled { opacity: .3; cursor: default; }
-.pc-scontrino .sc-pag button:active:not(:disabled) { background: rgba(106, 220, 175, .34); }
-.pc-scontrino .sc-pag b { font-family: 'Fredoka', sans-serif; font-size: 14px; font-weight: 700;
-  min-width: 34px; text-align: center; }
-.pc-scontrino .sc-pag .sc-tutta { font-size: 15px; }
+.pc-scontrino .sc-tutta { border: none; border-radius: 11px; min-height: 42px;
+  padding: 0 14px; background: rgba(106, 220, 175, .18); color: #8DEBBB;
+  font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.pc-scontrino .sc-tutta:disabled { opacity: .3; cursor: default; }
+.pc-scontrino .sc-tutta:active:not(:disabled) { background: rgba(106, 220, 175, .34); }
 
 /* i giri del Crazy: al banco si paga «quello di prima», non «tre
    giri su cinque» */
