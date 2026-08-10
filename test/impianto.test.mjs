@@ -546,8 +546,27 @@ gruppo('Estendi tempo: una sezione sua, e i prezzi veri');
   /* il posto per la sezione e' stato preso dove c'era una COPIA */
   prova('la riga di comandi sparisce mentre la scheda vola',
     /\.entry\.vola \.e-fila \{[^}]*display:\s*none/.test(CSS));
-  prova('e l uscita e finita nella barra del conto', APP.includes('data-uscita'));
-  prova('col suo tasto che funziona', /d\.uscita !== undefined[\s\S]{0,120}chiudiIngresso\(PAN\.ingresso\)/.test(APP));
+  /* L'USCITA STA NEL MENU DELLA SCHEDA, NON DENTRO IL CONTO. C'e'
+     stata per un po' in fondo al pannello, accanto a «Paga tutto»:
+     cioe' sotto le dita di chi lo aveva aperto per segnare una birra.
+     Adesso il menu della scheda ha tre tasti che dicono dove portano
+     -- Modifica (il Parco), Bar (il bancone), Uscita -- e dal conto si
+     torna indietro con «Fatto». */
+  prova('l uscita non sta piu nella barra del conto', !APP.includes('data-uscita'));
+  prova('i tre tasti del menu ci sono tutti',
+    /const payBtn = mkAct\('[^']*Modifica', 'conto'/.test(APP) &&
+    /const barBtn = mkAct\('[^']*Bar', 'conto'/.test(APP) &&
+    /mkAct\('[^']*Uscita', 'forte'/.test(APP));
+  prova('e portano ognuno alla sua linguetta',
+    /Modifica[\s\S]{0,120}apriConto\('Parco'\)/.test(APP) &&
+    /Bar', 'conto'[\s\S]{0,120}apriConto\(primaCategoriaBar\(\)\)/.test(APP));
+  prova('l uscita chiude l ingresso', /Uscita', 'forte'[\s\S]{0,120}chiudiIngresso\(entry\)/.test(APP));
+  prova('e i due tasti che aprono il conto si spengono insieme',
+    /function spegniConto[\s\S]{0,220}barBtn\.classList\.remove\('on'\)/.test(APP));
+  prova('a conto aperto il tasto cambia linguetta invece di chiudere',
+    /GIA' APERTO, MA SU UN'ALTRA LINGUETTA[\s\S]{0,600}PAN\.cat !== cat\) \{\s*PAN\.cat = cat;/.test(APP));
+  prova('rifacendo la scheda si torna sulla linguetta di prima',
+    /const catEra = PAN\.cat[\s\S]{0,600}apriConto\(catEra\)/.test(APP));
 }
 
 gruppo('Il conto sopra o sotto, a scelta');

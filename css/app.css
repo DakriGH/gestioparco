@@ -1668,9 +1668,6 @@ main {
   white-space: nowrap;
 }
 .e-azioni button.forte { background: #fff; color: #123A2C; }
-/* Modifica e' quello che si tocca meno: sta a sinistra e piccolo,
-   cosi' non ruba spazio a Bar & Conto e all'Uscita */
-.e-azioni button.piccolo { padding: 11px 11px; font-size: 15px; background: rgba(255, 255, 255, 0.11); }
 .e-azioni button.on { background: #fff; color: #123A2C; }
 
 .e-later-tag {
@@ -3358,8 +3355,6 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
    74px, mangiandosi il respiro di tutta la schermata */
 .pc-fondo .bc-tasti .btn { min-width: 0; padding: 0 15px; }
 /* si riconosce a colpo d'occhio: e' l'unico che porta via il gruppo */
-.bc-tasti .bc-uscita { background: var(--warn-soft, rgba(232,140,60,.18));
-  color: var(--warn, #E8934C); box-shadow: inset 0 0 0 1.5px currentColor; }
 /* i posti vuoti non devono occupare il loro giro di gap: la fascia
    della modifica e la riga del suo annulla ci sono solo quando servono */
 

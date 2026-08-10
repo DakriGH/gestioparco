@@ -1005,13 +1005,6 @@ function costruisciPannello() {
     const d = b.dataset;
     const c = C();
 
-    /* l'uscita del gruppo: c'e' solo quando il pannello sta lavorando
-       su un ingresso gia' registrato */
-    if (d.uscita !== undefined) {
-      if (PAN.ingresso) chiudiIngresso(PAN.ingresso);
-      return;
-    }
-
     /* UN ALTRO GIRO DI CRAZY. Ci sale il primo -- che paga come tutti
        -- e gli altri si aggiungono col piu' della card. Il giro nuovo
        porta il suo blocco di minuti regalati; le salite si pagano a
@@ -1307,10 +1300,6 @@ function costruisciPannello() {
           toast('Incasso annullato \u21a9\ufe0e');
         });
       }
-      return;
-    }
-    if (d.uscita !== undefined) {
-      if (PAN.ingresso) chiudiIngresso(PAN.ingresso);
       return;
     }
     if (d.reg !== undefined)   {
@@ -3232,14 +3221,13 @@ function pcFondo() {
         : '') +
       (resta > 0 ? '<button class="btn" data-resto>\ud83e\uddee Resto</button>' +
         '<button class="btn" data-tutto>Paga tutto</button>' : '') +
-      /* L'USCITA STA QUI, su un ingresso gia' dentro. Prima viveva
-         nella riga di comandi sopra il pannello -- quella con i meno e
-         i piu' dei bambini, del Crazy e dei minuti -- che a pannello
-         aperto e' una COPIA di quello che c'e' dentro: le stesse tre
-         cose, piu' piccole. Toglierla fa posto senza togliere niente,
-         ma l'uscita non era una copia e andava messa al sicuro. E'
-         anche il posto giusto: si esce dopo aver guardato il conto. */
-      (PAN.ingresso ? '<button class="btn bc-uscita" data-uscita>\ud83d\udeaa Uscita</button>' : '') +
+      /* L'USCITA NON STA QUI. Stava in fondo al pannello, cioe' in
+         fondo alla schermata dove si sta CONTANDO: chi apriva il conto
+         per segnare una birra se la trovava sotto le dita, accanto a
+         «Paga tutto». Si esce da fuori -- dal menu della scheda, dove
+         c'e' il suo tasto -- dopo aver chiuso il conto: prima si
+         guarda, poi si chiude, poi si esce. Da qui si torna indietro
+         con «Fatto». */
       '<button class="btn btn-ok" data-reg>' +
         (PAN.ingresso ? '\u2713 Fatto' : tot > 0 && resta <= 0 ? '\u2705 Registra e incassa' : 'Registra') +
       '</button>' +
@@ -3846,13 +3834,9 @@ function entryCard(entry) {
   const apriParco = (ev) => {
     ev.stopPropagation();
     if (!card.classList.contains('aperto')) card.classList.add('aperto');
-    /* se il conto e' gia' aperto basta cambiare linguetta */
-    if (!payPanel.classList.contains('hidden') && PAN.ingresso === entry) {
-      PAN.cat = 'Parco';
-      aggiornaPannello({ entra: true });
-      accendiPersone();
-      return;
-    }
+    /* il cambio di linguetta a conto aperto lo sa fare apriConto: qui
+       si aggiunge solo l'accensione di chi accompagna, che e' il
+       motivo per cui si tocca la figura */
     apriConto('Parco');
     accendiPersone();
   };
@@ -4022,12 +4006,27 @@ function entryCard(entry) {
   const payPanel = el('div', 'e-panel e-guscio hidden');
   dentro.appendChild(payPanel);
 
+  /* i due tasti che aprono il conto: si accendono e si spengono
+     insieme, perche' aprono la stessa cosa da due porte diverse */
+  const tastiConto = [];
   /* Apre (o chiude) il conto. Ci passano sia il tasto sia la figura:
      una strada sola, cosi' non possono comportarsi in modo diverso. */
   const apriConto = (cat) => {
     /* mentre una scheda sta volando i tocchi non contano: vedi
        occupaVolo */
     if (voloOccupato) return;
+    /* GIA' APERTO, MA SU UN'ALTRA LINGUETTA: si cambia linguetta e
+       basta. Se no i tre tasti si comportavano come uno solo -- il
+       secondo che toccavi RICHIUDEVA il conto invece di portarti dove
+       diceva -- e per passare dal Parco al bancone servivano due
+       tocchi al buio. Toccare due volte lo stesso tasto invece chiude,
+       che e' come si e' sempre chiuso. */
+    if (!payPanel.classList.contains('hidden') && PAN.ingresso === entry &&
+        cat && PAN.cat !== cat) {
+      PAN.cat = cat;
+      aggiornaPannello({ entra: true });
+      return;
+    }
     /* la misura va presa ADESSO, prima che il pannello si apra: se la
        prendo dopo, il buco lasciato nella lista e' troppo corto e tutte
        le schede sotto saltano su */
@@ -4035,7 +4034,7 @@ function entryCard(entry) {
     const chiuso = payPanel.classList.contains('hidden');
     chiudiPannelli(entry.id);
     payPanel.classList.toggle('hidden', !chiuso);
-    payBtn.classList.toggle('on', chiuso);
+    tastiConto.forEach(b => b.classList.toggle('on', chiuso));
     if (chiuso) {
       /* di suo si apre sulle bibite: dal tasto quasi sempre si sta
          segnando da bere. Dalla figura invece si va dritti al Parco. */
@@ -4050,11 +4049,23 @@ function entryCard(entry) {
       posa(card);
     }
   };
-  const payBtn = mkAct('\ud83e\uddfe Bar & Conto', 'conto', (ev) => {
+  /* TRE TASTI CHE DICONO DOVE PORTANO. Prima ce n'era uno solo, «Bar
+     & Conto», e apriva sempre il bancone: per vestire una persona o
+     correggere l'orario si apriva e si cambiava linguetta, ogni volta.
+     Sono la stessa strada di prima -- `apriConto(cat)` -- con la
+     linguetta gia' scelta. */
+  const payBtn = mkAct('\u270f\ufe0f Modifica', 'conto', (ev) => {
     ev.stopPropagation();
-    apriConto();
+    apriConto('Parco');
   });
-  payBtn.title = 'Conto, bar, orario, bracciale, persone';
+  payBtn.title = 'Orario, bracciale, tempo, chi accompagna';
+
+  const barBtn = mkAct('\ud83e\udd64 Bar', 'conto', (ev) => {
+    ev.stopPropagation();
+    apriConto(primaCategoriaBar());
+  });
+  barBtn.title = 'Da bere, da mangiare, il conto';
+  tastiConto.push(payBtn, barBtn);
 
   mkAct('\ud83d\udeaa Uscita', 'forte', (ev) => { ev.stopPropagation(); chiudiIngresso(entry); });
 
@@ -4075,7 +4086,7 @@ function entryCard(entry) {
   aperta.onclick = (ev) => ev.stopPropagation();
 
   cardRefs.set(entry.id, {
-    card, count, range, sKids, sCrazy, sTime, solo,
+    card, count, range, sKids, sCrazy, sTime, solo, barBtn, apriConto,
     dueVal: soldiV, soldiK, soldi, wrist, bimbiV, crzV, crz, countK,
     payPanel, payBtn,
     /* servono a rivestire la riga quando cambia un vestito */
@@ -5031,7 +5042,7 @@ function posa(card) {
        spariva a mezz'aria e si vedeva un salto */
     if (rif && rif.payPanel) {
       rif.payPanel.classList.add('hidden');
-      rif.payBtn.classList.remove('on');
+      spegniConto(rif);
     }
     card.classList.remove('vola');
     card.style.left = card.style.top = card.style.width = card.style.height = card.style.maxHeight = '';
@@ -5073,7 +5084,7 @@ function posaSubito(card) {
   const v = volante;
   volante = null;
   const rif = cardRefs.get(card.dataset.id);
-  if (rif && rif.payPanel) { rif.payPanel.classList.add('hidden'); rif.payBtn.classList.remove('on'); }
+  if (rif && rif.payPanel) { rif.payPanel.classList.add('hidden'); spegniConto(rif); }
   card.classList.remove('vola');
   card.style.left = card.style.top = card.style.width = card.style.height = card.style.maxHeight = '';
   if (v.buco.parentNode) v.buco.remove();
@@ -5110,6 +5121,15 @@ function preparaSchermoIntero() {
     schermoIntero(true);
   };
   document.addEventListener('pointerdown', alPrimoTocco, { once: true });
+}
+
+/* I TASTI DEL CONTO SI SPENGONO INSIEME: sono due porte sulla stessa
+   stanza -- «Modifica» e «Bar» -- e lasciarne uno acceso a pannello
+   chiuso vorrebbe dire raccontare una cosa che non c'e' piu'. */
+function spegniConto(r) {
+  if (!r) return;
+  if (r.payBtn) r.payBtn.classList.remove('on');
+  if (r.barBtn) r.barBtn.classList.remove('on');
 }
 
 /* una scheda aperta per volta: due aperte non ci stanno sullo schermo */
@@ -5350,7 +5370,7 @@ function chiudiPannelli(tranne) {
     if (id === tranne || !r.card.isConnected) return;
     if (r.payPanel && !r.payPanel.classList.contains('hidden')) {
       r.payPanel.classList.add('hidden');
-      r.payBtn.classList.remove('on');
+      spegniConto(r);
       if (volante && volante.card === r.card) posa(r.card);
     }
   });
@@ -5693,6 +5713,10 @@ function redrawCard(entry) {
      (succedeva cambiando il vestito di una persona dal conto). Lo si
      posa prima, e si riapre dopo. */
   const conPannello = !!(PAN.root && r.card.contains(PAN.root));
+  /* SU QUALE LINGUETTA ERA. Riaprendo col tasto si tornava sempre al
+     bancone: aggiungevi una persona dal Parco e il pannello ti
+     rispondeva col listino delle bibite. */
+  const catEra = PAN.cat;
   if (conPannello) {
     if (volante && volante.card === r.card) posaSubito(r.card);
     else riportaPannello(r.card);
@@ -5702,7 +5726,7 @@ function redrawCard(entry) {
   if (era) fresh.classList.add('aperto');
   if (conPannello) {
     const nuovo = cardRefs.get(entry.id);
-    if (nuovo) nuovo.payBtn.click();
+    if (nuovo) nuovo.apriConto(catEra);
   }
   tick();
 }
