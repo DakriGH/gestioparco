@@ -107,18 +107,16 @@
       };
     },
 
-    /* IL TOP: corto, scollo dritto, spalline sottili. Dalla canotta si
-       distingue per tre cose che si vedono da lontano -- FINISCE PIU'
-       SU (sotto resta scoperto un dito di vita), il bordo di sopra e'
-       una riga dritta e non un ovale, e le spalline sono due fili
-       invece di due fasce. */
+    /* IL TOP: senza maniche come la canotta, ma FEMMINILE. Le tre cose
+       che lo distinguono si vedono da lontano: lo SCOLLO A V invece del
+       collo tondo, le SPALLINE SOTTILI invece di due fasce, e la VITA
+       SEGNATA invece del taglio dritto. */
     top: (c) => ({
-      sagoma: 'M16.6 13 L31.4 13 L32.6 30.5 Q24 32.6 15.4 30.5 Z',
-      ombra: 'M16.6 13 L20.6 13 L19.4 31.4 L15.4 30.5 Z',
-      segni: `<path d="M19.4 13 L20.6 7.6 M28.6 13 L27.4 7.6" stroke="${sc(c, -12)}" stroke-width="1.7" stroke-linecap="round"/>
-              <path d="M16.6 14.8 L31.4 14.8" stroke="${sc(c, -34)}" stroke-width="1.4"/>
-              <path d="M15.8 29.4 Q24 31.4 32.2 29.4" fill="none" stroke="${sc(c, -28)}" stroke-width="1.4"/>
-              <path d="M20 18 Q24 20 28 18" fill="none" stroke="${sc(c, -20)}" stroke-width="0.9" opacity=".6"/>`
+      sagoma: 'M18.6 8.6 L21 8 L24 15 L27 8 L29.4 8.6 L31.4 16 L30 25 L32 38 Q24 40.4 16 38 L18 25 L16.6 16 Z',
+      ombra: 'M16.6 16 L18.6 8.6 L21 8 L19.6 15.4 L18 25 L16 38 Z',
+      segni: `<path d="M21 8 L24 15 L27 8" fill="none" stroke="${sc(c, -40)}" stroke-width="1.4"/>
+              <path d="M18 23.6 Q24 25.8 30 23.6" fill="none" stroke="${sc(c, -34)}" stroke-width="1.6"/>
+              <path d="M16.4 36.4 Q24 38.6 31.6 36.4" fill="none" stroke="${sc(c, -28)}" stroke-width="1.3"/>`
     }),
 
     /* LUNGO: stretto, cade dritto e ARRIVA IN FONDO all'icona, con le
@@ -277,6 +275,61 @@
     })
   };
 
+  /* ══════════════════════════════════════════════════════════
+     I TAGLI DI CAPELLI, come icone.
+     Nella tavolozza dei capelli si sceglie il taglio guardando, non
+     leggendo -- e allora il disegno deve avere la stessa cura dei capi:
+     bordo bianco spesso e contorno scuro. Senza, una chioma nera su
+     fondo scuro e' una macchia di cui non si vede la forma, ed era
+     proprio la forma la cosa da scegliere.
+     Ogni taglio e' una LISTA di forme (i ricci sono cerchi, gli altri
+     sono sagome): si disegnano tre volte -- prima tutti i bianchi, poi
+     tutti gli scuri, poi tutti i colori -- cosi' il contorno resta solo
+     attorno alla silhouette e non fra un ricciolo e l'altro.
+     Riquadro 48x48, testa al centro (24, 25) con raggio 15,5.
+     ══════════════════════════════════════════════════════════ */
+  const TESTA = 'M24 9.5 a15.5 15.5 0 1 1 -0.1 0 Z';
+  const TAGLI = {
+    pelato: [],
+    corti: [['path', 'd="M7 25 A17 17 0 0 1 41 25 Q36 16.6 24 16.6 Q12 16.6 7 25 Z"']],
+    medio: [['path', 'd="M6.6 33 Q6 19 10.6 13 Q15.2 7.4 24 7.4 Q32.8 7.4 37.4 13 ' +
+      'Q42 19 41.4 33 Q38.4 22 35 18 Q30.4 14 24 14 Q17.6 14 13 18 Q9.6 22 6.6 33 Z"']],
+    lunghi: [['path', 'd="M5.6 42 Q5 17 24 7 Q43 17 42.4 42 Q39.4 23 35 18 ' +
+      'Q30.4 13.4 24 13.4 Q17.6 13.4 13 18 Q8.6 23 5.6 42 Z"']],
+    ricci: [
+      ['path', 'd="M9 25 A16 16 0 0 1 39 25 Q34 15 24 15 Q14 15 9 25 Z"'],
+      ['circle', 'cx="11" cy="16" r="7"'], ['circle', 'cx="24" cy="10" r="8"'],
+      ['circle', 'cx="37" cy="16" r="7"'],
+      ['circle', 'cx="8.5" cy="26" r="6.5"'], ['circle', 'cx="39.5" cy="26" r="6.5"'],
+      ['circle', 'cx="10" cy="35" r="6"'], ['circle', 'cx="38" cy="35" r="6"']
+    ],
+    riccimedi: [
+      ['path', 'd="M9 25 A16 16 0 0 1 39 25 Q34 15 24 15 Q14 15 9 25 Z"'],
+      ['circle', 'cx="11" cy="16" r="7"'], ['circle', 'cx="24" cy="10" r="8"'],
+      ['circle', 'cx="37" cy="16" r="7"'],
+      ['circle', 'cx="9.5" cy="26" r="6"'], ['circle', 'cx="38.5" cy="26" r="6"']
+    ]
+  };
+
+  function capelli(taglio, colore, pelle, misura) {
+    const m = misura || 44;
+    const c = colore || '#2A1E16';
+    const sk = pelle || '#F6CFA8';
+    const pezzi = TAGLI[taglio] || TAGLI.corti;
+    const strato = (attr) =>
+      `<path d="${TESTA}" ${attr}/>` +
+      pezzi.map(p => `<${p[0]} ${p[1]} ${attr}/>`).join('');
+    return `<svg viewBox="-3 -3 54 54" width="${m}" height="${m}" aria-hidden="true">` +
+      strato('fill="none" stroke="rgba(255,255,255,.94)" stroke-width="7" stroke-linejoin="round"') +
+      strato('fill="none" stroke="rgba(18,18,26,.9)" stroke-width="2.6" stroke-linejoin="round"') +
+      `<path d="${TESTA}" fill="${sk}"/>` +
+      pezzi.map(p => `<${p[0]} ${p[1]} fill="${c}"/>`).join('') +
+      /* il luccichio del pelato: e' la cosa che si vede davvero su una
+         testa rasata, e senza di lui l'icona era una faccia vuota */
+      (pezzi.length ? '' : `<ellipse cx="18" cy="17" rx="5.4" ry="3.2" fill="#ffffff" opacity=".55" transform="rotate(-20 18 17)"/>`) +
+      '</svg>';
+  }
+
   function accessorio(chiave, colore, misura) {
     const fn = ACCESSORI[chiave];
     if (!fn) return '';
@@ -361,5 +414,5 @@
       d.segni + '</svg>';
   }
 
-  global.CAPI = { capo, accessorio, elenco: Object.keys(CAPI), accessori: Object.keys(ACCESSORI) };
+  global.CAPI = { capo, accessorio, capelli, elenco: Object.keys(CAPI), accessori: Object.keys(ACCESSORI), tagli: Object.keys(TAGLI) };
 })(window);

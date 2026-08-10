@@ -466,6 +466,51 @@ gruppo('I capelli: quattro colori, sei tagli, e la descrizione onesta');
   prova('scelto il taglio, il pelato si dice', /pelato/i.test(detto(r.avatar)), detto(r.avatar));
 }
 
+gruppo('Il pelato e pelato, e i capelli coprono il cranio');
+{
+  /* PELATO VUOL DIRE PELATO. Aveva la corona di capelli ai lati -- il
+     nonno stempiato -- ma adesso "pelato" e' una scelta fra sei tagli,
+     e chi la tocca vuole una testa senza capelli. */
+  const testa = (stile, col) => AV.build(AV.normalize({
+    role: 'altro', skin: '#F6CFA8', hair: { style: stile, color: col || '#1E1712' },
+    hat: { style: 'none', color: '#E23D4B' }, facial: 'none'
+  }));
+  prova('il pelato non porta capelli addosso', testa('pelato').indexOf('#1E1712') < 0,
+    'trovata la tinta dei capelli su una testa rasata');
+  prova('ma si vede che e una testa lucida', testa('pelato').indexOf('opacity=".2"') > 0);
+  prova('e gli altri i capelli ce li hanno', testa('corti').indexOf('#1E1712') > 0);
+
+  /* LA CALOTTA E' PIU' LARGA DELLA TESTA: la testa e' un'ellisse
+     21,5 x 22,5 col vertice a 17,5, e le ciocche arrivavano esattamente
+     li' -- fra l'una e l'altra restava una mezzaluna di pelle scoperta,
+     e da lontano sembravano tutti un po' stempiati (il papa' in
+     particolare, che e' un guasto vecchio). */
+  ['corti', 'medio', 'lunghi', 'codino', 'chignon', 'treccine'].forEach(k => {
+    prova(k + ': la calotta passa sopra il cranio', testa(k).indexOf('A24 25 0 0 1 74 40') > 0);
+  });
+  prova('e il papa non e piu stempiato',
+    AV.build(AV.baseFor('papa')).indexOf('A24 25 0 0 1 74 40') > 0);
+}
+
+gruppo('Le icone dei tagli hanno il bordo come i capi');
+{
+  /* Su fondo scuro una chioma nera senza contorno e' una macchia di
+     cui non si vede la forma -- ed era la forma la cosa da scegliere. */
+  ['pelato', 'corti', 'medio', 'lunghi', 'ricci', 'riccimedi'].forEach(k => {
+    const h = CAPI.capelli(k, '#1E1712', '#F6CFA8', 44);
+    prova(k + ': l icona c e', h.slice(0, 4) === '<svg' && h.length > 200);
+    prova(k + ': ha il bordo bianco e quello scuro',
+      h.indexOf('rgba(255,255,255,.94)') > 0 && h.indexOf('rgba(18,18,26,.9)') > 0);
+  });
+  const teste = ['pelato', 'corti', 'medio', 'lunghi', 'ricci', 'riccimedi']
+    .map(k => CAPI.capelli(k, '#1E1712', '#F6CFA8', 44));
+  prova('e sei tagli sono sei disegni diversi', new Set(teste).size === 6);
+  prova('il pelato non ha capelli nemmeno nell icona',
+    CAPI.capelli('pelato', '#1E1712', '#F6CFA8', 44).indexOf('#1E1712') < 0);
+  prova('e il colore dei capelli arriva nell icona',
+    CAPI.capelli('lunghi', '#D8A657', '#F6CFA8', 44).indexOf('#D8A657') > 0);
+}
+
 gruppo('La tavolozza dei capelli: colori e tagli, disegnati');
 {
   const p = persona();
@@ -475,7 +520,10 @@ gruppo('La tavolozza dei capelli: colori e tagli, disegnati');
   prova('piu la ruota, che e l arcobaleno',
     aperta.indexOf('data-accruota="capelli"') > 0 && aperta.indexOf('Arcobaleno') > 0);
   uguale('i sei tagli', conta(aperta, /data-taglio="/g), 6);
-  prova('ogni taglio e disegnato sulla testa vera', conta(aperta, /<svg/g) >= 6);
+  prova('ogni taglio e disegnato, col bordo come i capi',
+    conta(aperta, /<svg/g) >= 6 && aperta.indexOf('rgba(255,255,255,.94)') > 0);
+  prova('e la scritta sotto e quella dei capi, non una piu piccola',
+    conta(aperta, /class="capo cap-t/g) === 6);
   prova('e si puo togliere', aperta.indexOf('data-accvia="capelli"') > 0);
 }
 

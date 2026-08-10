@@ -796,16 +796,17 @@
                <circle cx="58.6" cy="86.1" r="1.5" fill="${shade(ct, -54)}"/>
                <circle cx="58.6" cy="92.2" r="1.5" fill="${shade(ct, -54)}"/>`;
     } else if (av.top.style === 'top') {
-      /* IL TOP: scollo dritto, due spalline sottili, e FINISCE SOPRA LA
-         VITA -- sotto resta un dito di pelle scoperta. Sono quelle tre
-         cose a distinguerlo dalla canotta, che invece scende fino ai
-         pantaloni con due fasce larghe sulle spalle. */
-      torso = `<path d="M37 68 Q50 74 63 68 L64.5 100 L35.5 100 Z" fill="${skin}"/>
-               <path d="M42.6 76 L44.6 66.4 M57.4 76 L55.4 66.4" stroke="${shade(ct, -12)}" stroke-width="2.8" stroke-linecap="round"/>
-               <path d="M38.4 76 L61.6 76 L63 93 L37 93 Z" fill="${topP.fill}" ${line}/>
-               <path d="M38.4 78.2 L61.6 78.2" stroke="${shade(ct, -34)}" stroke-width="1.5"/>
-               <path d="M37.4 90.6 Q50 92.6 62.6 90.6" fill="none" stroke="${shade(ct, -28)}" stroke-width="1.6"/>
-               <path d="M44 80 Q50 82 56 80" fill="none" stroke="${shade(ct, -20)}" stroke-width="1" opacity=".6"/>`;
+      /* IL TOP: senza maniche come la canotta, ma FEMMINILE -- scollo a
+         V, spalline sottili, vita segnata. La canotta invece e' dritta,
+         collo tondo e spalline larghe: messe una accanto all'altra si
+         distinguono senza leggere il nome.
+         Dietro c'e' la pelle: il V lascia scoperto un pezzo di petto, e
+         senza qualcosa sotto li' si vedeva il vuoto. */
+      torso = `<path d="M38 66 Q50 73 62 66 L64 102 L36 102 Z" fill="${skin}"/>
+               <path d="M41 64.5 L45.5 63.5 L50 74 L54.5 63.5 L59 64.5 L64 78 L62 89 L64.5 102 L35.5 102 L38 89 L36 78 Z" fill="${topP.fill}" ${line}/>
+               <path d="M45.5 63.5 L50 74 L54.5 63.5" fill="none" stroke="${shade(ct, -40)}" stroke-width="1.6"/>
+               <path d="M37 88.4 Q50 91 63 88.4" fill="none" stroke="${shade(ct, -34)}" stroke-width="1.8"/>
+               <path d="M36.4 99.6 Q50 101.6 63.6 99.6" fill="none" stroke="${shade(ct, -28)}" stroke-width="1.5"/>`;
     } else if (av.top.style === 'felpa') {
       /* cappuccio dietro la testa, i due LACCETTI con gli occhielli,
          la tasca a marsupio e il fondo a costine */
@@ -874,39 +875,50 @@
                 <path d="M43 46.5 Q50 44.6 57 46.5 Q50 49.4 43 46.5 Z" fill="${shade(hairCol, 14)}"/>`;
     }
 
-    /* --- capelli davanti --- */
+    /* --- capelli davanti ---
+       LA CALOTTA E' PIU' LARGA DELLA TESTA. La testa e' un'ellisse
+       21,5 x 22,5 col vertice a 17,5; le ciocche arrivavano esattamente
+       li' -- e fra l'una e l'altra restava una mezzaluna di pelle
+       scoperta, coi capelli corti e col papa' in particolare: da
+       lontano sembravano tutti un po' stempiati.
+       Adesso il bordo di sopra e' un mezzo cerchio CONCENTRICO alla
+       testa ma piu' grande (24 x 25, vertice a 15), quindi copre
+       sempre; quello che cambia da un taglio all'altro e' la frangia,
+       cioe' quanta fronte si vede. */
+    const calotta = (frangia) =>
+      'M26 40 A24 25 0 0 1 74 40 Q69.5 ' + frangia + ' 50 ' + frangia +
+      ' Q30.5 ' + frangia + ' 26 40 Z';
     let hair = '';
     if (hairStyle === 'pelato') {
-      /* la corona di capelli del nonno: sopra niente, ai lati una fascia
-         piena che scende fin sopra l'orecchio. Due trattini sbiaditi non
-         si vedevano, e il nonno sembrava un ragazzo rasato. */
-      hair = `<path d="M28 44 Q27 30 32 25 Q30 36 31 46 Z" fill="${hairCol}"/>
-              <path d="M72 44 Q73 30 68 25 Q70 36 69 46 Z" fill="${hairCol}"/>
-              <path d="M28 40 Q29 31 34 27" stroke="${hairCol}" stroke-width="4.5" fill="none" stroke-linecap="round"/>
-              <path d="M72 40 Q71 31 66 27" stroke="${hairCol}" stroke-width="4.5" fill="none" stroke-linecap="round"/>`;
+      /* PELATO VUOL DIRE PELATO. Aveva la corona di capelli ai lati --
+         il nonno stempiato -- ma "pelato" adesso e' una scelta fra sei
+         tagli, e chi la tocca vuole una testa senza capelli, non una
+         mezza calvizie. Resta solo il luccichio sul cranio, che e' la
+         cosa che si vede davvero su una testa rasata. */
+      hair = `<ellipse cx="42" cy="27" rx="7.5" ry="4.6" fill="#ffffff" opacity=".2" transform="rotate(-18 42 27)"/>`;
     } else if (hairStyle === 'corti') {
-      hair = `<path d="M28 40 Q28 18 50 18 Q72 18 72 40 Q68 28 50 28 Q32 28 28 40 Z" fill="${hairCol}"/>`;
+      hair = `<path d="${calotta(28)}" fill="${hairCol}"/>`;
     } else if (hairStyle === 'medio') {
-      hair = `<path d="M27 44 Q27 17 50 17 Q73 17 73 44 Q70 27 50 27 Q30 27 27 44 Z" fill="${hairCol}"/>
+      hair = `<path d="${calotta(27)}" fill="${hairCol}"/>
               <path d="M27 34 Q24 44 27 52" stroke="${hairCol}" stroke-width="6" fill="none" stroke-linecap="round"/>
               <path d="M73 34 Q76 44 73 52" stroke="${hairCol}" stroke-width="6" fill="none" stroke-linecap="round"/>`;
     } else if (hairStyle === 'lunghi') {
-      hair = `<path d="M27 42 Q27 16 50 16 Q73 16 73 42 Q70 24 50 24 Q30 24 27 42 Z" fill="${hairCol}"/>`;
+      hair = `<path d="${calotta(25)}" fill="${hairCol}"/>`;
     } else if (hairStyle === 'ricci' || hairStyle === 'riccimedi') {
       hair = `<circle cx="33" cy="30" r="8" fill="${hairCol}"/><circle cx="43" cy="21" r="9" fill="${hairCol}"/>
               <circle cx="57" cy="21" r="9" fill="${hairCol}"/><circle cx="67" cy="30" r="8" fill="${hairCol}"/>
               <circle cx="50" cy="24" r="9" fill="${hairCol}"/>`;
     } else if (hairStyle === 'codino') {
       /* la riga di lato: dice "coda" anche prima di vedere la coda */
-      hair = `<path d="M28 40 Q28 17 50 17 Q72 17 72 40 Q68 27 50 27 Q32 27 28 40 Z" fill="${hairCol}"/>
+      hair = `<path d="${calotta(27)}" fill="${hairCol}"/>
               <path d="M40 19 Q36 27 34 38" stroke="${shade(hairCol, 24)}" stroke-width="1.6" fill="none" opacity=".85"/>`;
     } else if (hairStyle === 'chignon') {
       /* tirati indietro, lisci, con le tempie scoperte: la testa della
          signora che ha i capelli raccolti */
-      hair = `<path d="M28 40 Q28 17 50 17 Q72 17 72 40 Q69 25 50 25 Q31 25 28 40 Z" fill="${hairCol}"/>
+      hair = `<path d="${calotta(25)}" fill="${hairCol}"/>
               <path d="M34 30 Q42 22 50 21 Q58 22 66 30" stroke="${shade(hairCol, 20)}" stroke-width="1.3" fill="none" opacity=".7"/>`;
     } else if (hairStyle === 'treccine') {
-      hair = `<path d="M28 40 Q28 17 50 17 Q72 17 72 40 Q68 27 50 27 Q32 27 28 40 Z" fill="${hairCol}"/>
+      hair = `<path d="${calotta(27)}" fill="${hairCol}"/>
               <path d="M36 24 L34 32 M44 20 L43 29 M56 20 L57 29 M64 24 L66 32" stroke="${shade(hairCol, 22)}" stroke-width="1.4" stroke-linecap="round"/>`;
     }
 

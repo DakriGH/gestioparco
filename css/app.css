@@ -3690,13 +3690,13 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
 .armadio .volante .cap-tinte > button { flex: 0 0 auto; width: 38px; height: 32px; }
 .armadio .volante .cap-arc { font-size: 10.5px; color: rgba(255,255,255,.5); }
 .armadio .volante .cap-tagli { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
-.armadio .volante .cap-t { height: auto; background: rgba(0,0,0,.3); border-radius: 10px;
-  padding: 2px 1px 3px; display: flex; flex-direction: column; align-items: center; gap: 1px;
-  cursor: pointer; color: #E9E9F2; font: inherit; }
-.armadio .volante .cap-t svg { width: 100%; height: 36px; display: block; }
-.armadio .volante .cap-t .nm { font-size: 8.5px; font-weight: 700; line-height: 1.05;
-  color: rgba(255,255,255,.72); text-align: center; }
-.armadio .volante .cap-t.on { border-color: #fff; background: rgba(255,255,255,.14); }
+/* i tagli sono capi come gli altri: ereditano .capo -- riquadro,
+   disegno col bordo bianco, e la scritta sotto della stessa misura di
+   quelle dei vestiti. Prima era piccola la meta' e su fondo scuro non
+   si leggeva. */
+.armadio .volante .cap-t { height: auto; border: 3px solid transparent; }
+.armadio .volante .cap-t svg { max-width: 42px; }
+.armadio .volante .cap-t.on { border-color: #fff; background: rgba(255,255,255,.16); }
 
 /* TRE SECONDI DI BATTITO.
    Chi tocca la figura sulla scheda sta cercando "Chi accompagna", che

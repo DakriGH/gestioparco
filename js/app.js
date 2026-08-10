@@ -2370,16 +2370,14 @@ function tavolozzaCapelli(av) {
     '<button class="cap-c' + (ora === c.c.toLowerCase() ? ' on' : '') +
     '" data-acccol="capelli|' + c.c + '" style="background:' + c.c +
     '" title="' + esc(c.n[0]) + '"></button>').join('');
+  /* I TAGLI SONO CAPI COME GLI ALTRI: stessa classe, quindi stesso
+     disegno col bordo bianco, stessa misura e soprattutto la stessa
+     scritta sotto -- prima era piccola la meta’ e su fondo scuro non
+     si leggeva. */
   const tagli = TAGLI_CAPELLI.map(k => {
     const it = AV.findIn(AV.HAIR, k);
-    /* la testa vera, con questo taglio: si sceglie guardando, non
-       leggendo */
-    const testa = AV.build(Object.assign({}, av, {
-      hair: { style: k, color: av.hair.color },
-      hat: { style: 'none', color: '#E23D4B' }
-    }), { zona: 'testa' });
-    return '<button class="cap-t' + (av.hair.style === k ? ' on' : '') +
-      '" data-taglio="' + k + '">' + testa +
+    return '<button class="capo cap-t' + (av.hair.style === k ? ' on' : '') +
+      '" data-taglio="' + k + '">' + CAPI.capelli(k, av.hair.color, av.skin, 44) +
       '<span class="nm">' + esc(it.label) + '</span></button>';
   }).join('');
   return '<div class="volante capelli">' +
