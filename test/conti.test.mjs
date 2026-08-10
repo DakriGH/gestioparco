@@ -579,6 +579,53 @@ gruppo('Il ritocco da cinque minuti non e una vendita', () => {
   ok('e il prezzo e lo stesso', ctx.costOf(riletto).parkTotal, prezzo);
 });
 
+gruppo('A tempo aperto la riga non dice mai «pagato»', () => {
+  /* IL BUG CHE HA VISTO LUI, alle casse: un ingresso a tempo aperto con
+     i bambini dentro compariva nella lista come gia' pagato, e solo
+     dopo un po' (o dopo averci messo le mani) la cifra saltava fuori.
+     La riga dei soldi guardava una cosa sola -- quanto resta da dare --
+     e a tempo aperto lo zero non vuol dire pagato: vuol dire che il
+     conto NON E' ANCORA FATTO. E zero ci sta per un pezzo:
+       · l'ora d'ingresso e' arrotondata ai cinque minuti e puo' cadere
+         qualche minuto avanti: finche' non e' passata il tempo dentro
+         e' zero, e il parco costa zero;
+       · i minuti regalati dal Crazy si scalano dal tempo passato: con
+         un giro (otto minuti) i primi otto minuti sono coperti.
+     Chi guarda la lista per sapere chi deve ancora pagare leggeva il
+     contrario del vero. */
+  const ora = Date.now();          /* il tempo aperto si misura da ADESSO */
+
+  /* ora d'ingresso cinque minuti avanti: dentro da -5 minuti */
+  const avanti = conto({ children: 2, payLater: true, startTime: ora + 5 * 60000,
+    durationMinutes: 0, barItems: [] });
+  ok('col tempo che non e ancora cominciato non si deve niente',
+     ctx.dueOf(avanti).total, 0);
+  const v1 = ctx.vociSoldi(avanti, ctx.dueOf(avanti));
+  vero('ma la riga NON dice pagato', v1.pagato === false);
+  vero('dice che si paga all uscita', /uscita/.test(v1.k));
+
+  /* un giro di Crazy: i primi otto minuti di parco sono coperti */
+  const crazy = conto({ children: 2, payLater: true, startTime: ora,
+    durationMinutes: 0, crazyJumping: 1, crazyGiri: [1], barItems: [] });
+  crazy.paidPark = ctx.dueOf(crazy).park;          /* pagato il solo Crazy */
+  const v2 = ctx.vociSoldi(crazy, ctx.dueOf(crazy));
+  vero('e nemmeno quando i minuti regalati coprono la permanenza', v2.pagato === false);
+
+  /* a tempo chiuso invece pagato vuol dire pagato */
+  const chiuso = conto({ children: 2, durationMinutes: 30, baseMinutes: 30, barItems: [] });
+  const v3 = ctx.vociSoldi(chiuso, ctx.dueOf(chiuso));
+  vero('a tempo chiuso, se resta da dare lo dice', v3.pagato === false && /pagare/.test(v3.k));
+  chiuso.paidPark = ctx.dueOf(chiuso).park;
+  const v4 = ctx.vociSoldi(chiuso, ctx.dueOf(chiuso));
+  vero('e quando e saldato dice pagato', v4.pagato === true);
+
+  /* e un conto vuoto non e un conto pagato */
+  const vuoto = conto({ children: 0, durationMinutes: 30, baseMinutes: 30, barItems: [] });
+  const v5 = ctx.vociSoldi(vuoto, ctx.dueOf(vuoto));
+  vero('un conto vuoto non risulta pagato', v5.pagato === false);
+  vero('e lo dice: niente sul conto', /niente/.test(v5.k));
+});
+
 gruppo('Lo stesso tempo costa lo stesso, da qualunque tasto passi', () => {
   /* IL PIU' E IL MENO STANNO IN DUE POSTI: nel pannello e nella
      striscia della scheda in lista. La striscia scriveva i minuti a

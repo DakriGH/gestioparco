@@ -5549,17 +5549,37 @@ function pannelloResto(entry, dovuto, onIncassa) {
 /* aggiorna i numeri di una scheda senza ricostruirla */
 /* I soldi con l'etichetta sopra il numero: dice sempre COSA e' quella
    cifra, che era la cosa ambigua della colonna a destra. */
-function soldiDi(r, entry, due) {
-  const resta = due.total;
-  const pagato = due.parkPaid + due.barPaid;
-  if (resta <= 0) {
-    r.soldiK.textContent = 'pagato';
-    r.dueVal.textContent = '\u2713';
-  } else {
-    r.soldiK.textContent = pagato > 0 ? 'restano' : 'da pagare';
-    r.dueVal.textContent = eur(resta);
+/* CHE COSA DICE LA RIGA DEI SOLDI, in tre parole e un numero.
+   Sta fuori dal disegno perche' e' una REGOLA -- quando si puo' dire
+   «pagato» -- e le regole si provano; il disegno si limita a scriverla.
+
+   A TEMPO APERTO NON SI DICE MAI «PAGATO».
+   Il conto non e' ancora fatto: si fa all'uscita, sul tempo davvero
+   passato. Ma il dovuto puo' essere zero per un pezzo -- l'ora
+   d'ingresso arrotondata che cade qualche minuto avanti, i minuti
+   regalati dal Crazy che coprono tutta la permanenza fatta finora --
+   e la riga rispondeva col segno verde: «pagato». Su un gruppo che non
+   aveva dato un euro, e che il conto lo deve tutto.
+
+   E UN CONTO VUOTO NON E' UN CONTO PAGATO: se non hanno preso niente
+   la riga lo dice, invece di spuntare un incasso che non c'e' stato. */
+function vociSoldi(entry, due) {
+  const resta = r2(due.total);
+  const preso = r2(due.parkPaid + due.barPaid);
+  const vale = r2(due.park + due.bar);
+  if (entry.payLater) {
+    return { k: '\u23f3 all\u2019uscita', v: resta > 0 ? eur(resta) : '\u2014', pagato: false };
   }
-  r.soldi.classList.toggle('pagato', resta <= 0);
+  if (vale <= 0.005) return { k: 'niente sul conto', v: '\u2014', pagato: false };
+  if (resta <= 0) return { k: 'pagato', v: '\u2713', pagato: true };
+  return { k: preso > 0 ? 'restano' : 'da pagare', v: eur(resta), pagato: false };
+}
+
+function soldiDi(r, entry, due) {
+  const s = vociSoldi(entry, due);
+  r.soldiK.textContent = s.k;
+  r.dueVal.textContent = s.v;
+  r.soldi.classList.toggle('pagato', s.pagato);
 }
 
 /* CHI C'E' E COM'E' VESTITO, nella riga della lista.
