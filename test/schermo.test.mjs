@@ -122,6 +122,38 @@ gruppo('Un giro aperto e vuoto si vede, e non regala niente', () => {
     60 + ctx.settings.crazyExtraMinutes);
 });
 
+gruppo('Ogni amaro ha il suo disegno, e non sono tutti uguali', () => {
+  /* IL DISEGNO SEGUE IL NOME. Se una voce non ha il suo, resta
+     l'emoji -- e otto bicchierini identici in fila non servono a
+     niente: al banco si tocca quello che si riconosce. */
+  const alc = ctx.settings.barMenu.filter(v => v.cat === 'Alcolici');
+  uguale('gli otto del banco', alc.map(v => v.name),
+    ['Eremita', 'Amaro del Capo', 'Amaro Silano', 'Limoncello',
+     'Kaciuto', 'Rupes', 'Spritz base', 'Spritz completo']);
+  uguale('quattro a tre euro', alc.filter(v => v.price === 3).length, 4);
+  uguale('tre a quattro', alc.filter(v => v.price === 4).length, 3);
+  uguale('e il completo a sei', alc.filter(v => v.price === 6).map(v => v.name),
+    ['Spritz completo']);
+  prova('niente due voci con lo stesso codice',
+    new Set(ctx.settings.barMenu.map(v => v.id)).size === ctx.settings.barMenu.length);
+
+  const visti = {};
+  alc.forEach(v => {
+    const h = ctx.iconaBar(v.name, v.em);
+    prova(v.name + ': ha il disegno, non l\u2019emoji', h.indexOf('<svg') === 0, h.slice(0, 40));
+    prova(v.name + ': non e\u2019 uguale a un altro', !visti[h], 'identico a ' + visti[h]);
+    visti[h] = v.name;
+  });
+  /* i nomi come capita di scriverli arrivano lo stesso */
+  ['kachiuto', 'Amaro Kaciuto', 'del Capo', 'aperol spritz', 'spritz completo'].forEach(n => {
+    prova('"' + n + '" trova il suo disegno', ctx.iconaBar(n, '').indexOf('<svg') === 0);
+  });
+  /* le patatine: sacchetto, non lattina */
+  prova('le patatine hanno un disegno tutto loro',
+    ctx.iconaBar('Patatine', '').indexOf('<svg') === 0 &&
+    ctx.iconaBar('Patatine', '') !== ctx.iconaBar('Coca Cola', ''));
+});
+
 gruppo('La card del Crazy e la riga dei tagli non cambiano forma sotto le dita', () => {
   /* LA COLONNA DEI GIRI C'E' SEMPRE. Comparendo solo dopo la prima
      salita, la card si allargava di colpo a meta' lavoro e il tasto

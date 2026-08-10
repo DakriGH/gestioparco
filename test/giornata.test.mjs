@@ -291,6 +291,62 @@ gruppo('Il giro completo di un ingresso: registra, riapri, correggi, esci', () =
   ok('e in cassa c’e’ esattamente il prezzo pieno', cassa, r2(finale.park + finale.bar));
 });
 
+gruppo('Dal registro si cancella un ingresso, una giornata, tutto', () => {
+  /* NEL REGISTRO FINISCONO ANCHE GLI SBAGLI: il gruppo battuto due
+     volte, la prova fatta per capire come funziona, i soldi segnati
+     sulla riga di un altro. Restavano dentro i totali della giornata e
+     dentro le medie per sempre. */
+  const oggi = ctx.giornataDi(Date.now());
+  const ieri = ctx.giornataDi(oggi - 1);
+  const prima = ctx.entries;
+  /* cancellare ridisegna la lista, aggiorna il pallino e rimette in
+     piedi il registro: tutta roba di schermo, che qui non c'e'. Si
+     mette da parte e si rimette alla fine. */
+  const veri = {};
+  ['buildActiveView', 'updateBadge', 'riapriRegistro', 'toast'].forEach(k => {
+    veri[k] = ctx.mondo[k];
+    ctx.mondo[k] = () => {};
+  });
+  ctx.entries = [];
+  const metti = (quando, bimbi, preso, stato) => {
+    ctx.entries.push({
+      id: 'r' + ctx.entries.length, status: stato || 'closed', startTime: quando,
+      children: bimbi, crazyJumping: 0, durationMinutes: 60, baseMinutes: 60,
+      barItems: [], paidLines: {}, paidAmt: {}, paidPark: preso, paidBar: 0, people: []
+    });
+  };
+  metti(oggi + 11 * 3600000, 2, 14);
+  metti(oggi + 15 * 3600000, 3, 21);
+  metti(ieri + 16 * 3600000, 1, 7);
+  metti(oggi + 18 * 3600000, 2, 0, 'active');    /* questo e' ancora dentro */
+
+  ok('oggi tre ingressi', ctx.contiGiornata(oggi).gruppi, 3);
+  ok('ieri uno', ctx.contiGiornata(ieri).gruppi, 1);
+  ok('e oggi in cassa', ctx.contiGiornata(oggi).incassato, 35);
+
+  /* un ingresso solo, quello sbagliato */
+  ctx.eliminaIngresso(ctx.entries[1]);
+  ok('via l ingresso sbagliato', ctx.contiGiornata(oggi).gruppi, 2);
+  ok('e i suoi soldi se ne vanno con lui', ctx.contiGiornata(oggi).incassato, 14);
+
+  /* una giornata intera */
+  ctx.eliminaGiornata(ieri);
+  ok('ieri non c e piu', ctx.contiGiornata(ieri).gruppi, 0);
+  ok('mentre oggi non si tocca', ctx.contiGiornata(oggi).gruppi, 2);
+
+  /* tutto lo storico -- ma chi e' in sala resta dov'e' */
+  ctx.svuotaRegistro();
+  ok('lo storico e vuoto', ctx.contiGiornata(oggi).incassato, 0);
+  ok('ma chi e dentro resta', ctx.entries.length, 1);
+  ok('ed e proprio quello ancora dentro', ctx.entries[0].status, 'active');
+
+  /* cancellare una giornata vuota non fa danni */
+  ctx.eliminaGiornata(ctx.giornataDi(oggi - 40 * 24 * 3600000));
+  ok('il vuoto non tocca nessuno', ctx.entries.length, 1);
+  Object.keys(veri).forEach(k => { ctx.mondo[k] = veri[k]; });
+  ctx.entries = prima;
+});
+
 gruppo('Registrando non si perde niente per strada', () => {
   /* IL GUASTO CHE HA INSEGNATO QUESTA PROVA. commitEntry() copia un
      elenco di campi scritto a mano, e chi ne aggiunge uno nuovo se lo

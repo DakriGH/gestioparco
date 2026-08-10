@@ -74,28 +74,68 @@ function bottiglia(o) {
     '<rect x="' + (nx - 0.5) + '" y="' + (yTappo + hTappo - 0.6) + '" width="' + (nw + 1) + '" height="1.6" fill="#000" opacity=".18"/>'
   );
 }
-/* BUSTA di patatine: sacchetto con la saldatura sopra e sotto */
+/* UNA PATATINA: un disco ondulato, non un cerchio. */
+function patatina(cx, cy, r, rot, chip, bordo) {
+  const n = x => (Math.round(x * 100) / 100);
+  return '<g transform="translate(' + cx + ' ' + cy + ') rotate(' + rot + ')">' +
+    '<ellipse rx="' + n(r) + '" ry="' + n(r * 0.72) + '" fill="' + chip + '"/>' +
+    /* il contorno serve: senza, due patatine vicine si impastano in un
+       grumo solo e non si contano piu' */
+    '<ellipse rx="' + n(r) + '" ry="' + n(r * 0.72) + '" fill="none" stroke="' + bordo +
+      '" stroke-width=".9"/>' +
+    '<path d="M' + n(-r * 0.62) + ' .2q' + n(r * 0.31) + ' ' + n(-r * 0.62) + ' ' +
+      n(r * 0.62) + ' 0t' + n(r * 0.62) + ' 0" stroke="' + bordo +
+      '" stroke-width="1" fill="none" stroke-linecap="round"/></g>';
+}
+/* BUSTA DI PATATINE, aperta, con le patatine che escono.
+   Prima era un rettangolo con gli angoli smussati e una finestra ovale
+   nel mezzo: al banco la si scambiava per una lattina -- e di lattine,
+   cinque righe piu' su, ce ne sono cinque. Adesso il sacchetto e' PIU'
+   LARGO SOTTO CHE SOPRA (una lattina no), ha lo strappo a zig-zag in
+   cima e tre patatine che ne escono: si riconosce da lontano e senza
+   leggere il nome. */
 function busta(o) {
+  const corpo = o.corpo || '#F2C230';
+  const chip = o.chip || '#E8A33D';
+  const bordo = o.bordo || '#C4821F';
   return svg(
-    '<path d="M12 9h16l2 3.4v20.2L28 36H12l-2-3.4V12.4L12 9Z" fill="' + o.corpo + '"/>' +
-    '<path d="M10 12.4h20v2.2H10zM10 30.4h20v2.2H10z" fill="#000" opacity=".16"/>' +
-    '<path d="M12 9h16v1.2H12zM12 34.8h16V36H12z" fill="#fff" opacity=".35"/>' +
-    '<ellipse cx="20" cy="22.6" rx="6.6" ry="5.2" fill="#FBF7EC"/>' +
-    '<path d="M15.6 23.6c.8-2.6 2.4-4 4.4-4s3.6 1.4 4.4 4c-1.6 1.4-3 2-4.4 2s-2.8-.6-4.4-2Z" fill="' + (o.chip || '#E8A33D') + '"/>' +
-    '<path d="M16.8 22.4c1-1.2 2-1.8 3.2-1.8s2.2.6 3.2 1.8" stroke="#C97C22" stroke-width=".9" fill="none" opacity=".8"/>'
+    /* le patatine che escono: disegnate PRIMA, cosi' il sacchetto le
+       taglia in basso e sembrano uscire da dentro */
+    patatina(13.4, 13, 3.9, -24, chip, bordo) +
+    patatina(26.6, 12.4, 4, 22, chip, bordo) +
+    patatina(20, 9.4, 4.2, -5, chip, bordo) +
+    /* il sacchetto, con lo strappo in cima */
+    '<path d="M13 15.4l1.9-2.4 1.9 2.4 1.9-2.4 1.9 2.4 1.9-2.4 1.9 2.4 1.9-2.4 1.9 2.4' +
+      'L30 32.8a2.8 2.8 0 0 1-2.8 2.8H12.8A2.8 2.8 0 0 1 10 32.8L13 15.4Z" fill="' + corpo + '"/>' +
+    /* il buio dentro, appena sotto lo strappo */
+    '<path d="M13 15.4h15.2l.3 2.2H12.8l.2-2.2Z" fill="#000" opacity=".22"/>' +
+    /* la luce sul fianco sinistro: da' il volume del sacchetto */
+    '<path d="M14.6 18.6 12.9 32.4" stroke="#fff" stroke-width="2.4" opacity=".24" stroke-linecap="round"/>' +
+    /* l\u2019etichetta chiara con due patatine sopra */
+    '<rect x="12.2" y="22.4" width="15.6" height="7.6" rx="2.4" fill="#FBF7EC" opacity=".94"/>' +
+    patatina(16.2, 26.2, 2.9, -14, chip, bordo) +
+    /* accanto, due righe: sull\u2019etichetta c\u2019e\u2019 scritto qualcosa, e due
+       patatine simmetriche sembravano due occhi */
+    '<rect x="20" y="24.6" width="6.4" height="1.5" rx=".75" fill="' + bordo + '" opacity=".75"/>' +
+    '<rect x="20" y="27.2" width="4.4" height="1.5" rx=".75" fill="' + bordo + '" opacity=".5"/>'
   );
 }
-/* SPRITZ con l'aperitivo attorno: olive, tarallini, patatine */
-function spritz() {
+/* SPRITZ. Due voci al banco, due disegni: il BASE e' il calice e
+   basta, il COMPLETO ha attorno l'aperitivo -- olive, tarallini,
+   patatine. Sono la stessa consumazione con o senza il mangiare, e il
+   disegno lo dice senza leggere il prezzo. */
+function spritz(o) {
+  o = o || {};
   return svg(
-    /* ciotoline dietro */
+    /* ciotoline dietro: solo nel completo */
+    (!o.snack ? '' :
     '<ellipse cx="8.6" cy="31.4" rx="6.4" ry="4.2" fill="#2B2F3A"/>' +
     '<circle cx="6.4" cy="30" r="2.1" fill="#7BA83C"/><circle cx="10.4" cy="30.6" r="2.1" fill="#5F8C2E"/>' +
     '<circle cx="8.4" cy="32.8" r="2.1" fill="#7BA83C"/>' +
     '<ellipse cx="31.6" cy="31.8" rx="6.4" ry="4.2" fill="#2B2F3A"/>' +
     '<circle cx="29.6" cy="30.6" r="2.4" stroke="#D8A85A" stroke-width="1.5" fill="none"/>' +
     '<circle cx="33.4" cy="31.4" r="2.4" stroke="#C79647" stroke-width="1.5" fill="none"/>' +
-    '<path d="M28.4 34.4c1.2-1.4 2.6-2 4-2s2.8.6 4 2c-1.6 1-3 1.4-4 1.4s-2.4-.4-4-1.4Z" fill="#E8A33D"/>' +
+    '<path d="M28.4 34.4c1.2-1.4 2.6-2 4-2s2.8.6 4 2c-1.6 1-3 1.4-4 1.4s-2.4-.4-4-1.4Z" fill="#E8A33D"/>') +
     /* il calice */
     '<path d="M11.4 6.6h17.2L22.6 17.8a2 2 0 0 0-.24 1V28h-2.6v-9.2a2 2 0 0 0-.24-1L11.4 6.6Z" fill="#FF7A29"/>' +
     '<path d="M13.8 8.6h12.4L23.2 14h-6.4L13.8 8.6Z" fill="#fff" opacity=".3"/>' +
@@ -116,11 +156,51 @@ function tazzina() {
     '<path d="M15 9.6c0-1.6 1.6-1.6 1.6-3.2M19.2 9.6c0-1.6 1.6-1.6 1.6-3.2" stroke="#B9BFC9" stroke-width="1.4" stroke-linecap="round" opacity=".8"/>'
   );
 }
-/* BICCHIERINO da liquore */
+/* BICCHIERINO DA AMARO: il vetro e' vetro, il liquore sta DENTRO.
+   Prima il bicchiere era tutto pieno del colore del liquore: con un
+   amaro solo bastava, ma adesso al banco ce ne sono sei e vanno
+   riconosciuti al volo. Cambia il colore, cambia il livello, e chi ha
+   un segno suo se lo tiene: il GELO del Capo (che si versa dal
+   congelatore), la FETTA del limoncello, la FOGLIA del Kaciuto (alloro
+   e finocchietto), la STELLA d\u2019oro del Rupes.
+   o.livello -> quanto e' pieno (0..1), di suo tre quarti */
 function bicchierino(o) {
+  const yA = 12.6, yB = 25.8, alt = yB - yA;          /* il tratto dritto */
+  const liv = Math.max(0, Math.min(1, o.livello == null ? 0.74 : o.livello));
+  const u = 1 - liv;                                   /* quanto vuoto in cima */
+  const n = x => (Math.round(x * 100) / 100);
+  const yL = n(yA + u * alt);
+  const xL = n(12.6 + 1.9 * u), xR = n(27.4 - 1.7 * u);
+  const vetro = 'M12.6 12.6h14.8l-1.7 13.2a3.2 3.2 0 0 1-3.2 2.8h-4.8a3.2 3.2 0 0 1-3.2-2.8L12.6 12.6Z';
+  const dentro = 'M' + xL + ' ' + yL + 'H' + xR +
+    'L25.7 25.8a3.2 3.2 0 0 1-3.2 2.8h-4.8a3.2 3.2 0 0 1-3.2-2.8L' + xL + ' ' + yL + 'Z';
   return svg(
-    '<path d="M12.6 12.6h14.8l-1.7 13.2a3.2 3.2 0 0 1-3.2 2.8h-4.8a3.2 3.2 0 0 1-3.2-2.8L12.6 12.6Z" fill="' + o.liquore + '"/>' +
-    '<path d="M13.2 12.6h13.6l-.6 4.4H13.8l-.6-4.4Z" fill="#fff" opacity=".3"/>' +
+    '<path d="' + vetro + '" fill="#DCE6F0" opacity=".22"/>' +
+    '<path d="' + dentro + '" fill="' + o.liquore + '"/>' +
+    /* il pelo del liquore, un filo piu' chiaro */
+    '<rect x="' + xL + '" y="' + yL + '" width="' + n(xR - xL) + '" height="1.3" rx=".65" fill="#fff" opacity=".28"/>' +
+    /* il vetro: il bordo e il riflesso sul fianco */
+    '<path d="' + vetro + '" fill="none" stroke="#C6D4E4" stroke-width="1.4" opacity=".65"/>' +
+    '<path d="M15.4 14.4 16.8 25" stroke="#fff" stroke-width="1.6" opacity=".3" stroke-linecap="round"/>' +
+    /* IL GELO: brina sul vetro e un fiocco. L\u2019amaro del Capo si
+       versa ghiacciato, ed e\u2019 la prima cosa che si chiede. */
+    (o.gelo ? '<circle cx="17.2" cy="19.4" r="1.1" fill="#fff" opacity=".75"/>' +
+      '<circle cx="22.4" cy="22" r=".9" fill="#fff" opacity=".6"/>' +
+      '<circle cx="20.4" cy="16.6" r=".8" fill="#fff" opacity=".5"/>' +
+      '<path d="M30 8.6v7M26.6 10.4l6.8 4M33.4 10.4l-6.8 4" stroke="#BFE6F2" ' +
+      'stroke-width="1.7" stroke-linecap="round"/>' : '') +
+    /* LA FETTA DI LIMONE sul bordo */
+    (o.fetta ? '<circle cx="27.4" cy="12.2" r="4.4" fill="' + o.fetta + '"/>' +
+      '<circle cx="27.4" cy="12.2" r="4.4" fill="none" stroke="#FBF7EC" stroke-width="1"/>' +
+      '<path d="M27.4 7.8v8.8M23 12.2h8.8" stroke="#FBF7EC" stroke-width=".9" opacity=".9"/>' : '') +
+    /* LA FOGLIA: alloro e finocchietto, quello che c\u2019e\u2019 dentro */
+    (o.foglia ? '<path d="M27.6 8.4c3.4-.6 5.4 1 5.4 1s-1.4 2.4-4.8 3c-1.8.4-2.4-3.6-.6-4Z" fill="#4E8C3A"/>' +
+      '<path d="M27.8 11.6c1.8-1 3.6-1.4 3.6-1.4" stroke="#2F5F22" stroke-width=".9" ' +
+      'stroke-linecap="round" fill="none"/>' : '') +
+    /* LA STELLA D\u2019ORO: il Rupes e\u2019 quello premiato, e al banco lo si
+       chiama cosi\u2019 -- "quello buono" */
+    (o.stella ? STELLA(28.4, 10.4, 4.4, o.stella) : '') +
+    /* gambo e piede */
     '<rect x="18.4" y="28" width="3.2" height="5.4" fill="#D5D9E0"/>' +
     '<rect x="13" y="32.8" width="14" height="3.2" rx="1.6" fill="#D5D9E0"/>'
   );
@@ -198,11 +278,21 @@ const ICONE = {
   /* l'Ichnusa ha la bottiglia larga e bassa: e' la sua forma */
   ichnu:     () => bottiglia({ larga:true, vetro:'#8C5A28', tappo:'#D2172F', etichetta:'#D2172F', stella:'#FBF7EC' }),
   tenn:      () => bottiglia({ vetro:'#9C6B2F', tappo:'#D2172F', etichetta:'#D2172F', riga:'#FBF7EC' }),
-  /* --- alcolici --- */
-  limon:     () => bicchierino({ liquore:'#F5E04A' }),
+  /* --- alcolici ---
+     Sei amari in fila: cambia il colore del liquore e cambia il segno.
+     Il Capo si versa ghiacciato, il limoncello ha la sua fetta, il
+     Kaciuto e' di alloro e finocchietto, il Rupes e' quello premiato. */
+  eremita:   () => bicchierino({ liquore:'#3C2A18', livello:.8 }),
+  capo:      () => bicchierino({ liquore:'#2A1A12', livello:.78, gelo:true }),
+  silano:    () => bicchierino({ liquore:'#8A5320', livello:.72 }),
+  limon:     () => bicchierino({ liquore:'#F5E04A', livello:.7, fetta:'#FFE24A' }),
+  kaciuto:   () => bicchierino({ liquore:'#4A5A22', livello:.76, foglia:true }),
+  rupes:     () => bicchierino({ liquore:'#8C4A16', livello:.74, stella:'#E8C36B' }),
+  /* restano per chi se li e' aggiunti a mano nel suo listino */
   amari:     () => bicchierino({ liquore:'#5B3A22' }),
-  grappa:    () => bicchierino({ liquore:'#EDE7DA' }),
-  spritz:    () => spritz()
+  grappa:    () => bicchierino({ liquore:'#EDE7DA', livello:.66 }),
+  spritz:    () => spritz(),
+  spritzc:   () => spritz({ snack:true })
 };
 
 /* ---------- aggancio al menu del bar, per nome ---------- */
@@ -222,7 +312,15 @@ const NOMI_ICONE = {
   'heineken':'heine', 'nastro azzurro':'nastro', 'ichnusa':'ichnu',
   "tennent's":'tenn', 'tennents':'tenn', 'tennent':'tenn',
   'limoncello':'limon', 'amari':'amari', 'amaro':'amari',
-  'grappa':'grappa', 'spritz':'spritz',
+  'grappa':'grappa',
+  /* gli amari del banco, coi nomi come si dicono davvero */
+  'eremita':'eremita', 'amaro eremita':'eremita',
+  'amaro del capo':'capo', 'del capo':'capo', 'vecchio amaro del capo':'capo', 'capo':'capo',
+  'amaro silano':'silano', 'silano':'silano',
+  'kaciuto':'kaciuto', 'amaro kaciuto':'kaciuto', 'kachiuto':'kaciuto', 'cachiuto':'kaciuto',
+  'rupes':'rupes', 'amaro rupes':'rupes',
+  'spritz':'spritz', 'spritz base':'spritz', 'aperol spritz':'spritz', 'aperol':'spritz',
+  'spritz completo':'spritzc', 'aperol spritz completo':'spritzc', 'spritz con snack':'spritzc',
   'bambini':'bimbi', 'ingresso':'bimbi', 'crazy jumping':'crazy', 'crazy':'crazy'
 };
 function chiaveIcona(nome) {

@@ -393,6 +393,28 @@ gruppo('Il vestito cambiato si vede subito anche nella lista');
     /cardRefs\.set\([\s\S]{0,320}avBox, nome, tratti, apriParco, sigGente/.test(APP));
 }
 
+gruppo('Il banco degli amari, e ognuno col suo disegno');
+{
+  const ICO = leggi('js/icone.js');
+  /* Una voce "Amari" sola non bastava: al banco si chiedono per nome,
+     costano diverso, e a fine giornata si vuole sapere QUALE e' andato. */
+  ['Eremita', 'Amaro del Capo', 'Amaro Silano', 'Limoncello', 'Kaciuto', 'Rupes',
+   'Spritz base', 'Spritz completo'].forEach(n => {
+    prova('nel listino c e ' + n, APP.indexOf("name: '" + n + "'") > 0);
+  });
+  /* il listino sta SALVATO su ogni tavoletta: senza la migrazione, le
+     casse restavano con "Amari" e "Grappa" per sempre */
+  prova('e arriva anche su chi ha gia l app', /amariNuovi/.test(APP));
+  ['eremita', 'capo', 'silano', 'kaciuto', 'rupes', 'spritzc'].forEach(k => {
+    prova('il disegno di ' + k, new RegExp('\\n\\s*' + k + ':\\s*\\(\\)').test(ICO));
+  });
+  prova('e i nomi del banco ci arrivano',
+    /'amaro del capo':'capo'/.test(ICO) && /'kaciuto':'kaciuto'/.test(ICO) &&
+    /'spritz completo':'spritzc'/.test(ICO));
+  /* la busta sembrava una lattina: adesso ha lo strappo e le patatine */
+  prova('le patatine hanno il loro sacchetto', /function patatina/.test(ICO));
+}
+
 gruppo('I giri del Crazy stanno nella sua card');
 {
   /* Il tempo del Crazy si conta a giri, non a teste: tre che salgono

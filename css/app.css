@@ -983,6 +983,20 @@ main {
 /* chi e' uscito senza saldare si vede a colpo d'occhio: e' l'unica
    riga che chiede qualcosa a chi legge */
 .reg-riga.deve { background: rgba(228, 87, 79, .09); }
+/* LA RIGA DEL REGISTRO SI TOCCA: da li' si apre l'ingresso per
+   correggerlo, o lo si butta. Il gallone a destra lo dice: senza, una
+   riga che si tocca sembra una riga scritta. */
+.reg-riga.tocca { cursor: pointer; }
+.reg-riga.tocca:active { background: rgba(255, 255, 255, .1); }
+.reg-riga .reg-vai { font-size: 19px; font-weight: 700; color: var(--txt-3);
+  margin-left: 2px; }
+/* le cose serie stanno in fondo, staccate, dove non si finisce col
+   pollice mentre si scorre */
+.reg-azioni { display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-top: 16px; padding-top: 12px;
+  border-top: 1.5px solid rgba(255, 255, 255, .09); }
+.reg-azioni .rz-hint { flex: 1; min-width: 120px; font-size: 11.5px; color: var(--txt-3); }
+.reg-azioni .btn-danger { flex: 0 0 auto; }
 .reg-riga .ora { font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 700;
   color: var(--txt-2); flex: 0 0 46px; font-variant-numeric: tabular-nums; }
 .reg-riga .chi { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }

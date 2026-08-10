@@ -276,10 +276,18 @@ function defaultSettings() {
       { id: 'b13', name: 'Nastro Azzurro',  price: 3,    em: '\ud83c\udf7a', cat: 'Birre' },
       { id: 'b14', name: 'Ichnusa',         price: 3,    em: '\ud83c\udf7a', cat: 'Birre' },
       { id: 'b15', name: "Tennent's",       price: 3.5,  em: '\ud83c\udf7a', cat: 'Birre' },
+      /* GLI AMARI, UNO PER UNO. Una voce "Amari" sola non bastava piu':
+         al banco si chiedono per nome, costano diverso (3 e 4) e a fine
+         giornata si vuole sapere QUALE e' andato. Lo Spritz e' due
+         voci, non una: quello liscio e quello col mangiare. */
+      { id: 'b20', name: 'Eremita',         price: 3,    em: '\ud83e\udd43', cat: 'Alcolici' },
+      { id: 'b21', name: 'Amaro del Capo',  price: 3,    em: '\ud83e\udd43', cat: 'Alcolici' },
+      { id: 'b22', name: 'Amaro Silano',    price: 3,    em: '\ud83e\udd43', cat: 'Alcolici' },
       { id: 'b16', name: 'Limoncello',      price: 3,    em: '\ud83c\udf4b', cat: 'Alcolici' },
-      { id: 'b17', name: 'Amari',           price: 3,    em: '\ud83e\udd43', cat: 'Alcolici' },
-      { id: 'b18', name: 'Grappa',          price: 4,    em: '\ud83e\udd43', cat: 'Alcolici' },
-      { id: 'b19', name: 'Spritz',          price: 6,    em: '\ud83c\udf79', cat: 'Alcolici' }
+      { id: 'b23', name: 'Kaciuto',         price: 4,    em: '\ud83e\udd43', cat: 'Alcolici' },
+      { id: 'b24', name: 'Rupes',           price: 4,    em: '\ud83e\udd43', cat: 'Alcolici' },
+      { id: 'b25', name: 'Spritz base',     price: 4,    em: '\ud83c\udf79', cat: 'Alcolici' },
+      { id: 'b26', name: 'Spritz completo', price: 6,    em: '\ud83c\udf79', cat: 'Alcolici' }
     ],
     animazioni: true,
     schermoIntero: false,
@@ -769,9 +777,20 @@ function roleOf(k) { return AV.ROLES.find(r => r.key === k) || AV.ROLES[AV.ROLES
 function nameOf(p) { return (p.name && p.name.trim()) || roleOf(p.role).label; }
 
 let sheetEsc = null;
+/* IL FOGLIO CHE C'E' ADESSO. Serve perche' aprire un foglio ne
+   sostituisce un altro senza passare dal suo close(): chi aspettava di
+   sapere che era finito -- il registro, che si rimette in piedi da se'
+   -- restava a credere di essere ancora aperto. */
+let foglioVivo = null;
+
 function sheet(title, opts) {
   opts = opts || {};
   const root = $('#modalRoot');
+  /* il foglio di prima e' finito: si toglie il suo tasto Esc e si
+     avvisa chi lo aspettava */
+  if (sheetEsc) { document.removeEventListener('keydown', sheetEsc); sheetEsc = null; }
+  const finito = foglioVivo; foglioVivo = null;
+  if (finito && typeof finito.onClose === 'function') finito.onClose();
   root.classList.remove('hidden');
   root.innerHTML = '';
 
@@ -802,11 +821,14 @@ function sheet(title, opts) {
   root.appendChild(ov);
   root.appendChild(box);
 
+  const mio = { onClose: opts.onClose };
+  foglioVivo = mio;
   const close = () => {
     root.classList.add('hidden');
     root.innerHTML = '';
     document.removeEventListener('keydown', sheetEsc);
     sheetEsc = null;
+    if (foglioVivo === mio) foglioVivo = null;
     if (typeof opts.onClose === 'function') opts.onClose();
   };
   ov.onclick = close;
@@ -5484,11 +5506,20 @@ function statistiche(giorni) {
 let hubDove = 'giornata';
 let hubGiorno = null;
 let hubPeriodo = 30;              // quanti giorni guarda lo storico
+let hubFoglio = null;             // il registro, se e' aperto adesso
+
+/* Rimette in piedi il registro dov'era. Serve dopo ogni correzione:
+   il foglio della domanda ("elimino?") prende il posto del registro, e
+   dopo aver risposto ci si aspetta di ritrovarcisi dentro, non a mani
+   vuote sulla lista. */
+function riapriRegistro() { fogliRegistro(); }
 
 function fogliRegistro(giorno) {
   hubDove = giorno === undefined ? hubDove : 'giornata';
   hubGiorno = giorno === undefined ? (hubGiorno || giornataDi(Date.now())) : giorno;
-  const s = sheet('\ud83d\udcd2 Registro e statistiche', { grande: true });
+  const s = sheet('\ud83d\udcd2 Registro e statistiche',
+    { grande: true, onClose: () => { hubFoglio = null; } });
+  hubFoglio = s;
 
   const linguette = el('div', 'hub-cat');
   const dentro = el('div', 'hub-dentro');
@@ -5510,6 +5541,15 @@ function fogliRegistro(giorno) {
   };
   disegna();
   footBtn(s.foot, 'Chiudi', 'btn-ghost', s.close);
+}
+
+/* Una domanda seria dentro il registro: qualunque cosa si risponda,
+   si torna al registro. */
+function chiediNelRegistro(titolo, testo, parola, si) {
+  const q = sheet(titolo);
+  q.body.appendChild(el('div', 'hint', testo));
+  footBtn(q.foot, 'Lascia stare', 'btn-ghost', () => { q.close(); riapriRegistro(); });
+  footBtn(q.foot, parola, 'btn-danger', () => { q.close(); si(); });
 }
 
 /* ── una giornata: quella di oggi, o quella che si sceglie ── */
@@ -5568,7 +5608,19 @@ function vistaGiornata(dentro, ridisegna) {
 
   const lst = el('div', 'reg-lista');
   c.righe.forEach(r => {
-    const riga = el('div', 'reg-riga' + (r.resta > 0.005 ? ' deve' : ''));
+    const riga = el('div', 'reg-riga tocca' + (r.resta > 0.005 ? ' deve' : ''));
+    /* NEL REGISTRO FINISCONO ANCHE GLI SBAGLI: il gruppo battuto due
+       volte, la prova fatta per capire come funziona, i soldi segnati
+       sulla riga di un altro. Restavano li' per sempre -- dentro i
+       totali della giornata e dentro le medie -- e l'unico modo di
+       toglierli era non averceli messi. Adesso la riga si tocca. */
+    riga.setAttribute('role', 'button');
+    riga.tabIndex = 0;
+    riga.title = 'apri, correggi o cancella questo ingresso';
+    riga.onclick = () => {
+      const e = lista(entries).find(x => x.id === r.id);
+      if (e) fogliRigaRegistro(e);
+    };
     riga.appendChild(el('span', 'ora', r.ora));
     const chi = el('span', 'chi');
     chi.appendChild(el('b', null, r.chi));
@@ -5579,9 +5631,158 @@ function vistaGiornata(dentro, ridisegna) {
     soldi.appendChild(el('b', null, eur(r.preso)));
     if (r.resta > 0.005) soldi.appendChild(el('span', 'manca', '\u2212' + eur(r.resta)));
     riga.appendChild(soldi);
+    riga.appendChild(el('span', 'reg-vai', '\u203a'));
     lst.appendChild(riga);
   });
   dentro.appendChild(lst);
+
+  /* e la giornata intera, quando e' tutta da buttare: la prova di un
+     pomeriggio, il giorno registrato due volte */
+  const az = el('div', 'reg-azioni');
+  az.appendChild(el('span', 'rz-hint', 'Tocca una riga per correggerla o cancellarla.'));
+  const via = el('button', 'btn btn-sm btn-danger', '\ud83d\uddd1\ufe0f Elimina la giornata');
+  via.onclick = () => chiediNelRegistro('Elimina tutta la giornata?',
+    'Spariscono ' + c.gruppi + (c.gruppi === 1 ? ' ingresso' : ' ingressi') + ' di ' +
+    nomeGiornata(hubGiorno).toLowerCase() + ', con i ' + eur(c.incassato) +
+    ' che risultano incassati e i ' + c.bambini + (c.bambini === 1 ? ' bambino' : ' bambini') +
+    ' contati nelle medie. Per qualche secondo si pu\u00f2 annullare.',
+    'Elimina la giornata', () => eliminaGiornata(hubGiorno));
+  az.appendChild(via);
+  dentro.appendChild(az);
+}
+
+/* UNA RIGA DEL REGISTRO, APERTA. Due strade: andare all'ingresso e
+   sistemarlo -- che e' quasi sempre quello che serve, perche' lo
+   sbaglio e' un numero, non l'ingresso intero -- oppure buttarlo. */
+function fogliRigaRegistro(entry) {
+  const d = dueOf(entry);
+  const preso = r2(num(entry.paidPark, 0) + num(entry.paidBar, 0));
+  const q = clamp(entry.children, 0, 1e6);
+  const crz = clamp(entry.crazyJumping, 0, 1e6);
+  const s = sheet(fmtTime(entry.startTime) + ' \u00b7 ' + nomiDi(entry));
+  s.body.appendChild(el('div', 'hint',
+    q + (q === 1 ? ' bambino' : ' bambini') +
+    (crz ? ' \u00b7 ' + crz + (crz === 1 ? ' salita' : ' salite') + ' di Crazy' : '') +
+    ' \u00b7 incassati ' + eur(preso) +
+    (d.total > 0.005 ? ' \u00b7 mancano ' + eur(d.total) : '') +
+    (entry.status === 'active' ? ' \u00b7 \u00e8 ancora dentro' : '')));
+
+  const scelta = (cls, em, titolo, sotto, fn) => {
+    const b = el('button', 'scelta-riga ' + cls);
+    b.appendChild(el('span', 'sc-em', em));
+    const t = el('span', 'sc-txt');
+    t.appendChild(el('b', null, titolo));
+    t.appendChild(el('span', null, sotto));
+    b.appendChild(t);
+    b.onclick = () => { s.close(); fn(); };
+    s.body.appendChild(b);
+  };
+
+  /* CORREGGERE UN INGRESSO GIA' USCITO vuol dire riportarlo dentro.
+     In archivio le schede sono righe secche -- data, nome, due tasti --
+     e un conto da aprire non ce l'hanno: e' fatto apposta, se no
+     l'archivio di fine stagione sarebbe migliaia di schede intere da
+     disegnare. Quindi la strada e' quella che l'app ha sempre avuto:
+     torna fra quelli dentro, lo correggi, e lo fai uscire di nuovo. */
+  const inSala = entry.status === 'active';
+  scelta('', inSala ? '\u270f\ufe0f' : '\u21a9\ufe0e',
+    inSala ? 'Apri e correggi' : 'Riportalo dentro e correggilo',
+    inSala
+      ? 'Chiude il registro e va a questo ingresso, col conto gi\u00e0 aperto: da l\u00ec si cambiano ' +
+        'bambini, orario, giri di Crazy e soldi incassati.'
+      : 'Questo gruppo \u00e8 gi\u00e0 uscito. Torna fra quelli dentro col conto aperto: lo correggi ' +
+        'e poi lo fai uscire un\u2019altra volta.',
+    () => {
+      if (!inSala) {
+        entry.status = 'active';
+        delete entry.costoFinale;   /* torna dentro: si riconta col listino di adesso */
+        saveEntries();
+        updateBadge();
+      }
+      vaiAllIngresso(entry);
+    });
+
+  scelta('pericolo', '\ud83d\uddd1\ufe0f', 'Elimina questo ingresso',
+    'Sparisce dal registro e dai conti della giornata, con i soldi che risultavano incassati. ' +
+    'Per qualche secondo si pu\u00f2 annullare.',
+    () => eliminaIngresso(entry, riapriRegistro));
+
+  footBtn(s.foot, 'Torna al registro', 'btn-ghost', riapriRegistro);
+}
+
+/* PORTA A QUELL'INGRESSO e aprigli il conto: che sia ancora dentro o
+   gia' in archivio, si arriva allo stesso posto. */
+function vaiAllIngresso(entry) {
+  /* di archiviati non ce ne arrivano -- chi chiama li riporta dentro
+     prima -- ma se succede si mostra l'archivio e si dice perche' */
+  const inArchivio = entry.status !== 'active';
+  showArchive = inArchivio;
+  archivioTutto = true;              /* anche se e' vecchio di mesi */
+  if (tab !== 'active') switchTab('active'); else buildActiveView();
+  if (inArchivio) { toast('\u00c8 in archivio: riportalo dentro per correggerlo'); return; }
+  setTimeout(() => {
+    const r = cardRefs.get(entry.id);
+    if (!r || !r.card.isConnected) { toast('Non trovo pi\u00f9 questo ingresso'); return; }
+    r.card.scrollIntoView({ block: 'center', behavior: anima() ? 'smooth' : 'auto' });
+    r.card.classList.remove('evidenzia');
+    void r.card.offsetWidth;
+    r.card.classList.add('evidenzia');
+    setTimeout(() => r.card.classList.remove('evidenzia'), 3000);
+    if (typeof r.apriParco === 'function') r.apriParco({ stopPropagation: () => {} });
+  }, 160);
+}
+
+/* UNA GIORNATA INTERA, VIA. I soldi che risultavano incassati se ne
+   vanno con lei -- ed e' il punto: una giornata di prova non deve
+   restare nelle medie per sempre. */
+function eliminaGiornata(inizio) {
+  if (typeof volante !== 'undefined' && volante) posaSubito(volante.card);
+  const fine = inizio + 24 * 3600 * 1000;
+  const prima = lista(entries).slice();
+  const dentro = e => {
+    const t = num(e.startTime, num(e.createdAt, 0));
+    return t >= inizio && t < fine;
+  };
+  const quanti = prima.filter(dentro).length;
+  if (!quanti) { riapriRegistro(); return; }
+  entries = prima.filter(e => !dentro(e));
+  saveEntries();
+  buildActiveView();
+  updateBadge();
+  riapriRegistro();
+  fatto('Giornata cancellata \u00b7 ' + quanti + (quanti === 1 ? ' ingresso' : ' ingressi'), () => {
+    entries = prima;
+    saveEntries();
+    buildActiveView();
+    updateBadge();
+    if (hubFoglio) riapriRegistro();
+    toast('Giornata rimessa a posto \u21a9\ufe0e');
+  });
+}
+
+/* TUTTO LO STORICO, VIA -- ma non chi e' dentro adesso.
+   Le prove dei primi giorni sporcano le medie per sempre, e cancellarle
+   una giornata alla volta e' un lavoro. Chi sta ancora nel parco resta
+   dov'e': quello non e' storico, e' gente in sala. */
+function svuotaRegistro() {
+  if (typeof volante !== 'undefined' && volante) posaSubito(volante.card);
+  const prima = lista(entries).slice();
+  const restano = prima.filter(e => e.status === 'active');
+  const quanti = prima.length - restano.length;
+  if (!quanti) { riapriRegistro(); return; }
+  entries = restano;
+  saveEntries();
+  buildActiveView();
+  updateBadge();
+  riapriRegistro();
+  fatto('Registro svuotato \u00b7 ' + quanti + (quanti === 1 ? ' ingresso' : ' ingressi'), () => {
+    entries = prima;
+    saveEntries();
+    buildActiveView();
+    updateBadge();
+    if (hubFoglio) riapriRegistro();
+    toast('Registro rimesso a posto \u21a9\ufe0e');
+  });
 }
 
 /* ── una barra: il riquadro colorato piu' il suo numero ──
@@ -5640,7 +5841,24 @@ function vistaStorico(dentro, ridisegna) {
     graf.appendChild(r);
   });
   dentro.appendChild(graf);
-  dentro.appendChild(el('div', 'hint', 'Tocca una barra per aprire quella giornata.'));
+  dentro.appendChild(el('div', 'hint', 'Tocca una barra per aprire quella giornata, e da l\u00ec correggi o cancelli.'));
+
+  /* e la scopa grossa, in fondo dove non si tocca per sbaglio */
+  const az = el('div', 'reg-azioni');
+  const dentroAdesso = lista(entries).filter(e => e.status === 'active').length;
+  const storici = lista(entries).length - dentroAdesso;
+  az.appendChild(el('span', 'rz-hint', storici + (storici === 1 ? ' ingresso' : ' ingressi') +
+    ' in tutto lo storico'));
+  const via = el('button', 'btn btn-sm btn-danger', '\ud83e\uddf9 Svuota tutto lo storico');
+  via.onclick = () => chiediNelRegistro('Svuota tutto lo storico?',
+    'Spariscono ' + storici + (storici === 1 ? ' ingresso' : ' ingressi') +
+    ' di tutte le giornate, con i loro soldi e le loro medie. ' +
+    (dentroAdesso ? (dentroAdesso === 1 ? 'Il gruppo ancora dentro resta dov’e’. '
+      : 'I ' + dentroAdesso + ' gruppi ancora dentro restano dove sono. ') : '') +
+    'Per qualche secondo si pu\u00f2 annullare.',
+    'Svuota lo storico', svuotaRegistro);
+  az.appendChild(via);
+  dentro.appendChild(az);
 }
 
 /* ── le statistiche: cosa succede DI SOLITO ── */
@@ -5789,7 +6007,7 @@ function fogliUscita(entry, d, esci) {
    conti della giornata. I soldi che risultavano incassati se ne vanno
    con lui -- ed e' il punto: se erano stati battuti per sbaglio, non
    devono restare in cassa. */
-function eliminaIngresso(entry) {
+function eliminaIngresso(entry, dopo) {
   if (volante) posaSubito(volante.card);
   const foto = fotografia(entry);
   const dovEra = lista(entries).indexOf(entry);
@@ -5797,6 +6015,9 @@ function eliminaIngresso(entry) {
   saveEntries();
   buildActiveView();
   updateBadge();
+  /* chi ha chiesto la cancellazione dal registro vuole ritrovarcisi
+     dentro, aggiornato -- prima e dopo l'annulla */
+  if (typeof dopo === 'function') dopo();
   fatto('Ingresso eliminato \ud83d\uddd1\ufe0f', () => {
     /* torna al SUO posto nell'elenco, non in fondo: la lista e' in
        ordine di arrivo e ritrovarselo altrove confonde */
@@ -5804,6 +6025,7 @@ function eliminaIngresso(entry) {
     saveEntries();
     buildActiveView();
     updateBadge();
+    if (typeof dopo === 'function' && hubFoglio) dopo();
     toast('Rimesso a posto \u21a9\ufe0e');
   });
 }
@@ -6554,6 +6776,22 @@ function init() {
   }
   if (!Array.isArray(settings.quickDurations) || !settings.quickDurations.length) {
     settings.quickDurations = [15, 30, 60, 90];
+  }
+  /* IL BANCO DEGLI AMARI, ANCHE SU CHI HA GIA' L'APP.
+     Il listino sta SALVATO su ogni tavoletta: cambiare quello di serie
+     non tocca chi c'e' gia', e le casse sarebbero rimaste con "Amari"
+     e "Grappa" per sempre. Si rifa' una volta sola -- e si segna che e'
+     stato fatto, se no il giorno che qualcuno toglie una voce se la
+     ritrova il lunedi' dopo.
+     Quello che il banco si e' aggiunto da se' negli Alcolici resta, in
+     coda: e' roba sua, non nostra. */
+  if (!settings.amariNuovi && Array.isArray(settings.barMenu)) {
+    const nuovi = defaultSettings().barMenu.filter(v => v.cat === 'Alcolici');
+    const via = nuovi.map(v => v.id).concat(['b17', 'b18', 'b19']);
+    const suoi = settings.barMenu.filter(v => v.cat === 'Alcolici' && via.indexOf(v.id) < 0);
+    settings.barMenu = settings.barMenu.filter(v => v.cat !== 'Alcolici').concat(nuovi, suoi);
+    settings.amariNuovi = true;
+    save(SK.settings, settings);
   }
   entries = normalizeEntries(load(SK.entries));
   presets = load(SK.presets) || [];
