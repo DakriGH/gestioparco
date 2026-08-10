@@ -431,6 +431,41 @@ gruppo('Gli accessori: si mettono, si tolgono, e si vedono addosso');
     aperta.indexOf('data-accvia="scarpe"') >= 0);
 }
 
+gruppo('Il mimetico e mimetico, e la scritta e UNA scritta');
+{
+  /* IL MIMETICO non ha un fondo: ha solo macchie, che si incastrano e
+     arrivano ai bordi. Prima erano otto macchioline tonde staccate col
+     colore del capo a fare da sfondo -- a occhio, dei pois sfrangiati. */
+  const camo = AV.tessuto(VERDE, 'camo', 'kX');
+  prova('il mimetico e una tessera con dentro le macchie', /<pattern/.test(camo.def));
+  prova('almeno sette macchie', (camo.def.match(/<path/g) || []).length >= 7,
+    (camo.def.match(/<path/g) || []).length + ' macchie');
+  prova('e quattro toni, non uno',
+    new Set(camo.def.match(/fill="#[0-9a-f]{6}"/gi) || []).size >= 4);
+
+  /* LA SCRITTA NON E UNA TESSERA: e una stampa, in mezzo al capo.
+     Ripetuta diventava una manciata di barre sparse -- cioe la
+     fantasia a righe, che e quella della porta accanto. */
+  const logo = AV.tessuto(VERDE, 'logo', 'kY');
+  prova('la scritta non si ripete a tessere', !logo.def && logo.fill === VERDE);
+  prova('e dice con che colore scriverla', !!logo.scritta);
+
+  const magl = CAPI.capo('maglietta', VERDE, 'logo', 48);
+  prova('sulla maglietta la scritta c e', magl.indexOf(logo.scritta) > 0);
+  prova('ed e una sola', (magl.match(new RegExp('rx="[0-9.]+" fill="' + logo.scritta + '"', 'g')) || []).length === 2);
+
+  const fig = AV.build(AV.normalize({ role: 'altro',
+    top: { style: 'maglietta', color: VERDE, pattern: 'logo' },
+    pants: { style: 'pantaloni', color: VERDE, pattern: 'logo' } }));
+  prova('e addosso ce ne sono due: petto e gamba',
+    (fig.match(new RegExp('fill="' + logo.scritta + '"', 'g')) || []).length === 4);
+  const soloSopra = AV.build(AV.normalize({ role: 'altro',
+    top: { style: 'maglietta', color: VERDE, pattern: 'logo' },
+    pants: { style: 'pantaloni', color: VERDE, pattern: 'solid' } }));
+  prova('col sotto tinta unita la scritta e una sola',
+    (soloSopra.match(new RegExp('fill="' + logo.scritta + '"', 'g')) || []).length === 2);
+}
+
 gruppo('Il Top ha preso il posto del Gilet');
 {
   /* Un top e una canotta non sono lo stesso capo: il top FINISCE PIU'

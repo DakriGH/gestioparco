@@ -384,6 +384,17 @@
     return VISTA;
   }
 
+  /* DOVE VA LA SCRITTA su ogni capo: il petto per i sopra, la coscia
+     per i sotto -- e piu' piccola sui capi corti, che di posto ne
+     hanno meno. [x, y, larghezza] */
+  const SCRITTA_DOVE = {
+    pantaloni: [24, 21, 13], jeans: [24, 21, 13], tuta: [24, 21, 13], leggings: [24, 21, 12],
+    pantaloncini: [24, 19, 12], jeanscorti: [24, 19, 12],
+    gonna: [24, 18.5, 14], gonnalunga: [24, 21, 14],
+    vestito: [24, 26, 14], vestitolungo: [24, 28, 13],
+    canotta: [24, 27, 14], top: [24, 27, 12]
+  };
+
   function capo(chiave, colore, fantasia, misura) {
     const fn = CAPI[chiave];
     if (!fn) return '';
@@ -405,13 +416,19 @@
        occupano davvero, quindi il disegno cresce dentro lo stesso
        pulsante, senza che il pannello si allunghi di un pixel. */
     const vb = riquadroComune();
+    /* LA SCRITTA E' UNA SOLA, in mezzo al capo: la stoffa resta tinta
+       unita e la stampa si mette qui, dove sta sul capo vero -- al
+       centro del petto, o sulla coscia per i capi di sotto. */
+    const dove = SCRITTA_DOVE[chiave] || [24, 25, 16];
+    const stampa = (t.scritta && global.AV && AV.scritta)
+      ? AV.scritta(dove[0], dove[1], dove[2], t.scritta, c) : '';
     return `<svg viewBox="${vb}" width="${m}" height="${m}" aria-hidden="true">` +
       (t.def ? `<defs>${t.def}</defs>` : '') +
       `<path d="${d.sagoma}" fill="none" stroke="rgba(255,255,255,.94)" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>` +
       `<path d="${d.sagoma}" fill="none" stroke="rgba(18,18,26,.9)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>` +
       `<path d="${d.sagoma}" fill="${t.fill}"/>` +
       (d.ombra ? `<path d="${d.ombra}" fill="rgba(0,0,0,.14)"/>` : '') +
-      d.segni + '</svg>';
+      stampa + d.segni + '</svg>';
   }
 
   global.CAPI = { capo, accessorio, capelli, elenco: Object.keys(CAPI), accessori: Object.keys(ACCESSORI), tagli: Object.keys(TAGLI) };

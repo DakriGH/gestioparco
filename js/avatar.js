@@ -471,31 +471,34 @@
     } else if (pattern === 'plaid') {
       size = 12; s = `<rect width="12" height="12" fill="${color}"/><rect y="4" width="12" height="3" fill="${color2}" opacity="0.8"/><rect x="4" width="3" height="12" fill="${color2}" opacity="0.8"/>`;
     } else if (pattern === 'camo') {
-      /* Macchie irregolari e di tre toni su una tessera grande: quello
-         di prima erano due ellissi ripetute ogni dieci pixel e a
-         guardarlo si vedeva la griglia, non la mimetica. */
-      size = 30;
-      const scuro = shade(color, -34), chiaro = shade(color, 30);
-      s = `<rect width="30" height="30" fill="${color}"/>
-        <path d="M2 5 Q7 1 12 4 Q16 8 11 11 Q5 13 2 9 Z" fill="${color2}"/>
-        <path d="M18 2 Q25 0 28 5 Q29 10 24 11 Q19 10 17 6 Z" fill="${scuro}"/>
-        <path d="M6 16 Q12 14 15 19 Q16 24 10 25 Q4 24 4 20 Z" fill="${chiaro}"/>
-        <path d="M20 15 Q27 15 29 20 Q30 26 24 27 Q18 26 18 21 Z" fill="${color2}"/>
-        <path d="M0 24 Q4 22 6 26 Q6 30 2 30 L0 30 Z" fill="${scuro}"/>
-        <path d="M12 27 Q17 26 18 30 L11 30 Z" fill="${scuro}"/>
-        <path d="M25 11 Q29 12 29 15 L24 14 Z" fill="${chiaro}"/>`;
+      /* MIMETICO VERO: macchie che si INCASTRANO fra loro e arrivano
+         fino ai bordi della tessera, in quattro toni.
+         Prima erano otto macchioline tonde staccate, con in mezzo il
+         colore del capo a fare da fondo: a occhio erano dei pois
+         sfrangiati, non una mimetica. Una mimetica non ha un fondo --
+         ha solo macchie -- e i bordi sono spezzati, non tondi. */
+      size = 26;
+      const scuro = shade(color, -38), chiaro = shade(color, 30);
+      s = `<rect width="26" height="26" fill="${color}"/>
+        <path d="M0 0 L10 0 L12.5 3 L9 6.5 L11 9.5 L6 11 L1.5 8.5 L0 5 Z" fill="${scuro}"/>
+        <path d="M14 0 L26 0 L26 6 L22.5 8.5 L17 7 L14.5 3.5 Z" fill="${color2}"/>
+        <path d="M0 12 L4 11 L7.5 14 L6.5 18.5 L3 21 L0 19.5 Z" fill="${chiaro}"/>
+        <path d="M10.5 8.5 L15.5 9.5 L19 13 L17.5 17.5 L12 19 L8.5 15.5 Z" fill="${scuro}"/>
+        <path d="M21.5 10 L26 8.5 L26 17 L23 19 L20 16 L21 12.5 Z" fill="${chiaro}"/>
+        <path d="M0 22.5 L4.5 22 L9 24 L10 26 L0 26 Z" fill="${color2}"/>
+        <path d="M13 21 L18.5 20.5 L22 23 L21.5 26 L12.5 26 Z" fill="${scuro}"/>
+        <path d="M24 20.5 L26 20 L26 26 L23.5 26 Z" fill="${chiaro}"/>`;
     } else if (pattern === 'stars') {
       size = 14; s = `<rect width="14" height="14" fill="${color}"/><path d="M7 2.4 L8.3 5.8 L11.9 5.8 L9 8 L10.1 11.5 L7 9.3 L3.9 11.5 L5 8 L2.1 5.8 L5.7 5.8 Z" fill="${color2}"/>`;
     } else if (pattern === 'logo') {
-      /* Una SCRITTA vera, non due barre: parole di lunghezza diversa,
-         con le lettere appena accennate. Due rettangoli tondi si
-         leggevano come righe, che e' la fantasia della porta accanto. */
-      size = 26;
-      const parola = (x, y, w, h) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${h / 2}" fill="${color2}"/>`;
-      s = `<rect width="26" height="26" fill="${color}"/>` +
-        parola(3, 6.5, 6, 3) + parola(10.5, 6.5, 4, 3) + parola(16, 6.5, 7, 3) +
-        parola(5, 12, 9, 3) + parola(15.5, 12, 5.5, 3) +
-        parola(7.5, 17.5, 4, 2.4) + parola(13, 17.5, 8, 2.4);
+      /* LA SCRITTA NON E' UNA FANTASIA DA RIPETERE: e' UNA stampa, in
+         mezzo al capo. Ripetuta a tessere diventava una manciata di
+         barre sparse su tutta la maglietta -- cioe' una fantasia a
+         righe, che e' quella della porta accanto.
+         Qui la stoffa resta tinta unita e la scritta la mette chi
+         disegna il capo, al centro del petto (o della gamba): si
+         restituisce solo il COLORE con cui scriverla. */
+      return { fill: color, def: '', scritta: color2 };
     } else if (pattern === 'diag') {
       size = 10; s = `<rect width="10" height="10" fill="${color}"/><path d="M-3 3 L3 -3 M0 10 L10 0 M7 13 L13 7" stroke="${color2}" stroke-width="3.2"/>`;
     } else if (pattern === 'scacchi') {
@@ -530,6 +533,25 @@
       fill: `url(#${id})`,
       def: `<pattern id="${id}" width="${size}" height="${size}" patternUnits="userSpaceOnUse">${s}</pattern>`
     };
+  }
+
+  /* LA SCRITTA STAMPATA: due parole, una grossa con le lettere
+     accennate da tre tacche del colore del capo, e una sottile sotto.
+     E' quello che si vede su una maglietta a due metri: non si legge
+     cosa c'e' scritto, si vede CHE c'e' scritto qualcosa. */
+  function scritta(cx, cy, w, col, sfondo) {
+    const n = (v) => Math.round(v * 100) / 100;
+    const h = Math.max(2.6, w * 0.27);
+    const x = cx - w / 2, y = cy - h;
+    let out = `<rect x="${n(x)}" y="${n(y)}" width="${n(w)}" height="${n(h)}" rx="${n(h * 0.4)}" fill="${col}"/>`;
+    [0.3, 0.52, 0.74].forEach(f => {
+      out += `<rect x="${n(x + w * f)}" y="${n(y - 0.3)}" width="${n(Math.max(0.5, w * 0.05))}" ` +
+        `height="${n(h + 0.6)}" fill="${sfondo}"/>`;
+    });
+    const w2 = w * 0.58, h2 = Math.max(1.5, h * 0.48);
+    out += `<rect x="${n(cx - w2 / 2)}" y="${n(y + h + h * 0.38)}" width="${n(w2)}" ` +
+      `height="${n(h2)}" rx="${n(h2 / 2)}" fill="${col}"/>`;
+    return out;
   }
 
   function build(av, opts) {
@@ -956,6 +978,13 @@
              <circle cx="50" cy="9" r="5" fill="${shade(hc, 26)}"/>`;
     }
 
+    /* la stampa: al centro del petto e, per i capi di sotto, sulla
+       coscia -- che e' dove la si vede su un pantalone della tuta */
+    const scrittaSopra = topP.scritta
+      ? scritta(50, isDress ? 90 : 87, isDress ? 21 : 22, topP.scritta, av.top.color) : '';
+    const scrittaSotto = (!vestitoLungo && botP.scritta)
+      ? scritta(50, 110, 19, botP.scritta, av.pants.color) : '';
+
     const w = opts.width || '100%';
     const h = opts.height || '100%';
     // opts.zona ritaglia l'inquadratura su una parte sola (stile Mii)
@@ -963,10 +992,10 @@
     return `<svg viewBox="${vb}" width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="avatar" preserveAspectRatio="xMidYMid meet">
       <defs>${defs}</defs>
       ${hairBack}
-      ${legs}${shoes}${bottom}
+      ${legs}${shoes}${bottom}${scrittaSotto}
       ${neck}
       ${bag}
-      ${torso}${arms}${armsSkin}${polsi}
+      ${torso}${scrittaSopra}${arms}${armsSkin}${polsi}
       ${head}${face}${facial}
       ${hair}${glasses}${hat}
     </svg>`;
@@ -1070,7 +1099,7 @@
     COLORS, HAIR_COLORS, SKINS, PATTERNS,
     HAIR, HAT, GLASSES, FACIAL, TOP, PANTS, SHOES, BAG, ROLES,
     build, traits, normalize, defaultFor, baseFor, colorName, findIn, shade, coloreFantasia,
-    filoDenim,
+    filoDenim, scritta,
     /* la stoffa: serve alle icone dei capi, che devono mostrare la
        fantasia VERA e non una sua imitazione. Un solo posto dove sono
        definite le trame, cosi' l'icona e la figura non divergono mai. */

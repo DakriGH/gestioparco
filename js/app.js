@@ -1803,6 +1803,7 @@ function sincronizzaBracciali(box, inizio, colore, custom) {
 /* La pezza della fantasia: la TRAMA VERA, coi due colori del capo.
    Un quadretto grande e senza didascalia si riconosce a vista, e al
    banco si sceglie guardando, non leggendo. */
+let pezzaSeq = 0;
 function pezzaFantasia(pat, c1, c2) {
   const st = {
     'solid':     'background:' + c1,
@@ -1811,32 +1812,31 @@ function pezzaFantasia(pat, c1, c2) {
     'dots':      'background:' + c1 + ';background-image:radial-gradient(' + c2 + ' 3px,transparent 3.2px);background-size:12px 12px',
     'plaid':     'background:' + c1 + ';background-image:repeating-linear-gradient(90deg,' + c2 + ' 0 4px,transparent 4px 13px),repeating-linear-gradient(180deg,' + c2 + ' 0 4px,transparent 4px 13px)',
     'scacchi':   'background:' + c1 + ';background-image:linear-gradient(45deg,' + c2 + ' 25%,transparent 25% 75%,' + c2 + ' 75%),linear-gradient(45deg,' + c2 + ' 25%,transparent 25% 75%,' + c2 + ' 75%);background-size:16px 16px;background-position:0 0,8px 8px',
-    /* mimetico: tre toni e tessere di misura diversa, cosi' la griglia
-       regolare non si vede piu' e sembra una macchia vera */
-    'camo':      'background:' + c1 + ';background-image:' +
-      'radial-gradient(ellipse 60% 70% at 20% 30%,' + c2 + ' 48%,transparent 50%),' +
-      'radial-gradient(ellipse 55% 65% at 75% 65%,' + AV.shade(c1, -34) + ' 46%,transparent 48%),' +
-      'radial-gradient(ellipse 50% 60% at 60% 15%,' + AV.shade(c1, 26) + ' 44%,transparent 46%);' +
-      'background-size:29px 24px,23px 19px,19px 16px;background-position:0 0,11px 7px,5px 13px'
   };
+  /* MIMETICO E SCRITTA SI MOSTRANO PER QUELLO CHE SONO.
+     Erano imitazioni fatte con le sfumature del CSS -- tre ellissi
+     sfumate per il mimetico, tre barre per la scritta -- e adesso che
+     le due fantasie sono state rifatte direbbero un'altra cosa da
+     quella che finisce addosso. Qui si disegna la stoffa VERA, con la
+     stessa funzione che veste la figura. */
+  if (pat === 'camo' || pat === 'logo') {
+    const t = AV.tessuto(c1, pat, 'sw' + (++pezzaSeq));
+    return '<span class="sw"><svg viewBox="0 0 26 26" preserveAspectRatio="xMidYMid slice" ' +
+      'style="display:block;width:100%;height:100%;border-radius:inherit">' +
+      (t.def ? '<defs>' + t.def + '</defs>' : '') +
+      '<rect width="26" height="26" fill="' + t.fill + '"/>' +
+      (t.scritta ? AV.scritta(13, 15, 17, t.scritta, c1) : '') + '</svg></span>';
+  }
+
   /* fiori e cuori sono SEGNI: a questa misura un carattere grande si
      legge meglio di un motivo ripetuto */
   const segno = { fiori: '\u273f', cuori: '\u2665' }[pat];
-  const dentro = segno
-    ? '<b style="color:' + c2 + '">' + segno + '</b>'
-    : (pat === 'logo' ? scrittaFinta(c2) : '');
+  const dentro = segno ? '<b style="color:' + c2 + '">' + segno + '</b>' : '';
   return '<span class="sw" style="' + (st[pat] || ('background:' + c1)) + '">' + dentro + '</span>';
 }
 
 /* la "scritta sulla maglietta" si DISEGNA: tre righe di paroline. Un
    simbolo tipografico qualunque non diceva niente. */
-function scrittaFinta(c2) {
-  const riga = (w) => '<i style="display:block;height:3px;width:' + w +
-    'px;border-radius:2px;background:' + c2 + '"></i>';
-  return '<span style="display:flex;flex-direction:column;gap:2.5px;align-items:center">' +
-    riga(20) + riga(14) + riga(17) + '</span>';
-}
-
 /* Porta a vista un riquadro dentro il vano che scorre, scorrendo del
    MINIMO indispensabile: solo quanto basta a fargli arrivare il fondo
    a filo. `scrollIntoView` invece lo incollerebbe al bordo alto,
