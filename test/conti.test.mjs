@@ -626,6 +626,52 @@ gruppo('A tempo aperto la riga non dice mai «pagato»', () => {
   vero('e lo dice: niente sul conto', /niente/.test(v5.k));
 });
 
+gruppo('Il conto del tempo aperto si vede, non si indovina', () => {
+  /* Il prezzo a tempo aperto e' l'unico che si muove da solo, e viene
+     fuori da tre passaggi: tempo passato, meno i minuti regalati dal
+     Crazy, arrotondato ai cinque in su; poi il cartello, che va a
+     fasce. A video si vedeva solo il risultato, e ogni tanto saltava di
+     tre euro senza che si capisse perche'. */
+  const ora = Date.now();
+  const c = conto({ children: 2, payLater: true, startTime: ora - 41 * 60000,
+    durationMinutes: 0, crazyJumping: 1, crazyGiri: [1], barItems: [] });
+
+  const a = ctx.contiAperto(c, ora);
+  ok('dentro da quarantuno minuti', Math.round(a.dentro), 41);
+  ok('otto regalati dal giro di Crazy', a.regalati, ctx.settings.crazyExtraMinutes);
+  ok('quindi trentatre contati', Math.round(a.contati), 33);
+  ok('arrotondati ai cinque in su fanno trentacinque', a.su, 35);
+  ok('che cadono nella fascia dei quaranta', a.scaglione, 40);
+  ok('e il prezzo e quello della fascia', a.prezzo, ctx.priceFor(40));
+  ok('lo stesso che mette sul conto costOf', ctx.costOf(c).unit, a.prezzo);
+
+  vero('e c e scritto da dove esce', /33′ contati/.test(ctx.spiegaAperto(c, true, ora)) &&
+    /fascia 40′/.test(ctx.spiegaAperto(c, true, ora)));
+  vero('nella versione lunga c e anche il tempo dentro',
+    /dentro da 41′/.test(ctx.spiegaAperto(c, false, ora)));
+
+  /* i due casi in cui il conto e' zero: si dicono, non si tacciono */
+  const coperto = conto({ children: 2, payLater: true, startTime: ora - 3 * 60000,
+    durationMinutes: 0, crazyJumping: 1, crazyGiri: [1], barItems: [] });
+  ok('col Crazy che copre tutto non si paga parco', ctx.costOf(coperto).parkTotal, 0);
+  vero('e lo dice: coperti dal Crazy', /Crazy/.test(ctx.spiegaAperto(coperto, true, ora)));
+
+  const prima = conto({ children: 2, payLater: true, startTime: ora + 5 * 60000,
+    durationMinutes: 0, barItems: [] });
+  vero('e se non sono ancora entrati lo dice',
+    /non sono ancora entrati/.test(ctx.spiegaAperto(prima, true, ora)));
+
+  /* la fascia e' quella del cartello, non un numero inventato */
+  const fasce = ctx.settings.tariffs.map(t => t.m);
+  let storte = [];
+  for (let m = 1; m <= 200; m++) {
+    const sc = ctx.scaglioneDi(m);
+    if (!fasce.includes(sc)) storte.push(m + ' -> ' + sc);
+    if (ctx.priceFor(m) !== ctx.priceFor(sc)) storte.push(m + ': prezzo diverso dalla fascia');
+  }
+  ok('ogni minuto cade su una fascia scritta sul cartello', storte.slice(0, 3), []);
+});
+
 gruppo('Lo stesso tempo costa lo stesso, da qualunque tasto passi', () => {
   /* IL PIU' E IL MENO STANNO IN DUE POSTI: nel pannello e nella
      striscia della scheda in lista. La striscia scriveva i minuti a

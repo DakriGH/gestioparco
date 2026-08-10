@@ -377,6 +377,53 @@ function priceFor(mins) {
      avrebbe chiesto 36. */
   return list[list.length - 1].p;
 }
+/* SU CHE FASCIA DEL CARTELLO CADE UN TEMPO: il tetto della fascia --
+   trentatre' minuti stanno nella fascia dei quaranta -- che e' il
+   numero scritto sul muro, quello che il cliente puo' controllare. */
+function scaglioneDi(mins) {
+  const list = tariffs();
+  if (!list.length || mins <= 0) return 0;
+  for (const t of list) if (mins <= t.m) return t.m;
+  return list[list.length - 1].m;
+}
+
+/* IL CONTO DEL TEMPO APERTO, passaggio per passaggio.
+   Quanto sono stati dentro, quanto gliene regala il Crazy, quanto ne
+   resta da pagare, su che fascia cade. E' lo stesso conto che fa
+   costOf() -- `up5(dentro - regalati)` e poi il cartello -- scritto in
+   modo che si possa mostrare invece di doverlo indovinare. */
+function contiAperto(c, ora) {
+  c = c || C();
+  ora = num(ora, Date.now());
+  const dentro = Math.max(0, (ora - num(c.startTime, ora)) / 60000);
+  const regalati = regalatiDi(c);
+  const contati = Math.max(0, dentro - regalati);
+  const su = up5(contati);
+  return { dentro, regalati, contati, su,
+    scaglione: scaglioneDi(su), prezzo: priceFor(su) };
+}
+
+/* minuti scritti come si leggono: a occhio sotto l'ora, in ore e
+   minuti sopra */
+function minTxt(m) {
+  m = Math.max(0, Math.round(num(m, 0)));
+  return m < 60 ? m + '\u2032' : fmtMin(m);
+}
+
+/* LO STESSO CONTO IN UNA RIGA SOLA.
+   `corto` per la lista, dove il tempo passato sta gia' scritto grande
+   di fianco e ripeterlo sarebbe rumore. */
+function spiegaAperto(c, corto, ora) {
+  const a = contiAperto(c, ora);
+  if (a.contati <= 0) {
+    if (a.dentro <= 0) return 'non sono ancora entrati';
+    if (a.regalati > 0) return 'coperti dai +' + minTxt(a.regalati) + ' del Crazy';
+    return 'appena entrati';
+  }
+  const conto = minTxt(a.contati) + ' contati \u2192 fascia ' + minTxt(a.scaglione);
+  return corto ? conto : 'dentro da ' + minTxt(a.dentro) + ' \u00b7 ' + conto;
+}
+
 function braceletFor(ts) {
   const d = new Date(num(ts, Date.now()));
   const mins = d.getHours() * 60 + d.getMinutes();
@@ -3165,7 +3212,12 @@ function pcFondo() {
   const conta = {
     bimbi: bimbi > 0
       ? bimbi + (bimbi === 1 ? ' bambino' : ' bambini') +
-        (c.payLater ? ' \u00b7 tempo aperto' : ' \u00d7 ' + fmtMin(clamp(num(c.durationMinutes, 0), 0, 1e6)))
+        /* a tempo aperto, al posto di «tempo aperto» -- che lo dice gia'
+           l'orario qui sotto, «→ aperta» -- c'e' il conto da cui esce
+           il prezzo: e' l'unico numero della fascia che si muove da
+           solo, e senza il conto scritto sembra cambiare a caso */
+        (c.payLater ? ' \u00b7 \u23f3 ' + spiegaAperto(c, true)
+          : ' \u00d7 ' + fmtMin(clamp(num(c.durationMinutes, 0), 0, 1e6)))
       : '',
     crazy: crz > 0 ? crz + (crz === 1 ? ' giro' : ' giri') +
       (volte > 1 ? ' in ' + volte + ' volte' : '') : '',
@@ -3905,8 +3957,11 @@ function entryCard(entry) {
   const soldi = el('div', 'e-soldi');
   const soldiK = el('span', 'k', '');
   const soldiV = el('span', 'v num', '');
+  /* la riga del conto scritto in piccolo: c'e' solo a tempo aperto */
+  const soldiS = el('span', 'sott vuota', '');
   soldi.appendChild(soldiK);
   soldi.appendChild(soldiV);
+  soldi.appendChild(soldiS);
   riga.appendChild(soldi);
 
   card.appendChild(riga);
@@ -4087,7 +4142,7 @@ function entryCard(entry) {
 
   cardRefs.set(entry.id, {
     card, count, range, sKids, sCrazy, sTime, solo, barBtn, apriConto,
-    dueVal: soldiV, soldiK, soldi, wrist, bimbiV, crzV, crz, countK,
+    dueVal: soldiV, soldiK, soldiS, soldi, wrist, bimbiV, crzV, crz, countK,
     payPanel, payBtn,
     /* servono a rivestire la riga quando cambia un vestito */
     avBox, nome, tratti, apriParco, sigGente: firmaGente(entry)
@@ -4373,8 +4428,13 @@ function scontrinoRiga(c, id) {
           return [iniz].concat(blocchi).filter(m => m > 0).map(m => fmtMin(m)).join(' + ') + ' \u00b7 ';
         })()
       : '';
-    sotto = pezzi + fmtMin(tempoTotale(c)) +
-      (c.payLater ? ' \u00b7 tempo aperto' : ' \u00b7 esce alle ' + fmtTime(endTimeOf(c)));
+    /* a tempo aperto i minuti comprati sono zero -- non hanno comprato
+       niente, pagano quello che stanno -- e scrivere «0m · tempo
+       aperto» diceva il falso due volte. Qui va il conto per intero,
+       che e' quello che serve a chi sta per incassare. */
+    sotto = c.payLater
+      ? '\u23f3 tempo aperto \u00b7 ' + spiegaAperto(c, false)
+      : pezzi + fmtMin(tempoTotale(c)) + ' \u00b7 esce alle ' + fmtTime(endTimeOf(c));
   } else if (id === 'crazy') {
     const volte = turniCrazy(c);
     sotto = volte + (volte === 1 ? ' volta' : ' volte') +
@@ -5568,7 +5628,11 @@ function vociSoldi(entry, due) {
   const preso = r2(due.parkPaid + due.barPaid);
   const vale = r2(due.park + due.bar);
   if (entry.payLater) {
-    return { k: '\u23f3 all\u2019uscita', v: resta > 0 ? eur(resta) : '\u2014', pagato: false };
+    /* e sotto, piccolo, DA DOVE ESCE quella cifra: il tempo aperto e'
+       l'unico posto in cui il prezzo si muove da solo, e senza il conto
+       scritto sembra che cambi a caso */
+    return { k: '\u23f3 all\u2019uscita', v: resta > 0 ? eur(resta) : '\u2014',
+      sotto: spiegaAperto(entry, true), pagato: false };
   }
   if (vale <= 0.005) return { k: 'niente sul conto', v: '\u2014', pagato: false };
   if (resta <= 0) return { k: 'pagato', v: '\u2713', pagato: true };
@@ -5579,6 +5643,10 @@ function soldiDi(r, entry, due) {
   const s = vociSoldi(entry, due);
   r.soldiK.textContent = s.k;
   r.dueVal.textContent = s.v;
+  if (r.soldiS) {
+    r.soldiS.textContent = s.sotto || '';
+    r.soldiS.classList.toggle('vuota', !s.sotto);
+  }
   r.soldi.classList.toggle('pagato', s.pagato);
 }
 

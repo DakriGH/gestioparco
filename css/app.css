@@ -1539,6 +1539,14 @@ main {
   font-variant-numeric: tabular-nums;
 }
 .e-soldi.pagato .v { opacity: 0.8; }
+/* IL CONTO SCRITTO IN PICCOLO, sotto la cifra: c'e' solo a tempo
+   aperto, dove il prezzo si muove da solo. Quando non serve la riga
+   sparisce del tutto (`display: none`) invece di restare vuota: una
+   riga vuota qui allungherebbe tutte le schede della lista. */
+.e-soldi .sott { display: block; font-size: 10px; font-weight: 700;
+  line-height: 1.25; margin-top: 2px; color: rgba(255, 255, 255, .62);
+  font-variant-numeric: tabular-nums; }
+.e-soldi .sott.vuota { display: none; }
 
 /* =============== QUELLO CHE SI APRE =============== */
 /* Si apre davvero, non appare di colpo: la griglia passa da 0 a tutta
