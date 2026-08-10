@@ -1582,107 +1582,32 @@ main {
    prima -- e senza scritta uno regalerebbe otto minuti credendo di
    aggiustare un numero. La riga sotto e' piccola e spenta finche' il
    giro e' vuoto, e si accende quando ci sale il primo. */
-/* LA FASCETTA E' UNA GRIGLIA, non roba che va a capo dove capita.
-   Prima riga: bambini, minuti e i due tasti a destra. Seconda riga: il
-   Crazy, che si prende tutta la larghezza perche' ha dentro il totale,
-   il giro e i suoi tasti. Cosi' le celle sono alte uguali e allineate,
-   e la fascetta non cambia forma a seconda di quanto c'e' scritto. */
-.e-fila { display: grid; grid-template-columns: auto auto auto 1fr; gap: 8px;
-  align-items: stretch; }
-.e-fila > .e-cella { align-self: stretch; }
-.e-fila > .e-azioni { justify-self: end; align-self: center; }
-.e-cella.e-crz { grid-column: 1 / -1; gap: 6px; }
 
-/* LE TESTE GIA' PAGATE, attaccate a quello che si sta pagando.
-   Due pastiglie verdi uguali, una accanto ai bambini e una in fondo
-   alla riga del Crazy, non dicevano a chi si riferivano: sembravano
-   due comandi della fascetta. Adesso stanno DENTRO la cella della
-   loro cosa, dopo un filo che le divide, con la parola sopra --
-   "pagati" per i bambini, "salite pagate" per il Crazy.
-   Verde come la fascia delle card, che e' la stessa cassa. */
-.e-cella.con-pagate { padding-right: 7px; }
-.e-cella .pg-sep { width: 1px; align-self: stretch; margin: 0 3px 0 5px;
-  background: rgba(255, 255, 255, 0.18); }
-.e-cella .pg-k { font-size: 9px; font-weight: 800; letter-spacing: .05em;
-  text-transform: uppercase; color: rgba(141, 235, 187, 0.85); max-width: 44px;
-  line-height: 1.05; }
-.e-cella .pg-v { color: #DFF7EC; font-size: 15px; min-width: 32px; }
-.e-cella button.pg-b { background: rgba(106, 220, 175, 0.16); color: #A9EFD3;
-  min-width: 34px; }
-.e-cella button.pg-b:active { background: rgba(106, 220, 175, 0.34); }
-.e-cella button.pg-b:disabled { opacity: .3; }
-/* quando hanno pagato tutti la coda si accende: si vede da lontano
-   quali gruppi sono a posto */
-.e-cella.pagata .pg-v { color: #08301F; }
-.e-cella.pagata .pg-k { color: #6ADCAF; }
-.e-cella.pagata .pg-v { background: var(--ok, #6ADCAF); border-radius: 8px; padding: 0 6px; }
+/* ══════════════════════════════════════════════════════════
+   LA STRISCIA: TRE GRUPPI, OGNUNO COL SUO NOME.
+   Erano cinque coppie meno/piu' identiche su due righe -- bambini,
+   pagati, minuti, giri, giri pagati -- con le etichette da otto pixel
+   in mezzo: la stessa forma voleva dire cinque cose diverse, e per
+   sapere quale bisognava fermarsi a leggere. Adesso sono TRE, ognuna
+   col nome scritto sopra in chiaro, e sono tre cose diverse fra loro:
+   quanti bambini, quanto tempo, quanti giri.
+   Il resto -- segnare il pagato, correggere una volta vecchia,
+   cancellarla -- lo fa lo Scontrino, dove ogni riga ha il suo posto e
+   c'e' spazio per scrivere cos'e'.
+   ══════════════════════════════════════════════════════════ */
+.e-fila { display: flex; flex-wrap: wrap; align-items: stretch; gap: 9px; }
+.e-fila > .e-azioni { margin-left: auto; align-self: center; }
+.e-cella { flex-direction: column; align-items: center; gap: 1px;
+  padding: 4px 9px 6px; }
+.e-nome { font-size: 9.5px; font-weight: 800; letter-spacing: .07em;
+  text-transform: uppercase; color: rgba(255, 255, 255, .55); line-height: 1.2; }
+.e-dentro-cella { display: flex; align-items: center; gap: 6px; }
+/* verde quando quella cosa e' tutta pagata: un COLORE, non un tasto.
+   I tasti del pagato stavano qui e sembravano quelli della quantita'. */
+.e-cella.pagata { background: rgba(106, 220, 175, .16);
+  box-shadow: inset 0 0 0 1.5px rgba(106, 220, 175, .3); }
+.e-cella.pagata .e-nome { color: #8DEBBB; }
 
-/* LA CELLA DEL CRAZY DICE IN CHE GIRO SEI.
-   Qui il piu' apre un giro NUOVO -- la scheda si riapre al volo
-   perche' sono tornati a saltare, non per correggere il numero di
-   prima -- e senza scritta uno regalerebbe otto minuti credendo di
-   aggiustare un numero. La riga sotto e' piccola e spenta finche' il
-   giro e' vuoto, e si accende quando ci sale il primo. */
-/* LA FASCETTA E' UNA GRIGLIA, non roba che va a capo dove capita.
-   Prima riga: bambini, minuti e i due tasti a destra. Seconda riga: il
-   Crazy, che si prende tutta la larghezza perche' ha dentro il totale,
-   il giro e i suoi tasti. Cosi' le celle sono alte uguali e allineate,
-   e la fascetta non cambia forma a seconda di quanto c'e' scritto. */
-.e-fila { display: grid; grid-template-columns: auto auto auto 1fr; gap: 8px;
-  align-items: stretch; }
-.e-fila > .e-cella { align-self: stretch; }
-.e-fila > .e-azioni { justify-self: end; align-self: center; }
-.e-cella.e-crz { grid-column: 1 / -1; gap: 6px; }
-
-/* LE TESTE GIA' PAGATE, verdi come la fascia delle card: e' la stessa
-   cosa, e la stessa cassa. Verde pieno quando hanno pagato tutti. */
-.e-cella.e-pag { background: rgba(106, 220, 175, 0.16);
-  box-shadow: inset 0 0 0 1.5px rgba(106, 220, 175, 0.28); }
-.e-cella.e-pag .k { color: #8DEBBB; font-size: 13px; }
-.e-cella.e-pag .v { color: #DFF7EC; font-size: 16px; min-width: 34px; }
-.e-cella.e-pag button { background: rgba(106, 220, 175, 0.14); color: #A9EFD3; }
-.e-cella.e-pag button:active { background: rgba(106, 220, 175, 0.3); }
-.e-cella.e-pag.tutte { background: rgba(106, 220, 175, 0.3);
-  box-shadow: inset 0 0 0 1.5px rgba(106, 220, 175, 0.5); }
-.e-cella.e-pag.spenta { opacity: .45; }
-/* quella del Crazy sta in fondo alla sua riga, piu' piccola */
-.e-crz .crz-pag { display: flex; align-items: center; gap: 4px; margin-left: auto;
-  padding-left: 8px; border-left: 1px solid rgba(255, 255, 255, 0.16); }
-.e-crz .crz-pag .k { color: #8DEBBB; font-size: 12px; }
-.e-crz .crz-pag b { min-width: 30px; text-align: center; font-family: 'Fredoka', sans-serif;
-  font-size: 14px; color: #DFF7EC; }
-.e-crz .crz-pag button { min-width: 34px; height: 32px; border: none; border-radius: 9px;
-  cursor: pointer; background: rgba(106, 220, 175, 0.16); color: #A9EFD3;
-  font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 700; }
-.e-crz .crz-pag button:active { background: rgba(106, 220, 175, 0.32); }
-.e-crz .crz-pag button:disabled { opacity: .3; cursor: default; }
-.e-later-tag { align-self: center; }
-/* IL TOTALE: quante salite in tutto. Non si tocca -- e' la somma dei
-   giri -- ed e' scritto in grigio apposta, per non confonderlo col
-   numero del giro che invece si muove. */
-.e-crz .crz-tot { display: flex; align-items: baseline; gap: 3px; padding: 0 6px 0 2px; }
-.e-crz .crz-tot b { font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 700;
-  color: rgba(255, 255, 255, 0.85); }
-.e-crz .crz-tot small { font-size: 9px; font-weight: 800; letter-spacing: .06em;
-  text-transform: uppercase; color: rgba(255, 255, 255, 0.4); }
-/* IL GIRO: il numero che si muove, coi suoi tasti, staccato dal
-   totale da un filo */
-.e-crz .crz-giro { display: flex; align-items: center; gap: 5px; padding-left: 7px;
-  border-left: 1px solid rgba(255, 255, 255, 0.16); }
-.e-crz .crz-giro.spento .v { color: rgba(255, 255, 255, 0.35); }
-.e-crz .crz-nuovo { padding: 0 9px; width: auto; font-size: 12px; font-weight: 700;
-  background: rgba(232, 180, 76, 0.2); box-shadow: inset 0 0 0 1.5px rgba(232, 180, 76, 0.42);
-  color: #F6DCA6; }
-.e-crz .crz-via { width: 30px; font-size: 13px; background: rgba(255, 255, 255, 0.07);
-  color: rgba(255, 255, 255, 0.6); }
-.e-crz .crz-via:disabled { opacity: .3; }
-.e-crz-k { font-size: 9.5px; font-weight: 800; letter-spacing: .07em;
-  text-transform: uppercase; color: rgba(255, 255, 255, 0.45); white-space: nowrap;
-  padding-left: 2px; }
-.e-crz-k.acceso { color: #C9B6FF; }
-/* il giro che si sta toccando e' gia' pagato: si dice li', accanto al
-   suo numero, non solo nel totale verde in fondo alla riga */
-.e-crz-k.saldo { color: #8DEBBB; }
 .e-cella .v {
   font-family: 'Fredoka', sans-serif;
   font-size: 19px;

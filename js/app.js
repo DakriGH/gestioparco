@@ -3715,8 +3715,13 @@ function entryCard(entry) {
   aperta.appendChild(dentro);
   const fila = el('div', 'e-fila');
 
-  const mkCella = (emoji, key, step, suffisso) => {
+  /* UN GRUPPO, COL SUO NOME SOPRA. Il nome non e' decorazione: erano
+     cinque coppie meno/piu' tutte uguali, e senza leggere l'etichetta
+     minuscola in mezzo non si sapeva quale muovesse cosa. */
+  const mkCella = (emoji, key, step, nome) => {
     const box = el('div', 'e-cella');
+    if (nome) box.appendChild(el('span', 'e-nome', nome));
+    const dentro = el('span', 'e-dentro-cella');
     const minus = el('button');
     minus.textContent = step > 1 ? '\u2212' + step : '\u2212';
     const kk = emoji ? el('span', 'k', emoji) : null;
@@ -3728,7 +3733,16 @@ function entryCard(entry) {
       /* passano dal conto anche questi: cambiare i bambini qui e non di
          la' voleva dire lasciare le righe pagate scollegate dai soldi */
       const voce = key === 'children' ? 'bimbi' : key === 'crazyJumping' ? 'crazy' : null;
-      if (voce) conConto(entry, () => bcSetQ(voce, clamp(num(entry[key], 0) + d, 0, 99999)));
+      /* IL CRAZY SI CONTA DENTRO UN GIRO, qui come dappertutto: il piu'
+         e il meno muovono la volta aperta adesso, e se non ce n'e'
+         ancora una la aprono. Senza, il numero saliva ma i minuti
+         regalati non arrivavano -- quelli li porta il giro. */
+      if (voce === 'crazy') {
+        conConto(entry, () => {
+          if (!giriCrazy(entry).length) giroNuovo(entry);
+          cambiaGiro(entry, giroOra(entry), d);
+        });
+      } else if (voce) conConto(entry, () => bcSetQ(voce, clamp(num(entry[key], 0) + d, 0, 99999)));
       else entry[key] = clamp(num(entry[key], 0) + d, 0, 99999);
       saveEntries();
       syncCard(entry);
@@ -3736,16 +3750,23 @@ function entryCard(entry) {
     };
     minus.onclick = bump(-step);
     plus.onclick = bump(step);
-    box.appendChild(minus);
-    if (kk) box.appendChild(kk);
-    box.appendChild(val);
-    box.appendChild(plus);
+    dentro.appendChild(minus);
+    if (kk) dentro.appendChild(kk);
+    dentro.appendChild(val);
+    dentro.appendChild(plus);
+    box.appendChild(dentro);
     fila.appendChild(box);
-    return { box, val, minus };
+    return { box, val, minus, plus };
   };
-  const sKids = mkCella('\ud83e\uddd2', 'children', 1);
-  const sTime = mkCella(null, 'durationMinutes', 5);
-  const sPag = mkCellaPagate(entry, sKids.box, 'bimbi', 'pagati');
+  /* TRE GRUPPI, NON CINQUE. Quello che facevano gli altri due -- segnare
+     il pagato, aprire e cancellare i giri -- adesso si fa nello
+     Scontrino, dove ogni riga ha il suo posto e la sua scritta. Qui
+     restano le tre cose che si fanno al volo con una mano sola: arriva
+     un altro bambino, restano cinque minuti in piu', hanno fatto un
+     altro giro. */
+  const sKids = mkCella('\ud83e\uddd2', 'children', 1, 'Bambini');
+  const sTime = mkCella(null, 'durationMinutes', 5, 'Tempo');
+  const sCrazy = mkCella('\ud83e\udd38', 'crazyJumping', 1, 'Crazy');
   if (entry.payLater) {
     sTime.box.classList.add('hidden');
     fila.appendChild(el('div', 'e-later-tag', '\u23f3 Tempo aperto'));
@@ -3760,11 +3781,6 @@ function entryCard(entry) {
     return b;
   };
   fila.appendChild(azioni);
-  /* IL CRAZY VA IN FONDO, e si prende tutta la seconda riga: e' quello
-     con dentro piu' roba -- il totale, il giro, i due tasti -- e
-     schiacciato accanto agli altri mandava la fascetta a capo dove
-     capitava. Due righe DECISE stanno meglio di tre a caso. */
-  const sCrazy = mkCellaCrazy(entry, fila);
   dentro.appendChild(fila);
 
   /* Il guscio del conto: qui dentro ci entra IL pannello -- lo stesso
@@ -3830,7 +3846,7 @@ function entryCard(entry) {
   aperta.onclick = (ev) => ev.stopPropagation();
 
   cardRefs.set(entry.id, {
-    card, count, range, sKids, sCrazy, sTime, sPag, solo,
+    card, count, range, sKids, sCrazy, sTime, solo,
     dueVal: soldiV, soldiK, soldi, wrist, bimbiV, crzV, crz, countK,
     payPanel, payBtn,
     /* servono a rivestire la riga quando cambia un vestito */
@@ -5312,35 +5328,18 @@ function firmaGente(entry) {
 }
 
 /* ══════════════════════════════════════════════════════════
-   IL CRAZY NELLA FASCETTA DELLA LISTA
-   Qui non si sta registrando un ingresso: si sta segnando una cosa
-   successa ADESSO, con la scheda aperta al volo perche' il gruppo e'
-   tornato a saltare. Quindi il piu' non aggiunge al giro di prima --
-   quello e' finito -- ma APRE UN GIRO NUOVO, e i tocchi seguenti
-   contano chi sale in quel giro.
-   La fascetta lo scrive: "1\u00ba giro" mentre stai contando, e "nuovo
-   giro" finche' non e' salito nessuno. Senza quella scritta uno
-   premerebbe il piu' credendo di correggere il numero di prima, e
-   invece regala otto minuti.
-   Il giro aperto qui vale finche' la fascetta resta com'e': si chiude
-   riaprendo la scheda. */
-let giroLista = { id: null, i: -1 };
-
-/* QUAL E' IL GIRO SU CUI SI STA LAVORANDO.
-   Di suo e' l'ULTIMO, sempre: e' quello aperto, quello che stai
-   segnando adesso. Non si chiude da solo chiudendo la scheda --
-   riaprendola ti ritrovi dove eri -- e un giro nuovo si apre solo col
-   suo tasto, che e' l'unica cosa che deve deciderlo.
-   Cosi' anche il meno e la crocetta hanno sempre qualcosa su cui
-   lavorare: prima, se non avevi ancora toccato il piu', erano spenti e
-   non c'era modo di togliere un Crazy dalla fascetta. */
-function giroDiLista(entry) {
-  const g = conConto(entry, () => giriCrazy(entry));
-  if (!g.length) return { i: -1, n: 0, aperto: false };
-  const scelto = (giroLista.id === entry.id && giroLista.i >= 0 && giroLista.i < g.length)
-    ? giroLista.i : g.length - 1;
-  return { i: scelto, n: g[scelto], aperto: true };
-}
+   IL CRAZY NELLA STRISCIA DELLA LISTA
+   Qui non si sta registrando un ingresso: si segna una cosa successa
+   ADESSO, con la scheda aperta al volo perche' il gruppo e' tornato a
+   saltare. Il piu' e il meno lavorano sull'ULTIMA volta aperta, e se
+   non ce n'e' ancora una la aprono: e' il gesto piu' corto per la cosa
+   che si fa piu' spesso.
+   Le volte, una per una -- correggerne una vecchia, cancellarla,
+   aprirne una nuova apposta -- si sistemano nello Scontrino, dove
+   ognuna ha la sua riga e c'e' spazio per scrivere cos'e'. Qui un
+   "giro scelto" da tenere a mente era una cosa in piu' da capire in
+   una striscia che ne aveva gia' cinque.
+   ══════════════════════════════════════════════════════════ */
 
 /* QUANTE TESTE HANNO GIA' PAGATO, dalla fascetta.
    Sulla card del conto c'e' da sempre la fascia verde "0/3": qui
@@ -5354,117 +5353,6 @@ function giroDiLista(entry) {
    bambini, le salite -- dopo un filo che le divide. Cosi' non e' "una
    pastiglia verde della fascetta" ma "quanti di QUESTI hanno pagato",
    e la parola sopra lo dice a voce. */
-function mkCellaPagate(entry, box, voce, parola) {
-  const sep = el('span', 'pg-sep');
-  const eti = el('span', 'pg-k', parola);
-  const minus = el('button', 'pg-b', '\u2212');
-  const val = el('span', 'v num pg-v', '0/0');
-  const plus = el('button', 'pg-b', '+');
-  const tocca = (d) => (ev) => {
-    ev.stopPropagation();
-    conConto(entry, () => segnaPagate(voce, bcPag(voce) + d));
-    saveEntries();
-    syncCard(entry);
-    tick();
-  };
-  minus.onclick = tocca(-1);
-  plus.onclick = tocca(1);
-  box.appendChild(sep);
-  box.appendChild(eti);
-  box.appendChild(minus);
-  box.appendChild(val);
-  box.appendChild(plus);
-  box.classList.add('con-pagate');
-  return { box, val, minus, plus, eti };
-}
-
-function mkCellaCrazy(entry, fila) {
-  /* DUE NUMERI DIVERSI, E VANNO DETTI TUTT'E DUE.
-     "5" puo' voler dire cinque salite in tutto o cinque saliti in
-     questo giro, e sono due conti diversi: uno fa i soldi, l'altro fa
-     i minuti regalati. Qui a sinistra c'e' il TOTALE (grigio, non si
-     tocca) e a destra il GIRO che stai contando, coi suoi tasti.
-     E i due mestieri hanno un tasto per uno: "+giro" ne apre uno
-     nuovo, la crocetta cancella quello aperto. */
-  const box = el('div', 'e-cella e-crz');
-  box.appendChild(el('span', 'k', '\ud83e\udd38'));
-  const tot = el('span', 'crz-tot');
-  const totN = el('b', null, '0');
-  tot.appendChild(totN);
-  tot.appendChild(el('small', null, 'in tutto'));
-  box.appendChild(tot);
-
-  const gruppo = el('span', 'crz-giro');
-  const minus = el('button', null, '\u2212');
-  const val = el('span', 'v num', '0');
-  const plus = el('button', null, '+');
-  gruppo.appendChild(minus);
-  gruppo.appendChild(val);
-  gruppo.appendChild(plus);
-  box.appendChild(gruppo);
-
-  const nuovo = el('button', 'crz-nuovo', '+ giro');
-  const via = el('button', 'crz-via', '\u2715');
-  box.appendChild(nuovo);
-  box.appendChild(via);
-  /* e quante SALITE hanno gia' pagato: stessa coda dei bambini, con
-     la sua parola -- qui si paga a testa, non a giro */
-  const pagate = mkCellaPagate(entry, box, 'crazy', 'giri pagati');
-  const pVal = pagate.val, pMeno = pagate.minus, pPiu = pagate.plus;
-  /* la scritta sta IN RIGA, non sotto: sotto faceva la cella piu'
-     alta delle altre e la fascetta veniva storta */
-  const nota = el('span', 'e-crz-k', 'nuovo giro');
-  gruppo.appendChild(nota);
-
-  const dopo = () => { saveEntries(); syncCard(entry); tick(); };
-  const tocca = (d) => (ev) => {
-    ev.stopPropagation();
-    conConto(entry, () => {
-      let stato = giroDiLista(entry);
-      if (d > 0) {
-        /* se non c'e' proprio nessun giro, il primo si apre da se': il
-           resto delle volte si conta in quello aperto, e un giro nuovo
-           lo apre solo il suo tasto */
-        if (!stato.aperto) {
-          giroNuovo(entry);
-          giroLista = { id: entry.id, i: giriCrazy(entry).length - 1 };
-          stato = giroDiLista(entry);
-        }
-        cambiaGiro(entry, stato.i, 1);
-      } else if (stato.aperto) {
-        cambiaGiro(entry, stato.i, -1);
-        /* svuotato del tutto: si torna a lavorare sull'ultimo che resta */
-        if (giriCrazy(entry).length <= stato.i) giroLista = { id: null, i: -1 };
-      }
-    });
-    dopo();
-  };
-  minus.onclick = tocca(-1);
-  plus.onclick = tocca(1);
-  /* apre un giro e basta: chi sale lo conti col piu' */
-  nuovo.onclick = (ev) => {
-    ev.stopPropagation();
-    conConto(entry, () => {
-      giroNuovo(entry);
-      giroLista = { id: entry.id, i: giriCrazy(entry).length - 1 };
-    });
-    dopo();
-  };
-  /* cancella il giro aperto: chi c'era dentro esce dal conto */
-  via.onclick = (ev) => {
-    ev.stopPropagation();
-    conConto(entry, () => {
-      const stato = giroDiLista(entry);
-      if (!stato.aperto) return;
-      viaGiro(entry, stato.i);
-      giroLista = { id: null, i: -1 };
-    });
-    dopo();
-  };
-  fila.appendChild(box);
-  return { box, val, minus, nota, totN, via, gruppo, pVal, pMeno, pPiu };
-}
-
 function syncCard(entry) {
   const r = cardRefs.get(entry.id);
   if (!r) return;
@@ -5480,52 +5368,22 @@ function syncCard(entry) {
   const soloCrazy = kids <= 0 && crazy > 0;
   if (r.solo) r.solo.classList.toggle('hidden', !soloCrazy);
   if (r.card) r.card.classList.toggle('solo-crazy', soloCrazy);
-  /* nella fascetta il numero e' quello del GIRO che si sta contando,
-     non il totale delle salite: sono il piu' e il meno qui accanto a
-     muoverlo, e il totale sta nella pastiglia della riga sopra */
-  const gl = giroDiLista(entry);
-  r.sCrazy.val.textContent = gl.aperto ? gl.n : 0;
-  if (r.sCrazy.totN) {
-    const giri = conConto(entry, () => giriCrazy(entry));
-    const pieni = giri.filter(n => n > 0).length;
-    r.sCrazy.totN.textContent = crazy;
-    r.sCrazy.totN.title = crazy + (crazy === 1 ? ' giro' : ' giri') + ' in ' +
-      pieni + (pieni === 1 ? ' volta' : ' volte');
-  }
-  if (r.sCrazy.nota) {
-    /* e QUESTO giro, e' gia' pagato? Il numero verde in fondo alla
-       riga dice il totale; qui serve sapere se quello che si sta
-       toccando e' a posto o no. */
-    const pgGiro = gl.aperto ? conConto(entry, () => pagateDelGiro(entry, gl.i)) : 0;
-    const saldoGiro = gl.aperto && gl.n > 0 && pgGiro >= gl.n;
-    r.sCrazy.nota.textContent = !gl.aperto ? 'il piu\u2019 apre il primo giro'
-      : gl.n === 0 ? (gl.i + 1) + '\u00ba giro \u00b7 conta chi sale'
-      : (gl.i + 1) + '\u00ba giro \u00b7 ' + (saldoGiro ? '\u2713 pagato'
-        : pgGiro > 0 ? pgGiro + '/' + gl.n + ' pagate' : 'da pagare');
-    r.sCrazy.nota.classList.toggle('acceso', gl.aperto && gl.n > 0);
-    r.sCrazy.nota.classList.toggle('saldo', saldoGiro);
-  }
-  if (r.sCrazy.via) r.sCrazy.via.disabled = !gl.aperto;
-  /* le teste pagate: quelle dei bambini nella prima riga, quelle del
-     Crazy in fondo alla sua */
-  if (r.sPag) {
-    const pg = conConto(entry, () => bcPag('bimbi'));
-    r.sPag.val.textContent = pg + '/' + kids;
-    r.sPag.box.classList.toggle('pagata', kids > 0 && pg >= kids);
-    r.sPag.minus.disabled = pg <= 0;
-    r.sPag.plus.disabled = kids <= 0 || pg >= kids;
-  }
-  if (r.sCrazy.pVal) {
-    const pc = conConto(entry, () => bcPag('crazy'));
-    r.sCrazy.pVal.textContent = pc + '/' + crazy;
-    r.sCrazy.box.classList.toggle('pagata', crazy > 0 && pc >= crazy);
-    r.sCrazy.pMeno.disabled = pc <= 0;
-    r.sCrazy.pPiu.disabled = crazy <= 0 || pc >= crazy;
-  }
-  if (r.sCrazy.gruppo) r.sCrazy.gruppo.classList.toggle('spento', !gl.aperto);
+  /* IL NUMERO E' IL TOTALE, e il meno e il piu' lavorano sull'ultima
+     volta aperta: nella striscia non c'e' piu' un "giro scelto" da
+     tenere a mente. Le volte, una per una, si sistemano nello
+     Scontrino, che ha lo spazio per scrivere accanto a ognuna cos'e'.
+     E IL PAGATO NON STA PIU' QUI: erano due coppie identiche a quelle
+     della quantita', attaccate -- si segnava di aver preso i soldi
+     credendo di aggiungere un bambino. Resta il verde sul gruppo
+     quando e' tutto pagato, che e' un colore, non un tasto. */
+  r.sCrazy.val.textContent = crazy;
+  r.sCrazy.minus.disabled = crazy <= 0;
+  r.sCrazy.box.classList.toggle('pagata',
+    crazy > 0 && conConto(entry, () => bcPag('crazy')) >= crazy);
+  r.sKids.box.classList.toggle('pagata',
+    kids > 0 && conConto(entry, () => bcPag('bimbi')) >= kids);
   r.sTime.val.textContent = entry.payLater ? '\u2014' : entry.durationMinutes + '\u2032';
   r.sKids.minus.disabled = kids <= 0;
-  r.sCrazy.minus.disabled = !gl.aperto || gl.n <= 0;
   r.sTime.minus.disabled = num(entry.durationMinutes, 0) <= 5;
 
   /* IL VESTITO CAMBIATO SI VEDE SUBITO. syncCard() gira a ogni tocco

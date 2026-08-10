@@ -343,28 +343,30 @@ gruppo('Nessuna funzione scritta e poi dimenticata');
     morte.length <= restiNoti.length, 'adesso sono ' + morte.length + ': ' + morte.join(', '));
 }
 
-gruppo('Nella fascetta della lista il Crazy apre un giro nuovo');
+gruppo('La striscia della lista: tre gruppi, ognuno col suo nome');
 {
-  /* Li' non si sta registrando: si segna una cosa successa ADESSO,
-     perche' il gruppo e' tornato a saltare. Quindi il piu' non
-     aggiunge al giro di prima -- quello e' finito -- ma ne apre uno
-     nuovo. E deve essere SCRITTO, se no uno preme credendo di
-     correggere il numero di prima e regala otto minuti. */
-  prova('la cella del Crazy e una cosa sua', /function mkCellaCrazy/.test(APP));
-  prova('il primo tocco apre un giro',
-    /function mkCellaCrazy[\s\S]{0,2600}if \(!stato\.aperto\) \{[\s\S]{0,140}giroNuovo\(entry\)/.test(APP));
-  prova('e i tocchi dopo contano in QUEL giro',
-    /function mkCellaCrazy[\s\S]{0,2900}cambiaGiro\(entry, stato\.i, 1\)/.test(APP));
-  /* i due numeri sono cose diverse e vanno detti tutt e due: il
-     totale fa i soldi, il giro fa i minuti regalati */
-  prova('la cella dice anche il TOTALE delle salite',
-    /crz-tot/.test(APP) && /\.e-crz \.crz-tot \{/.test(CSS));
-  prova('con un tasto per aprire un giro e uno per cancellarlo',
-    /crz-nuovo/.test(APP) && /crz-via/.test(APP) && /function viaGiro/.test(APP));
-  prova('la fascetta scrive in che giro sei', APP.includes('nuovo giro') && APP.includes('e-crz-k'));
-  prova('e la scritta ha il suo aspetto', /\.e-crz-k \{/.test(CSS));
-  prova('riaprendo la scheda il giro si chiude',
-    /giroLista = \{ id: null, i: -1 \}/.test(APP));
+  /* C'ERANO CINQUE COPPIE MENO/PIU' IDENTICHE su due righe -- bambini,
+     pagati, minuti, giri, giri pagati -- con le etichette da otto
+     pixel in mezzo: la stessa forma voleva dire cinque cose diverse, e
+     per sapere quale bisognava leggere. Adesso sono tre, ognuna col
+     suo nome sopra in chiaro, e sono tre cose diverse fra loro.
+     Il resto -- pagare, correggere una volta vecchia, cancellarla --
+     lo fa lo Scontrino, che ha lo spazio per farlo bene. */
+  prova('ogni gruppo ha il suo nome scritto',
+    /mkCella\('\\ud83e\\uddd2', 'children', 1, 'Bambini'\)/.test(APP) &&
+    /mkCella\(null, 'durationMinutes', 5, 'Tempo'\)/.test(APP) &&
+    /mkCella\('\\ud83e\\udd38', 'crazyJumping', 1, 'Crazy'\)/.test(APP));
+  prova('e il nome ha il suo aspetto', /\.e-nome \{/.test(CSS));
+  prova('tre gruppi e basta: niente piu celle del pagato',
+    !/function mkCellaPagate/.test(APP) && !/function mkCellaCrazy/.test(APP));
+  prova('niente piu giro scelto da tenere a mente',
+    !/giroDiLista/.test(APP) && !/giroLista/.test(APP));
+  /* il piu' del Crazy apre lo stesso una volta, se non ce n'e' una */
+  prova('il piu del Crazy conta dentro una volta',
+    /if \(voce === 'crazy'\)[\s\S]{0,220}giroNuovo\(entry\)[\s\S]{0,120}cambiaGiro\(entry, giroOra\(entry\), d\)/.test(APP));
+  /* e quello che e' sparito da qui c'e' nello Scontrino */
+  prova('le volte si sistemano nello scontrino',
+    /data-gpiu="/.test(APP) && /data-gvia="/.test(APP) && /sc-g-nuovo/.test(APP));
 }
 
 gruppo('Il vestito cambiato si vede subito anche nella lista');
@@ -384,11 +386,16 @@ gruppo('Il vestito cambiato si vede subito anche nella lista');
     const fine = APP.indexOf('\nfunction ', i + 10);
     return APP.slice(i, fine > 0 ? fine : undefined).indexOf('aggiornaPallino(entry);') > 0;
   })());
-  /* e il tasto delle teste pagate, che prima c era solo nel conto */
-  prova('la fascetta sa segnare chi ha pagato',
-    /function mkCellaPagate/.test(APP) && /\.e-cella\.e-pag \{/.test(CSS));
-  prova('e passa dalla cassa di sempre',
-    /function mkCellaPagate[\s\S]{0,900}segnaPagate\(voce, bcPag\(voce\) \+ d\)/.test(APP));
+  /* IL PAGATO NON STA PIU' NELLA STRISCIA: erano due coppie identiche
+     a quelle della quantita', attaccate -- si segnava di aver preso i
+     soldi credendo di aggiungere un bambino. Adesso si segna nello
+     Scontrino, dove ogni riga dice cos'e' e quanto vale. Qui resta il
+     VERDE quando e' tutto pagato, che e' un colore, non un tasto. */
+  prova('il gruppo diventa verde quando e tutto pagato',
+    /r\.sKids\.box\.classList\.toggle\('pagata'/.test(APP) &&
+    /r\.sCrazy\.box\.classList\.toggle\('pagata'/.test(APP));
+  prova('e il pagato si segna nello scontrino',
+    /data-scpiu="/.test(APP) && /data-sctutta="/.test(APP));
   prova('la scheda si tiene i pezzi da rivestire',
     /cardRefs\.set\([\s\S]{0,320}avBox, nome, tratti, apriParco, sigGente/.test(APP));
 }
