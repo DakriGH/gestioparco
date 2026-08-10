@@ -387,6 +387,37 @@ gruppo('Gli accessori: si mettono, si tolgono, e si vedono addosso');
     prova(a + ': tolto, sparisce dalla figura', via.indexOf('#EC4899') < 0);
   }
 
+  /* «TOGLI» RIMETTE COM'ERA, tutto il pezzo. Dei capelli si sceglie
+     anche il taglio: rimettendo il solo colore, i ricci scelti un
+     attimo prima restavano addosso e il tasto sembrava rotto. */
+  {
+    const q = persona();
+    const suoi = { stile: q.avatar.hair.style, colore: q.avatar.hair.color };
+    q.avatar.scelti = {};
+    app.accMetti(q.avatar, 'capelli', '#EC4899');
+    app.segna(q, 'capelli');
+    q.avatar.hair.style = 'riccimedi';
+    app.segna(q, 'taglio');
+    prova('scelti colore e taglio, si vedono', q.avatar.hair.style === 'riccimedi' &&
+      q.avatar.hair.color === '#EC4899');
+
+    app.accTogli(q.avatar, 'capelli', q.role);
+    delete q.avatar.scelti.capelli; delete q.avatar.scelti.taglio;
+    uguale('togli rimette il taglio del ruolo', q.avatar.hair.style, suoi.stile);
+    uguale('e anche il colore', q.avatar.hair.color, suoi.colore);
+    prova('e la scheda non racconta piu niente sui capelli',
+      !app.AV.traits(q.avatar, 9, true).some(x => /capell|ricc|pelat/i.test(x.txt)),
+      app.AV.traits(q.avatar, 9, true).map(x => x.txt).join(' · '));
+
+    /* e le scarpe tornano quelle del ruolo, non un bianco qualunque */
+    const r = persona();
+    const scarpeSue = JSON.stringify(r.avatar.shoes);
+    app.accMetti(r.avatar, 'scarpe', '#EC4899');
+    app.accTogli(r.avatar, 'scarpe', r.role);
+    uguale('anche le scarpe tornano quelle del ruolo',
+      JSON.stringify(r.avatar.shoes), scarpeSue);
+  }
+
   /* la tavolozza si apre su UNO solo, quello toccato */
   const p = persona();
   const chiusa = app.armadioDi(p, '');

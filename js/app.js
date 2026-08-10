@@ -2103,7 +2103,13 @@ function syncPeople(container, people, onChange) {
       } else if (p && d.accvia !== undefined) {
         accTogli(p.avatar, d.accvia, p.role);
         p.tocco = true;
-        if (p.avatar.scelti) delete p.avatar.scelti[d.accvia];
+        if (p.avatar.scelti) {
+          delete p.avatar.scelti[d.accvia];
+          /* il taglio e' una scelta a parte dal colore: se resta segnato,
+             la scheda continua a raccontare una chioma che nessuno ha
+             piu' scelto */
+          if (d.accvia === 'capelli') delete p.avatar.scelti.taglio;
+        }
         container.dataset.tav = '';
       } else return;
       container.dataset.sig = '';
@@ -2238,9 +2244,15 @@ function accMetti(av, acc, colore) {
   if (acc === 'capelli') av.hair.color = colore;
   else if (acc === 'scarpe') av.shoes = { style: 'sneakers', color: colore };
 }
+/* «TOGLI» RIMETTE TUTTO IL PEZZO COM'ERA, non solo la sua tinta.
+   Dei capelli adesso si sceglie anche il TAGLIO: rimettendo il solo
+   colore, i ricci scelti un attimo prima restavano addosso e il tasto
+   sembrava non fare niente. Si torna a quello che il ruolo aveva di
+   suo -- taglio e colore -- che e' l'unico "di serie" che esista. */
 function accTogli(av, acc, ruolo) {
-  if (acc === 'capelli') av.hair.color = AV.baseFor(ruolo).hair.color;
-  else if (acc === 'scarpe') av.shoes = { style: 'sneakers', color: '#F4F6F8' };
+  const base = AV.baseFor(ruolo);
+  if (acc === 'capelli') av.hair = { style: base.hair.style, color: base.hair.color };
+  else if (acc === 'scarpe') av.shoes = { style: base.shoes.style, color: base.shoes.color };
 }
 
 /* LO STACCO FRA UN GRUPPO E L'ALTRO.
