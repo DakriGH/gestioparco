@@ -751,9 +751,23 @@ gruppo('Gli accessori: cinque cose, e il colore solo a chi ce l\u2019ha');
   q.avatar.shoes = { style: 'sneakers', color: '#EC4899' };
   app.accTogli(q.avatar, 'accessori', q.role);
   const base = AV.baseFor(q.role);
-  uguale('via gli occhiali', q.avatar.glasses, base.glasses);
-  uguale('via lo zaino', q.avatar.bag.style, base.bag.style);
+  uguale('via gli occhiali', q.avatar.glasses, 'none');
+  uguale('via lo zaino', q.avatar.bag.style, 'none');
   uguale('e le scarpe tornano quelle del ruolo', q.avatar.shoes.color, base.shoes.color);
+
+  /* «TOGLI TUTTI» TOGLIE DAVVERO, anche quello che il ruolo ha di suo.
+     Rimetteva quelli dell'archetipo -- e il nonno gli occhiali ce li ha
+     -- quindi toglierli glieli rimetteva: il tasto sembrava non fare
+     niente. Ma toccarlo e' un'interazione, e vuol dire una cosa
+     precisa: questa persona gli occhiali non li ha. */
+  const nn = { id: 'n2', role: 'nonno', name: '', note: '', tocco: false,
+    avatar: app.AV.normalize(app.AV.baseFor('nonno'), 'nonno') };
+  uguale('il nonno di suo porta gli occhiali', nn.avatar.glasses, 'vista');
+  app.accTogli(nn.avatar, 'accessori', 'nonno');
+  uguale('e togliendoli restano tolti', nn.avatar.glasses, 'none');
+  uguale('coi baffi', nn.avatar.facial, 'none');
+  prova('e la figura non li disegna piu',
+    !/M38 38 a4\.6/.test(app.AV.build(nn.avatar)));
 }
 
 gruppo('I dati di prima continuano a funzionare');

@@ -2303,6 +2303,12 @@ function syncPeople(container, people, onChange) {
              la scheda continua a raccontare una chioma che nessuno ha
              piu' scelto */
           if (d.accvia === 'capelli') delete p.avatar.scelti.taglio;
+          /* e gli accessori sono tre segni: occhiali, borsa, scarpe */
+          if (d.accvia === 'accessori') {
+            delete p.avatar.scelti.occhiali;
+            delete p.avatar.scelti.borsa;
+            delete p.avatar.scelti.scarpe;
+          }
         }
         container.dataset.tav = '';
       } else return;
@@ -2455,11 +2461,17 @@ function accTogli(av, acc, ruolo) {
   else if (acc === 'scarpe') av.shoes = { style: base.shoes.style, color: base.shoes.color };
   else if (acc === 'zaino') av.bag = { style: 'none', color: base.bag.color };
   else if (acc === 'accessori') {
-    /* «togli» sugli accessori li toglie TUTTI: e' il tasto che rimette
-       la persona com'era prima che qualcuno la guardasse */
-    av.glasses = base.glasses;
-    av.facial = base.facial;
-    av.bag = { style: base.bag.style, color: base.bag.color };
+    /* «TOGLI TUTTI» TOGLIE DAVVERO.
+       Rimetteva quelli del RUOLO -- e il nonno di suo gli occhiali ce
+       li ha, quindi toglierli glieli rimetteva: il tasto sembrava non
+       fare niente. Ma toccarlo e' un'interazione, e vuol dire una cosa
+       precisa: «questa persona gli occhiali non li ha, e lo zaino
+       nemmeno». La faccia resta pulita e la schiena vuota.
+       Le scarpe fanno eccezione perche' scalzo non ci va nessuno:
+       quelle tornano com'erano di serie. */
+    av.glasses = 'none';
+    av.facial = 'none';
+    av.bag = { style: 'none', color: base.bag.color };
     av.shoes = { style: base.shoes.style, color: base.shoes.color };
   }
 }

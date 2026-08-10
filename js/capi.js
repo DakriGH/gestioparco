@@ -280,14 +280,24 @@
               <circle cx="24" cy="24" r="15.5" fill="#F6CFA8"/>
               <path d="M18.5 31.5 Q24 35 29.5 31.5" fill="none" stroke="#1B1B24"
                 stroke-width="1.8" stroke-linecap="round"/>`,
-      /* LENTI PIU' LARGHE CHE ALTE e le astine che escono: tonde e
-         senza astine sembravano un binocolo. */
-      sagoma: 'M4 19.5 L9.5 21.5 L9.5 25 L4 23.5 Z M44 19.5 L38.5 21.5 L38.5 25 L44 23.5 Z' +
-        'M20.5 22.5 h7 v3 h-7 Z' +
-        'M6 24 a8.5 6.8 0 1 1 17 0 a8.5 6.8 0 1 1 -17 0 Z' +
-        'M9.4 24 a5.1 3.9 0 1 0 10.2 0 a5.1 3.9 0 1 0 -10.2 0 Z' +
-        'M25 24 a8.5 6.8 0 1 1 17 0 a8.5 6.8 0 1 1 -17 0 Z' +
-        'M28.4 24 a5.1 3.9 0 1 0 10.2 0 a5.1 3.9 0 1 0 -10.2 0 Z',
+      /* MONTATURA SOTTILE. Il vetro e' un filo di metallo attorno a un
+         buco: con la montatura grossa e il bordo da adesivo spesso
+         sette pixel, del buco non restava niente e sulla faccia
+         sembravano una mascherina. Qui il cerchio esterno e quello
+         interno sono a un pixel e mezzo l'uno dall'altro, e i due bordi
+         sono sottili anche loro (vedi `bordo` e `filo`). */
+      bordo: 3.4, filo: 1.2,
+      /* PICCOLI E ALL'ALTEZZA DEGLI OCCHI: prendevano tutta la faccia,
+         fronte e guance comprese, ed e' anche quello che li faceva
+         sembrare una mascherina. Occhiali veri stanno in mezzo, e
+         sopra e sotto resta faccia. */
+      sagoma: 'M8.6 20.4 L12.2 21.4 L12.2 23 L8.6 22.2 Z' +
+        'M39.4 20.4 L35.8 21.4 L35.8 23 L39.4 22.2 Z' +
+        'M21.6 21.6 h4.8 v1.7 h-4.8 Z' +
+        'M11.8 22 a5.6 4.6 0 1 1 11.2 0 a5.6 4.6 0 1 1 -11.2 0 Z' +
+        'M13.2 22 a4.2 3.3 0 1 0 8.4 0 a4.2 3.3 0 1 0 -8.4 0 Z' +
+        'M25 22 a5.6 4.6 0 1 1 11.2 0 a5.6 4.6 0 1 1 -11.2 0 Z' +
+        'M26.4 22 a4.2 3.3 0 1 0 8.4 0 a4.2 3.3 0 1 0 -8.4 0 Z',
       segni: ''
     }),
 
@@ -295,20 +305,27 @@
        che si vede da lontano -- con un lampo di luce sopra. */
     sole: (c) => ({
       /* stessa faccia, stessa montatura: qui pero' le lenti sono PIENE
-         -- e' quello che si vede da lontano -- con un lampo di luce */
+         -- e' quello che si vede da lontano -- con un lampo di luce.
+         Anche qui il bordo e' sottile: sette pixel di bianco attorno a
+         due lenti attaccate le facevano diventare una banda sola. */
+      bordo: 3.4, filo: 1.2,
       sotto: `<circle cx="24" cy="24" r="15.5" fill="none" stroke="rgba(255,255,255,.94)" stroke-width="7"/>
               <circle cx="24" cy="24" r="15.5" fill="none" stroke="rgba(18,18,26,.9)" stroke-width="2.6"/>
               <circle cx="24" cy="24" r="15.5" fill="#F6CFA8"/>
               <path d="M18.5 31.5 Q24 35 29.5 31.5" fill="none" stroke="#1B1B24"
                 stroke-width="1.8" stroke-linecap="round"/>`,
-      sagoma: 'M4 19.5 L9.5 21.5 L9.5 25 L4 23.5 Z M44 19.5 L38.5 21.5 L38.5 25 L44 23.5 Z' +
-        'M20.5 22.5 h7 v3 h-7 Z' +
-        'M6 24 a8.5 6.8 0 1 1 17 0 a8.5 6.8 0 1 1 -17 0 Z' +
-        'M25 24 a8.5 6.8 0 1 1 17 0 a8.5 6.8 0 1 1 -17 0 Z',
-      segni: `<path d="M10 21.5 Q13 19.4 16.5 19.8" fill="none" stroke="#ffffff"
-                stroke-width="2.2" stroke-linecap="round" opacity=".55"/>
-              <path d="M29 21.5 Q32 19.4 35.5 19.8" fill="none" stroke="#ffffff"
-                stroke-width="2.2" stroke-linecap="round" opacity=".55"/>`
+      /* PICCOLI E ALL'ALTEZZA DEGLI OCCHI: prendevano tutta la faccia
+         -- fronte e guance comprese -- ed e' quello che li faceva
+         sembrare una mascherina. */
+      sagoma: 'M8.6 20.4 L12.2 21.4 L12.2 23 L8.6 22.2 Z' +
+        'M39.4 20.4 L35.8 21.4 L35.8 23 L39.4 22.2 Z' +
+        'M21.6 21.6 h4.8 v1.7 h-4.8 Z' +
+        'M11.8 22 a5.6 4.6 0 1 1 11.2 0 a5.6 4.6 0 1 1 -11.2 0 Z' +
+        'M25 22 a5.6 4.6 0 1 1 11.2 0 a5.6 4.6 0 1 1 -11.2 0 Z',
+      segni: `<path d="M13.4 20 Q15.4 18.6 17.8 18.9" fill="none" stroke="#ffffff"
+                stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
+              <path d="M26.6 20 Q28.6 18.6 31 18.9" fill="none" stroke="#ffffff"
+                stroke-width="1.5" stroke-linecap="round" opacity=".5"/>`
     }),
 
     /* SCARPE: una scarpa di profilo, grande */
@@ -398,10 +415,15 @@
        da vista: senza, il cerchio interno si riempirebbe e sarebbero
        due occhiali da sole. */
     const regola = d.evenodd ? ' fill-rule="evenodd"' : '';
+    /* IL BORDO DA ADESIVO SI PUO' STRINGERE. Sette pixel di bianco
+       vanno bene attorno a una scarpa o a uno zaino; attorno a una
+       montatura da occhiali, che e' spessa due, coprono il vetro e
+       quello che resta e' una mascherina. */
+    const bordo = d.bordo || 7, filo = d.filo || 2.6;
     return `<svg viewBox="-3 -3 54 54" width="${m}" height="${m}" aria-hidden="true">` +
       (d.sotto || '') +
-      `<path d="${d.sagoma}" fill="none" stroke="rgba(255,255,255,.94)" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>` +
-      `<path d="${d.sagoma}" fill="none" stroke="rgba(18,18,26,.9)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>` +
+      `<path d="${d.sagoma}" fill="none" stroke="rgba(255,255,255,.94)" stroke-width="${bordo}" stroke-linejoin="round" stroke-linecap="round"/>` +
+      `<path d="${d.sagoma}" fill="none" stroke="rgba(18,18,26,.9)" stroke-width="${filo}" stroke-linejoin="round" stroke-linecap="round"/>` +
       `<path d="${d.sagoma}" fill="${c}"${regola}/>` +
       d.segni + '</svg>';
   }
