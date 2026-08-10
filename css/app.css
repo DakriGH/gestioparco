@@ -3551,6 +3551,25 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
 .armadio .sottoblocco > .capi { height: 100%; }
 .armadio .capo { justify-content: center; }
 .armadio .roba > .fant { min-height: 27px; max-height: 33px; }
+/* ══════════════════════════════════════════════════════════
+   QUANDO C'E' ANCHE L'ESTENDI
+   Sulla scheda di chi e' gia' dentro compare la fascia «Estendi»:
+   cinquanta pixel in meno per tutto il resto, e col guardaroba aperto
+   -- due file di capi, due di fantasie, due di colori -- non ci si sta
+   piu'. Invece di far comparire una barra di scorrimento (che nel
+   pannello e' proprio la cosa che non deve succedere) si stringe di
+   qualche pixel quello che puo' stringersi senza diventare scomodo:
+   le file dei capi da settantasette a settanta, le fantasie da
+   ventinove a ventisette, gli stacchi di un pixel. Il disegno dentro i
+   pulsanti resta della stessa misura.
+   In "+ Nuovo" l'Estendi non c'e' e non cambia niente.
+   ══════════════════════════════════════════════════════════ */
+.pan-conto.con-estendi .armadio .roba > .capi,
+.pan-conto.con-estendi .armadio .roba > .sottoblocco { min-height: 62px; max-height: 70px; }
+.pan-conto.con-estendi .armadio .roba > .fant { min-height: 25px; max-height: 27px; }
+.pan-conto.con-estendi .armadio .stacco { min-height: 4px; }
+.pan-conto.con-estendi .armadio .stacco.forte { min-height: 8px; }
+.pan-conto.con-estendi .armadio .et { margin-bottom: 1px; }
 .armadio .roba > .tinte { min-height: 21px; max-height: 30px; }
 .armadio .fant { display: grid; gap: 5px; }
 .armadio .fant button { border: none; border-radius: 9px; padding: 2px; min-width: 0;
@@ -3558,7 +3577,19 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
 .armadio .fant button.on { background: #fff; }
 .armadio .fant .sw { display: flex; align-items: center; justify-content: center;
   width: 100%; height: 100%; min-height: 23px; border-radius: 7px;
-  box-shadow: 0 0 0 1px rgba(0,0,0,.4) inset; }
+  box-shadow: 0 0 0 1px rgba(0,0,0,.4) inset;
+  /* LA PEZZA DISEGNATA NON DECIDE QUANTO E' ALTA LA FILA.
+     Mimetico e scritta non sono sfumature del CSS ma un <svg> vero
+     (e' l'unico modo perche' la pastiglia mostri la stoffa che finisce
+     davvero addosso). Un svg quadrato largo quanto la pastiglia si
+     porta dietro la SUA altezza: la fila delle fantasie diventava alta
+     sessanta pixel invece di trenta, sbordava dal suo riquadro e
+     finiva SOPRA le pastiglie del colore -- e li' sotto si toccava una
+     fantasia credendo di prendere una tinta.
+     Messo fuori dal flusso, il disegno riempie la pastiglia e
+     dell'altezza non ha piu' voce in capitolo. */
+  position: relative; overflow: hidden; }
+.armadio .fant .sw > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .armadio .fant .sw b { font-size: 25px; line-height: 1; }
 
 .armadio .tinte { display: grid; gap: 4px; }

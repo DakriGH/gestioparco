@@ -393,6 +393,24 @@ gruppo('Il vestito cambiato si vede subito anche nella lista');
     /cardRefs\.set\([\s\S]{0,320}avBox, nome, tratti, apriParco, sigGente/.test(APP));
 }
 
+gruppo('Il guardaroba non si sfascia quando compare l’Estendi');
+{
+  /* LA PEZZA DISEGNATA NON DECIDE QUANTO E' ALTA LA FILA. Mimetico e
+     scritta sono un <svg> vero (e' l'unico modo perche' la pastiglia
+     mostri la stoffa che finisce davvero addosso), e un svg quadrato
+     largo quanto la pastiglia si porta dietro la SUA altezza: la fila
+     delle fantasie diventava alta il doppio e finiva sopra le
+     pastiglie del colore. */
+  prova('il disegno della pezza sta fuori dal flusso',
+    /\.armadio \.fant \.sw > svg \{[^}]*position: absolute/.test(CSS));
+  prova('e la pastiglia lo ritaglia',
+    /\.armadio \.fant \.sw \{[^}]*overflow: hidden/.test(CSS));
+  /* e col guardaroba aperto sotto l'Estendi ci si sta lo stesso */
+  prova('col pannello di chi e dentro il guardaroba si stringe',
+    /\.pan-conto\.con-estendi \.armadio/.test(CSS));
+  prova('e il pannello se lo dice da se', /con-estendi/.test(APP));
+}
+
 gruppo('Il banco degli amari, e ognuno col suo disegno');
 {
   const ICO = leggi('js/icone.js');

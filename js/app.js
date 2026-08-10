@@ -1665,6 +1665,13 @@ function disegnaEstendi(p, c) {
   /* solo su chi e' gia' dentro */
   const suUno = !!PAN.ingresso;
   box.classList.toggle('hidden', !suUno);
+  /* CON L'ESTENDI A VIDEO IL PANNELLO HA CINQUANTA PIXEL IN MENO, e il
+     guardaroba aperto e' proprio la cosa che ce ne mette di piu'. Il
+     riquadro lo dice a se stesso: da li' le file dei capi e delle
+     fantasie si stringono di qualche pixel invece di far comparire una
+     barra di scorrimento. In "+ Nuovo", dove l'Estendi non c'e',
+     restano grandi come prima. */
+  p.classList.toggle('con-estendi', suUno);
   if (!suUno) { box.innerHTML = ''; box.dataset.sig = ''; return; }
 
   const aperto = !!c.payLater;
