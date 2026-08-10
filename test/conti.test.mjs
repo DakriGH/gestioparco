@@ -541,8 +541,26 @@ gruppo('Solo Crazy: dieci minuti in omaggio, e non si pagano mai', () => {
   ok('niente tempo di parco comprato', c.durationMinutes, 0);
   ok('e dieci minuti in omaggio', ctx.omaggioDi(c), omaggio);
   ok('si paga solo il Crazy', ctx.dueOf(c).park, ctx.settings.crazyJumpingPrice);
-  ok('ma dentro ci resta', Math.round((ctx.endTimeOf(c) - c.startTime) / 60000),
-     omaggio + extra);
+  /* I DIECI MINUTI SONO IL PRIMO GIRO, non un regalo in piu': salire,
+     saltare, uscire sta tutto li' dentro. Sommarci anche i minuti del
+     giro voleva dire regalare due volte la stessa cosa. */
+  ok('ma dentro ci resta l omaggio, e basta',
+     Math.round((ctx.endTimeOf(c) - c.startTime) / 60000), omaggio);
+  /* dal secondo giro in poi si sommano davvero: sono salite in piu' */
+  ctx.giroNuovo(c);
+  ctx.cambiaGiro(c, ctx.giriCrazy(c).length - 1, 1);
+  ok('col secondo giro si aggiungono i suoi minuti',
+     Math.round((ctx.endTimeOf(c) - c.startTime) / 60000), omaggio + extra);
+  ctx.giroNuovo(c);
+  ctx.cambiaGiro(c, ctx.giriCrazy(c).length - 1, 2);
+  ok('e col terzo un altro pezzo',
+     Math.round((ctx.endTimeOf(c) - c.startTime) / 60000), omaggio + extra * 2);
+  ok('mentre i soldi restano quelli delle salite',
+     ctx.dueOf(c).park, ctx.r2(ctx.settings.crazyJumpingPrice * 4));
+  /* e tornando a un giro solo si torna ai dieci minuti */
+  ctx.viaGiro(c, 2); ctx.viaGiro(c, 1);
+  ok('via i giri, via i loro minuti',
+     Math.round((ctx.endTimeOf(c) - c.startTime) / 60000), omaggio);
 
   /* adesso arrivano anche al parco: mezz'ora */
   ctx.bcSetQ('bimbi', 2);
@@ -557,7 +575,7 @@ gruppo('Solo Crazy: dieci minuti in omaggio, e non si pagano mai', () => {
   ok('i dieci minuti in omaggio non entrano nel prezzo',
      ctx.dueOf(c).park !== ctx.r2(ctx.priceFor(40) * 2 + ctx.settings.crazyJumpingPrice), true);
   ok('ma restano nella permanenza',
-     Math.round((ctx.endTimeOf(c) - c.startTime) / 60000), 30 + omaggio + extra);
+     Math.round((ctx.endTimeOf(c) - c.startTime) / 60000), 30 + omaggio);
 
   /* e il tasto che allunga dice il prezzo del blocco, non dell'omaggio */
   ok('allungare di mezz ora costa la mezz ora',

@@ -206,7 +206,11 @@ gruppo('Una giornata coi solo-Crazy, i giri e il tempo venduto', () => {
 
     /* l'ora d'uscita comprende SEMPRE tutto: comprato + giri + omaggio */
     const dentro = Math.round((ctx.endTimeOf(c) - c.startTime) / 60000);
-    const atteso = clampNum(c.durationMinutes) + ctx.turniCrazy(c) * extra + ctx.omaggioDi(c);
+    /* il primo giro di un solo-Crazy sta gia' dentro l'omaggio: quei
+       dieci minuti SONO il primo giro, non un regalo in piu' */
+    const gratis = ctx.omaggioDi(c) > 0 ? 1 : 0;
+    const atteso = clampNum(c.durationMinutes) +
+      Math.max(0, ctx.turniCrazy(c) - gratis) * extra + ctx.omaggioDi(c);
     if (dentro !== atteso) return ok('permanenza sbagliata al giro ' + i, dentro, atteso);
 
     attesoVenduto = r2(attesoVenduto + ctx.dueOf(c).park + ctx.dueOf(c).bar);

@@ -400,7 +400,14 @@ gruppo('I giri del Crazy stanno nella sua card');
      "3 poi 2" non e' "5" -- quindi i giri si scrivono uno per uno. */
   prova('i giri sono una lista, non un numero', /function giriCrazy/.test(APP));
   prova('e i minuti si contano sui giri',
-    /function minutiCrazy[\s\S]{0,160}turniCrazy\(e\) \* /.test(APP));
+    /function minutiCrazy[\s\S]{0,600}turniCrazy\(e\) - primoGratis/.test(APP));
+  /* i dieci minuti del solo Crazy SONO il primo giro: sommarci anche i
+     minuti del giro voleva dire regalare due volte la stessa cosa */
+  prova('e il primo giro del solo Crazy e gia nell omaggio',
+    /primoGratis = omaggioDi\(e\) > 0 \? 1 : 0/.test(APP));
+  prova('e il tempo regalato si chiede a una funzione sola',
+    /function regalatiDi/.test(APP) &&
+    /startTime \+ \(num\(e\.durationMinutes, 0\) \+ regalatiDi\(e\)\)/.test(APP));
   /* LA CARD RESTA QUELLA DELLE ALTRE: il piu' e il meno di sempre.
      Quello che cambiano dentro e' il GIRO SCELTO, e il giro si sceglie
      toccandolo nello storico qui accanto. Cosi' si corregge un giro

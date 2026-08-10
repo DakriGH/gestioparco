@@ -617,13 +617,34 @@ function omaggioDi(e) {
   return clamp(Math.round(num(e.omaggio, 0)), 0, 1e6);
 }
 
-/* i minuti regalati: quelli di TUTTI i giri messi insieme */
+/* I MINUTI REGALATI DAI GIRI.
+   Ogni giro tiene dentro il gruppo un altro po': il tempo di salire,
+   saltare e scendere.
+   MA IL PRIMO GIRO DEL SOLO CRAZY E' GIA' PAGATO DALL'OMAGGIO. Chi
+   entra solo per saltare ha i suoi dieci minuti regalati, e QUELLI
+   SONO il primo giro -- salire, saltare, uscire. Sommarci anche i
+   minuti del giro voleva dire regalare due volte la stessa cosa:
+   dieci piu' cinque per un giro solo. Dal secondo in poi invece si
+   sommano davvero, perche' sono salite in piu': 10 + 5 + 5.
+   Su un ingresso normale non cambia niente: li' l'omaggio non c'e' e
+   ogni giro conta per intero. */
 function minutiCrazy(e) {
-  return turniCrazy(e) * clamp(num(settings.crazyExtraMinutes, 0), 0, 1e6);
+  const extra = clamp(num(settings.crazyExtraMinutes, 0), 0, 1e6);
+  const primoGratis = omaggioDi(e) > 0 ? 1 : 0;
+  return Math.max(0, turniCrazy(e) - primoGratis) * extra;
+}
+
+/* Tutto il tempo che il gruppo sta dentro senza pagarlo: i minuti dei
+   giri piu' l'omaggio del solo Crazy. E' questo il numero che si
+   scrive in cima allo storico -- non i soli giri, che sul primo di un
+   solo-Crazy direbbero "+0" mentre il gruppo resta dentro dieci
+   minuti. */
+function regalatiDi(e) {
+  return minutiCrazy(e) + omaggioDi(e);
 }
 
 function endTimeOf(e) {
-  return e.startTime + (num(e.durationMinutes, 0) + minutiCrazy(e) + omaggioDi(e)) * 60000;
+  return e.startTime + (num(e.durationMinutes, 0) + regalatiDi(e)) * 60000;
 }
 /* IL COLORE DELLA SCHEDA E' L'OROLOGIO, e cambia quando cambia
    davvero qualcosa:
@@ -659,7 +680,7 @@ function costOf(entry) {
   /* I minuti REGALATI dal Crazy Jumping non si pagano: restano dentro
      piu' a lungo, ma lo scaglione si calcola sul tempo del parco. Il
      Crazy si paga a parte, col suo prezzo. */
-  const regalati = minutiCrazy(entry) + omaggioDi(entry);
+  const regalati = regalatiDi(entry);
   let base;
   if (entry.payLater) {
     // paga il tempo passato dentro, meno quello regalato dal Crazy
@@ -3838,7 +3859,7 @@ function storicoGiri() {
      invece di scorrere. */
   return '<div class="bc-storico"><div class="st-dentro">' +
     '<div class="st-testa"><span class="st-k">giri</span>' +
-      '<span class="st-min">+' + minutiCrazy(c) + '′</span></div>' +
+      '<span class="st-min">+' + regalatiDi(c) + '′</span></div>' +
     /* UNA RIGA PER GIRO, e scorrono. Con le pastiglie in fila si
        leggeva male gia' al terzo giro; in colonna ogni giro ha la sua
        riga con scritto tutto, e quando sono tanti si scorre -- dentro
