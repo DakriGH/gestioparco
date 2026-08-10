@@ -412,7 +412,9 @@ gruppo('Il banco degli amari, e ognuno col suo disegno');
     /'amaro del capo':'capo'/.test(ICO) && /'kaciuto':'kaciuto'/.test(ICO) &&
     /'spritz completo':'spritzc'/.test(ICO));
   /* la busta sembrava una lattina: adesso ha lo strappo e le patatine */
-  prova('le patatine hanno il loro sacchetto', /function patatina/.test(ICO));
+  /* non e' una lattina: ha le saldature seghettate e i riflessi */
+  prova('la busta delle patatine e seghettata sopra e sotto',
+    /function busta/.test(ICO) && /l1\.25 -2\.2l1\.25 2\.2/.test(ICO));
 }
 
 gruppo('I giri del Crazy stanno nella sua card');

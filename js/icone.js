@@ -74,50 +74,35 @@ function bottiglia(o) {
     '<rect x="' + (nx - 0.5) + '" y="' + (yTappo + hTappo - 0.6) + '" width="' + (nw + 1) + '" height="1.6" fill="#000" opacity=".18"/>'
   );
 }
-/* UNA PATATINA: un disco ondulato, non un cerchio. */
-function patatina(cx, cy, r, rot, chip, bordo) {
-  const n = x => (Math.round(x * 100) / 100);
-  return '<g transform="translate(' + cx + ' ' + cy + ') rotate(' + rot + ')">' +
-    '<ellipse rx="' + n(r) + '" ry="' + n(r * 0.72) + '" fill="' + chip + '"/>' +
-    /* il contorno serve: senza, due patatine vicine si impastano in un
-       grumo solo e non si contano piu' */
-    '<ellipse rx="' + n(r) + '" ry="' + n(r * 0.72) + '" fill="none" stroke="' + bordo +
-      '" stroke-width=".9"/>' +
-    '<path d="M' + n(-r * 0.62) + ' .2q' + n(r * 0.31) + ' ' + n(-r * 0.62) + ' ' +
-      n(r * 0.62) + ' 0t' + n(r * 0.62) + ' 0" stroke="' + bordo +
-      '" stroke-width="1" fill="none" stroke-linecap="round"/></g>';
-}
-/* BUSTA DI PATATINE, aperta, con le patatine che escono.
-   Prima era un rettangolo con gli angoli smussati e una finestra ovale
-   nel mezzo: al banco la si scambiava per una lattina -- e di lattine,
-   cinque righe piu' su, ce ne sono cinque. Adesso il sacchetto e' PIU'
-   LARGO SOTTO CHE SOPRA (una lattina no), ha lo strappo a zig-zag in
-   cima e tre patatine che ne escono: si riconosce da lontano e senza
-   leggere il nome. */
+/* BUSTA DI PATATINE.
+   Il sacchetto e' quello di sempre -- si legge bene, e a cambiarlo con
+   una busta aperta le patatine sembravano patatine vere invece di un
+   pacco da banco. Quello che gli mancava per non sembrare una lattina
+   sono le due cose che ha una busta e una lattina no: le SALDATURE
+   SEGHETTATE sopra e sotto -- quelle le tagliano con la forbice a
+   zig-zag -- e i RIFLESSI LUNGHI della plastica lucida. */
 function busta(o) {
   const corpo = o.corpo || '#F2C230';
   const chip = o.chip || '#E8A33D';
-  const bordo = o.bordo || '#C4821F';
+  /* la dentellatura: otto denti da due e mezzo, in cima da sinistra a
+     destra e in fondo al contrario, cosi' il contorno si chiude */
+  let su = '', giu = '';
+  for (let k = 0; k < 8; k++) {
+    su += 'l1.25 -2.2l1.25 2.2';
+    giu += 'l-1.25 2.2l-1.25 -2.2';
+  }
   return svg(
-    /* le patatine che escono: disegnate PRIMA, cosi' il sacchetto le
-       taglia in basso e sembrano uscire da dentro */
-    patatina(13.4, 13, 3.9, -24, chip, bordo) +
-    patatina(26.6, 12.4, 4, 22, chip, bordo) +
-    patatina(20, 9.4, 4.2, -5, chip, bordo) +
-    /* il sacchetto, con lo strappo in cima */
-    '<path d="M13 15.4l1.9-2.4 1.9 2.4 1.9-2.4 1.9 2.4 1.9-2.4 1.9 2.4 1.9-2.4 1.9 2.4' +
-      'L30 32.8a2.8 2.8 0 0 1-2.8 2.8H12.8A2.8 2.8 0 0 1 10 32.8L13 15.4Z" fill="' + corpo + '"/>' +
-    /* il buio dentro, appena sotto lo strappo */
-    '<path d="M13 15.4h15.2l.3 2.2H12.8l.2-2.2Z" fill="#000" opacity=".22"/>' +
-    /* la luce sul fianco sinistro: da' il volume del sacchetto */
-    '<path d="M14.6 18.6 12.9 32.4" stroke="#fff" stroke-width="2.4" opacity=".24" stroke-linecap="round"/>' +
-    /* l\u2019etichetta chiara con due patatine sopra */
-    '<rect x="12.2" y="22.4" width="15.6" height="7.6" rx="2.4" fill="#FBF7EC" opacity=".94"/>' +
-    patatina(16.2, 26.2, 2.9, -14, chip, bordo) +
-    /* accanto, due righe: sull\u2019etichetta c\u2019e\u2019 scritto qualcosa, e due
-       patatine simmetriche sembravano due occhi */
-    '<rect x="20" y="24.6" width="6.4" height="1.5" rx=".75" fill="' + bordo + '" opacity=".75"/>' +
-    '<rect x="20" y="27.2" width="4.4" height="1.5" rx=".75" fill="' + bordo + '" opacity=".5"/>'
+    '<path d="M10 10.4' + su + 'L30 34.6' + giu + 'Z" fill="' + corpo + '"/>' +
+    /* le due saldature: li' la plastica e' schiacciata, e piu' scura */
+    '<path d="M10 12.6h20v2.2H10zM10 30.2h20v2.2H10z" fill="#000" opacity=".18"/>' +
+    /* la finestra con la patatina dentro */
+    '<ellipse cx="20" cy="22.6" rx="6.6" ry="5.2" fill="#FBF7EC"/>' +
+    '<path d="M15.6 23.6c.8-2.6 2.4-4 4.4-4s3.6 1.4 4.4 4c-1.6 1.4-3 2-4.4 2s-2.8-.6-4.4-2Z" fill="' + chip + '"/>' +
+    '<path d="M16.8 22.4c1-1.2 2-1.8 3.2-1.8s2.2.6 3.2 1.8" stroke="#C97C22" stroke-width=".9" fill="none" opacity=".8"/>' +
+    /* i due riflessi, sopra a tutto: passano anche sull\u2019etichetta,
+       come fa la luce su una busta vera */
+    '<path d="M15.2 11.6 12.8 33.2" stroke="#fff" stroke-width="2.8" opacity=".24" stroke-linecap="round"/>' +
+    '<path d="M18.2 11.8 16.6 33" stroke="#fff" stroke-width="1.2" opacity=".15" stroke-linecap="round"/>'
   );
 }
 /* SPRITZ. Due voci al banco, due disegni: il BASE e' il calice e

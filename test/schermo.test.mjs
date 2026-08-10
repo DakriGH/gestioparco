@@ -149,9 +149,14 @@ gruppo('Ogni amaro ha il suo disegno, e non sono tutti uguali', () => {
     prova('"' + n + '" trova il suo disegno', ctx.iconaBar(n, '').indexOf('<svg') === 0);
   });
   /* le patatine: sacchetto, non lattina */
+  const pat = ctx.iconaBar('Patatine', '');
   prova('le patatine hanno un disegno tutto loro',
-    ctx.iconaBar('Patatine', '').indexOf('<svg') === 0 &&
-    ctx.iconaBar('Patatine', '') !== ctx.iconaBar('Coca Cola', ''));
+    pat.indexOf('<svg') === 0 && pat !== ctx.iconaBar('Coca Cola', ''));
+  /* e non e' una lattina: le due cose che ha una busta e una lattina
+     no sono le saldature seghettate e i riflessi della plastica */
+  uguale('sedici denti, otto sopra e otto sotto',
+    (pat.match(/l1\.25 -2\.2|l-1\.25 2\.2/g) || []).length, 16);
+  uguale('e due riflessi', (pat.match(/stroke="#fff"/g) || []).length, 2);
 });
 
 gruppo('La card del Crazy e la riga dei tagli non cambiano forma sotto le dita', () => {
