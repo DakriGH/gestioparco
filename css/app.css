@@ -757,12 +757,16 @@ main {
    se sparisse, la riga si riorganizzerebbe a ogni "tempo aperto" */
 .tp-gr.spento { opacity: .45; }
 .tp-dx { margin-left: auto; }
-/* INGRESSO ... USCITA. Due orari uno accanto all'altro, uguali, senza
-   niente che dicesse quale fosse quale: si andava a memoria
-   sull'orologio e sulla porta. Adesso c'e' scritto. */
-.tp-et { font-size: 11px; font-weight: 800; letter-spacing: .08em;
-  text-transform: uppercase; color: rgba(255, 255, 255, 0.45); }
-.tp-et2 { margin-left: 2px; }
+/* QUANTO TEMPO HANNO COMPRATO, in fondo a destra accanto al
+   bracciale. Le scritte «Ingresso» e «Uscita» dicevano una cosa che i
+   due disegni -- l'orologio e la porta -- dicono da soli; i minuti no,
+   e senza di loro dopo un +5 o un +30 nessun taglio e' piu' acceso e
+   non si sa piu' a che punto si e'. */
+.tp-min { margin-left: auto; display: flex; align-items: center; gap: 5px;
+  background: rgba(0, 0, 0, 0.28); border-radius: 13px; padding: 5px 12px; }
+.tp-min .em { font-size: 14px; opacity: .85; }
+.tp-min b { font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 700;
+  line-height: 1; }
 /* IL TASTO "ORA" DICE SE L'ORARIO E' VIVO. Spento: l'ingresso segue
    l'orologio da solo, non c'e' niente da fare. Acceso e lampeggiante:
    l'orario e' stato messo a mano e da qui si torna ad adesso. */

@@ -925,7 +925,6 @@ function costruisciPannello() {
         <h2><span class="em">\u23f1\ufe0f</span> Tempo</h2>
         <div class="blk-in">
         <div class="tp-riga">
-          <span class="tp-et">Ingresso</span>
           <span class="tp-gr">
             <span class="em">\ud83d\udd52</span>
             <button data-a="ora" data-v="-5" aria-label="5 minuti prima">\u2212</button>
@@ -933,13 +932,20 @@ function costruisciPannello() {
             <button data-a="ora" data-v="5" aria-label="5 minuti dopo">+</button>
             <button class="txt pc-oralive" data-a="ora" data-v="ora"><span class="em">\ud83d\udccd</span> Ora</button>
           </span>
-          <span class="tp-et tp-et2">\u2192 Uscita</span>
           <span class="tp-gr pc-gfine">
             <span class="em">\ud83d\udeaa</span>
             <button data-a="fine" data-v="-1" aria-label="esce prima">\u2212</button>
             <span class="v num pc-fine">--:--</span>
             <button data-a="fine" data-v="1" aria-label="esce dopo">+</button>
           </span>
+          <!-- QUANTO TEMPO HANNO COMPRATO, in fondo a destra accanto al
+               bracciale. Le due scritte «Ingresso» e «Uscita» dicevano
+               una cosa che i due disegni -- l'orologio e la porta --
+               dicono da soli; i minuti no, e senza di loro dopo un +5
+               o un +30 nessun taglio e' piu' acceso e non si sa piu' a
+               che punto si e'. E' lo stesso numero che sta nella
+               striscia della lista, nello stesso posto: a destra. -->
+          <span class="tp-min"><span class="em">\u23f1\ufe0f</span><b class="num pc-min">30m</b></span>
           <span class="brc tp-dx">
             <button class="brc-b" data-a="bracapri">
               <span class="pallo pc-pallo"></span><span class="pc-bracnome">Auto</span>
@@ -1601,6 +1607,8 @@ function minutiPagati(c) {
 function disegnaFascia(p, c) {
   const aperto = !!c.payLater;
   p.querySelector('.pc-ora').textContent = fmtTime(c.startTime);
+  const min = p.querySelector('.pc-min');
+  if (min) min.textContent = aperto ? '\u2014' : fmtMin(clamp(num(c.durationMinutes, 0), 0, 1e6));
   /* il tasto "Ora": spento mentre l'orario segue l'orologio da solo
      (non c'e' niente da fare), acceso e lampeggiante appena lo si e'
      spostato a mano -- e' l'unico modo per tornare al live */
@@ -1778,14 +1786,9 @@ function disegnaEstendi(p, c) {
         '</i></button>';
     }).join('') +
     '<span class="est-dx">' +
-      /* QUANTO TEMPO HANNO COMPRATO IN TUTTO. Senza, dopo un +5 o un
-         +30 nessun taglio e' piu' acceso e non si sa piu' a che punto
-         si e': si vede solo l'ora d'uscita, che pero' comprende anche i
-         minuti regalati dal Crazy e non dice quanto si e' venduto.
-         Questo e' il tempo di parco, quello che si paga. */
-      '<span class="est-fine">' + (aperto ? 'tempo aperto' : 'in tutto') +
-        '<b>' + (aperto ? '\u2014' : fmtMin(clamp(num(c.durationMinutes, 0), 0, 1e6))) + '</b></span>' +
-      '<span class="est-fine">' + (aperto ? '\u00a0' : 'fino alle') +
+      /* il totale dei minuti sta due righe sopra, accanto al bracciale:
+         qui basta l'ora d'uscita */
+      '<span class="est-fine">' + (aperto ? 'tempo aperto' : 'fino alle') +
         '<b>' + (aperto ? '\u2014' : fmtTime(endTimeOf(c))) + '</b></span>' +
     '</span>';
 }
