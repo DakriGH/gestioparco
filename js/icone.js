@@ -74,35 +74,65 @@ function bottiglia(o) {
     '<rect x="' + (nx - 0.5) + '" y="' + (yTappo + hTappo - 0.6) + '" width="' + (nw + 1) + '" height="1.6" fill="#000" opacity=".18"/>'
   );
 }
-/* BUSTA DI PATATINE.
-   Il sacchetto e' quello di sempre -- si legge bene, e a cambiarlo con
-   una busta aperta le patatine sembravano patatine vere invece di un
-   pacco da banco. Quello che gli mancava per non sembrare una lattina
-   sono le due cose che ha una busta e una lattina no: le SALDATURE
-   SEGHETTATE sopra e sotto -- quelle le tagliano con la forbice a
-   zig-zag -- e i RIFLESSI LUNGHI della plastica lucida. */
+/* BUSTA DI PATATINE, come quelle che stanno sul banco.
+   Tre cose la fanno riconoscere prima ancora di leggere il nome, e
+   sono tutte e tre nella sagoma:
+     - e' PIU' ALTA CHE LARGA (una lattina e' tozza);
+     - le SALDATURE ROSSE sopra e sotto sono seghettate, coi denti
+       piccoli e fitti della forbice a zig-zag;
+     - i FIANCHI RIENTRANO -- larga alle saldature, stretta in mezzo,
+       la forma a )( -- perche' il sacchetto e' gonfio in cima e in
+       fondo e schiacciato dove lo si tiene.
+   Il corpo e' bianco come le buste vere, e dentro c'e' una patatina
+   ondulata. Niente marchio: un riquadro rosso dove sta l'etichetta e
+   una riga chiara dove c'e' scritto il nome. */
 function busta(o) {
-  const corpo = o.corpo || '#F2C230';
-  const chip = o.chip || '#E8A33D';
-  /* la dentellatura: otto denti da due e mezzo, in cima da sinistra a
-     destra e in fondo al contrario, cosi' il contorno si chiude */
+  const corpo = o.corpo || '#F4F5F8';        /* il bianco della busta */
+  const banda = o.banda || '#D62128';        /* il rosso delle saldature */
+  const chip = o.chip || '#F0DCA2';
+  /* otto denti per parte, da 2.75: in cima da sinistra a destra e in
+     fondo al contrario, cosi' il contorno si chiude da se' */
   let su = '', giu = '';
   for (let k = 0; k < 8; k++) {
-    su += 'l1.25 -2.2l1.25 2.2';
-    giu += 'l-1.25 2.2l-1.25 -2.2';
+    su += 'l1.375 -1.8l1.375 1.8';
+    giu += 'l-1.375 1.8l-1.375 -1.8';
   }
+  /* i fianchi: due archi che rientrano di tre buoni pixel per parte */
+  const destro = 'C27.8 14 27.8 27 31 33.8';
+  const sinistro = 'C12.2 27 12.2 14 9 7.2';
   return svg(
-    '<path d="M10 10.4' + su + 'L30 34.6' + giu + 'Z" fill="' + corpo + '"/>' +
-    /* le due saldature: li' la plastica e' schiacciata, e piu' scura */
-    '<path d="M10 12.6h20v2.2H10zM10 30.2h20v2.2H10z" fill="#000" opacity=".18"/>' +
-    /* la finestra con la patatina dentro */
-    '<ellipse cx="20" cy="22.6" rx="6.6" ry="5.2" fill="#FBF7EC"/>' +
-    '<path d="M15.6 23.6c.8-2.6 2.4-4 4.4-4s3.6 1.4 4.4 4c-1.6 1.4-3 2-4.4 2s-2.8-.6-4.4-2Z" fill="' + chip + '"/>' +
-    '<path d="M16.8 22.4c1-1.2 2-1.8 3.2-1.8s2.2.6 3.2 1.8" stroke="#C97C22" stroke-width=".9" fill="none" opacity=".8"/>' +
-    /* i due riflessi, sopra a tutto: passano anche sull\u2019etichetta,
-       come fa la luce su una busta vera */
-    '<path d="M15.2 11.6 12.8 33.2" stroke="#fff" stroke-width="2.8" opacity=".24" stroke-linecap="round"/>' +
-    '<path d="M18.2 11.8 16.6 33" stroke="#fff" stroke-width="1.2" opacity=".15" stroke-linecap="round"/>'
+    '<path d="M9 7.2' + su + destro + giu + sinistro + 'Z" fill="' + corpo + '"/>' +
+    /* il fianco in ombra: e' quello che fa vedere che e' gonfio */
+    '<path d="M27.4 9.6C29.4 15 29.4 26 27.4 31.4l3.4 1.6C32.4 26 32.4 15 30.8 8.4Z" ' +
+      'fill="#000" opacity=".08"/>' +
+    /* LE DUE SALDATURE ROSSE: dentellate di fuori, dritte di dentro */
+    '<path d="M10.2 10.6L9 7.2' + su + 'L29.8 10.6Z" fill="' + banda + '"/>' +
+    '<path d="M29.8 30.4L31 33.8' + giu + 'L10.2 30.4Z" fill="' + banda + '"/>' +
+    /* la riga scura dove la saldatura schiaccia la plastica */
+    '<path d="M10.4 10.6h19.2v.9H10.4zM10.4 29.6h19.2v.9H10.4z" fill="#000" opacity=".1"/>' +
+    /* l\u2019etichetta in alto e la riga del nome in basso */
+    '<rect x="15.8" y="12.4" width="8.4" height="3" rx=".9" fill="' + banda + '"/>' +
+    '<rect x="14.6" y="27.4" width="10.8" height="1.4" rx=".7" fill="#000" opacity=".22"/>' +
+    /* LA PATATINA: bordo ondulato, non una monetina tonda */
+    '<path d="M20.4 15.9c2.7-.3 5.5 1.1 5.9 3.3.4 2.1-.9 3.1-.7 4.5.3 1.7-1.6 3.1-3.7 3.3' +
+      '-2 .2-3.3-.8-4.7-1.4-1.9-.8-3.2-2.2-3-4.3.2-2.4 1.7-3.5 2.7-4.3 1-.8 2-1 3.5-1.1Z" ' +
+      'fill="#000" opacity=".08" transform="translate(1.1 .9)"/>' +
+    '<path d="M20.4 15.9c2.7-.3 5.5 1.1 5.9 3.3.4 2.1-.9 3.1-.7 4.5.3 1.7-1.6 3.1-3.7 3.3' +
+      '-2 .2-3.3-.8-4.7-1.4-1.9-.8-3.2-2.2-3-4.3.2-2.4 1.7-3.5 2.7-4.3 1-.8 2-1 3.5-1.1Z" ' +
+      'fill="' + chip + '"/>' +
+    /* la luce sulla gobba e le bollicine di frittura. Un arco lungo da
+       una parte all’altra la faceva sembrare una fetta di limone:
+       qui e’ un lampo corto, dove la patatina si alza. */
+    '<path d="M17.6 18.9c1.1-.9 2.3-1.3 3.6-1.3" stroke="#FCF6E2" ' +
+      'stroke-width="1.2" fill="none" stroke-linecap="round" opacity=".95"/>' +
+    '<path d="M17.4 25.2c1.6.9 3.2 1.2 4.8.9" stroke="#D8B96A" ' +
+      'stroke-width=".9" fill="none" stroke-linecap="round" opacity=".5"/>' +
+    '<circle cx="19.4" cy="22.4" r=".7" fill="#D8B96A" opacity=".65"/>' +
+    '<circle cx="22.8" cy="20.9" r=".55" fill="#D8B96A" opacity=".5"/>' +
+    '<circle cx="23.2" cy="24" r=".45" fill="#D8B96A" opacity=".4"/>' +
+    /* i due riflessi della plastica, sul fianco in ombra */
+    '<path d="M27 11.6 26 29.4" stroke="#fff" stroke-width="1.8" opacity=".55" stroke-linecap="round"/>' +
+    '<path d="M29 12.8 28.4 28.2" stroke="#fff" stroke-width=".9" opacity=".33" stroke-linecap="round"/>'
   );
 }
 /* SPRITZ. Due voci al banco, due disegni: il BASE e' il calice e
@@ -256,7 +286,8 @@ const ICONE = {
   estapes:   () => lattina({ corpo:'#E8834F', fascia:'#FBF7EC', frutto:'#FFB58A', foglia:true }),
   bras:      () => bottiglia({ piccola:true, vetro:'#6B4226', tappo:'#C9A227', etichetta:'#C9A227', riga:'#5B3A22' }),
   /* --- snack --- */
-  pata:      () => busta({ corpo:'#F2C230', chip:'#E8873D' }),
+  /* bianca con le saldature rosse, come quelle sul banco */
+  pata:      () => busta({ corpo:'#F4F5F8', banda:'#D62128', chip:'#F0DCA2' }),
   /* --- birre --- */
   heine:     () => bottiglia({ vetro:'#1B7A3E', tappo:'#D2172F', etichetta:'#0F6431', stella:'#D2172F' }),
   nastro:    () => bottiglia({ vetro:'#C9A46A', tappo:'#1F4E9C', etichetta:'#1F4E9C', riga:'#FBF7EC' }),

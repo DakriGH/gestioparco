@@ -154,8 +154,14 @@ gruppo('Ogni amaro ha il suo disegno, e non sono tutti uguali', () => {
     pat.indexOf('<svg') === 0 && pat !== ctx.iconaBar('Coca Cola', ''));
   /* e non e' una lattina: le due cose che ha una busta e una lattina
      no sono le saldature seghettate e i riflessi della plastica */
-  uguale('sedici denti, otto sopra e otto sotto',
-    (pat.match(/l1\.25 -2\.2|l-1\.25 2\.2/g) || []).length, 16);
+  prova('seghettata sopra e sotto, otto denti per parte',
+    (pat.match(/l1\.375 -1\.8|l-1\.375 1\.8/g) || []).length >= 16);
+  /* la sagoma a )(: larga alle saldature, stretta in mezzo. E' quella
+     che si riconosce da lontano, prima ancora del colore. */
+  prova('coi fianchi che rientrano',
+    pat.indexOf('C27.8 14') > 0 && pat.indexOf('C12.2 27') > 0);
+  prova('bianca, con le saldature rosse',
+    pat.indexOf('#F4F5F8') > 0 && pat.indexOf('#D62128') > 0);
   uguale('e due riflessi', (pat.match(/stroke="#fff"/g) || []).length, 2);
 });
 
