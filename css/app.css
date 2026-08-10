@@ -762,10 +762,15 @@ main {
    due disegni -- l'orologio e la porta -- dicono da soli; i minuti no,
    e senza di loro dopo un +5 o un +30 nessun taglio e' piu' acceso e
    non si sa piu' a che punto si e'. */
-.tp-min { margin-left: auto; display: flex; align-items: center; gap: 5px;
-  background: rgba(0, 0, 0, 0.28); border-radius: 13px; padding: 5px 12px; }
-.tp-min .em { font-size: 14px; opacity: .85; }
-.tp-min b { font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 700;
+.tp-min { margin-left: auto; display: flex; align-items: center; gap: 6px;
+  background: rgba(0, 0, 0, 0.28); border-radius: 13px; padding: 6px 14px; }
+/* ATTACCATO AL BRACCIALE. Tutti e due avevano il margine automatico e
+   si spartivano il vuoto: restavano a mezza fascia l'uno dall'altro,
+   e il numero sembrava perso in mezzo invece che in fondo. */
+.tp-riga .brc.tp-dx { margin-left: 0; }
+.tp-min .em { font-size: 15px; opacity: .85; }
+/* grande come gli orari: e' un dato che si legge, non una didascalia */
+.tp-min b { font-family: 'Fredoka', sans-serif; font-size: 25px; font-weight: 700;
   line-height: 1; }
 /* IL TASTO "ORA" DICE SE L'ORARIO E' VIVO. Spento: l'ingresso segue
    l'orologio da solo, non c'e' niente da fare. Acceso e lampeggiante:
@@ -3011,8 +3016,8 @@ html:not(.anima) .view.entra-dx { animation: none; }
 @keyframes bcFoglio{ from { transform: translateY(26px); opacity: .4 } to { transform: none; opacity: 1 } }
 
 /* la griglia entra SOLO quando cambi categoria: prima si rianimava a
-   ogni tocco e sembrava che la schermata si ricaricasse */
-.bc-griglia.entra { animation: bcEntra .2s ease both; }
+   ogni tocco e sembrava che la schermata si ricaricasse. L'animazione
+   e' quella comune, qui sotto. */
 /* le fasce dei tasti scivolano su solo quando NASCONO: rifarlo a ogni
    piu' e meno faceva sembrare che i tasti si spostassero da soli */
 .bc-card.nato .bc-zone { animation: bcSu .18s ease both; }
@@ -3342,15 +3347,25 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
 .bc-cat button { display: flex; align-items: center; gap: 7px; }
 .bc-cat button svg { width: 21px; height: 21px; }
 .bc-cat button .bc-em { font-size: 18px; line-height: 1; }
-/* la vista che arriva entra da sotto, appena */
-.pc-parco.entra > .card, .pc-parco.entra > .bc-griglia, .bc-griglia.entra > .bc-card { animation: bcEntra .3s ease both; }
-/* il pannello che arriva dentro la scheda che vola: sale piano, cosi'
-   si capisce che e' la stessa cosa che stava in "+ Nuovo" e non una
-   schermata comparsa dal nulla */
-.pan-conto.arriva { animation: bcEntra .28s cubic-bezier(.22,.9,.3,1) both; }
-.pc-parco.entra > .card:nth-child(2) { animation-delay: .04s; }
-.pc-parco.entra > .card:nth-child(3) { animation-delay: .08s; }
-.pc-parco.entra > .card:nth-child(4) { animation-delay: .12s; }
+/* ══════════════════════════════════════════════════════════
+   L'INGRESSO E' UNO SOLO, E NON SPOSTA QUELLO CHE SI MISURA
+   Due guasti, tutti e due dovuti a dove stava attaccata l'animazione.
+   1. Il PANNELLO entrava spostato di nove pixel (`bcEntra` addosso a
+      `.pan-conto`), e proprio in quei trecento millisecondi si
+      misurava quanto e' alto: la misura veniva nove pixel corta, e al
+      primo tocco -- che rimisura da fermo -- tutto il conto in fondo
+      saltava giu' di nove. Adesso il pannello sta FERMO e a scivolare
+      dentro sono le due parti che ha dentro: si vede la stessa cosa,
+      ma il rettangolo che si misura non si muove.
+   2. Le quattro card del Parco entravano UNA PER VOLTA, a quaranta
+      millisecondi l'una dall'altra: cambiando linguetta la schermata
+      si ricomponeva a pezzi, e sembrava che si stesse ancora
+      caricando. Adesso entra tutta insieme, una volta sola.
+   ══════════════════════════════════════════════════════════ */
+.pc-parco.entra, .bc-griglia.entra, .pc-scontrino.entra {
+  animation: bcEntra .22s cubic-bezier(.22,.9,.3,1) both; }
+.pan-conto.arriva > .pc-scala, .pan-conto.arriva > .pc-fondo {
+  animation: bcEntra .28s cubic-bezier(.22,.9,.3,1) both; }
 
 /* "Quanto restano" sta su UNA riga: i tagli, i minuti esatti e per
    ultimo il "paga dopo", che e' l'eccezione e sta in fondo come tale */

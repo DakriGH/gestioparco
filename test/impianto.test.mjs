@@ -400,6 +400,26 @@ gruppo('Il vestito cambiato si vede subito anche nella lista');
     /cardRefs\.set\([\s\S]{0,320}avBox, nome, tratti, apriParco, sigGente/.test(APP));
 }
 
+gruppo('Le animazioni non spostano quello che si misura');
+{
+  /* IL GUASTO. Il pannello entrava spostato di nove pixel in giu'
+     (`bcEntra` addosso a `.pan-conto`), e proprio in quei trecento
+     millisecondi si misurava quanto e' alto: la misura veniva nove
+     pixel corta, e al PRIMO TOCCO -- che rimisura da fermo -- tutto il
+     conto in fondo saltava giu'. Il rimedio non e' togliere
+     l'animazione: e' non farla al pezzo che viene misurato. */
+  prova('il pannello non si muove mentre entra',
+    !/\.pan-conto\.arriva \{/.test(CSS) &&
+    /\.pan-conto\.arriva > \.pc-scala/.test(CSS));
+  /* e le quattro card del Parco entravano una per volta, a quaranta
+     millisecondi l'una dall'altra: cambiando linguetta la schermata si
+     ricomponeva a pezzi e sembrava che stesse ancora caricando */
+  prova('la schermata entra tutta insieme, non a pezzi',
+    !/\.pc-parco\.entra > \.card:nth-child/.test(CSS));
+  prova('con una animazione sola per i tre vani',
+    /\.pc-parco\.entra, \.bc-griglia\.entra, \.pc-scontrino\.entra/.test(CSS));
+}
+
 gruppo('Il guardaroba non si sfascia quando compare l’Estendi');
 {
   /* LA PEZZA DISEGNATA NON DECIDE QUANTO E' ALTA LA FILA. Mimetico e
