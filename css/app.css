@@ -3860,10 +3860,17 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
    -- e la tavolozza compare solo sotto le altre due.
    ══════════════════════════════════════════════════════════ */
 .armadio .volante.accessori { display: flex; flex-direction: column; gap: 5px;
-  width: min(330px, 78vw); }
-.armadio .volante .acc-cose { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
-.armadio .volante .acc-c { height: auto; border: 3px solid transparent; }
-.armadio .volante .acc-c svg { max-width: 40px; }
+  width: min(310px, 76vw); align-items: flex-start; }
+.armadio .volante.accessori > * { width: 100%; }
+/* PICCOLI E ANCORATI A SINISTRA, come una lista di voci. Larghi un
+   quinto del pannello sembravano cinque pulsanti da premere, non
+   cinque cose fra cui scegliere: il vuoto a destra e' quello che li fa
+   leggere come un elenco. */
+.armadio .volante .acc-cose { display: flex; flex-wrap: wrap; gap: 5px; }
+.armadio .volante .acc-c { flex: 0 0 auto; width: 54px; height: auto;
+  border: 3px solid transparent; padding: 2px 1px 3px; }
+.armadio .volante .acc-c svg { max-width: 30px; }
+.armadio .volante .acc-c .nm { font-size: 9px; }
 /* addosso = bordo bianco, come i capi scelti; quello che si sta
    guardando ha il fondo acceso, perche' e' suo il colore qui sotto */
 .armadio .volante .acc-c.on { border-color: #fff; }

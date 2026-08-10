@@ -2657,7 +2657,7 @@ function tavolozzaAccessori(av) {
       : x.k === 'sole' ? '#1F2430' : '#3A3D45';
     return '<button class="capo acc-c' + (su ? ' on' : '') +
       (accScelto === x.k ? ' scelto' : '') + '" data-accsel="' + x.k + '">' +
-      CAPI.accessorio(x.k, colore, 44) +
+      CAPI.accessorio(x.k, colore, 30) +
       '<span class="nm">' + esc(x.nome) + '</span></button>';
   }).join('');
 
