@@ -187,6 +187,33 @@ gruppo('Lo scontrino: tutto quello che hanno preso, in una lista sola', () => {
   uguale('e pagato anche il bar il conto e chiuso', ctx.dueOf(c).total, 0);
   uguale('senza avanzi', ctx.dueOf(c).avanzo, 0);
 
+  /* ALLUNGANDO IL TEMPO LA RIGA NON E' PIU' PAGATA.
+     Spuntare le teste e incassare i soldi sembrano la stessa cosa
+     finche' il prezzo non cambia sotto: si pagano due bambini per
+     mezz'ora, poi si allunga di mezz'ora e il prezzo raddoppia -- le
+     teste restano due su due, ma meta' del conto non e' entrata. La
+     riga restava verde, e col gruppo davanti si diceva «ha gia'
+     pagato». */
+  const t = conto({ children: 2, crazyJumping: 0, durationMinutes: 30, baseMinutes: 30, barItems: [] });
+  ctx.bcSegna('bimbi', true);
+  ctx.scAperta = null;
+  prova('pagata, la riga e saldata', /class="sc-voce saldata"/.test(ctx.scontrinoRiga(t, 'bimbi')));
+  uguale('e non resta niente', ctx.dueOf(t).parkDue, 0);
+
+  t.durationMinutes = 60; t.aggiunte = [30];
+  const dopo = ctx.scontrinoRiga(t, 'bimbi');
+  prova('allungato il tempo, non e piu saldata', !/saldata/.test(dopo));
+  prova('e dice quanto manca su questa riga', /restano /.test(dopo), dopo.slice(0, 220));
+  ctx.scAperta = 'bimbi';
+  prova('e il tasto dice quanto c e da incassare',
+    /paga 14,00/.test(ctx.scontrinoRiga(t, 'bimbi')), ctx.scontrinoRiga(t, 'bimbi').slice(0, 400));
+  ctx.scAperta = null;
+  /* e chiudendola i soldi entrano davvero */
+  ctx.bcSegna('bimbi', true);
+  uguale('chiusa la riga, il parco e a posto', ctx.dueOf(t).parkDue, 0);
+  uguale('coi soldi giusti', ctx.importoRiga('bimbi'), ctx.totaleRiga('bimbi'));
+  ctx.PAN.conto = c; ctx.PAN.ingresso = c;
+
   /* A TEMPO APERTO IL TEMPO SI CONTA ALL’USCITA: senza un’ora di
      fine non c’e’ una durata, quindi non c’e’ un prezzo da coprire in
      anticipo. Il tasto e’ spento, e il divieto non sta nel disegno. */

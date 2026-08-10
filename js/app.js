@@ -1109,7 +1109,16 @@ function costruisciPannello() {
       const quante = (n) => { if (id === 'bimbi') pagaTempo(n - bcPag(id)); else segnaPagate(id, n); };
       if (d.scpiu !== undefined) quante(bcPag(id) + 1);
       else if (d.scmeno !== undefined) quante(bcPag(id) - 1);
-      else quante(bcPag(id) >= bcQ(id) ? 0 : bcQ(id));
+      else {
+        /* «PAGA TUTTA» CHIUDE LA RIGA SULL'IMPORTO, non sulle teste.
+           Con le teste gia' spuntate e il prezzo salito dopo un
+           allungamento, segnare le teste non muoveva un euro: il tasto
+           sembrava rotto e la riga restava scoperta. */
+        const tot = totaleRiga(id), preso = importoRiga(id);
+        if (tot > 0 && preso + 0.005 >= tot) segnaPagate(id, 0);
+        else if (id === 'bimbi' && c.payLater) { /* niente anticipi a tempo aperto */ }
+        else bcSegna(id, true);
+      }
       pcSalva(); aggiornaPannello(); return;
     }
     if (d.scgiro !== undefined) {
@@ -3025,10 +3034,29 @@ function iconaCat(cat) {
 function pcFondo() {
   const c = C(), due = dueOf(c);
   const tot = r2(due.park + due.bar), pag = r2(due.paidPark + due.paidBar), resta = due.total;
+  /* DI CHE COS'E' FATTO OGNI TOTALE.
+     «Totale Parco 24,00» non dice se sono due bambini per un'ora o
+     quattro per mezz'ora, e al banco la domanda arriva sempre in quella
+     forma: «ma quanti sono?». Una riga piccola sotto il nome, e la
+     cifra non ha piu' bisogno di essere spiegata a voce. */
+  const bimbi = clamp(num(c.children, 0), 0, 1e6);
+  const crz = clamp(num(c.crazyJumping, 0), 0, 1e6);
+  const volte = turniCrazy(c);
+  const pezzi = lista(c.barItems).reduce((a, x) => a + clamp(num(x.qty, 0), 0, 1e6), 0);
+  const conta = {
+    bimbi: bimbi > 0
+      ? bimbi + (bimbi === 1 ? ' bambino' : ' bambini') +
+        (c.payLater ? ' \u00b7 tempo aperto' : ' \u00d7 ' + fmtMin(clamp(num(c.durationMinutes, 0), 0, 1e6)))
+      : '',
+    crazy: crz > 0 ? crz + (crz === 1 ? ' giro' : ' giri') +
+      (volte > 1 ? ' in ' + volte + ' volte' : '') : '',
+    bar: pezzi > 0 ? pezzi + (pezzi === 1 ? ' cosa' : ' cose') : ''
+  };
   const parte = (nome, ico, id, im, p) => {
     const fatto = im > 0 && p >= im - 0.005;
     return '<div class="bc-parte' + (fatto ? ' fatta' : '') + '">' + ICONE[ico]() +
       '<div class="bc-pk"><span class="k">' + nome + '</span>' +
+      (conta[id] ? '<span class="dicosa">' + conta[id] + '</span>' : '') +
       '<span class="v num">' + eur(im) + '</span>' +
       /* la riga del "pagato" c'e' SEMPRE, anche vuota: se comparisse solo
          quando serve, il blocco si alzerebbe e abbasserebbe sotto le dita
@@ -4172,7 +4200,15 @@ let scAperta = null;
 function scontrinoRiga(c, id) {
   const v = bcVoce(id) || { id: id, name: id, em: '\u2022' };
   const q = bcQ(id), pg = bcPag(id);
-  const saldo = q > 0 && pg >= q;
+  /* SALDATA VUOL DIRE CHE SONO ENTRATI I SOLDI, non che sono spuntate
+     le teste. Le due cose sembrano la stessa finche' il prezzo non
+     cambia sotto: si pagano due bambini per mezz'ora, poi si allunga
+     di mezz'ora e il prezzo raddoppia -- le teste restano due su due,
+     ma meta' del conto non e' entrata. La riga restava verde e col
+     gruppo davanti si diceva «ha gia' pagato». */
+  const tot = totaleRiga(id), preso = importoRiga(id);
+  const saldo = tot > 0 && preso + 0.005 >= tot;
+  const resta = Math.max(0, r2(tot - preso));
   const aperta = scAperta === id;
 
   /* la riga sotto il nome dice la cosa che serve sapere di QUELLA voce:
@@ -4198,10 +4234,11 @@ function scontrinoRiga(c, id) {
     sotto = eur(prezzoUnita(id)) + ' l\u2019uno';
   }
 
-  /* il bollino del pagato: verde a posto, la frazione se e' a meta',
-     niente se non ha ancora pagato nessuno */
+  /* il bollino del pagato: la spunta se e' a posto, QUANTO MANCA se e'
+     entrato qualcosa ma non tutto -- che e' la cosa che serve sapere,
+     piu' di «due su due» -- niente se non ha pagato nessuno */
   const bollo = saldo ? '<span class="sc-ok">\u2713</span>'
-    : pg > 0 ? '<span class="sc-meta">' + pg + '/' + q + '</span>' : '';
+    : preso > 0 ? '<span class="sc-meta">restano ' + eur(resta) + '</span>' : '';
 
   return '<div class="sc-voce' + (aperta ? ' aperta' : '') + (saldo ? ' saldata' : '') + '">' +
     '<button class="sc-riga" data-scapri="' + esc(id) + '">' +
@@ -4221,8 +4258,10 @@ function scontrinoRiga(c, id) {
    paga: gli stessi due colori delle card del bar. */
 function scontrinoComandi(c, id, q, pg) {
   const avanti = id === 'bimbi' && !!c.payLater;
+  const tot = totaleRiga(id), preso = importoRiga(id);
+  const saldo = tot > 0 && preso + 0.005 >= tot;
   let out = '<div class="sc-apri"><div class="sc-comandi">' +
-    '<span class="sc-gr"><i>quante</i>' +
+    '<span class="sc-gr"><i>' + (id === 'bimbi' ? 'bambini' : id === 'crazy' ? 'crazy' : 'quante') + '</i>' +
       '<button data-scmq="' + esc(id) + '"' + (q <= 0 ? ' disabled' : '') + '>\u2212</button>' +
       '<b>' + q + '</b>' +
       '<button data-scpq="' + esc(id) + '">+</button></span>' +
@@ -4231,7 +4270,8 @@ function scontrinoComandi(c, id, q, pg) {
       '<b>' + pg + '/' + q + '</b>' +
       '<button data-scpiu="' + esc(id) + '"' + (pg >= q || avanti ? ' disabled' : '') + '>+</button></span>' +
     '<button class="sc-tutta" data-sctutta="' + esc(id) + '"' + (avanti ? ' disabled' : '') + '>' +
-      (pg >= q ? '\u21a9\ufe0e togli' : '\u2713 paga tutta') + '</button></div>';
+      (saldo ? '\u21a9\ufe0e togli' : '\u2713 paga ' + eur(Math.max(0, r2(tot - preso)))) +
+      '</button></div>';
 
   /* IL TEMPO CHE RESTA, E QUANTO COSTA TENERLI ANCORA: sotto la riga
      dei bambini, perche' il tempo e' quello che comprano loro. Solo su
