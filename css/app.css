@@ -3696,7 +3696,40 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
 .pc-scontrino .sc-txt span { font-size: 11px; color: var(--txt-3); white-space: nowrap;
   overflow: hidden; text-overflow: ellipsis; }
 .pc-scontrino .sc-eu { font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 700;
-  flex: 0 0 auto; }
+  flex: 0 0 auto; min-width: 62px; text-align: right; }
+/* QUANTE CE NE SONO: bianco, come la fila di sopra delle card. Il
+   verde qui accanto dice quante sono PAGATE, e i due colori sono gli
+   stessi delle card apposta -- si sbaglia bottone una volta sola. */
+.pc-scontrino .sc-q { flex: 0 0 auto; display: flex; align-items: center; gap: 3px;
+  background: rgba(0, 0, 0, .3); border-radius: 11px; padding: 3px; }
+.pc-scontrino .sc-q button { min-width: 34px; height: 34px; border: none; border-radius: 9px;
+  background: rgba(255, 255, 255, .1); color: var(--txt);
+  font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 700; cursor: pointer; }
+.pc-scontrino .sc-q button:disabled { opacity: .3; cursor: default; }
+.pc-scontrino .sc-q button:active:not(:disabled) { background: rgba(255, 255, 255, .24); }
+.pc-scontrino .sc-q b { font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 700;
+  min-width: 26px; text-align: center; }
+
+/* IL TEMPO CHE RESTA, sotto la riga dei bambini: «quanto manca» e
+   «quanto costa tenerli ancora» sono le due domande che arrivano al
+   banco, e per rispondere si tornava alla linguetta Parco. */
+.pc-scontrino .sc-tempo { display: flex; align-items: center; flex-wrap: wrap; gap: 5px;
+  padding: 4px 9px 2px 48px; }
+.pc-scontrino .sc-t-k { font-size: 11.5px; font-weight: 700; color: var(--txt-3);
+  margin-right: auto; }
+.pc-scontrino .sc-t-k.scaduto { color: #F09A94; }
+.pc-scontrino .sc-t-b { display: flex; flex-direction: column; align-items: center; gap: 0;
+  border: none; border-radius: 10px; background: rgba(232, 180, 76, .16); color: #F2C94C;
+  font: inherit; padding: 4px 10px; min-height: 36px; cursor: pointer; }
+.pc-scontrino .sc-t-b b { font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 700; }
+.pc-scontrino .sc-t-b i { font-style: normal; font-size: 10.5px; font-weight: 700;
+  color: rgba(242, 201, 76, .8); }
+.pc-scontrino .sc-t-b:disabled { opacity: .35; cursor: default; }
+.pc-scontrino .sc-t-b:active:not(:disabled) { transform: scale(.95); }
+.pc-scontrino .sc-t-meno { border: none; border-radius: 10px; background: rgba(255, 255, 255, .08);
+  color: rgba(255, 255, 255, .75); font: inherit; font-size: 12px; font-weight: 700;
+  padding: 0 10px; min-height: 36px; cursor: pointer; }
+.pc-scontrino .sc-t-meno:disabled { opacity: .3; cursor: default; }
 /* le stesse due frecce delle card, cosi' il gesto e' quello di sempre */
 .pc-scontrino .sc-pag { flex: 0 0 auto; display: flex; align-items: center; gap: 3px;
   background: rgba(0, 0, 0, .3); border-radius: 11px; padding: 3px; }

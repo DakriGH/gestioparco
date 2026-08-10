@@ -78,11 +78,14 @@ gruppo('La card del Crazy dice quello che i conti sanno', () => {
     return presi(cardCrazy(), /class="bc-chip">(\d+)</g)[0];
   })(), String(ctx.giriCrazy(c)[0]));
 
-  /* il totale sta scritto sopra, accanto al prezzo */
+  /* il totale sta scritto sopra, accanto al prezzo.
+     UNA PAROLA SOLA: giro. "Salita" al banco non la dice nessuno, e
+     due parole per la stessa cosa costringevano a tradurre ogni volta.
+     Quante VOLTE sono saliti si legge nella colonna qui accanto. */
   const testa = cardCrazy();
-  prova('sopra c e il totale delle salite', testa.indexOf('5 salite') >= 0, testa.slice(0, 400));
-  prova('e quanti giri sono', testa.indexOf('2 giri') >= 0);
-  prova('col prezzo di una salita', testa.indexOf(ctx.eur(ctx.prezzoUnita('crazy'))) >= 0);
+  prova('sopra c e il totale dei giri', testa.indexOf('5 giri') >= 0, testa.slice(0, 400));
+  prova('e la parola salita non c e piu', !/salit/i.test(testa), testa.slice(0, 300));
+  prova('col prezzo di un giro', testa.indexOf(ctx.eur(ctx.prezzoUnita('crazy'))) >= 0);
 
   /* una riga per giro, col numero di quel giro */
   uguale('una riga per giro, coi numeri giusti',
@@ -185,6 +188,22 @@ gruppo('Lo scontrino: tutto quello che hanno preso, in una lista sola', () => {
   ctx.pagaTempo(1);
   uguale('e nemmeno forzandolo si incassa in anticipo', ctx.bcPag('bimbi'), 0);
   ctx.PAN.conto = c; ctx.PAN.ingresso = c;
+
+  /* NELLO SCONTRINO SI TOGLIE E SI AGGIUNGE, non solo si paga: per una
+     bibita battuta per sbaglio si tornava al bancone a cercarla fra
+     venti card. */
+  prova('ogni riga ha i tasti della quantita',
+    /data-scmq="b3"/.test(ctx.scontrinoRiga(c, 'b3')) &&
+    /data-scpq="b3"/.test(ctx.scontrinoRiga(c, 'b3')));
+  prova('e quelli del pagato, che sono un’altra cosa',
+    /data-scpiu="b3"/.test(ctx.scontrinoRiga(c, 'b3')));
+
+  /* LA PAROLA E' UNA SOLA: giro. */
+  prova('niente «salite» nello scontrino',
+    !/salit/i.test(ctx.scontrinoRiga(c, 'crazy')), ctx.scontrinoRiga(c, 'crazy').slice(0, 200));
+  prova('i giri del Crazy si chiamano giri', /3 giri/.test(ctx.scontrinoRiga(c, 'crazy')));
+  prova('e le volte in cui sono saliti si chiamano volte',
+    /in 2 volte/.test(ctx.scontrinoRiga(c, 'crazy')));
 
   /* e si puo' disfare tutto */
   ctx.bcSegna('bimbi', false); ctx.bcSegna('crazy', false); ctx.bcSegna('bar', false);

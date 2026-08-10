@@ -418,11 +418,11 @@ function sistemaAggiunte(e) {
    I SOLDI restano a testa: il Crazy si paga per ognuno che lo fa. E'
    il tempo che non si moltiplica.
    Di serie e' un giro solo (i dati vecchi non hanno il campo), e i
-   giri non possono essere piu' delle salite pagate. */
+   giri non possono essere piu' dei giri pagati. */
 /* I GIRI, UNO PER UNO: `crazyGiri` e' quanti sono saliti in ognuno.
    Un numero solo non bastava: al primo giro salgono in tre, al secondo
    in due, e "cinque" non racconta nessuna delle due cose. La somma dei
-   giri e' sempre `crazyJumping` -- le salite pagate -- e chi arriva da
+   giri e' sempre `crazyJumping` -- i giri pagati -- e chi arriva da
    una versione vecchia, che quel campo non ce l'ha, vale un giro solo
    con tutti dentro: e' la lettura giusta di quei dati. */
 function giriCrazy(e) {
@@ -490,7 +490,8 @@ function giroOra(c) {
 }
 
 /* QUANTE SALITE HA GIA' PAGATO UN GIRO.
-   La cassa conta le salite pagate, non i giri: "tre pagate su cinque"
+   La cassa conta i giri pagati, non le volte in cui sono saliti:
+   "tre pagati su cinque"
    e' un numero solo, e da quello non si capisce QUALI giri siano a
    posto -- col gruppo davanti che chiede "quello di prima l'ho gia'
    pagato?" e nessuno che sappia rispondere.
@@ -1069,6 +1070,18 @@ function costruisciPannello() {
     }
 
     /* --- lo scontrino --- */
+    if (d.scpq !== undefined || d.scmq !== undefined) {
+      const id = d.scpq || d.scmq;
+      const su = d.scpq !== undefined;
+      tocchi.id = id;
+      /* IL CRAZY SI CONTA DENTRO UN GIRO, qui come sulla card: quello
+         che il piu' e il meno muovono e' la volta aperta adesso. */
+      if (id === 'crazy') {
+        if (!giriCrazy(c).length) giroNuovo(c);
+        cambiaGiro(c, giroOra(c), su ? 1 : -1);
+      } else bcSetQ(id, bcQ(id) + (su ? 1 : -1));
+      pcSalva(); aggiornaPannello(); return;
+    }
     if (d.scpiu !== undefined || d.scmeno !== undefined || d.sctutta !== undefined) {
       const id = d.scpiu || d.scmeno || d.sctutta;
       tocchi.id = id;
@@ -4060,8 +4073,11 @@ function scontrinoRiga(c, id) {
     }
   }
   if (id === 'crazy') {
-    const giri = turniCrazy(c);
-    sotto += ' \u00b7 ' + giri + (giri === 1 ? ' giro' : ' giri') +
+    /* quante VOLTE sono saliti, non quanti giri: i giri sono le
+       quantita' qui a sinistra, e ripetere la parola per due conti
+       diversi e' esattamente quello che confondeva */
+    const volte = turniCrazy(c);
+    sotto += ' \u00b7 in ' + volte + (volte === 1 ? ' volta' : ' volte') +
       (minutiCrazy(c) > 0 ? ' \u00b7 +' + minutiCrazy(c) + '\u2032' : '');
   }
   /* A TEMPO APERTO NON SI INCASSA IN ANTICIPO: senza un'ora di uscita
@@ -4072,6 +4088,15 @@ function scontrinoRiga(c, id) {
   let dentro = '<div class="sc-riga' + stato + '" data-scid="' + esc(id) + '">' +
     '<span class="sc-em">' + iconaBar(v.name, v.em) + '</span>' +
     '<span class="sc-txt"><b>' + esc(v.name) + '</b><span>' + sotto + '</span></span>' +
+    /* QUANTE CE NE SONO, non solo quante sono pagate. Per togliere una
+       bibita battuta per sbaglio si tornava al bancone a cercarla fra
+       venti card: qui e' la stessa riga che si sta guardando.
+       Bianco la quantita', verde il pagato -- gli stessi due colori
+       delle card, cosi' non si scambiano. */
+    '<span class="sc-q">' +
+      '<button data-scmq="' + esc(id) + '"' + (q <= 0 ? ' disabled' : '') + '>\u2212</button>' +
+      '<b>' + q + '</b>' +
+      '<button data-scpq="' + esc(id) + '">+</button></span>' +
     '<span class="sc-eu">' + eur(totaleRiga(id)) + '</span>' +
     '<span class="sc-pag">' +
       '<button data-scmeno="' + esc(id) + '"' + (pg <= 0 ? ' disabled' : '') + '>\u2212</button>' +
@@ -4079,8 +4104,36 @@ function scontrinoRiga(c, id) {
       '<button data-scpiu="' + esc(id) + '"' + (pg >= q || avanti ? ' disabled' : '') + '>+</button>' +
       '<button class="sc-tutta" data-sctutta="' + esc(id) + '"' + (avanti ? ' disabled' : '') +
       ' title="tutta la riga">' + (pg >= q ? '\u21a9\ufe0e' : '\u2713') + '</button></span></div>';
+  /* IL TEMPO CHE RESTA, E QUANTO COSTA TENERLI ANCORA.
+     La riga dei bambini dice quanto vale il tempo comprato; ma la
+     domanda che arriva al banco e' l'altra -- «quanto manca?» e
+     «quanto mi costa un'altra mezz'ora?» -- e per rispondere si
+     tornava alla linguetta Parco. Qui c'e' tutto: quanto manca, fino a
+     che ora, e i tre tagli col loro prezzo gia' calcolato.
+     Solo su chi e' GIA' DENTRO: mentre lo registri il tempo lo scegli
+     coi tagli, e allungare una cosa che non e' ancora entrata non
+     vuol dire niente. */
+  if (id === 'bimbi' && PAN.ingresso) {
+    const aperto = !!c.payLater;
+    const manca = endTimeOf(c) - Date.now();
+    dentro += '<div class="sc-tempo">' +
+      '<span class="sc-t-k' + (!aperto && manca <= 0 ? ' scaduto' : '') + '">' +
+        (aperto ? '\u23f3 tempo aperto'
+          : manca > 0 ? '\u23f1\ufe0f restano ' + fmtDur(manca)
+          : '\u23f1\ufe0f scaduto da ' + fmtDur(-manca)) + '</span>' +
+      ESTENDI_TAGLI.map(m => {
+        const costo = aperto ? 0 : costoEstensione(c, m);
+        return '<button class="sc-t-b" data-a="est" data-v="' + m + '"' +
+          (aperto ? ' disabled' : '') + '><b>+' + fmtMin(m) + '</b><i>' +
+          (aperto ? '\u2014' : costo > 0 ? '+' + eur(costo) : 'gratis') + '</i></button>';
+      }).join('') +
+      '<button class="sc-t-meno" data-a="est" data-v="-15"' +
+        (aperto || clamp(num(c.durationMinutes, 60), 0, 1e6) <= 15 ? ' disabled' : '') +
+        '>\u2212 15m</button></div>';
+  }
+
   /* I GIRI DEL CRAZY, uno per uno: al banco si paga «quello di prima»,
-     non «tre salite su cinque». */
+     non «tre giri su cinque». */
   if (id === 'crazy') {
     const g = giriCrazy(c);
     if (g.length) {
@@ -4089,7 +4142,7 @@ function scontrinoRiga(c, id) {
         const saldo = n > 0 && pagate >= n;
         return '<button class="sc-giro' + (saldo ? ' on' : (pagate > 0 ? ' meta' : '')) +
           '" data-scgiro="' + i + '">' + (i + 1) + '\u00ba \u00b7 ' + n +
-          (n === 1 ? ' salita' : ' salite') + ' \u00b7 ' +
+          (n === 1 ? ' giro' : ' giri') + ' \u00b7 ' +
           (saldo ? '\u2713 pagato' : pagate > 0 ? pagate + '/' + n : 'da pagare') + '</button>';
       }).join('') + '</div>';
     }
@@ -4221,10 +4274,10 @@ function storicoGiri() {
         return '<span class="st-riga' + (i === ora ? ' on' : '') +
           (saldo ? ' saldato' : (pg > 0 ? ' meta' : '')) + '">' +
         '<button class="st-g" data-sel="' + i + '"' +
-        ' aria-label="giro ' + (i + 1) + ', ' + n + (n === 1 ? ' salito' : ' saliti') + '">' +
+        ' aria-label="il ' + (i + 1) + '\u00ba: ' + n + (n === 1 ? ' giro' : ' giri') + '">' +
         '<span class="st-n">' + (i + 1) + 'º</span>' +
         '<b>' + n + '</b>' +
-        '<span class="st-q">' + (n === 0 ? 'da contare' : n === 1 ? 'salito' : 'saliti') + '</span>' +
+        '<span class="st-q">' + (n === 0 ? 'da contare' : n === 1 ? 'giro' : 'giri') + '</span>' +
         /* QUALI GIRI SONO PAGATI, riga per riga: la spunta se e' a
            posto, "1/2" se e' pagato a meta', "da pagare" se no */
         '<span class="st-p">' + (n === 0 ? ''
@@ -4252,10 +4305,13 @@ function bcGiriTesto() {
   /* stretto: sta accanto al prezzo, e se va a capo la card cresce.
      Qui il TOTALE -- che sulla fila del piu' e del meno non c'e' piu',
      li' c'e' il giro che si sta segnando -- e quanti giri sono. */
-  const salite = g.reduce((a, b) => a + b, 0);
-  const pieni = g.filter(n => n > 0).length;
-  return salite + (salite === 1 ? ' salita' : ' salite') +
-    ' · ' + pieni + (pieni === 1 ? ' giro' : ' giri');
+  /* UNA PAROLA SOLA: GIRO. «Salita» al banco non la dice nessuno --
+     si chiede «quanti giri hanno fatto?» -- e avere due parole per la
+     stessa cosa costringeva a tradurre ogni volta.
+     Qui il totale basta: quante VOLTE sono saliti si legge nella
+     colonna qui accanto, che li elenca uno per uno. */
+  const giri = g.reduce((a, b) => a + b, 0);
+  return giri + (giri === 1 ? ' giro' : ' giri');
 }
 
 /* Il velo: un pannello sovrapposto, incollato in basso, con dietro il
@@ -5307,7 +5363,7 @@ function mkCellaCrazy(entry, fila) {
   box.appendChild(via);
   /* e quante SALITE hanno gia' pagato: stessa coda dei bambini, con
      la sua parola -- qui si paga a testa, non a giro */
-  const pagate = mkCellaPagate(entry, box, 'crazy', 'salite pagate');
+  const pagate = mkCellaPagate(entry, box, 'crazy', 'giri pagati');
   const pVal = pagate.val, pMeno = pagate.minus, pPiu = pagate.plus;
   /* la scritta sta IN RIGA, non sotto: sotto faceva la cella piu'
      alta delle altre e la fascetta veniva storta */
@@ -5387,7 +5443,8 @@ function syncCard(entry) {
     const giri = conConto(entry, () => giriCrazy(entry));
     const pieni = giri.filter(n => n > 0).length;
     r.sCrazy.totN.textContent = crazy;
-    r.sCrazy.totN.title = crazy + ' salite in ' + pieni + (pieni === 1 ? ' giro' : ' giri');
+    r.sCrazy.totN.title = crazy + (crazy === 1 ? ' giro' : ' giri') + ' in ' +
+      pieni + (pieni === 1 ? ' volta' : ' volte');
   }
   if (r.sCrazy.nota) {
     /* e QUESTO giro, e' gia' pagato? Il numero verde in fondo alla
@@ -6010,7 +6067,7 @@ function fogliRigaRegistro(entry) {
   const s = sheet(fmtTime(entry.startTime) + ' \u00b7 ' + nomiDi(entry));
   s.body.appendChild(el('div', 'hint',
     q + (q === 1 ? ' bambino' : ' bambini') +
-    (crz ? ' \u00b7 ' + crz + (crz === 1 ? ' salita' : ' salite') + ' di Crazy' : '') +
+    (crz ? ' \u00b7 ' + crz + (crz === 1 ? ' giro' : ' giri') + ' di Crazy' : '') +
     ' \u00b7 incassati ' + eur(preso) +
     (d.total > 0.005 ? ' \u00b7 mancano ' + eur(d.total) : '') +
     (entry.status === 'active' ? ' \u00b7 \u00e8 ancora dentro' : '')));
@@ -7007,7 +7064,7 @@ function riparaConto(o) {
   o.children = int(o.children, 9999);
   o.crazyJumping = int(o.crazyJumping, 9999);
   /* i giri di Crazy: una lista di numeri buoni, e la loro somma deve
-     fare le salite pagate. Chi arriva da una versione vecchia non ha
+     fare i giri pagati. Chi arriva da una versione vecchia non ha
      il campo e vale un giro solo con tutti dentro -- che e' anche la
      lettura giusta di quei dati: si segnava chi saliva, non quante
      volte. */
