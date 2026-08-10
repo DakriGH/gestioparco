@@ -3517,8 +3517,8 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
    In "+ Nuovo" l'Estendi non c'e' e non cambia niente.
    ══════════════════════════════════════════════════════════ */
 .pan-conto.con-estendi .armadio .roba > .capi,
-.pan-conto.con-estendi .armadio .roba > .sottoblocco { min-height: 62px; max-height: 70px; }
-.pan-conto.con-estendi .armadio .roba > .fant { min-height: 25px; max-height: 27px; }
+.pan-conto.con-estendi .armadio .roba > .sottoblocco { min-height: 60px; max-height: 66px; }
+.pan-conto.con-estendi .armadio .roba > .fant { min-height: 24px; max-height: 25px; }
 .pan-conto.con-estendi .armadio .stacco { min-height: 4px; }
 .pan-conto.con-estendi .armadio .stacco.forte { min-height: 8px; }
 .pan-conto.con-estendi .armadio .et { margin-bottom: 1px; }
@@ -3852,6 +3852,28 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
    ══════════════════════════════════════════════════════════ */
 .armadio .volante.capelli { display: flex; flex-direction: column; gap: 5px;
   width: min(348px, 80vw); }
+/* ══════════════════════════════════════════════════════════
+   GLI ACCESSORI
+   Cinque cose che si guardano addosso a una persona: la faccia
+   pulita, gli occhiali, quelli da sole, lo zaino, le scarpe. Le prime
+   tre non hanno un colore da scegliere -- gli occhiali sono occhiali
+   -- e la tavolozza compare solo sotto le altre due.
+   ══════════════════════════════════════════════════════════ */
+.armadio .volante.accessori { display: flex; flex-direction: column; gap: 5px;
+  width: min(330px, 78vw); }
+.armadio .volante .acc-cose { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+.armadio .volante .acc-c { height: auto; border: 3px solid transparent; }
+.armadio .volante .acc-c svg { max-width: 40px; }
+/* addosso = bordo bianco, come i capi scelti; quello che si sta
+   guardando ha il fondo acceso, perche' e' suo il colore qui sotto */
+.armadio .volante .acc-c.on { border-color: #fff; }
+.armadio .volante .acc-c.scelto { background: rgba(255, 255, 255, .16); }
+.armadio .volante .acc-tinte { display: grid;
+  grid-template-columns: repeat(9, 1fr); gap: 4px; }
+.armadio .volante .acc-tinte button { height: 28px; border-radius: 8px;
+  border: 3px solid transparent; padding: 0; cursor: pointer; min-width: 0; }
+.armadio .volante .acc-tinte button.on { border-color: #fff; }
+.armadio .volante .acc-tinte .ruota { height: 28px; border-radius: 8px; }
 .armadio .volante .tv-k { font-size: 9px; font-weight: 800; letter-spacing: .08em;
   text-transform: uppercase; color: rgba(255,255,255,.55); }
 .armadio .volante .cap-tinte { display: flex; align-items: center; gap: 6px; }

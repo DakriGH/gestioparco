@@ -256,6 +256,47 @@
               <circle cx="24" cy="10.4" r="1.9" fill="${sc(c, 44)}"/>`
     }),
 
+    /* FACCIA PULITA: una faccia e basta -- niente occhiali, niente
+       barba. E' una cosa che si GUARDA e si dice («no, niente
+       occhiali»), quindi ha un posto suo fra gli accessori. */
+    faccia: (c) => ({
+      sagoma: 'M24 8.5 a15.5 15.5 0 1 1 -0.1 0 Z',
+      segni: `<circle cx="18.5" cy="22" r="2" fill="#1B1B24"/>
+              <circle cx="29.5" cy="22" r="2" fill="#1B1B24"/>
+              <path d="M17.5 29.5 Q24 34 30.5 29.5" fill="none" stroke="#1B1B24"
+                stroke-width="2" stroke-linecap="round"/>`
+    }),
+
+    /* OCCHIALI DA VISTA: due cerchi VUOTI -- si vede la faccia
+       attraverso -- il ponte e le due astine. */
+    occhiali: (c) => ({
+      evenodd: true,
+      /* LENTI PIU' LARGHE CHE ALTE e le astine che escono: tonde e
+         senza astine sembravano un binocolo. */
+      sagoma: 'M4 19.5 L9.5 21.5 L9.5 25 L4 23.5 Z M44 19.5 L38.5 21.5 L38.5 25 L44 23.5 Z' +
+        'M20.5 22.5 h7 v3 h-7 Z' +
+        'M6 24 a8.5 6.8 0 1 1 17 0 a8.5 6.8 0 1 1 -17 0 Z' +
+        'M9.4 24 a5.1 3.9 0 1 0 10.2 0 a5.1 3.9 0 1 0 -10.2 0 Z' +
+        'M25 24 a8.5 6.8 0 1 1 17 0 a8.5 6.8 0 1 1 -17 0 Z' +
+        'M28.4 24 a5.1 3.9 0 1 0 10.2 0 a5.1 3.9 0 1 0 -10.2 0 Z',
+      segni: ''
+    }),
+
+    /* DA SOLE: la stessa montatura, ma le lenti sono PIENE -- e' quello
+       che si vede da lontano -- con un lampo di luce sopra. */
+    sole: (c) => ({
+      /* la stessa montatura, ma le lenti sono PIENE -- e' quello che si
+         vede da lontano -- con un lampo di luce sopra */
+      sagoma: 'M4 19.5 L9.5 21.5 L9.5 25 L4 23.5 Z M44 19.5 L38.5 21.5 L38.5 25 L44 23.5 Z' +
+        'M20.5 22.5 h7 v3 h-7 Z' +
+        'M6 24 a8.5 6.8 0 1 1 17 0 a8.5 6.8 0 1 1 -17 0 Z' +
+        'M25 24 a8.5 6.8 0 1 1 17 0 a8.5 6.8 0 1 1 -17 0 Z',
+      segni: `<path d="M10 21.5 Q13 19.4 16.5 19.8" fill="none" stroke="#ffffff"
+                stroke-width="2.2" stroke-linecap="round" opacity=".55"/>
+              <path d="M29 21.5 Q32 19.4 35.5 19.8" fill="none" stroke="#ffffff"
+                stroke-width="2.2" stroke-linecap="round" opacity=".55"/>`
+    }),
+
     /* SCARPE: una scarpa di profilo, grande */
     scarpe: (c) => ({
       sagoma: 'M6 34 L6 21 Q13 19 17.5 23 L26.5 30.5 Q33.5 32.5 38.5 33 Q43 33.5 43 37 L43 39.5 Q43 41.5 40.5 41.5 L8.5 41.5 Q6 41.5 6 39 Z',
@@ -339,11 +380,15 @@
     /* stesso taglio da adesivo dei capi: bordo bianco spesso, contorno
        scuro, poi il colore. La fila deve sembrare una sola famiglia di
        icone, non due. */
+    /* `evenodd` serve alle sagome BUCATE, come le lenti degli occhiali
+       da vista: senza, il cerchio interno si riempirebbe e sarebbero
+       due occhiali da sole. */
+    const regola = d.evenodd ? ' fill-rule="evenodd"' : '';
     return `<svg viewBox="-3 -3 54 54" width="${m}" height="${m}" aria-hidden="true">` +
       (d.sotto || '') +
       `<path d="${d.sagoma}" fill="none" stroke="rgba(255,255,255,.94)" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>` +
       `<path d="${d.sagoma}" fill="none" stroke="rgba(18,18,26,.9)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>` +
-      `<path d="${d.sagoma}" fill="${c}"/>` +
+      `<path d="${d.sagoma}" fill="${c}"${regola}/>` +
       d.segni + '</svg>';
   }
 

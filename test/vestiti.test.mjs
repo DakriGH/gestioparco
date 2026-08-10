@@ -671,6 +671,53 @@ gruppo('Due persone vestite uguali si notano subito');
   app.mondo.avvisaSosia = veroAvviso;
 }
 
+gruppo('Gli accessori: cinque cose, e il colore solo a chi ce l\u2019ha');
+{
+  /* Le scarpe erano l'unica cosa che si potesse dire oltre ai capelli,
+     e intanto occhiali, occhiali da sole e zaino -- che all'uscita
+     riconoscono una persona molto meglio del colore delle scarpe --
+     stavano solo nel modello, senza un posto da cui sceglierli. */
+  const p = persona();
+  const aperta = app.armadioDi(p, 'accessori');
+  prova('si apre la tavolozza degli accessori', aperta.indexOf('volante accessori') > 0);
+  ['faccia', 'occhiali', 'sole', 'zaino', 'scarpe'].forEach(k => {
+    prova('c e ' + k, aperta.indexOf('data-accsel="' + k + '"') > 0);
+  });
+  prova('ognuna col suo disegno e la sua scritta',
+    conta(aperta, /class="capo acc-c/g) === 5 && conta(aperta, /<svg/g) >= 5);
+  prova('e il bordo da adesivo come i capi', aperta.indexOf('rgba(255,255,255,.94)') > 0);
+
+  /* IL COLORE SI SCEGLIE SOLO A CHI CE L'HA: gli occhiali sono
+     occhiali, lo zaino e le scarpe no. */
+  prova('sulle scarpe c e la tavolozza dei colori',
+    conta(aperta, /data-acccol="scarpe\|/g) === AV.COLORS.length &&
+    aperta.indexOf('data-accruota="scarpe"') > 0);
+  const suOcchiali = (() => { app.accScelto = 'occhiali'; const h = app.armadioDi(p, 'accessori');
+    app.accScelto = 'scarpe'; return h; })();
+  prova('sugli occhiali no', suOcchiali.indexOf('data-acccol=') < 0);
+
+  /* le icone ci sono davvero, e sono cinque disegni diversi */
+  const disegni = ['faccia', 'occhiali', 'sole', 'zaino', 'scarpe'].map(k => CAPI.accessorio(k, '#22C55E', 44));
+  prova('cinque disegni diversi', new Set(disegni).size === 5);
+  disegni.forEach((h, i) => prova('il disegno ' + i + ' e un svg col bordo',
+    h.slice(0, 4) === '<svg' && h.indexOf('rgba(18,18,26,.9)') > 0));
+  /* gli occhiali da vista sono BUCATI: si vede la faccia attraverso */
+  prova('gli occhiali da vista hanno le lenti vuote',
+    CAPI.accessorio('occhiali', '#22C55E', 44).indexOf('fill-rule="evenodd"') > 0);
+  prova('quelli da sole no', CAPI.accessorio('sole', '#22C55E', 44).indexOf('fill-rule') < 0);
+
+  /* e «togli tutti» rimette la persona com'era */
+  const q = persona();
+  q.avatar.glasses = 'sole';
+  q.avatar.bag = { style: 'zaino', color: '#EC4899' };
+  q.avatar.shoes = { style: 'sneakers', color: '#EC4899' };
+  app.accTogli(q.avatar, 'accessori', q.role);
+  const base = AV.baseFor(q.role);
+  uguale('via gli occhiali', q.avatar.glasses, base.glasses);
+  uguale('via lo zaino', q.avatar.bag.style, base.bag.style);
+  uguale('e le scarpe tornano quelle del ruolo', q.avatar.shoes.color, base.shoes.color);
+}
+
 gruppo('I dati di prima continuano a funzionare');
 {
   /* Chi è già registrato ha un avatar salvato col guardaroba VECCHIO:
@@ -730,9 +777,9 @@ gruppo('Capelli e scarpe: spenti finché non li scegli tu');
 
   app.segna(p, 'scarpe');
   const acceso = app.armadioDi(p, '');
-  prova('scelte le scarpe, si accendono quelle',
+  prova('scelte le scarpe, si accende il tasto degli accessori',
     conta(acceso, /class="capo acc-b on"/g) === 1 &&
-    acceso.indexOf('acc-b on" data-acc="scarpe"') >= 0);
+    acceso.indexOf('acc-b on" data-acc="accessori"') >= 0);
   prova('e i capelli restano spenti', acceso.indexOf('acc-b on" data-acc="capelli"') < 0);
 }
 

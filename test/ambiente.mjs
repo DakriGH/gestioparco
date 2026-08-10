@@ -98,6 +98,8 @@ export function caricaApp() {
     /* la riga aperta nello scontrino: a riposo lo scontrino e' una
        lista, e i comandi di una riga escono solo quando la si tocca */
     get scAperta() { return scAperta; }, set scAperta(v) { scAperta = v; },
+    /* quale accessorio si sta guardando nella sua tavolozza */
+    get accScelto() { return accScelto; }, set accScelto(v) { accScelto = v; },
     /* il contesto stesso: serve ai test per mettere da parte una
        funzione che tocca lo schermo (switchTab) e rimetterla dopo.
        Sostituirla sull'oggetto esportato non basta: l'app chiama la

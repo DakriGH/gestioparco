@@ -2268,13 +2268,32 @@ function syncPeople(container, people, onChange) {
         /* l'accessorio non si sceglie per forma ma per COLORE: toccarlo
            apre la tavolozza, toccarlo ancora la richiude */
         container.dataset.tav = (container.dataset.tav === d.acc) ? '' : d.acc;
+      } else if (p && d.accsel !== undefined) {
+        /* si sceglie una cosa: la si mette addosso e la si tiene
+           selezionata, cosi' la tavolozza sotto e' la sua */
+        const k = d.accsel;
+        accScelto = k;
+        const av = p.avatar;
+        if (k === 'faccia') { av.glasses = 'none'; av.facial = 'none'; segna(p, 'occhiali'); }
+        else if (k === 'occhiali') { av.glasses = 'vista'; segna(p, 'occhiali'); }
+        else if (k === 'sole') { av.glasses = 'sole'; segna(p, 'occhiali'); }
+        else if (k === 'zaino') {
+          /* toccando lo zaino che c'e' gia' lo si toglie: e' il gesto
+             piu' corto per «no, lo zaino non ce l'ha» */
+          if (av.bag.style === 'zaino') { av.bag = { style: 'none', color: av.bag.color }; }
+          else av.bag = { style: 'zaino', color: av.bag.color || '#E23D4B' };
+          segna(p, 'borsa');
+        } else if (k === 'scarpe') segna(p, 'scarpe');
+        container.dataset.tav = 'accessori';
       } else if (p && d.acccol !== undefined) {
         const parti = d.acccol.split('|');
         accMetti(p.avatar, parti[0], parti[1]);
         segna(p, parti[0]);
-        /* dei capelli si scelgono colore E taglio: la tavolozza resta
-           aperta finche' non la si chiude col suo tasto */
-        container.dataset.tav = parti[0] === 'capelli' ? 'capelli' : '';
+        /* dei capelli si scelgono colore E taglio, e degli accessori si
+           passa da uno all'altro: la tavolozza resta aperta finche' non
+           la si chiude col suo tasto */
+        container.dataset.tav = parti[0] === 'capelli' ? 'capelli'
+          : (parti[0] === 'scarpe' || parti[0] === 'zaino') ? 'accessori' : '';
       } else if (p && d.accvia !== undefined) {
         accTogli(p.avatar, d.accvia, p.role);
         p.tocco = true;
@@ -2410,14 +2429,20 @@ function avvisaSosia(p, entry) {
    quasi nessuno li ha, e occupavano due posti in una fila dove ogni
    posto e' larghezza tolta ai capi. Chi ne ha bisogno li mette
    dall'editor completo. */
+/* DOVE STA SCRITTO, dentro l'avatar, il colore di ogni accessorio.
+   Capelli e scarpe ce l'hanno sempre; lo zaino solo se ce l'ha. */
 const ACC_DOVE = {
   capelli: (av) => av.hair.color,
-  scarpe: (av) => av.shoes.color
+  scarpe: (av) => av.shoes.color,
+  zaino: (av) => av.bag.color
 };
-const ACC_NOME = { capelli: 'Capelli', scarpe: 'Scarpe' };
+const ACC_NOME = { capelli: 'Capelli', accessori: 'Accessori' };
+/* i due tasti della fila: i capelli, e tutto il resto */
+const ACC_BOTTONI = ['capelli', 'accessori'];
 function accMetti(av, acc, colore) {
   if (acc === 'capelli') av.hair.color = colore;
   else if (acc === 'scarpe') av.shoes = { style: 'sneakers', color: colore };
+  else if (acc === 'zaino') av.bag = { style: 'zaino', color: colore };
 }
 /* «TOGLI» RIMETTE TUTTO IL PEZZO COM'ERA, non solo la sua tinta.
    Dei capelli adesso si sceglie anche il TAGLIO: rimettendo il solo
@@ -2428,6 +2453,15 @@ function accTogli(av, acc, ruolo) {
   const base = AV.baseFor(ruolo);
   if (acc === 'capelli') av.hair = { style: base.hair.style, color: base.hair.color };
   else if (acc === 'scarpe') av.shoes = { style: base.shoes.style, color: base.shoes.color };
+  else if (acc === 'zaino') av.bag = { style: 'none', color: base.bag.color };
+  else if (acc === 'accessori') {
+    /* «togli» sugli accessori li toglie TUTTI: e' il tasto che rimette
+       la persona com'era prima che qualcuno la guardasse */
+    av.glasses = base.glasses;
+    av.facial = base.facial;
+    av.bag = { style: base.bag.style, color: base.bag.color };
+    av.shoes = { style: base.shoes.style, color: base.shoes.color };
+  }
 }
 
 /* LO STACCO FRA UN GRUPPO E L'ALTRO.
@@ -2484,11 +2518,23 @@ function armadioDi(p, tavolozzaAperta) {
      tutti, quindi partivano sempre accesi: due pastiglie bianche che
      dicevano "selezionato" senza che nessuno avesse selezionato
      niente, e l'occhio ci tornava sopra ogni volta per capire perche'. */
-  const accessori = Object.keys(ACC_DOVE).map(k => {
-    const c = ACC_DOVE[k](av);
-    const mio = !!(av.scelti && av.scelti[k]);
+  /* IL TASTO MOSTRA QUELLO CHE LA PERSONA HA ADDOSSO: se porta gli
+     occhiali disegna gli occhiali, se ha lo zaino lo zaino, se no le
+     scarpe -- che ce le hanno tutti. Un'icona fissa avrebbe detto
+     "accessori" e basta, e la fila serve proprio a vedere a colpo
+     d'occhio com'e' fatta la persona. */
+  const iconaAcc = () => {
+    if (av.glasses === 'sole') return CAPI.accessorio('sole', '#1F2430', 44);
+    if (av.glasses === 'vista') return CAPI.accessorio('occhiali', '#3A3D45', 44);
+    if (av.bag.style === 'zaino') return CAPI.accessorio('zaino', av.bag.color || '#8A8AA0', 44);
+    return CAPI.accessorio('scarpe', av.shoes.color || '#8A8AA0', 44);
+  };
+  const accessori = ACC_BOTTONI.map(k => {
+    const mio = k === 'accessori'
+      ? !!(av.scelti && (av.scelti.scarpe || av.scelti.borsa || av.scelti.occhiali))
+      : !!(av.scelti && av.scelti[k]);
     return '<button class="capo acc-b' + (mio ? ' on' : '') + '" data-acc="' + k + '">' +
-      CAPI.accessorio(k, c || '#8A8AA0', 44) +
+      (k === 'capelli' ? CAPI.accessorio('capelli', ACC_DOVE.capelli(av) || '#8A8AA0', 44) : iconaAcc()) +
       '<span class="nm">' + ACC_NOME[k] + '</span></button>';
   }).join('');
   /* LA FANTASIA ANCHE AL SOTTO. Il modello la teneva gia' (la figura
@@ -2507,7 +2553,7 @@ function armadioDi(p, tavolozzaAperta) {
        cappello e zaino, la fila teneva dodici colonne per dieci
        pulsanti -- due posti vuoti in fondo, e tutti i pulsanti del
        sotto piu' stretti di quelli del sopra senza motivo. */
-    '<div class="capi" style="' + colonne(AV.PANTS.length + Object.keys(ACC_DOVE).length) + '">' +
+    '<div class="capi" style="' + colonne(AV.PANTS.length + ACC_BOTTONI.length) + '">' +
     AV.PANTS.map(t => '<button class="capo' + (av.pants.style === t.key ? ' on' : '') +
       '" data-pants="' + t.key + '">' + CAPI.capo(t.key, av.pants.color, av.pants.pattern, 44) +
       '<span class="nm">' + esc(t.label) + '</span></button>').join('') + accessori + '</div>' +
@@ -2577,10 +2623,70 @@ function tavolozzaCapelli(av) {
     '<button class="via" data-accvia="capelli">togli</button></div>';
 }
 
+/* GLI ACCESSORI: cinque cose che si guardano addosso a una persona.
+   Le prime tre stanno sulla faccia e non hanno un colore da scegliere
+   -- gli occhiali sono occhiali -- le altre due si', e allora sotto
+   compare la tavolozza di sempre.
+   «Faccia pulita» non e' il vuoto: e' una cosa che si e' GUARDATA e si
+   puo' dire («no, niente occhiali»), e serve a togliere quelli che il
+   ruolo mette di suo. */
+const ACC_COSE = [
+  { k: 'faccia', nome: 'Faccia pulita' },
+  { k: 'occhiali', nome: 'Occhiali' },
+  { k: 'sole', nome: 'Da sole' },
+  { k: 'zaino', nome: 'Zaino', tinta: true },
+  { k: 'scarpe', nome: 'Scarpe', tinta: true }
+];
+/* quale si sta guardando: da li' dipende di che cosa e' la tavolozza */
+let accScelto = 'scarpe';
+
+function accAddosso(av, k) {
+  if (k === 'faccia') return av.glasses === 'none' && av.facial === 'none';
+  if (k === 'occhiali') return av.glasses === 'vista';
+  if (k === 'sole') return av.glasses === 'sole';
+  if (k === 'zaino') return av.bag.style === 'zaino';
+  return true;                       /* le scarpe ce le hanno tutti */
+}
+
+function tavolozzaAccessori(av) {
+  const cose = ACC_COSE.map(x => {
+    const su = accAddosso(av, x.k);
+    const colore = x.k === 'zaino' ? (av.bag.color || '#8A8AA0')
+      : x.k === 'scarpe' ? (av.shoes.color || '#8A8AA0')
+      : x.k === 'faccia' ? av.skin
+      : x.k === 'sole' ? '#1F2430' : '#3A3D45';
+    return '<button class="capo acc-c' + (su ? ' on' : '') +
+      (accScelto === x.k ? ' scelto' : '') + '" data-accsel="' + x.k + '">' +
+      CAPI.accessorio(x.k, colore, 44) +
+      '<span class="nm">' + esc(x.nome) + '</span></button>';
+  }).join('');
+
+  const conTinta = ACC_COSE.find(x => x.k === accScelto && x.tinta);
+  let tinte = '';
+  if (conTinta) {
+    const ora = String(ACC_DOVE[accScelto](av) || '').toLowerCase();
+    tinte = '<span class="tv-k">Colore ' +
+      (accScelto === 'zaino' ? 'dello zaino' : 'delle scarpe') + '</span>' +
+      '<div class="acc-tinte">' +
+        AV.COLORS.map(c => '<button data-acccol="' + accScelto + '|' + c.c +
+          '" style="background:' + c.c + '" title="' + esc(c.n[0]) + '"' +
+          (ora === c.c.toLowerCase() ? ' class="on"' : '') + '></button>').join('') +
+        '<button class="ruota" data-accruota="' + accScelto + '" title="scegli tu"></button>' +
+      '</div>';
+  }
+
+  return '<div class="volante accessori">' +
+    '<span class="tv-k">Che cos\u2019ha addosso</span>' +
+    '<div class="acc-cose">' + cose + '</div>' +
+    tinte +
+    '<button class="via" data-accvia="accessori">togli tutti</button></div>';
+}
+
 /* la tavolozza di un accessorio: le stesse tinte, la ruota, e il tasto
    per toglierlo */
 function tavolozza(av, acc) {
   if (acc === 'capelli') return tavolozzaCapelli(av);
+  if (acc === 'accessori') return tavolozzaAccessori(av);
   const ora = ACC_DOVE[acc](av);
   return '<div class="volante">' +
     AV.COLORS.map(c => '<button data-acccol="' + acc + '|' + c.c + '" style="background:' + c.c + '"' +
