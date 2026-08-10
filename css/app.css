@@ -856,6 +856,22 @@ main {
 .est-b:active { transform: scale(.95); }
 .est-b:disabled { opacity: .34; cursor: default; }
 .tp-est .est-dx { margin-left: auto; display: flex; align-items: center; gap: 9px; }
+/* IL MENO E IL PIU' DA CINQUE MINUTI, a sinistra e attaccati.
+   In tutta l'app il meno e il piu' sono una coppia; qui ce n'era uno
+   solo, da un quarto d'ora, in fondo a destra -- e la mano si fermava
+   a cercarlo. Cinque minuti perche' questa e' la correzione («no
+   aspetta, sono entrati cinque minuti fa»): per i salti grossi ci sono
+   i tre tagli col loro prezzo. */
+/* alta come i tre tagli qui accanto -- 42 pixel, cornice compresa --
+   se no la fascia cresce di quattro pixel e col guardaroba aperto sono
+   proprio i quattro che mancano per starci dentro */
+.est-cinque { display: flex; gap: 3px; background: rgba(0, 0, 0, .26);
+  border-radius: 13px; padding: 2px; flex: 0 0 auto; }
+.est-cinque button { min-width: 52px; height: 38px; border: none; border-radius: 10px;
+  background: rgba(255, 255, 255, .1); color: var(--txt); font: inherit;
+  font-family: 'Fredoka', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; }
+.est-cinque button:active:not(:disabled) { background: rgba(255, 255, 255, .24); }
+.est-cinque button:disabled { opacity: .3; cursor: default; }
 .est-meno { min-width: 56px; height: 42px; border: none; border-radius: 11px; cursor: pointer;
   background: rgba(255, 255, 255, 0.1); color: var(--txt);
   font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 700; }
@@ -3757,10 +3773,49 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
   color: rgba(242, 201, 76, .8); }
 .pc-scontrino .sc-t-b:disabled { opacity: .35; cursor: default; }
 .pc-scontrino .sc-t-b:active:not(:disabled) { transform: scale(.95); }
-.pc-scontrino .sc-t-meno { border: none; border-radius: 10px; background: rgba(255, 255, 255, .08);
-  color: rgba(255, 255, 255, .75); font: inherit; font-size: 12px; font-weight: 700;
-  padding: 0 10px; min-height: 36px; cursor: pointer; }
-.pc-scontrino .sc-t-meno:disabled { opacity: .3; cursor: default; }
+/* la stessa coppia da cinque minuti dell'Estendi, e dalla stessa
+   parte: a sinistra dei tagli */
+.pc-scontrino .sc-t-cinque { display: flex; gap: 3px; background: rgba(0, 0, 0, .3);
+  border-radius: 11px; padding: 3px; }
+.pc-scontrino .sc-t-cinque button { min-width: 46px; min-height: 32px; border: none;
+  border-radius: 9px; background: rgba(255, 255, 255, .1); color: var(--txt);
+  font: inherit; font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 700;
+  cursor: pointer; }
+.pc-scontrino .sc-t-cinque button:disabled { opacity: .3; cursor: default; }
+
+/* ══════════════════════════════════════════════════════════
+   I GIRI, RIGA PER RIGA
+   Non solo da pagare: da correggere. Una volta contata male si
+   sistemava tornando alla linguetta Parco a cercare la colonna dello
+   storico; qui ogni volta ha i suoi tasti, dove la si sta guardando.
+   ══════════════════════════════════════════════════════════ */
+.pc-scontrino .sc-g-riga { display: flex; align-items: center; gap: 7px;
+  padding: 3px 9px 3px 48px; }
+.pc-scontrino .sc-g-n { font-family: 'Fredoka', sans-serif; font-size: 14px; font-weight: 700;
+  color: var(--txt-3); min-width: 22px; }
+.pc-scontrino .sc-g-q { display: flex; align-items: center; gap: 3px;
+  background: rgba(0, 0, 0, .3); border-radius: 10px; padding: 2px; }
+.pc-scontrino .sc-g-q button { min-width: 32px; height: 30px; border: none; border-radius: 8px;
+  background: rgba(255, 255, 255, .1); color: var(--txt);
+  font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 700; cursor: pointer; }
+.pc-scontrino .sc-g-q button:active { background: rgba(255, 255, 255, .24); }
+.pc-scontrino .sc-g-q b { font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 700;
+  min-width: 22px; text-align: center; }
+.pc-scontrino .sc-g-k { font-size: 11.5px; color: var(--txt-3); }
+.pc-scontrino .sc-g-paga { margin-left: auto; border: none; border-radius: 9px;
+  background: rgba(255, 255, 255, .07); color: rgba(255, 255, 255, .78);
+  font: inherit; font-size: 11.5px; font-weight: 700; padding: 6px 10px; min-height: 32px;
+  cursor: pointer; }
+.pc-scontrino .sc-g-paga.on { background: rgba(106, 220, 175, .18); color: #8DEBBB; }
+.pc-scontrino .sc-g-paga.meta { box-shadow: inset 0 0 0 1.5px rgba(106, 220, 175, .4); }
+.pc-scontrino .sc-g-via { flex: 0 0 auto; width: 32px; height: 32px; border: none;
+  border-radius: 9px; background: rgba(228, 87, 79, .16); color: #F09A94;
+  font-size: 14px; font-weight: 700; cursor: pointer; }
+.pc-scontrino .sc-g-via:active { background: rgba(228, 87, 79, .3); }
+.pc-scontrino .sc-g-nuovo { margin: 2px 9px 2px 48px; border: none; border-radius: 10px;
+  background: rgba(232, 180, 76, .18); color: #F2C94C; font: inherit; font-size: 12.5px;
+  font-weight: 700; padding: 7px 14px; min-height: 34px; cursor: pointer; align-self: flex-start; }
+.pc-scontrino .sc-g-nuovo:active { background: rgba(232, 180, 76, .34); }
 /* le stesse due frecce delle card, cosi' il gesto e' quello di sempre */
 .pc-scontrino .sc-pag { flex: 0 0 auto; display: flex; align-items: center; gap: 3px;
   background: rgba(0, 0, 0, .3); border-radius: 11px; padding: 3px; }
@@ -3774,14 +3829,8 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
 .pc-scontrino .sc-pag .sc-tutta { font-size: 15px; }
 
 /* i giri del Crazy: al banco si paga «quello di prima», non «tre
-   salite su cinque» */
-.pc-scontrino .sc-giri { display: flex; flex-wrap: wrap; gap: 4px; padding: 0 9px 2px 48px; }
-.pc-scontrino .sc-giro { border: none; border-radius: 9px; background: rgba(255, 255, 255, .07);
-  color: rgba(255, 255, 255, .78); font: inherit; font-size: 11.5px; font-weight: 700;
-  padding: 6px 10px; min-height: 32px; cursor: pointer; }
-.pc-scontrino .sc-giro.on { background: rgba(106, 220, 175, .18); color: #8DEBBB; }
-.pc-scontrino .sc-giro.meta { box-shadow: inset 0 0 0 1.5px rgba(106, 220, 175, .4); }
-.pc-scontrino .sc-giro:active { transform: scale(.96); }
+   giri su cinque» */
+.pc-scontrino .sc-giri { display: flex; flex-direction: column; gap: 2px; padding-bottom: 2px; }
 
 .pc-scontrino .sc-vuoto { text-align: center; color: var(--txt-3); font-size: 13px;
   line-height: 1.5; padding: 22px 16px; background: rgba(0, 0, 0, .22); border-radius: 16px; }

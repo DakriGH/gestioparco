@@ -1017,6 +1017,16 @@ function costruisciPannello() {
       aggiornaPannello();
       return;
     }
+    /* il piu' e il meno di UNA volta precisa: nello scontrino ogni
+       riga ha i suoi, e non c'e' un giro "scelto" da tenere a mente */
+    if (d.gpiu !== undefined || d.gmeno !== undefined) {
+      tocchi.id = 'crazy';
+      const su = d.gpiu !== undefined;
+      cambiaGiro(C(), parseInt(su ? d.gpiu : d.gmeno, 10), su ? 1 : -1);
+      pcSalva();
+      aggiornaPannello();
+      return;
+    }
     /* si tocca un giro nello storico: da li' in poi il piu' e il meno
        della card lavorano su QUELLO. E' il modo di correggere un giro
        vecchio senza avere due file di tasti a video. */
@@ -1680,8 +1690,22 @@ function disegnaEstendi(p, c) {
   if (box.dataset.sig === firma) return;
   box.dataset.sig = firma;
 
+  /* IL MENO E IL PIU' STANNO A SINISTRA, e sono di cinque minuti.
+     Prima c'era un solo "- 15m", e stava in fondo a destra: in tutta
+     l'app il meno e il piu' sono una coppia attaccata, a sinistra del
+     numero che muovono, e trovarne uno spaiato dall'altra parte faceva
+     fermare la mano. Un quarto d'ora poi e' un salto grosso per una
+     correzione -- «no aspetta, sono entrati cinque minuti fa» -- e per
+     i salti grossi ci sono gia' i tre tagli col loro prezzo. */
+  const corti = clamp(num(c.durationMinutes, 60), 0, 1e6);
   box.innerHTML =
     '<span class="est-k"><span class="em">\u23e9</span> Estendi</span>' +
+    '<span class="est-cinque">' +
+      '<button data-a="est" data-v="-5"' + (aperto || corti <= 5 ? ' disabled' : '') +
+        ' aria-label="cinque minuti in meno">\u2212 5m</button>' +
+      '<button data-a="est" data-v="5"' + (aperto ? ' disabled' : '') +
+        ' aria-label="cinque minuti in piu\u2019">+ 5m</button>' +
+    '</span>' +
     ESTENDI_TAGLI.map(m => {
       const costo = aperto ? 0 : costoEstensione(c, m);
       return '<button class="est-b" data-a="est" data-v="' + m + '"' + (aperto ? ' disabled' : '') + '>' +
@@ -1689,9 +1713,6 @@ function disegnaEstendi(p, c) {
         '</i></button>';
     }).join('') +
     '<span class="est-dx">' +
-      '<button class="est-meno" data-a="est" data-v="-15"' +
-        (aperto || clamp(num(c.durationMinutes, 60), 0, 1e6) <= 15 ? ' disabled' : '') +
-        ' aria-label="togli un quarto d\u2019ora">\u2212 15m</button>' +
       '<span class="est-fine">' + (aperto ? 'tempo aperto' : 'fino alle') +
         '<b>' + (aperto ? '\u2014' : fmtTime(endTimeOf(c))) + '</b></span>' +
     '</span>';
@@ -4123,36 +4144,54 @@ function scontrinoRiga(c, id) {
   if (id === 'bimbi' && PAN.ingresso) {
     const aperto = !!c.payLater;
     const manca = endTimeOf(c) - Date.now();
+    const corti = clamp(num(c.durationMinutes, 60), 0, 1e6);
     dentro += '<div class="sc-tempo">' +
       '<span class="sc-t-k' + (!aperto && manca <= 0 ? ' scaduto' : '') + '">' +
         (aperto ? '\u23f3 tempo aperto'
           : manca > 0 ? '\u23f1\ufe0f restano ' + fmtDur(manca)
           : '\u23f1\ufe0f scaduto da ' + fmtDur(-manca)) + '</span>' +
+      /* la coppia da cinque minuti, a sinistra dei tagli: e' la stessa
+         dell'Estendi, e sta dalla stessa parte */
+      '<span class="sc-t-cinque">' +
+        '<button data-a="est" data-v="-5"' + (aperto || corti <= 5 ? ' disabled' : '') +
+          '>\u2212 5m</button>' +
+        '<button data-a="est" data-v="5"' + (aperto ? ' disabled' : '') + '>+ 5m</button>' +
+      '</span>' +
       ESTENDI_TAGLI.map(m => {
         const costo = aperto ? 0 : costoEstensione(c, m);
         return '<button class="sc-t-b" data-a="est" data-v="' + m + '"' +
           (aperto ? ' disabled' : '') + '><b>+' + fmtMin(m) + '</b><i>' +
           (aperto ? '\u2014' : costo > 0 ? '+' + eur(costo) : 'gratis') + '</i></button>';
       }).join('') +
-      '<button class="sc-t-meno" data-a="est" data-v="-15"' +
-        (aperto || clamp(num(c.durationMinutes, 60), 0, 1e6) <= 15 ? ' disabled' : '') +
-        '>\u2212 15m</button></div>';
+      '</div>';
   }
 
   /* I GIRI DEL CRAZY, uno per uno: al banco si paga «quello di prima»,
      non «tre giri su cinque». */
   if (id === 'crazy') {
+    /* I GIRI SI GESTISCONO DA QUI, non solo si pagano. Per correggere
+       una volta contata male si tornava alla linguetta Parco a cercare
+       la colonna dello storico: adesso ogni volta ha la sua riga, coi
+       suoi tasti -- quanti sono saliti, se e' pagata, e la crocetta per
+       buttarla via -- e in fondo quello per aprirne una nuova. */
     const g = giriCrazy(c);
-    if (g.length) {
-      dentro += '<div class="sc-giri">' + g.map((n, i) => {
-        const pagate = pagateDelGiro(c, i);
-        const saldo = n > 0 && pagate >= n;
-        return '<button class="sc-giro' + (saldo ? ' on' : (pagate > 0 ? ' meta' : '')) +
-          '" data-scgiro="' + i + '">' + (i + 1) + '\u00ba \u00b7 ' + n +
-          (n === 1 ? ' giro' : ' giri') + ' \u00b7 ' +
-          (saldo ? '\u2713 pagato' : pagate > 0 ? pagate + '/' + n : 'da pagare') + '</button>';
-      }).join('') + '</div>';
-    }
+    dentro += '<div class="sc-giri">' + g.map((n, i) => {
+      const pagate = pagateDelGiro(c, i);
+      const saldo = n > 0 && pagate >= n;
+      return '<div class="sc-g-riga' + (saldo ? ' saldata' : '') + '">' +
+        '<span class="sc-g-n">' + (i + 1) + '\u00ba</span>' +
+        '<span class="sc-g-q">' +
+          '<button data-gmeno="' + i + '">\u2212</button><b>' + n + '</b>' +
+          '<button data-gpiu="' + i + '">+</button></span>' +
+        '<span class="sc-g-k">' + (n === 1 ? 'giro' : 'giri') + '</span>' +
+        '<button class="sc-g-paga' + (saldo ? ' on' : (pagate > 0 ? ' meta' : '')) +
+          '" data-scgiro="' + i + '">' +
+          (saldo ? '\u2713 pagato' : pagate > 0 ? pagate + '/' + n + ' pagati' : 'da pagare') +
+        '</button>' +
+        '<button class="sc-g-via" data-gvia="' + i + '" aria-label="cancella">\u2715</button>' +
+      '</div>';
+    }).join('') +
+      '<button class="sc-g-nuovo" data-giro="1">+ giro</button></div>';
   }
   return dentro;
 }

@@ -201,7 +201,16 @@ gruppo('Lo scontrino: tutto quello che hanno preso, in una lista sola', () => {
   /* LA PAROLA E' UNA SOLA: giro. */
   prova('niente «salite» nello scontrino',
     !/salit/i.test(ctx.scontrinoRiga(c, 'crazy')), ctx.scontrinoRiga(c, 'crazy').slice(0, 200));
-  prova('i giri del Crazy si chiamano giri', /3 giri/.test(ctx.scontrinoRiga(c, 'crazy')));
+  prova('i giri del Crazy si chiamano giri', /<b>3<\/b>/.test(ctx.scontrinoRiga(c, 'crazy')) &&
+    />giri</.test(ctx.scontrinoRiga(c, 'crazy')));
+  /* e da qui si GESTISCONO: quanti sono saliti, cancellare la volta,
+     aprirne una nuova. Prima si tornava alla linguetta Parco. */
+  prova('ogni volta ha il suo piu e il suo meno',
+    /data-gmeno="1"/.test(ctx.scontrinoRiga(c, 'crazy')) &&
+    /data-gpiu="1"/.test(ctx.scontrinoRiga(c, 'crazy')));
+  prova('e la sua crocetta', /data-gvia="1"/.test(ctx.scontrinoRiga(c, 'crazy')));
+  prova('piu il tasto per aprirne una nuova',
+    /data-giro="1"/.test(ctx.scontrinoRiga(c, 'crazy')));
   prova('e le volte in cui sono saliti si chiamano volte',
     /in 2 volte/.test(ctx.scontrinoRiga(c, 'crazy')));
 
