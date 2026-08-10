@@ -556,6 +556,29 @@ function soloCrazy(c) {
   }
 }
 
+/* E' un ingresso di soli salti? Cioe': c'e' il Crazy, non c'e'
+   nessuno in sala e non hanno comprato tempo di parco. */
+function soloSalti(c) {
+  c = c || C();
+  return omaggioDi(c) > 0 &&
+    clamp(num(c.durationMinutes, 0), 0, 1e6) <= 0 &&
+    clamp(num(c.children, 0), 0, 1e6) <= 0;
+}
+
+/* I TAGLI CHIESTI A MANO. Su un ingresso di soli salti la riga dei
+   tagli lascia il posto all'avviso: i tagli sono la cosa da NON fare
+   li', e tenerli accesi accanto a un ingresso senza tempo comprato
+   confondeva. Ma se poi decidono di restare, il tasto dell'avviso li
+   richiama -- per QUEL conto, e finche' resta aperto. */
+let tagliDi = null;
+
+/* L'avviso e' al posto dei tagli, adesso? Lo e' su un ingresso di soli
+   salti, finche' nessuno ha chiesto i tagli col tasto. */
+function avvisoSoli(c) {
+  c = c || C();
+  return soloSalti(c) && tagliDi !== c;
+}
+
 /* APRE UN GIRO, E BASTA. Non ci fa salire nessuno: chi sale lo conti
    tu col piu' della card, che riparte da zero. Prima ci metteva dentro
    una salita di sua iniziativa -- e quindi quattro euro sul conto che
@@ -843,13 +866,15 @@ function costruisciPannello() {
         <h2><span class="em">\u23f1\ufe0f</span> Tempo</h2>
         <div class="blk-in">
         <div class="tp-riga">
+          <span class="tp-et">Ingresso</span>
           <span class="tp-gr">
             <span class="em">\ud83d\udd52</span>
             <button data-a="ora" data-v="-5" aria-label="5 minuti prima">\u2212</button>
             <span class="v num pc-ora">--:--</span>
             <button data-a="ora" data-v="5" aria-label="5 minuti dopo">+</button>
-            <button class="txt" data-a="ora" data-v="ora"><span class="em">\ud83d\udccd</span> ora</button>
+            <button class="txt pc-oralive" data-a="ora" data-v="ora"><span class="em">\ud83d\udccd</span> Ora</button>
           </span>
+          <span class="tp-et tp-et2">\u2192 Uscita</span>
           <span class="tp-gr pc-gfine">
             <span class="em">\ud83d\udeaa</span>
             <button data-a="fine" data-v="-1" aria-label="esce prima">\u2212</button>
@@ -982,9 +1007,25 @@ function costruisciPannello() {
     if (d.cat !== undefined) { PAN.cat = d.cat; aggiornaPannello({ entra: true }); return; }
 
     /* --- il blocco Parco --- */
+    /* L'ORARIO D'INGRESSO E' LIVE FINCHE' NON LO TOCCHI.
+       Di norma il gruppo entra ADESSO: l'orario segue l'orologio da
+       solo mentre conti la gente, e il tasto "Ora" sta spento perche'
+       non c'e' niente da riportare a adesso. Appena lo sposti col piu'
+       o col meno -- "no guarda, erano entrati alle e venti" -- il tempo
+       smette di seguire l'orologio: da li' "Ora" si accende e
+       lampeggia, ed e' la strada per tornare indietro.
+       Prima l'ora si fermava all'apertura della schermata, e chi ci
+       metteva dieci minuti a registrare un gruppo gli segnava dieci
+       minuti di parco che non aveva fatto. */
     if (d.a === 'ora') {
-      if (d.v === 'ora') { c.startTime = roundTo5(new Date()).getTime(); c.braceletCustom = false; }
-      else c.startTime = num(c.startTime, Date.now()) + parseInt(d.v, 10) * 60000;
+      if (d.v === 'ora') {
+        c.startTime = roundTo5(new Date()).getTime();
+        c.braceletCustom = false;
+        delete c.oraManuale;
+      } else {
+        c.startTime = num(c.startTime, Date.now()) + parseInt(d.v, 10) * 60000;
+        c.oraManuale = true;
+      }
       pcSalva(); aggiornaPannello(); return;
     }
     /* Il meno e il piu' della card del tempo saltano di SCAGLIONE, non
@@ -1074,6 +1115,9 @@ function costruisciPannello() {
     /* un altro giro di Crazy: altri minuti regalati, stessi soldi.
        Chi sale si conta con la card, i giri con questo. */
 
+    /* "hanno deciso di restare": l'avviso lascia il posto ai tagli, e
+       da li' in poi e' un ingresso come tutti gli altri */
+    if (d.a === 'tagli') { tagliDi = c; aggiornaPannello(); return; }
     if (d.a === 'dopo') { c.payLater = !c.payLater; pcSalva(); aggiornaPannello(); return; }
     if (d.a === 'butta') {
       /* il riferimento e' uno solo: il cestino lo toglie e basta */
@@ -1157,8 +1201,10 @@ function applicaContoSu() {
    lavorare. E' l'unico modo di cambiargli padrone. */
 function montaPannello(host, conto, opz) {
   /* gruppo nuovo, storia nuova: il giro scelto torna a essere
-     l'ultimo, se no si correggerebbe il giro di un altro */
+     l'ultimo, se no si correggerebbe il giro di un altro, e i tagli
+     chiesti a mano tornano nascosti dietro l'avviso */
   giroScelto = 99;
+  tagliDi = null;
   opz = opz || {};
   const p = costruisciPannello();
   PAN.conto = conto;
@@ -1397,6 +1443,20 @@ function minutiPagati(c) {
 function disegnaFascia(p, c) {
   const aperto = !!c.payLater;
   p.querySelector('.pc-ora').textContent = fmtTime(c.startTime);
+  /* il tasto "Ora": spento mentre l'orario segue l'orologio da solo
+     (non c'e' niente da fare), acceso e lampeggiante appena lo si e'
+     spostato a mano -- e' l'unico modo per tornare al live */
+  const ol = p.querySelector('.pc-oralive');
+  if (ol) {
+    /* su un ingresso GIA' DENTRO l'orario e' fermo per forza: li' il
+       tasto e' un tasto come gli altri, ne' spento ne' lampeggiante */
+    const vivo = !PAN.ingresso && !c.oraManuale;
+    const chiama = !PAN.ingresso && !!c.oraManuale;
+    ol.classList.toggle('spenta', vivo);
+    ol.classList.toggle('lampeggia', chiama);
+    ol.title = vivo ? 'L\u2019orario segue l\u2019orologio da solo'
+      : 'Rimette l\u2019ingresso all\u2019ora di adesso';
+  }
   p.querySelector('.pc-fine').textContent = aperto ? '\u2014' : fmtTime(endTimeOf(c));
   /* i due tasti dell'uscita non hanno senso se un'uscita non c'e' */
   p.querySelector('.pc-gfine').classList.toggle('spento', aperto);
@@ -1436,25 +1496,15 @@ function disegnaFascia(p, c) {
   if (om) {
     const q = omaggioDi(c);
     const comprato = clamp(num(c.durationMinutes, 0), 0, 1e6);
-    const bimbi = clamp(num(c.children, 0), 0, 1e6);
-    /* "SOLO CRAZY" SI DICE SOLO SE E' VERO: senza bambini in sala e
-       senza tempo di parco comprato. Appena arriva un bambino non lo
-       e' piu' -- e il cartellone che diceva "nessun tempo di parco
-       comprato" restava li' a raccontare una cosa vecchia. I dieci
-       minuti in omaggio invece restano: quelli sono regalati e basta,
-       e la riga corta serve a spiegare perche' l'uscita e' piu' in
-       la' di quello che si e' venduto. */
-    const daSolo = q > 0 && comprato <= 0 && bimbi <= 0;
-    om.classList.toggle('hidden', q <= 0);
-    om.classList.toggle('grande', daSolo);
-    if (q <= 0) om.innerHTML = '';
-    else if (daSolo) {
-      om.innerHTML = '<b class="om-k"><span class="em">\ud83e\udd38</span> Solo Crazy</b>' +
-        '<span class="om-tx">Nessun tempo di parco comprato: si paga solo il salto. ' +
-        'Restano dentro <b>' + q + ' minuti in omaggio</b>, che non si pagano.</span>' +
-        '<span class="om-come">Se poi vogliono restare, tocca un taglio qui sotto: ' +
-        'si paga quello, e i ' + q + ' minuti restano regalati.</span>';
-    } else {
+    /* IL SOLO CRAZY NON SI PRENDE PIU' UN CARTELLONE. Quello che c'e'
+       da dire sta sulla riga dei tagli, che in un ingresso di soli
+       salti non serve a niente: due parole al posto di quattro righe.
+       Qui resta solo la riga corta dell'omaggio, che serve a spiegare
+       perche' l'uscita e' piu' in la' di quello che si e' venduto. */
+    const daSolo = avvisoSoli(c);
+    om.classList.toggle('hidden', q <= 0 || daSolo);
+    if (q <= 0 || daSolo) om.innerHTML = '';
+    else {
       om.innerHTML = '\ud83c\udf81 <b>+' + q + '\u2032</b> in omaggio' +
         '<small>' + (comprato <= 0
           ? 'tocca un taglio per vendere il tempo di parco'
@@ -1602,10 +1652,23 @@ function aggiornaPannello(opz) {
 
     const dur = p.querySelector('.pc-dur');
     const tagli = (settings.quickDurations || [15, 30, 60, 90]);
-    const firmaDur = tagli.join('|') + '>' + (c.payLater ? 'dopo' : c.durationMinutes);
+    /* SOLI SALTI: AL POSTO DEI TAGLI, L'AVVISO. In un ingresso senza
+       tempo di parco i tagli 15m 30m 1h 1h30 sono l'unica cosa che non
+       va toccata -- e stavano li' accesi, mentre un cartellone gigante
+       spiegava la stessa cosa a quattro righe di distanza. Adesso la
+       riga e' una sola e dice il necessario: cos'e' l'ingresso, che i
+       minuti in omaggio non si pagano, e il tasto per vendere il tempo
+       se poi decidono di restare. */
+    const avviso = avvisoSoli(c);
+    const firmaDur = tagli.join('|') + '>' + (c.payLater ? 'dopo' : c.durationMinutes) +
+      (avviso ? '|solo' + omaggioDi(c) : '');
     if (dur.dataset.sig !== firmaDur) {
       dur.dataset.sig = firmaDur;
-      dur.innerHTML = tagli.map(m =>
+      dur.innerHTML = avviso
+      ? '<span class="dur-solo"><b><span class="em">\ud83e\udd38</span> Solo Crazy</b>' +
+        '<i>+' + omaggioDi(c) + '\u2032 in omaggio, non si pagano</i></span>' +
+        '<button class="chip dur-tagli" data-a="tagli">+ Tempo di parco</button>'
+      : tagli.map(m =>
         '<button class="chip' + (!c.payLater && c.durationMinutes === m ? ' on' : '') +
         '" data-a="min" data-v="' + m + '">' + fmtMin(m) + '</button>').join('') +
         /* "TEMPO APERTO", non "paga dopo": la domanda di questa fascia e'
@@ -1618,6 +1681,8 @@ function aggiornaPannello(opz) {
         'title="Resta senza un orario di fine: si conta il tempo davvero passato">' +
         '\u23f3 Tempo aperto</button>';
     }
+    /* la riga dell'avviso non e' una riga di tagli: si veste da avviso */
+    dur.classList.toggle('solo', avviso);
     c.people = lista(c.people);
     syncPeople(p.querySelector('.pc-people'), c.people, () => { pcSalva(); });
   } else {
@@ -3083,6 +3148,8 @@ function commitEntry() {
     paidAmt: JSON.parse(JSON.stringify(draft.paidAmt || {})),
     paidPark: r2(draft.paidPark), paidBar: r2(draft.paidBar),
     barPaid: 0, parkPaid: false,
+    /* registrato, l'orario e' quello: non insegue piu' l'orologio */
+    oraManuale: true,
     baseMinutes: draft.durationMinutes,
     /* QUELLO CHE NASCE NEL MODULO DEVE ARRIVARE INTERO.
        Questo elenco e' scritto a mano, campo per campo, e chi ne
@@ -3701,7 +3768,11 @@ function bcCard(v, sempre) {
   const q = bcQ(v.id), pg = bcPag(v.id);
   const saldata = q > 0 && pg >= q;
   const aperta = sempre || q > 0;
-  return '<div class="bc-card' + (v.id === 'crazy' && q > 0 ? ' con-storico' : '') +
+  /* LA CARD DEL CRAZY STA SEMPRE APERTA sui giri, anche a zero: il
+     tasto "+ giro" e' li' pronto e si vede subito che quella card
+     lavora a giri. Comparendo solo dopo la prima salita, la card
+     cambiava forma sotto le dita a meta' lavoro. */
+  return '<div class="bc-card' + (v.id === 'crazy' ? ' con-storico' : '') +
     (saldata ? ' saldata' : (q ? ' presa' : '')) +
     (tocchi.id === v.id ? ' tocca' : '') +
     (tocchi.nato === v.id ? ' nato' : '') +
@@ -3709,7 +3780,7 @@ function bcCard(v, sempre) {
     /* LA CARD DEL CRAZY E' LA STESSA DELLE ALTRE: tutta quanta -- la
        testa e le due file -- sta in una colonna sua, e le si mette
        ACCANTO lo storico dei giri. Cosi' dentro non cambia niente. */
-    (v.id === 'crazy' && q > 0 ? '<div class="bc-lato">' : '') +
+    (v.id === 'crazy' ? '<div class="bc-lato">' : '') +
     '<button class="bc-su" data-add="' + v.id + '">' +
       (q > 0 ? '<span class="bc-fant">' + q + '</span>' : '') +
       iconaBar(v.name, v.em) +
@@ -3735,7 +3806,7 @@ function bcCard(v, sempre) {
         '<button data-pmeno="' + v.id + '"' + (pg <= 0 ? ' disabled' : '') + '>\u2212</button>' +
         '<button data-ppiu="' + v.id + '"' + (pg >= q ? ' disabled' : '') + '>+</button></div>'
       : '') +
-    (v.id === 'crazy' && q > 0 ? '</div>' + storicoGiri() : '') +
+    (v.id === 'crazy' ? '</div>' + storicoGiri() : '') +
   '</div>';
 }
 
@@ -3756,6 +3827,9 @@ function quantiOra() {
 function storicoGiri() {
   const c = C();
   const g = giriCrazy(c);
+  /* a giri zero la colonna resta, con dentro la sua riga di istruzioni:
+     e' li' che si apre il primo, e vederla vuota dice come funziona */
+  const vuoto = !g.length;
   const ora = giroOra(c);
   const extra = clamp(num(settings.crazyExtraMinutes, 0), 0, 1e6);
   /* IL DENTRO E' STACCATO DALLA CARD: sta appoggiato sopra la colonna
@@ -3770,6 +3844,7 @@ function storicoGiri() {
        riga con scritto tutto, e quando sono tanti si scorre -- dentro
        la sua colonna, senza far crescere la card di un pixel. */
     '<div class="st-lista">' +
+      (vuoto ? '<span class="st-vuoto">Nessun giro.<br>Tocca <b>+ giro</b> e conta chi sale.</span>' : '') +
       g.map((n, i) => {
         const pg = pagateDelGiro(c, i);
         const saldo = n > 0 && pg >= n;
@@ -5082,8 +5157,20 @@ function mostraSforato(entry) {
   }, 120);
 }
 
+/* L'ora d'ingresso di chi si sta registrando cammina con l'orologio,
+   finche' nessuno l'ha spostata a mano: si apre "+ Nuovo", si conta la
+   gente con calma, e all'atto di registrare l'orario e' gia' giusto. */
+function ingressoLive() {
+  if (PAN.ingresso || !draft || draft.oraManuale) return;
+  const adesso = roundTo5(new Date()).getTime();
+  if (adesso === draft.startTime) return;
+  draft.startTime = adesso;
+  if (PAN.root && PAN.conto === draft) { disegnaFascia(PAN.root, draft); pcFondoDis(); }
+}
+
 function tick() {
   const now = Date.now();
+  ingressoLive();
   /* L'AVVISO GUARDA SEMPRE, anche mentre sei in "+ Nuovo" o nel bar.
      E' proprio quello il momento in cui il colore rosso della lista
      non lo vedi -- se guardassi la lista, non servirebbe un avviso. */

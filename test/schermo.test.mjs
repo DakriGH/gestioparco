@@ -122,6 +122,77 @@ gruppo('Un giro aperto e vuoto si vede, e non regala niente', () => {
     60 + ctx.settings.crazyExtraMinutes);
 });
 
+gruppo('La card del Crazy e la riga dei tagli non cambiano forma sotto le dita', () => {
+  /* LA COLONNA DEI GIRI C'E' SEMPRE. Comparendo solo dopo la prima
+     salita, la card si allargava di colpo a meta' lavoro e il tasto
+     "+ giro" appariva dove un attimo prima c'era altro. */
+  const c = conto({ children: 3, crazyJumping: 0, durationMinutes: 60, baseMinutes: 60 });
+  const vuota = cardCrazy();
+  prova('a zero giri la colonna c\u2019e\u2019 lo stesso', vuota.indexOf('bc-storico') > 0);
+  prova('e dice come si apre il primo', vuota.indexOf('st-vuoto') > 0 &&
+    vuota.indexOf('+ giro') > 0, vuota.slice(0, 160));
+  prova('la card e\u2019 gia\u2019 larga', vuota.indexOf('con-storico') > 0);
+
+  ctx.bcSetQ('crazy', 2);
+  const piena = cardCrazy();
+  prova('e con un giro dentro resta larga uguale', piena.indexOf('con-storico') > 0);
+  prova('senza piu\u2019 la riga di istruzioni', piena.indexOf('st-vuoto') < 0);
+  prova('col giro scritto', /class="st-riga on"/.test(piena));
+});
+
+gruppo('Solo Crazy: due parole al posto dei tagli, non un cartellone', () => {
+  /* L'avviso vive dove stavano i tagli 15m 30m 1h 1h30: in un ingresso
+     senza tempo di parco quelli sono l'unica riga da non toccare. */
+  const c = conto({ children: 0, crazyJumping: 0, durationMinutes: 30, baseMinutes: 30 });
+  prova('un ingresso normale non e\u2019 di soli salti', ctx.soloSalti(c) === false);
+
+  ctx.bcSetQ('crazy', 2);            // salgono in due, e basta
+  uguale('niente tempo di parco comprato', c.durationMinutes, 0);
+  uguale('ma dieci minuti in omaggio', ctx.omaggioDi(c), 10);
+  prova('adesso e\u2019 di soli salti', ctx.soloSalti(c) === true);
+  uguale('e l\u2019omaggio non si paga', ctx.costOf(c).parkTotal, 0);
+
+  /* appena arriva un bambino non lo e' piu': si torna ai tagli */
+  c.children = 2;
+  prova('con un bambino in sala non lo e\u2019 piu\u2019', ctx.soloSalti(c) === false);
+  /* e nemmeno se poi il tempo lo comprano: quel tempo si paga,
+     l'omaggio resta regalato */
+  c.durationMinutes = 30;
+  prova('ne\u2019 se comprano il tempo', ctx.soloSalti(c) === false);
+  uguale('e i minuti in omaggio restano regalati',
+    ctx.costOf(c).parkTotal, ctx.r2(ctx.priceFor(30) * 2));
+});
+
+gruppo('L\u2019ora d\u2019ingresso segue l\u2019orologio finche\u2019 non la tocchi', () => {
+  /* Prima l'ora si fermava all'apertura della schermata: chi ci metteva
+     dieci minuti a registrare un gruppo gli segnava dieci minuti di
+     parco che non aveva fatto. */
+  ctx.PAN.ingresso = null;
+  ctx.PAN.root = null;
+  ctx.draft = ctx.freshDraft();
+  ctx.PAN.conto = ctx.draft;
+  ctx.draft.startTime = Date.now() - 20 * 60000;
+  ctx.ingressoLive();
+  const scarto = Math.abs(Date.now() - ctx.draft.startTime);
+  prova('senza toccarla, si rimette ad adesso', scarto < 6 * 60000,
+    'scarto ' + Math.round(scarto / 60000) + ' minuti');
+
+  /* messa a mano, sta ferma: e' il tasto "Ora" a riportarla al vivo */
+  ctx.draft.oraManuale = true;
+  ctx.draft.startTime = Date.now() - 40 * 60000;
+  const fermo = ctx.draft.startTime;
+  ctx.ingressoLive();
+  uguale('messa a mano, non si muove piu\u2019', ctx.draft.startTime, fermo);
+
+  /* e un ingresso gia' registrato non la muove di certo */
+  const e = conto({ startTime: Date.now() - 90 * 60000 });
+  const suo = e.startTime;
+  ctx.PAN.conto = e; ctx.PAN.ingresso = e;
+  ctx.ingressoLive();
+  uguale('e chi e\u2019 gia\u2019 dentro resta col suo orario', e.startTime, suo);
+  ctx.PAN.ingresso = e;
+});
+
 gruppo('Si vede QUALI giri sono pagati, e cancellarne uno rimette i soldi', () => {
   /* La cassa conta le salite pagate, non i giri: da "tre su cinque"
      non si capisce quale giro sia a posto. Le pagate si riempiono in
