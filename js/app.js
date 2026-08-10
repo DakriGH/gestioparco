@@ -2640,12 +2640,21 @@ const ACC_COSE = [
 /* quale si sta guardando: da li' dipende di che cosa e' la tavolozza */
 let accScelto = 'scarpe';
 
+/* ACCESO = L'HAI SCELTO TU, non «ce l'ha addosso».
+   Il ruolo porta gia' i suoi: il nonno ha gli occhiali, la mamma la
+   borsa. Quella roba e' l'archetipo -- serve a far sembrare una
+   persona una persona -- non una cosa vista addosso a QUESTA persona,
+   e infatti nella descrizione non compare finche' non la tocchi.
+   Il tasto deve dire la stessa cosa: spento finche' non sei stato tu,
+   se no si legge «occhiali» su una scheda che all'uscita non li
+   nomina, e si cerca il nonno sbagliato. */
 function accAddosso(av, k) {
-  if (k === 'faccia') return av.glasses === 'none' && av.facial === 'none';
-  if (k === 'occhiali') return av.glasses === 'vista';
-  if (k === 'sole') return av.glasses === 'sole';
-  if (k === 'zaino') return av.bag.style === 'zaino';
-  return true;                       /* le scarpe ce le hanno tutti */
+  const sc = av.scelti || {};
+  if (k === 'faccia') return !!sc.occhiali && av.glasses === 'none' && av.facial === 'none';
+  if (k === 'occhiali') return !!sc.occhiali && av.glasses === 'vista';
+  if (k === 'sole') return !!sc.occhiali && av.glasses === 'sole';
+  if (k === 'zaino') return !!sc.borsa && av.bag.style === 'zaino';
+  return !!sc.scarpe;                /* le scarpe ce le hanno tutti: conta la scelta */
 }
 
 function tavolozzaAccessori(av) {

@@ -849,11 +849,23 @@
 
     /* --- borse --- */
     let bag = '';
+    let bagSopra = '';
     const bg = av.bag.color;
     if (av.bag.style === 'zaino') {
-      bag = `<path d="M36 66 Q34 62 38 60 M64 66 Q66 62 62 60" stroke="${bg}" stroke-width="3.4" fill="none" stroke-linecap="round"/>
-             <rect x="24" y="70" width="11" height="26" rx="5" fill="${bg}" ${line}/>
-             <rect x="65" y="70" width="11" height="26" rx="5" fill="${bg}" ${line}/>`;
+      /* UNO ZAINO VISTO DA DAVANTI SONO GLI SPALLACCI, non due strisce
+         che spuntano ai fianchi: quelle sotto il braccio quasi non si
+         vedevano, e chi guardava la figura non capiva se lo zaino ci
+         fosse. Il sacco resta dietro -- si affaccia dai fianchi -- e le
+         due bretelle passano DAVANTI al busto, con la fibbia in mezzo.
+         Si disegnano dopo il busto e dopo le braccia: e' l'unico modo
+         perche' si vedano. */
+      bag = `<rect x="22" y="68" width="12" height="30" rx="5.5" fill="${shade(bg, -16)}" ${line}/>
+             <rect x="66" y="68" width="12" height="30" rx="5.5" fill="${shade(bg, -16)}" ${line}/>`;
+      bagSopra = `<path d="M43 67 L45 99 M57 67 L55 99" stroke="${bg}" stroke-width="5.4"
+                    stroke-linecap="round" fill="none"/>
+                  <path d="M43 67 L45 99 M57 67 L55 99" stroke="${shade(bg, -34)}" stroke-width="1.1"
+                    stroke-linecap="round" fill="none" opacity=".5"/>
+                  <rect x="43.6" y="82" width="12.8" height="4.6" rx="2.3" fill="${shade(bg, -30)}"/>`;
     } else if (av.bag.style === 'borsa') {
       bag = `<path d="M67 78 Q72 68 77 78" stroke="${bg}" stroke-width="2.4" fill="none"/>
              <rect x="64" y="78" width="17" height="18" rx="4" fill="${bg}" ${line}/>`;
@@ -995,7 +1007,7 @@
       ${legs}${shoes}${bottom}${scrittaSotto}
       ${neck}
       ${bag}
-      ${torso}${scrittaSopra}${arms}${armsSkin}${polsi}
+      ${torso}${scrittaSopra}${arms}${armsSkin}${polsi}${bagSopra}
       ${head}${face}${facial}
       ${hair}${glasses}${hat}
     </svg>`;

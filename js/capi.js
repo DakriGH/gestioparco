@@ -271,6 +271,15 @@
        attraverso -- il ponte e le due astine. */
     occhiali: (c) => ({
       evenodd: true,
+      /* LA FACCIA DIETRO. Da soli, due cerchi con le astine sono una
+         maschera di carnevale: sono gli occhiali di QUALCUNO, e la
+         faccia sotto e' quello che lo dice. Le lenti sono bucate
+         apposta -- si vede attraverso. */
+      sotto: `<circle cx="24" cy="24" r="15.5" fill="none" stroke="rgba(255,255,255,.94)" stroke-width="7"/>
+              <circle cx="24" cy="24" r="15.5" fill="none" stroke="rgba(18,18,26,.9)" stroke-width="2.6"/>
+              <circle cx="24" cy="24" r="15.5" fill="#F6CFA8"/>
+              <path d="M18.5 31.5 Q24 35 29.5 31.5" fill="none" stroke="#1B1B24"
+                stroke-width="1.8" stroke-linecap="round"/>`,
       /* LENTI PIU' LARGHE CHE ALTE e le astine che escono: tonde e
          senza astine sembravano un binocolo. */
       sagoma: 'M4 19.5 L9.5 21.5 L9.5 25 L4 23.5 Z M44 19.5 L38.5 21.5 L38.5 25 L44 23.5 Z' +
@@ -285,8 +294,13 @@
     /* DA SOLE: la stessa montatura, ma le lenti sono PIENE -- e' quello
        che si vede da lontano -- con un lampo di luce sopra. */
     sole: (c) => ({
-      /* la stessa montatura, ma le lenti sono PIENE -- e' quello che si
-         vede da lontano -- con un lampo di luce sopra */
+      /* stessa faccia, stessa montatura: qui pero' le lenti sono PIENE
+         -- e' quello che si vede da lontano -- con un lampo di luce */
+      sotto: `<circle cx="24" cy="24" r="15.5" fill="none" stroke="rgba(255,255,255,.94)" stroke-width="7"/>
+              <circle cx="24" cy="24" r="15.5" fill="none" stroke="rgba(18,18,26,.9)" stroke-width="2.6"/>
+              <circle cx="24" cy="24" r="15.5" fill="#F6CFA8"/>
+              <path d="M18.5 31.5 Q24 35 29.5 31.5" fill="none" stroke="#1B1B24"
+                stroke-width="1.8" stroke-linecap="round"/>`,
       sagoma: 'M4 19.5 L9.5 21.5 L9.5 25 L4 23.5 Z M44 19.5 L38.5 21.5 L38.5 25 L44 23.5 Z' +
         'M20.5 22.5 h7 v3 h-7 Z' +
         'M6 24 a8.5 6.8 0 1 1 17 0 a8.5 6.8 0 1 1 -17 0 Z' +

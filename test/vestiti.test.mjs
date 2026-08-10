@@ -706,6 +706,44 @@ gruppo('Gli accessori: cinque cose, e il colore solo a chi ce l\u2019ha');
     CAPI.accessorio('occhiali', '#22C55E', 44).indexOf('fill-rule="evenodd"') > 0);
   prova('quelli da sole no', CAPI.accessorio('sole', '#22C55E', 44).indexOf('fill-rule') < 0);
 
+  /* GLI OCCHIALI HANNO LA FACCIA DIETRO: da soli, due cerchi con le
+     astine sono una maschera di carnevale. */
+  ['occhiali', 'sole'].forEach(k => {
+    prova(k + ': ha la faccia dietro',
+      CAPI.accessorio(k, '#3A3D45', 44).indexOf('#F6CFA8') > 0);
+  });
+
+  /* LO ZAINO SI VEDE ADDOSSO: gli spallacci passano DAVANTI al busto.
+     Erano due strisce che spuntavano ai fianchi, sotto le braccia, e
+     guardando la figura non si capiva se lo zaino ci fosse. */
+  const conZaino = AV.build(AV.normalize({ role: 'altro', skin: '#F6CFA8',
+    bag: { style: 'zaino', color: '#E23D4B' } }));
+  const senza = AV.build(AV.normalize({ role: 'altro', skin: '#F6CFA8',
+    bag: { style: 'none', color: '#E23D4B' } }));
+  prova('lo zaino si vede sulla figura', nudo(conZaino) !== nudo(senza));
+  prova('e le bretelle stanno dopo le braccia', (() => {
+    const braccia = conZaino.lastIndexOf('<circle cx="71"');
+    const bretelle = conZaino.lastIndexOf('#E23D4B');
+    return braccia > 0 && bretelle > braccia;
+  })(), 'le bretelle finirebbero sotto il braccio');
+
+  /* QUELLO CHE L'ARCHETIPO HA DI SUO NON RISULTA SCELTO. Il nonno ha
+     gli occhiali perche' e' un nonno, non perche' qualcuno li ha visti:
+     il tasto resta spento e la scheda non li nomina. */
+  const nonno = { id: 'n1', role: 'nonno', name: '', note: '', tocco: false,
+    avatar: app.AV.normalize(app.AV.baseFor('nonno'), 'nonno') };
+  nonno.avatar.scelti = {};
+  uguale('l archetipo porta gli occhiali', nonno.avatar.glasses, 'vista');
+  const pann = app.armadioDi(nonno, 'accessori');
+  prova('ma nessun tasto e acceso', conta(pann, /class="capo acc-c on/g) === 0, pann.slice(0, 300));
+  prova('e la scheda non li nomina',
+    !app.AV.traits(nonno.avatar, 9, true).some(t => /occhial/i.test(t.txt)));
+  app.segna(nonno, 'occhiali');
+  const pann2 = app.armadioDi(nonno, 'accessori');
+  prova('scelti da te, il tasto si accende', conta(pann2, /class="capo acc-c on/g) === 1);
+  prova('e la scheda li dice',
+    app.AV.traits(nonno.avatar, 9, true).some(t => /occhial/i.test(t.txt)));
+
   /* e «togli tutti» rimette la persona com'era */
   const q = persona();
   q.avatar.glasses = 'sole';
