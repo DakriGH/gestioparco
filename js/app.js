@@ -2073,6 +2073,16 @@ function syncPeople(container, people, onChange) {
         }
       } else if (p && d.top !== undefined)   { p.avatar.top.style = d.top; segna(p, 'maglietta'); container.dataset.tav = ''; }
       else if (p && d.pat !== undefined)     { p.avatar.top.pattern = d.pat; segna(p, 'maglietta'); container.dataset.tav = ''; }
+      else if (p && d.patb !== undefined)    { p.avatar.pants.pattern = d.patb; segna(p, 'pantaloni'); container.dataset.tav = ''; }
+      /* IL TAGLIO E' UNA SCELTA A PARTE DAL COLORE: si segna da solo,
+         se no scegliendo il colore la scheda avrebbe raccontato anche
+         una lunghezza che nessuno ha guardato. La tavolozza resta
+         aperta: colore e taglio si scelgono di fila. */
+      else if (p && d.taglio !== undefined)  {
+        p.avatar.hair.style = d.taglio;
+        segna(p, 'taglio');
+        container.dataset.tav = 'capelli';
+      }
       else if (p && d.pants !== undefined)   { p.avatar.pants.style = d.pants; segna(p, 'pantaloni'); container.dataset.tav = ''; }
       else if (p && d.col !== undefined) {
         const parti = d.col.split('|');
@@ -2087,7 +2097,9 @@ function syncPeople(container, people, onChange) {
         const parti = d.acccol.split('|');
         accMetti(p.avatar, parti[0], parti[1]);
         segna(p, parti[0]);
-        container.dataset.tav = '';
+        /* dei capelli si scelgono colore E taglio: la tavolozza resta
+           aperta finche' non la si chiude col suo tasto */
+        container.dataset.tav = parti[0] === 'capelli' ? 'capelli' : '';
       } else if (p && d.accvia !== undefined) {
         accTogli(p.avatar, d.accvia, p.role);
         p.tocco = true;
@@ -2134,6 +2146,74 @@ function segna(p, parte) {
   p.tocco = true;
   p.avatar.scelti = p.avatar.scelti || {};
   p.avatar.scelti[parte] = true;
+  guardaSosia(p);
+}
+
+/* ══════════════════════════════════════════════════════════
+   «CE N'E' GIA' UNA VESTITA COSI'»
+   La descrizione serve a UNA cosa sola: riconoscere chi accompagna
+   all'uscita. Due mamme senza nome, tutte e due con la maglietta rossa
+   e i jeans, sono una descrizione che non riconosce piu' niente -- e
+   te ne accorgi tre ore dopo, col gruppo davanti e due schede uguali.
+   Il momento buono per dirlo e' ADESSO, mentre la si veste: basta
+   cambiare una cosa qualunque, o scrivere un nome.
+   Si confronta solo con chi e' DENTRO ADESSO: un sosia di tre settimane
+   fa non da' fastidio a nessuno.
+   ══════════════════════════════════════════════════════════ */
+const sosiaDetti = new Set();
+
+function firmaPersona(p) {
+  if (!p || !p.avatar) return '';
+  const t = AV.traits(p.avatar, 99, true).map(x => String(x.txt).toLowerCase()).sort().join('|');
+  return p.role + '#' + String(p.name || '').trim().toLowerCase() + '#' + t;
+}
+
+/* il gemello di questa persona fra quelli dentro, se c'e' */
+function sosiaDi(p) {
+  if (!p || !p.avatar) return null;
+  /* meno di due cose scelte non e' una descrizione: e' il vestito di
+     serie del ruolo, e con quello si somigliano tutti */
+  if (AV.traits(p.avatar, 99, true).length < 2) return null;
+  const firma = firmaPersona(p);
+  let trovato = null;
+  lista(entries).forEach(e => {
+    if (e.status !== 'active') return;
+    lista(e.people).forEach(q => {
+      if (!q || q.id === p.id || trovato) return;
+      if (firmaPersona(q) === firma) trovato = { entry: e, chi: q };
+    });
+  });
+  return trovato;
+}
+
+function guardaSosia(p) {
+  const gemello = sosiaDi(p);
+  if (!gemello) return;
+  const firma = firmaPersona(p);
+  /* una volta sola per descrizione: mentre si veste qualcuno si tocca
+     dieci volte, e dieci avvisi uguali sono un fastidio, non un aiuto */
+  if (sosiaDetti.has(firma)) return;
+  sosiaDetti.add(firma);
+  avvisaSosia(p, gemello.entry);
+}
+
+function avvisaSosia(p, entry) {
+  document.querySelectorAll('.avviso').forEach(x => x.remove());
+  const a = el('button', 'avviso giallo');
+  a.appendChild(el('span', 'av-em', '\u26a0\ufe0f'));
+  const t = el('span', 'av-tx');
+  t.appendChild(el('b', null, 'C\u2019\u00e8 gi\u00e0 qualcuno vestito cos\u00ec'));
+  t.appendChild(el('span', null, nomiDi(entry) + ' \u00b7 entrato alle ' + fmtTime(entry.startTime) +
+    ' \u00b7 cambia un pezzo o scrivi un nome, se no all\u2019uscita non li distingui'));
+  a.appendChild(t);
+  a.appendChild(el('span', 'av-vai', 'vedi \u203a'));
+  a.onclick = () => { a.remove(); vaiAllIngresso(entry); };
+  document.body.appendChild(a);
+  requestAnimationFrame(() => a.classList.add('su'));
+  setTimeout(() => {
+    a.classList.remove('su');
+    setTimeout(() => a.remove(), 320);
+  }, 7000);
 }
 
 /* L'ARMADIO: figura grande a sinistra, scelte a destra.
@@ -2224,6 +2304,16 @@ function armadioDi(p, tavolozzaAperta) {
       CAPI.accessorio(k, c || '#8A8AA0', 44) +
       '<span class="nm">' + ACC_NOME[k] + '</span></button>';
   }).join('');
+  /* LA FANTASIA ANCHE AL SOTTO. Il modello la teneva gia' (la figura
+     sapeva disegnare dei pantaloni a righe), ma non c'era modo di
+     sceglierla: una gonna a fiori si poteva vedere e non si poteva
+     dire. I due colori sono quelli del capo di sotto, non del sopra. */
+  const cs1 = av.pants.color, cs2 = AV.coloreFantasia(cs1);
+  const fantasieSotto = '<div class="fant" style="' + colonne(AV.PATTERNS.length) + '">' +
+    AV.PATTERNS.map(f => '<button class="' + (av.pants.pattern === f.key ? 'on' : '') +
+      '" data-patb="' + f.key + '" title="' + esc(f.n) + '">' +
+      pezzaFantasia(f.key, cs1, cs2) + '</button>').join('') + '</div>';
+
   const capiSotto = '<div class="sottoblocco' + (lungo ? ' spento-capi' : '') + '">' +
     /* le colonne sono i capi PIU' GLI ACCESSORI CHE CI SONO DAVVERO.
        Erano scritte "+ 4" da quando gli accessori erano quattro: tolti
@@ -2252,7 +2342,8 @@ function armadioDi(p, tavolozzaAperta) {
          per starci dentro tutto */
       tinte('top') + STACCO +
       '<span class="et">Sotto' + (lungo ? '<span class="spento-k">col vestito lungo non serve</span>' : '') +
-        '</span>' + capiSotto + STACCO_FORTE +
+        '</span>' + capiSotto + STACCO +
+      '<span class="et">Fantasia</span>' + fantasieSotto + STACCO_FORTE +
       tinte('pants') +
     '</div>' +
     /* la riga libera passa SOTTO a tutta larghezza: al banco e' quella
@@ -2263,9 +2354,48 @@ function armadioDi(p, tavolozzaAperta) {
     '</div>';
 }
 
-/* la tavolozza di un accessorio: le stesse quindici tinte, la ruota, e
-   il tasto per toglierlo */
+/* I SEI TAGLI CHE SI SCELGONO AL BANCO. Gli altri (codino, chignon,
+   treccine) restano addosso a chi ce li ha dal suo ruolo: qui c'e'
+   quello che serve a riconoscere qualcuno da lontano. */
+const TAGLI_CAPELLI = ['pelato', 'corti', 'medio', 'lunghi', 'ricci', 'riccimedi'];
+
+/* LA TAVOLOZZA DEI CAPELLI E' DIVERSA DALLE ALTRE: dei capelli non si
+   guarda solo il colore, si guarda anche la testa. Quattro tinte --
+   neri, marroni, biondi, e l'arcobaleno per tutto il resto -- e sotto i
+   sei tagli, ognuno disegnato sulla testa di QUESTA persona, col suo
+   colore addosso. */
+function tavolozzaCapelli(av) {
+  const ora = String(av.hair.color || '').toLowerCase();
+  const tinte = AV.HAIR_COLORS.slice(0, 3).map(c =>
+    '<button class="cap-c' + (ora === c.c.toLowerCase() ? ' on' : '') +
+    '" data-acccol="capelli|' + c.c + '" style="background:' + c.c +
+    '" title="' + esc(c.n[0]) + '"></button>').join('');
+  const tagli = TAGLI_CAPELLI.map(k => {
+    const it = AV.findIn(AV.HAIR, k);
+    /* la testa vera, con questo taglio: si sceglie guardando, non
+       leggendo */
+    const testa = AV.build(Object.assign({}, av, {
+      hair: { style: k, color: av.hair.color },
+      hat: { style: 'none', color: '#E23D4B' }
+    }), { zona: 'testa' });
+    return '<button class="cap-t' + (av.hair.style === k ? ' on' : '') +
+      '" data-taglio="' + k + '">' + testa +
+      '<span class="nm">' + esc(it.label) + '</span></button>';
+  }).join('');
+  return '<div class="volante capelli">' +
+    '<span class="tv-k">Colore</span>' +
+    '<div class="cap-tinte">' + tinte +
+      '<button class="ruota" data-accruota="capelli" title="scegli tu"></button>' +
+      '<span class="cap-arc">Arcobaleno</span></div>' +
+    '<span class="tv-k">Taglio</span>' +
+    '<div class="cap-tagli">' + tagli + '</div>' +
+    '<button class="via" data-accvia="capelli">togli</button></div>';
+}
+
+/* la tavolozza di un accessorio: le stesse tinte, la ruota, e il tasto
+   per toglierlo */
 function tavolozza(av, acc) {
+  if (acc === 'capelli') return tavolozzaCapelli(av);
   const ora = ACC_DOVE[acc](av);
   return '<div class="volante">' +
     AV.COLORS.map(c => '<button data-acccol="' + acc + '|' + c.c + '" style="background:' + c.c + '"' +
@@ -3174,6 +3304,10 @@ function openCustomizer(person, onDone) {
 /* ---------- salvataggio ingresso ---------- */
 /* ---------- salvataggio ingresso ---------- */
 function commitEntry() {
+  /* gruppo nuovo, avvisi nuovi: i sosia gia’ detti valgono per il
+     gruppo che si stava vestendo, non per sempre -- se no il terzo
+     gemello della giornata passava senza che nessuno dicesse niente */
+  sosiaDetti.clear();
   if (!draft.braceletCustom) {
     const slot = braceletFor(draft.startTime);
     draft.braceletColor = slot ? slot.color : null;
@@ -4460,14 +4594,24 @@ function apriRuota(tasto, coloreOra, scegli) {
   anteprima.appendChild(nome);
   box.appendChild(anteprima);
 
+  /* LA MISURA DEL TASTO SI PRENDE ADESSO, prima di toccare qualunque
+     cosa. Il primo colore fa ridisegnare la fila delle persone, e il
+     tasto che ha aperto la ruota se ne va insieme al resto: da li' in
+     poi misurarlo dava zero, e la ruota si piantava nell'angolo in alto
+     a sinistra dello schermo invece di aprirsi sotto il dito. */
+  const ancora = tasto.getBoundingClientRect();
+
   let scelto = coloreOra || '#8A8AA0';
-  const metti = (colore) => {
+  /* `zitto` = dipingi l'anteprima e basta. Aprire la ruota non e' una
+     scelta: chiamare `scegli` subito voleva dire cambiare il colore del
+     capo (e ridisegnare mezzo pannello) al solo tocco del tasto. */
+  const metti = (colore, zitto) => {
     scelto = colore;
     pastiglia.style.background = colore;
     nome.textContent = (typeof AV !== 'undefined' && AV.colorName) ? AV.colorName(colore, 0) : colore;
-    scegli(colore);
+    if (!zitto) scegli(colore);
   };
-  metti(scelto);
+  metti(scelto, true);
 
   const prendi = (ev) => {
     const r = cerchio.getBoundingClientRect();
@@ -4491,7 +4635,7 @@ function apriRuota(tasto, coloreOra, scegli) {
   cerchio.addEventListener('pointerup', () => { giu = false; });
 
   document.body.appendChild(box);
-  alzaMenu(box, tasto);
+  alzaMenuDove(box, ancora);
   chiudiFuoriDel(box, tasto);
 }
 
@@ -4517,12 +4661,18 @@ function chiudiFuoriDel(chi, tasto) {
    Si rimette in riga se lo schermo e' stretto, e se sotto non ci sta
    si apre verso l'alto. */
 function alzaMenu(men, tasto) {
+  alzaMenuDove(men, tasto.getBoundingClientRect());
+}
+
+/* come alzaMenu, ma col posto del tasto GIA' misurato: serve a chi il
+   tasto se lo vede sparire sotto le dita (la ruota dei colori ridisegna
+   la fila delle persone al primo tocco) */
+function alzaMenuDove(men, t) {
   men.style.position = 'fixed';
   men.style.right = 'auto';
   men.style.top = '0px';
   men.style.left = '0px';
   /* si misura DOPO averlo messo a video, se no e' largo zero */
-  const t = tasto.getBoundingClientRect();
   const m = men.getBoundingClientRect();
   const margine = 8;
   let x = t.right - m.width;                       // allineato a destra col tasto

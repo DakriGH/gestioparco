@@ -2074,6 +2074,12 @@ main {
   opacity: 0;
 }
 .avviso.su { transform: translate(-50%, 0); opacity: 1; }
+/* GIALLO, non rosso: il rosso in quest'app vuol dire "tempo scaduto",
+   e un sosia non e' una scadenza -- e' una cosa da sistemare adesso,
+   mentre si veste la persona, e fra dieci secondi non serve piu'. */
+.avviso.giallo { background: linear-gradient(180deg, #E8B44C, #C9922B); color: #221A06; }
+.avviso.giallo .av-tx span { color: rgba(34, 26, 6, .82); }
+.avviso.giallo .av-vai { background: rgba(0, 0, 0, .16); color: #221A06; }
 .avviso:active { filter: brightness(.94); }
 .avviso .av-em { font-size: 24px; line-height: 1; }
 .avviso .av-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
@@ -3446,7 +3452,14 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
    erano tutte in fondo si sbagliava capo un tocco su tre.
    In fondo, a tutta larghezza, la riga libera: al banco e' quella che
    si usa di corsa, quindi e' la piu' grande e la piu' visibile. */
-.armadio { display: grid; grid-template-columns: 112px 1fr; gap: 4px 9px;
+/* LA FIGURA SI STRINGE DI DODICI PIXEL. Le tinte sono passate da
+   quindici a diciassette (azzurro chiaro e blu scuro), e diciotto
+   pastiglie in fila su una colonna stretta sarebbero diventate
+   francobolli. La figura quei pixel ce li aveva di troppo: il
+   ritaglio "figura" e' 72 unita' larghe su 150 alte, quindi in una
+   colonna piu' stretta la persona resta grande uguale -- cala
+   l'altezza di ventitre pixel, che nel riquadro c'erano in aria. */
+.armadio { display: grid; grid-template-columns: 100px 1fr; gap: 4px 9px;
   margin-top: 5px; align-items: stretch; }
 .armadio .largo { grid-column: span 2; display: flex; flex-direction: column; gap: 4px; }
 .armadio .figura { background: rgba(0,0,0,.24); border-radius: 14px; display: flex;
@@ -3455,7 +3468,7 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
 /* 99x206: l'inquadratura "figura" e' 72x150, quindi alla stessa
    altezza di prima e' larga trentotto pixel in meno -- che vanno tutti
    ai capi qui accanto */
-.armadio .figura svg { display: block; width: 99px; height: 206px; }
+.armadio .figura svg { display: block; width: 88px; height: 183px; }
 /* ══════════════════════════════════════════════════════════
    GLI STACCHI, E COME SI SPARTISCONO L'ARIA
    La colonna dei capi non ha piu' un gap uguale per tutti: l'etichetta
@@ -3660,6 +3673,30 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
 .armadio .volante .ruota { height: 32px; border-radius: 8px; }
 .armadio .volante .via { grid-column: span 8; border: none; background: rgba(255,255,255,.1);
   color: #E9E9F2; border-radius: 9px; height: 30px; font: inherit; font-size: 12px; font-weight: 700; }
+
+/* ══════════════════════════════════════════════════════════
+   LA TAVOLOZZA DEI CAPELLI: colore E taglio.
+   Degli altri accessori si guarda solo il colore; dei capelli si
+   guarda anche la testa -- «quella coi ricci», «il pelato» -- e
+   scegliere il taglio dall'editor grande, tre schermate piu' in la',
+   voleva dire non sceglierlo mai. Ogni taglio e' disegnato sulla testa
+   di QUELLA persona, col suo colore addosso: si sceglie guardando.
+   ══════════════════════════════════════════════════════════ */
+.armadio .volante.capelli { display: flex; flex-direction: column; gap: 5px;
+  width: min(348px, 80vw); }
+.armadio .volante .tv-k { font-size: 9px; font-weight: 800; letter-spacing: .08em;
+  text-transform: uppercase; color: rgba(255,255,255,.55); }
+.armadio .volante .cap-tinte { display: flex; align-items: center; gap: 6px; }
+.armadio .volante .cap-tinte > button { flex: 0 0 auto; width: 38px; height: 32px; }
+.armadio .volante .cap-arc { font-size: 10.5px; color: rgba(255,255,255,.5); }
+.armadio .volante .cap-tagli { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
+.armadio .volante .cap-t { height: auto; background: rgba(0,0,0,.3); border-radius: 10px;
+  padding: 2px 1px 3px; display: flex; flex-direction: column; align-items: center; gap: 1px;
+  cursor: pointer; color: #E9E9F2; font: inherit; }
+.armadio .volante .cap-t svg { width: 100%; height: 36px; display: block; }
+.armadio .volante .cap-t .nm { font-size: 8.5px; font-weight: 700; line-height: 1.05;
+  color: rgba(255,255,255,.72); text-align: center; }
+.armadio .volante .cap-t.on { border-color: #fff; background: rgba(255,255,255,.14); }
 
 /* TRE SECONDI DI BATTITO.
    Chi tocca la figura sulla scheda sta cercando "Chi accompagna", che

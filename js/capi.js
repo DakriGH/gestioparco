@@ -107,15 +107,18 @@
       };
     },
 
-    gilet: (c) => ({
-      sagoma: 'M18 8 L21.5 7.5 L24 15 L26.5 7.5 L30 8 L32 17 L32.5 36 L24 39.5 L15.5 36 L16 17 Z',
-      ombra: 'M16 17 L18 8 L21.5 7.5 L19.5 16 L18.5 35 L15.5 36 Z',
-      segni: `<path d="M21.5 7.5 L24 15 L26.5 7.5 L28.4 8.4 L24 18.5 L19.6 8.4 Z" fill="${sc(c, 30)}" stroke="${sc(c, -30)}" stroke-width="0.7"/>
-              <path d="M24 18.5 L24 38.6" stroke="${sc(c, -38)}" stroke-width="1.3"/>
-              <circle cx="24" cy="23" r="1.05" fill="${sc(c, -54)}"/>
-              <circle cx="24" cy="28.5" r="1.05" fill="${sc(c, -54)}"/>
-              <circle cx="24" cy="34" r="1.05" fill="${sc(c, -54)}"/>
-              <path d="M17 30 L20.5 30 M31 30 L27.5 30" stroke="${sc(c, -32)}" stroke-width="1.1"/>`
+    /* IL TOP: corto, scollo dritto, spalline sottili. Dalla canotta si
+       distingue per tre cose che si vedono da lontano -- FINISCE PIU'
+       SU (sotto resta scoperto un dito di vita), il bordo di sopra e'
+       una riga dritta e non un ovale, e le spalline sono due fili
+       invece di due fasce. */
+    top: (c) => ({
+      sagoma: 'M16.6 13 L31.4 13 L32.6 30.5 Q24 32.6 15.4 30.5 Z',
+      ombra: 'M16.6 13 L20.6 13 L19.4 31.4 L15.4 30.5 Z',
+      segni: `<path d="M19.4 13 L20.6 7.6 M28.6 13 L27.4 7.6" stroke="${sc(c, -12)}" stroke-width="1.7" stroke-linecap="round"/>
+              <path d="M16.6 14.8 L31.4 14.8" stroke="${sc(c, -34)}" stroke-width="1.4"/>
+              <path d="M15.8 29.4 Q24 31.4 32.2 29.4" fill="none" stroke="${sc(c, -28)}" stroke-width="1.4"/>
+              <path d="M20 18 Q24 20 28 18" fill="none" stroke="${sc(c, -20)}" stroke-width="0.9" opacity=".6"/>`
     }),
 
     /* LUNGO: stretto, cade dritto e ARRIVA IN FONDO all'icona, con le
@@ -196,23 +199,30 @@
     })
   };
 
-  /* La cucitura color miele, i rivetti e le cinque tasche: sono LORO a
-     dire "jeans", non il blu — uno può averli neri e restano jeans. */
+  /* La cucitura, i rivetti e le cinque tasche: sono LORO a dire
+     "jeans", non il blu — uno può averli neri e restano jeans.
+     Il filo e' in tinta, molto piu' scuro del capo (AV.filoDenim): il
+     giallo miele di prima era l'unica cosa che si vedeva addosso a un
+     paio di jeans verdi o rossi. */
   function denim(c, giu, corti) {
-    const f = '#E3B04B';
+    const f = (global.AV && AV.filoDenim) ? AV.filoDenim(c) : sc(c, -58);
+    /* IL PUNTO E' GROSSO. Col filo giallo bastava un capello di
+       spessore per vedersi; in tinta col capo no, e a quaranta pixel i
+       jeans diventavano dei pantaloni qualunque -- che e' esattamente
+       la differenza che l'icona deve dire. */
     return `<path d="M14 12 L34 12" stroke="${sc(c, -46)}" stroke-width="2.4"/>
-            <path d="M14 10.1 L34 10.1 M14 13.9 L34 13.9" stroke="${f}" stroke-width="0.7" opacity=".9"/>
+            <path d="M14 9.9 L34 9.9 M14 14.1 L34 14.1" stroke="${f}" stroke-width="1.15" opacity="1"/>
             <path d="M17 8.4 L17 12 M24 8.4 L24 12 M31 8.4 L31 12" stroke="${sc(c, -40)}" stroke-width="1.6"/>
-            <path d="M16.6 16 Q20.6 16 22.2 20" fill="none" stroke="${f}" stroke-width="0.85" opacity=".9"/>
-            <path d="M31.4 16 Q27.4 16 25.8 20" fill="none" stroke="${f}" stroke-width="0.85" opacity=".9"/>
-            <circle cx="16.2" cy="15.1" r="0.8" fill="${f}"/>
-            <circle cx="31.8" cy="15.1" r="0.8" fill="${f}"/>
+            <path d="M16.6 16 Q20.6 16 22.2 20" fill="none" stroke="${f}" stroke-width="1.25" opacity="1"/>
+            <path d="M31.4 16 Q27.4 16 25.8 20" fill="none" stroke="${f}" stroke-width="1.25" opacity="1"/>
+            <circle cx="16.2" cy="15.1" r="1" fill="${f}"/>
+            <circle cx="31.8" cy="15.1" r="1" fill="${f}"/>
             <path d="M24 14 L24 ${corti ? 19 : 22}" stroke="${sc(c, -32)}" stroke-width="0.9" opacity=".6"/>` +
       (corti
         ? `<path d="M15 25 L22 25 M26 25 L33 25" stroke="${sc(c, -38)}" stroke-width="2.6"/>
-           <path d="M15 23.6 L22 23.6 M26 23.6 L33 23.6" stroke="${f}" stroke-width="0.7" opacity=".8"/>`
-        : `<path d="M19 16 L18.4 ${giu - 2} M29 16 L29.6 ${giu - 2}" stroke="${f}" stroke-width="0.65" opacity=".55"/>
-           <path d="M15.4 ${giu - 1.6} L22 ${giu - 1.6} M26 ${giu - 1.6} L32.6 ${giu - 1.6}" stroke="${f}" stroke-width="0.7" opacity=".8"/>`);
+           <path d="M15 23.3 L22 23.3 M26 23.3 L33 23.3" stroke="${f}" stroke-width="1.15" opacity="1"/>`
+        : `<path d="M19 16 L18.4 ${giu - 2} M29 16 L29.6 ${giu - 2}" stroke="${f}" stroke-width="1" opacity=".8"/>
+           <path d="M15.4 ${giu - 1.6} L22 ${giu - 1.6} M26 ${giu - 1.6} L32.6 ${giu - 1.6}" stroke="${f}" stroke-width="1.15" opacity="1"/>`);
   }
 
   /* ---------- i quattro accessori ----------

@@ -40,6 +40,13 @@ function prova(t, cond, extra) {
 /* ---------- attrezzi ---------- */
 const VERDE = '#22C55E';
 
+/* due cose che devono essere IDENTICHE: si scrive quello che si e'
+   avuto, se no un numero sbagliato non dice da dove arriva */
+function uguale(t, avuto, atteso) {
+  const x = JSON.stringify(avuto), y = JSON.stringify(atteso);
+  return prova(t, x === y, x === y ? '' : 'avuto  ' + x + '  atteso ' + y);
+}
+
 function figura(top, sotto, colore) {
   const av = AV.normalize({
     role: 'altro',
@@ -140,7 +147,6 @@ gruppo('I bottoni contati: quelli dell’icona e quelli addosso');
 const BOTTONI = [
   { capo: 'polo', scarto: -52, quanti: 2 },
   { capo: 'camicia', scarto: -54, quanti: 3 },
-  { capo: 'gilet', scarto: -54, quanti: 3 },
   { capo: 'giacca', scarto: -54, quanti: 2 },
   { capo: 'felpa', scarto: -50, quanti: 2 }    // occhielli dei laccetti
 ];
@@ -162,7 +168,8 @@ for (const t of AV.TOP) {
   const svgI = icona(t.key);
   const svgF = figura(t.key, 'pantaloni');
   const tinte = [...new Set(svgI.match(/#[0-9A-Fa-f]{6}/g) || [])]
-    .filter(c => c.toUpperCase() !== '#E3B04B');       // il filo dei jeans non c'entra
+    ;   /* il filo dei jeans e' in tinta col capo: non c'e' piu' niente
+           da escludere, era l'unico colore che non veniva dal capo */
   const mancanti = tinte.filter(c => svgF.toUpperCase().indexOf(c.toUpperCase()) < 0);
   prova(t.key + ': nessuna tinta persa per strada', mancanti.length === 0, 'mancano ' + mancanti.join(' '));
 }
@@ -391,6 +398,163 @@ gruppo('Gli accessori: si mettono, si tolgono, e si vedono addosso');
     conta(aperta, /data-acccol="/g) === AV.COLORS.length &&
     aperta.indexOf('data-accruota="scarpe"') >= 0 &&
     aperta.indexOf('data-accvia="scarpe"') >= 0);
+}
+
+gruppo('Il Top ha preso il posto del Gilet');
+{
+  /* Un top e una canotta non sono lo stesso capo: il top FINISCE PIU'
+     SU -- sotto si vede un dito di vita -- e le spalline sono due fili
+     invece di due fasce. */
+  prova('il gilet non e piu nel guardaroba', !AV.TOP.some(t => t.key === 'gilet'));
+  prova('e al suo posto c e il top', AV.TOP.some(t => t.key === 'top'));
+  prova('top e canotta non sono lo stesso disegno',
+    nudo(figura('top', 'pantaloni')) !== nudo(figura('canotta', 'pantaloni')));
+  const pelle = AV.normalize({ role: 'altro' }).skin;
+  const quanta = (svg) => (svg.match(new RegExp('fill="' + pelle + '"', 'gi')) || []).length;
+  prova('sotto il top si vede la vita scoperta',
+    quanta(figura('top', 'pantaloni')) > quanta(figura('canotta', 'pantaloni')),
+    'top ' + quanta(figura('top', 'pantaloni')) + ' vs canotta ' + quanta(figura('canotta', 'pantaloni')));
+  prova('l icona del top c e', icona('top').slice(0, 4) === '<svg');
+
+  /* chi ce l'aveva addosso ieri se lo ritrova, non torna in maglietta */
+  uguale('il gilet salvato diventa top',
+    AV.normalize({ role: 'altro', top: { style: 'gilet', color: '#E23D4B' } }).top.style, 'top');
+}
+
+gruppo('I capelli: quattro colori, sei tagli, e la descrizione onesta');
+{
+  uguale('i colori dei capelli', AV.HAIR_COLORS.map(c => c.n[0]),
+    ['nero', 'marrone', 'biondo', 'grigio']);
+  ['pelato', 'corti', 'medio', 'lunghi', 'ricci', 'riccimedi'].forEach(k => {
+    prova('il taglio ' + k + ' c e', AV.HAIR.some(h => h.key === k));
+  });
+  const testa = (stile) => nudo(AV.build(AV.normalize({
+    role: 'altro', hair: { style: stile, color: '#1E1712' }
+  })));
+  prova('ricci lunghi e ricci medi sono due teste diverse', testa('ricci') !== testa('riccimedi'));
+
+  /* LA DESCRIZIONE DICE SOLO QUELLO CHE HAI SCELTO.
+     Il taglio ce l'hanno tutti dal ruolo: scegliendo solo il colore
+     usciva "Capelli LUNGHI neri" su una persona di cui nessuno aveva
+     guardato la lunghezza -- e all'uscita si cercava una chioma lunga
+     su una testa rasata. */
+  const detto = (av) => (app.AV.traits(av, 9, true)
+    .find(t => /capell|pelat/i.test(t.txt)) || {}).txt || '';
+
+  const p = persona();
+  p.avatar.hair = { style: 'lunghi', color: '#1E1712' };
+  p.avatar.scelti = {};
+  prova('senza scelte i capelli non si dicono', detto(p.avatar) === '');
+  app.segna(p, 'capelli');
+  uguale('scelto il colore, si dice solo quello', detto(p.avatar), 'Capelli neri');
+  app.segna(p, 'taglio');
+  uguale('scelto anche il taglio, si dicono tutti e due', detto(p.avatar), 'Capelli lunghi neri');
+
+  const q = persona();
+  q.avatar.hair = { style: 'ricci', color: '#D8A657' };
+  q.avatar.scelti = {};
+  app.segna(q, 'taglio');
+  uguale('solo il taglio, niente colore', detto(q.avatar), 'Capelli ricci lunghi');
+
+  const r = persona();
+  r.avatar.hair = { style: 'pelato', color: '#1E1712' };
+  r.avatar.scelti = {};
+  app.segna(r, 'capelli');
+  prova('il pelato non si annuncia se hai scelto solo il colore', !/pelato/i.test(detto(r.avatar)),
+    detto(r.avatar));
+  app.segna(r, 'taglio');
+  prova('scelto il taglio, il pelato si dice', /pelato/i.test(detto(r.avatar)), detto(r.avatar));
+}
+
+gruppo('La tavolozza dei capelli: colori e tagli, disegnati');
+{
+  const p = persona();
+  const aperta = app.armadioDi(p, 'capelli');
+  prova('si apre la sua, non quella normale', aperta.indexOf('volante capelli') > 0);
+  uguale('tre tinte in fila', conta(aperta, /data-acccol="capelli\|/g), 3);
+  prova('piu la ruota, che e l arcobaleno',
+    aperta.indexOf('data-accruota="capelli"') > 0 && aperta.indexOf('Arcobaleno') > 0);
+  uguale('i sei tagli', conta(aperta, /data-taglio="/g), 6);
+  prova('ogni taglio e disegnato sulla testa vera', conta(aperta, /<svg/g) >= 6);
+  prova('e si puo togliere', aperta.indexOf('data-accvia="capelli"') > 0);
+}
+
+gruppo('La fantasia anche ai capi di sotto');
+{
+  const p = persona();
+  const h = app.armadioDi(p, '');
+  uguale('le fantasie del sopra', conta(h, /data-pat="/g), AV.PATTERNS.length);
+  uguale('e quelle del sotto', conta(h, /data-patb="/g), AV.PATTERNS.length);
+
+  const con = (pat) => nudo(AV.build(AV.normalize({
+    role: 'altro', pants: { style: 'pantaloni', color: '#E23D4B', pattern: pat }
+  })));
+  prova('i pantaloni a pois non sono quelli tinta unita', con('solid') !== con('dots'));
+
+  /* e si legge nella descrizione */
+  const q = persona('maglietta', 'gonna', '#E23D4B');
+  q.avatar.pants.color = '#22C55E';
+  q.avatar.pants.pattern = 'fiori';
+  q.avatar.scelti = {};
+  app.segna(q, 'pantaloni');
+  const txt = (app.AV.traits(q.avatar, 9, true).find(t => /gonna/i.test(t.txt)) || {}).txt || '';
+  prova('la gonna a fiori si legge', /fiori/i.test(txt), txt);
+}
+
+gruppo('Il filo dei jeans e in tinta, non giallo');
+{
+  prova('niente piu giallo miele', icona('jeans').toUpperCase().indexOf('#E3B04B') < 0);
+  prova('sul jeans normale il filo e piu scuro del capo',
+    parseInt(AV.filoDenim('#3B5C88').slice(1, 3), 16) < 0x3B);
+  prova('su un capo quasi nero si schiarisce, se no la cucitura sparisce',
+    parseInt(AV.filoDenim('#12121A').slice(1, 3), 16) > 0x12);
+  const filo = AV.filoDenim(VERDE);
+  prova('e icona e figura usano lo stesso filo',
+    icona('jeans').indexOf(filo) > 0 && figura('canotta', 'jeans').indexOf(filo) > 0, filo);
+}
+
+gruppo('Due persone vestite uguali si notano subito');
+{
+  /* La descrizione serve a UNA cosa: riconoscere chi accompagna
+     all'uscita. Due mamme senza nome, tutte e due con la camicia rossa
+     e i jeans, sono una descrizione che non riconosce piu' niente. */
+  const veroAvviso = app.mondo.avvisaSosia;
+  app.mondo.avvisaSosia = () => {};        /* qui lo schermo non c'e' */
+  const prima = app.entries;
+  const veste = (nome) => {
+    const x = persona('camicia', 'jeans', '#E23D4B');
+    x.id = 'p' + Math.round(Math.random() * 1e6);
+    x.name = nome || '';
+    x.avatar.scelti = {};
+    app.segna(x, 'maglietta');
+    app.segna(x, 'pantaloni');
+    return x;
+  };
+  const primo = veste();
+  const dentro = (stato) => { app.entries = [{ id: 'e1', status: stato, startTime: Date.now(),
+    children: 2, people: [primo], barItems: [], paidLines: {}, paidAmt: {} }]; };
+
+  dentro('active');
+  const secondo = veste();
+  prova('il sosia si trova', !!app.sosiaDi(secondo));
+
+  secondo.name = 'Giulia';
+  prova('con un nome diverso non e piu un sosia', !app.sosiaDi(secondo));
+
+  secondo.name = '';
+  secondo.avatar.top.color = '#22C55E';
+  prova('e nemmeno con la maglietta di un altro colore', !app.sosiaDi(secondo));
+
+  dentro('closed');
+  prova('un sosia gia uscito non disturba', !app.sosiaDi(veste()));
+
+  dentro('active');
+  const vuoto = persona();
+  vuoto.avatar.scelti = {};
+  prova('senza scelte niente avviso', !app.sosiaDi(vuoto));
+
+  app.entries = prima;
+  app.mondo.avvisaSosia = veroAvviso;
 }
 
 gruppo('I dati di prima continuano a funzionare');

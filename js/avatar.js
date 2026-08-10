@@ -26,9 +26,13 @@
     { c: '#FBBF24', n: ['giallo', 'gialla', 'gialli', 'gialle'] },
     { c: '#22C55E', n: ['verde', 'verde', 'verdi', 'verdi'] },
     { c: '#4F6B3A', n: ['verde militare', 'verde militare', 'verdi militare', 'verdi militare'] },
+    { c: '#7DD3FC', n: ['azzurro chiaro', 'azzurra chiara', 'azzurri chiari', 'azzurre chiare'] },
     { c: '#0EA5E9', n: ['azzurro', 'azzurra', 'azzurri', 'azzurre'] },
     { c: '#3B5C88', n: ['jeans', 'jeans', 'jeans', 'jeans'] },
     { c: '#2547C4', n: ['blu', 'blu', 'blu', 'blu'] },
+    /* blu resta invariabile anche accompagnato: "maglietta blu scuro",
+       come si dice al banco */
+    { c: '#16265E', n: ['blu scuro', 'blu scuro', 'blu scuro', 'blu scuro'] },
     { c: '#8B5CF6', n: ['viola', 'viola', 'viola', 'viola'] },
     { c: '#EC4899', n: ['rosa', 'rosa', 'rosa', 'rosa'] },
     { c: '#E3D2B4', n: ['beige', 'beige', 'beige', 'beige'] },
@@ -38,18 +42,21 @@
     { c: '#1F2430', n: ['nero', 'nera', 'neri', 'nere'] }
   ];
 
-  /* TRE colori, non otto. Al banco una persona si guarda per due
-     secondi: fra "castano" e "castano chiaro" non sceglie nessuno, e
-     otto pastiglie rallentavano senza aggiungere niente. Scuri, biondi,
-     grigi: quello che si nota davvero da lontano.
+  /* QUATTRO colori, non otto. Al banco una persona si guarda per due
+     secondi: fra "castano" e "castano chiaro" non sceglie nessuno.
+     Neri, marroni, biondi -- quello che si dice davvero guardando
+     qualcuno -- piu' il grigio dei nonni, che nel guardaroba non ha una
+     pastiglia sua (ce l'hanno gia' addosso) ma serve per chiamarlo col
+     suo nome. Qualunque altra tinta si prende dalla ruota.
      I colori vecchi non si perdono — colorName() prende il più vicino,
      quindi un avatar "biondo platino" di ieri resta biondo. */
   const HAIR_COLORS = [
-    { c: '#2A1E16', n: ['scuro', 'scura', 'scuri', 'scure'] },
+    { c: '#1E1712', n: ['nero', 'nera', 'neri', 'nere'] },
+    { c: '#6B4226', n: ['marrone', 'marrone', 'marroni', 'marroni'] },
     { c: '#D8A657', n: ['biondo', 'bionda', 'biondi', 'bionde'] },
     { c: '#C9CDD3', n: ['grigio', 'grigia', 'grigi', 'grigie'] }
   ];
-  const SCURI = HAIR_COLORS[0].c, BIONDI = HAIR_COLORS[1].c, GRIGI = HAIR_COLORS[2].c;
+  const SCURI = HAIR_COLORS[0].c, BIONDI = HAIR_COLORS[2].c, GRIGI = HAIR_COLORS[3].c;
 
   const SKINS = ['#FFE0C0', '#F6CFA8', '#E8B98A', '#D19A68', '#B67A4C', '#8F5A33', '#6B4226', '#4A2C18'];
 
@@ -77,7 +84,8 @@
     { key: 'corti', label: 'Corti', em: '💇', g: 2, noun: 'Capelli corti' },
     { key: 'medio', label: 'Medi', em: '💇‍♂️', g: 2, noun: 'Capelli medi' },
     { key: 'lunghi', label: 'Lunghi', em: '💇‍♀️', g: 2, noun: 'Capelli lunghi' },
-    { key: 'ricci', label: 'Ricci', em: '🧑‍🦱', g: 2, noun: 'Capelli ricci' },
+    { key: 'ricci', label: 'Ricci lunghi', em: '🧑‍🦱', g: 2, noun: 'Capelli ricci lunghi' },
+    { key: 'riccimedi', label: 'Ricci medi', em: '🧑‍🦱', g: 2, noun: 'Capelli ricci medi' },
     { key: 'codino', label: 'Codino', em: '🎀', g: 2, noun: 'Codino' },
     { key: 'chignon', label: 'Chignon', em: '👩‍🦰', g: 2, noun: 'Chignon' },
     { key: 'treccine', label: 'Treccine', em: '🧶', g: 2, noun: 'Treccine' }
@@ -116,7 +124,7 @@
     { key: 'canotta', label: 'Canotta', em: '🎽', g: 1, noun: 'Canotta', maniche: 'nessuna' },
     { key: 'felpa', label: 'Felpa', em: '🧥', g: 1, noun: 'Felpa', maniche: 'lunghe' },
     { key: 'giacca', label: 'Giacca', em: '🧳', g: 1, noun: 'Giacca', maniche: 'lunghe' },
-    { key: 'gilet', label: 'Gilet', em: '🦺', g: 0, noun: 'Gilet', maniche: 'nessuna' },
+    { key: 'top', label: 'Top', em: '👚', g: 0, noun: 'Top', maniche: 'nessuna' },
     { key: 'vestito', label: 'Vestito', em: '👗', g: 0, noun: 'Vestito', maniche: 'nessuna' },
     /* l'unico che copre le gambe fino ai piedi: sotto non ci va niente */
     { key: 'vestitolungo', label: 'Vestito lungo', em: '👚', g: 0, noun: 'Vestito lungo', full: true, maniche: 'nessuna' }
@@ -376,6 +384,9 @@
     // stili non più esistenti → ripiego sensato
     const OLD_HAIR = { boccoli: 'ricci', pelata: 'pelato' };
     if (OLD_HAIR[out.hair.style]) out.hair.style = OLD_HAIR[out.hair.style];
+    /* chi ha un gilet addosso da ieri si ritrova il top: e' il capo che
+       ha preso il suo posto, e sparire lo avrebbe rimesso in maglietta */
+    if (out.top.style === 'gilet') out.top.style = 'top';
     if (!HAIR.some(h => h.key === out.hair.style)) out.hair.style = 'corti';
     /* i due capi tolti diventano quello a cui somigliavano: chi e' gia'
        registrato col maglione non si ritrova in maglietta a gennaio */
@@ -416,6 +427,20 @@
     const f = (v) => Math.max(0, Math.min(255, Math.round(v + amt)));
     return '#' + [f((n >> 16) & 255), f((n >> 8) & 255), f(n & 255)]
       .map(v => v.toString(16).padStart(2, '0')).join('');
+  }
+
+  /* IL FILO DELLE CUCITURE DEI JEANS.
+     Era giallo miele -- come sui jeans da negozio -- ma addosso a un
+     capo di un altro colore quel giallo era l'unica cosa che si
+     vedeva, e i jeans verdi sembravano cuciti d'oro. Adesso e' il
+     colore del capo molto piu' scuro, come le cuciture in tinta.
+     Su un capo gia' scurissimo si schiarisce invece di scurire: una
+     cucitura nera su stoffa nera non e' una cucitura, e' niente. */
+  function filoDenim(hex) {
+    const c = toRgb(hex);
+    if (!c) return shade(hex, -58);
+    const lum = (c.r * 299 + c.g * 587 + c.b * 114) / 1000;
+    return lum < 72 ? shade(hex, 44) : shade(hex, -58);
   }
 
   /* Il colore della fantasia NON si sceglie: è quello del capo, schiarito
@@ -532,6 +557,13 @@
     if (hairStyle === 'lunghi') {
       hairBack = `<path d="M27 34 C23 56 25 78 30 88 L70 88 C75 78 77 56 73 34 Z" fill="${shade(hairCol, -14)}"/>`;
     } else if (hairStyle === 'ricci') {
+      /* RICCI LUNGHI: la cascata di boccoli scende fin sotto le spalle.
+         Sono due tagli diversi, e la differenza si vede di spalle. */
+      hairBack = `<circle cx="29" cy="46" r="9" fill="${shade(hairCol, -12)}"/><circle cx="71" cy="46" r="9" fill="${shade(hairCol, -12)}"/>
+                  <circle cx="27" cy="60" r="8.5" fill="${shade(hairCol, -16)}"/><circle cx="73" cy="60" r="8.5" fill="${shade(hairCol, -16)}"/>
+                  <circle cx="31" cy="72" r="7.5" fill="${shade(hairCol, -20)}"/><circle cx="69" cy="72" r="7.5" fill="${shade(hairCol, -20)}"/>`;
+    } else if (hairStyle === 'riccimedi') {
+      /* RICCI MEDI: i boccoli si fermano all'altezza delle orecchie */
       hairBack = `<circle cx="30" cy="46" r="9" fill="${shade(hairCol, -12)}"/><circle cx="70" cy="46" r="9" fill="${shade(hairCol, -12)}"/>`;
     } else if (hairStyle === 'treccine') {
       hairBack = `<path d="M28 36 L24 76" stroke="${shade(hairCol, -12)}" stroke-width="7" stroke-linecap="round"/><path d="M72 36 L76 76" stroke="${shade(hairCol, -12)}" stroke-width="7" stroke-linecap="round"/>`;
@@ -649,7 +681,10 @@
         /* I jeans si riconoscono dalla CUCITURA chiara, dai passanti e
            dai rivetti, non dal blu: uno puo' averli neri e restano
            jeans. Sono gli stessi cinque segni dell'icona. */
-        const filo = '#E3B04B';
+        /* il filo in tinta, molto piu' scuro del capo: lo stesso di
+           AV.filoDenim che usa l'icona, se no icona e figura
+           racconterebbero due paia di jeans diversi */
+        const filo = filoDenim(cb);
         const corti = av.pants.style === 'jeanscorti';
         const giu = corti ? 116 : 134;
         const sagoma = corti
@@ -658,17 +693,17 @@
         bottom = `<path d="${sagoma}" fill="${botP.fill}" ${line}/>
                   <path d="M38 96 L38 100.6 M50 96 L50 100.6 M62 96 L62 100.6" stroke="${shade(cb, -40)}" stroke-width="1.9"/>
                   <path d="M34 100.4 L66 100.4" stroke="${shade(cb, -46)}" stroke-width="3"/>
-                  <path d="M34 98.4 L66 98.4 M34 102.4 L66 102.4" stroke="${filo}" stroke-width="0.85" opacity=".9"/>
-                  <path d="M38 105 Q42.4 105 44.2 109.4" fill="none" stroke="${filo}" stroke-width="0.95" opacity=".9"/>
-                  <path d="M62 105 Q57.6 105 55.8 109.4" fill="none" stroke="${filo}" stroke-width="0.95" opacity=".9"/>
-                  <circle cx="37.6" cy="103.8" r="0.9" fill="${filo}"/>
-                  <circle cx="62.4" cy="103.8" r="0.9" fill="${filo}"/>
+                  <path d="M34 98.2 L66 98.2 M34 102.6 L66 102.6" stroke="${filo}" stroke-width="1.3" opacity="1"/>
+                  <path d="M38 105 Q42.4 105 44.2 109.4" fill="none" stroke="${filo}" stroke-width="1.4" opacity="1"/>
+                  <path d="M62 105 Q57.6 105 55.8 109.4" fill="none" stroke="${filo}" stroke-width="1.4" opacity="1"/>
+                  <circle cx="37.6" cy="103.8" r="1.15" fill="${filo}"/>
+                  <circle cx="62.4" cy="103.8" r="1.15" fill="${filo}"/>
                   <path d="M50 102.6 L50 ${corti ? 106 : 108}" stroke="${shade(cb, -32)}" stroke-width="1" opacity=".6"/>` +
           (corti
             ? `<path d="M34 ${giu - 3.4} L47 ${giu - 3.4} M53 ${giu - 3.4} L66 ${giu - 3.4}" stroke="${shade(cb, -38)}" stroke-width="3"/>
-               <path d="M34 ${giu - 5.4} L47 ${giu - 5.4} M53 ${giu - 5.4} L66 ${giu - 5.4}" stroke="${filo}" stroke-width="1.1" opacity=".9"/>`
-            : `<path d="M40 104 L39.4 ${giu - 2.4} M60 104 L60.6 ${giu - 2.4}" stroke="${filo}" stroke-width="1.1" opacity=".85"/>
-               <path d="M36 ${giu - 2} L47.4 ${giu - 2} M52.6 ${giu - 2} L64 ${giu - 2}" stroke="${filo}" stroke-width="0.75" opacity=".8"/>`);
+               <path d="M34 ${giu - 5.6} L47 ${giu - 5.6} M53 ${giu - 5.6} L66 ${giu - 5.6}" stroke="${filo}" stroke-width="1.5" opacity="1"/>`
+            : `<path d="M40 104 L39.4 ${giu - 2.4} M60 104 L60.6 ${giu - 2.4}" stroke="${filo}" stroke-width="1.4" opacity="1"/>
+               <path d="M36 ${giu - 2} L47.4 ${giu - 2} M52.6 ${giu - 2} L64 ${giu - 2}" stroke="${filo}" stroke-width="1.2" opacity="1"/>`);
       } else {
         // lunghi, dritti: cintura, cuciture laterali e quella al centro
         bottom = `<path d="M34 96 L66 96 L64.5 134 L52.5 134 L50 108 L47.5 134 L35.5 134 Z" fill="${botP.fill}" ${line}/>
@@ -760,15 +795,17 @@
                <path d="M35.8 87.3 L44.7 87.3 M64.2 87.3 L55.3 87.3" stroke="${shade(ct, -36)}" stroke-width="1.8"/>
                <circle cx="58.6" cy="86.1" r="1.5" fill="${shade(ct, -54)}"/>
                <circle cx="58.6" cy="92.2" r="1.5" fill="${shade(ct, -54)}"/>`;
-    } else if (av.top.style === 'gilet') {
-      // scollo a V, TRE bottoni e le due tasche
-      torso = `<path d="M40 66 Q50 72 60 66 L64 78 L64 103 L36 103 L36 78 Z" fill="${topP.fill}" ${line}/>
-               <path d="M45.6 65 L50 72.6 L54.4 65 L57.8 66.4 L50 76.9 L42.2 66.4 Z" fill="${shade(ct, 30)}" stroke="${shade(ct, -30)}" stroke-width="0.8"/>
-               <path d="M50 76.9 L50 101.5" stroke="${shade(ct, -38)}" stroke-width="1.9"/>
-               <circle cx="50" cy="82.4" r="1.4" fill="${shade(ct, -54)}"/>
-               <circle cx="50" cy="89.1" r="1.4" fill="${shade(ct, -54)}"/>
-               <circle cx="50" cy="95.9" r="1.4" fill="${shade(ct, -54)}"/>
-               <path d="M38 91 L43.8 91 M62 91 L56.2 91" stroke="${shade(ct, -32)}" stroke-width="1.6"/>`;
+    } else if (av.top.style === 'top') {
+      /* IL TOP: scollo dritto, due spalline sottili, e FINISCE SOPRA LA
+         VITA -- sotto resta un dito di pelle scoperta. Sono quelle tre
+         cose a distinguerlo dalla canotta, che invece scende fino ai
+         pantaloni con due fasce larghe sulle spalle. */
+      torso = `<path d="M37 68 Q50 74 63 68 L64.5 100 L35.5 100 Z" fill="${skin}"/>
+               <path d="M42.6 76 L44.6 66.4 M57.4 76 L55.4 66.4" stroke="${shade(ct, -12)}" stroke-width="2.8" stroke-linecap="round"/>
+               <path d="M38.4 76 L61.6 76 L63 93 L37 93 Z" fill="${topP.fill}" ${line}/>
+               <path d="M38.4 78.2 L61.6 78.2" stroke="${shade(ct, -34)}" stroke-width="1.5"/>
+               <path d="M37.4 90.6 Q50 92.6 62.6 90.6" fill="none" stroke="${shade(ct, -28)}" stroke-width="1.6"/>
+               <path d="M44 80 Q50 82 56 80" fill="none" stroke="${shade(ct, -20)}" stroke-width="1" opacity=".6"/>`;
     } else if (av.top.style === 'felpa') {
       /* cappuccio dietro la testa, i due LACCETTI con gli occhielli,
          la tasca a marsupio e il fondo a costine */
@@ -855,7 +892,7 @@
               <path d="M73 34 Q76 44 73 52" stroke="${hairCol}" stroke-width="6" fill="none" stroke-linecap="round"/>`;
     } else if (hairStyle === 'lunghi') {
       hair = `<path d="M27 42 Q27 16 50 16 Q73 16 73 42 Q70 24 50 24 Q30 24 27 42 Z" fill="${hairCol}"/>`;
-    } else if (hairStyle === 'ricci') {
+    } else if (hairStyle === 'ricci' || hairStyle === 'riccimedi') {
       hair = `<circle cx="33" cy="30" r="8" fill="${hairCol}"/><circle cx="43" cy="21" r="9" fill="${hairCol}"/>
               <circle cx="57" cy="21" r="9" fill="${hairCol}"/><circle cx="67" cy="30" r="8" fill="${hairCol}"/>
               <circle cx="50" cy="24" r="9" fill="${hairCol}"/>`;
@@ -950,32 +987,65 @@
     // prima cappello e colore della maglia, poi il resto
     push(HAT, av.hat.style, av.hat.color, '', 'cappello');
 
+    /* la coda della fantasia, accordata col capo: «a righe», «a fiori»,
+       «mimetico» o «mimetica» */
+    const codaFantasia = (chiave, g) => {
+      const pat = PATTERNS.find(p => p.key === chiave);
+      let suf = pat && pat.suf ? pat.suf : '';
+      if (suf === ' mimetic') suf = (g === 1 || g === 3) ? ' mimetica' : ' mimetico';
+      return suf;
+    };
+
     if (vale('maglietta')) {
       const topIt = findIn(TOP, av.top.style);
-      const pat = PATTERNS.find(p => p.key === av.top.pattern);
-      let patSuf = pat && pat.suf ? pat.suf : '';
-      if (patSuf === ' mimetic') patSuf = topIt.g === 1 || topIt.g === 3 ? ' mimetica' : ' mimetico';
       out.push({
         em: topIt.em,
-        txt: (topIt.noun + ' ' + colorName(av.top.color, topIt.g) + patSuf).trim(),
+        txt: (topIt.noun + ' ' + colorName(av.top.color, topIt.g) +
+          codaFantasia(av.top.pattern, topIt.g)).trim(),
         color: av.top.color
       });
     }
 
     push(BAG, av.bag.style, av.bag.color, '', 'borsa');
-    if (av.top.style !== 'vestito') push(PANTS, av.pants.style, av.pants.color, '', 'pantaloni');
+    /* IL SOTTO SI DICE ANCHE CON LA SUA FANTASIA -- una gonna a fiori
+       si vedeva e non si poteva scrivere. Non si dice solo sotto il
+       vestito LUNGO, che i pantaloni li copre fino ai piedi: il vestito
+       corto invece lascia vedere quello che c’e’ sotto, e infatti il
+       guardaroba lo fa scegliere. */
+    if (av.top.style !== 'vestitolungo' && vale('pantaloni')) {
+      const pIt = findIn(PANTS, av.pants.style);
+      if (!pIt.skip) out.push({
+        em: pIt.em,
+        txt: (pIt.noun + ' ' + colorName(av.pants.color, pIt.g) +
+          codaFantasia(av.pants.pattern, pIt.g)).trim(),
+        color: av.pants.color
+      });
+    }
     push(GLASSES, av.glasses, null, '', 'occhiali');
     push(FACIAL, av.facial, null, '', 'occhiali');
 
-    if (vale('capelli')) {
+    /* I CAPELLI SI DICONO PER QUELLO CHE HAI SCELTO, non per quello
+       che l'avatar ha addosso. Il taglio ce l'hanno tutti fin dal
+       ruolo -- e' l'archetipo, non una cosa vista -- quindi scegliendo
+       solo il colore usciva "Capelli LUNGHI neri" su una persona di cui
+       nessuno aveva guardato la lunghezza: all'uscita si cerca una
+       chioma lunga e si trova un rasato.
+         colore soltanto  -> "Capelli neri"
+         taglio soltanto  -> "Capelli lunghi"
+         tutti e due      -> "Capelli lunghi neri"  */
+    if (vale('capelli') || vale('taglio')) {
       const hairIt = findIn(HAIR, av.hair.style);
-      if (hairIt.bare) {
+      const conTaglio = vale('taglio');
+      const conColore = vale('capelli');
+      if (hairIt.bare && conTaglio) {
         out.push({ em: hairIt.em, txt: 'Pelato', color: null });
       } else {
+        const nome = conTaglio && !hairIt.bare ? hairIt.noun : 'Capelli';
+        const tinta = conColore ? colorName(av.hair.color, hairIt.g, HAIR_COLORS) : '';
         out.push({
           em: hairIt.em,
-          txt: (hairIt.noun + ' ' + colorName(av.hair.color, hairIt.g, HAIR_COLORS)).trim(),
-          color: av.hair.color
+          txt: (nome + (tinta ? ' ' + tinta : '')).trim(),
+          color: conColore ? av.hair.color : null
         });
       }
     }
@@ -988,6 +1058,7 @@
     COLORS, HAIR_COLORS, SKINS, PATTERNS,
     HAIR, HAT, GLASSES, FACIAL, TOP, PANTS, SHOES, BAG, ROLES,
     build, traits, normalize, defaultFor, baseFor, colorName, findIn, shade, coloreFantasia,
+    filoDenim,
     /* la stoffa: serve alle icone dei capi, che devono mostrare la
        fantasia VERA e non una sua imitazione. Un solo posto dove sono
        definite le trame, cosi' l'icona e la figura non divergono mai. */
