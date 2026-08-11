@@ -6,355 +6,310 @@
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#17171E">
 <meta name="robots" content="noindex">
-<title>Card Tempo — dieci proposte</title>
+<title>Card Tempo — il nastro</title>
 <link rel="icon" href="./icons/icon.svg">
 <link rel="stylesheet" href="./css/fonts.css">
 <style>
-  /* I DISEGNI SONO A GRANDEZZA VERA: 797 pixel, quanto il pannello sul
-     tablet in verticale, con i pezzi delle misure vere -- righe da 50,
-     tasti da 42, chip da 42 con l'angolo da 14, numeri Fredoka da 25.
-     Se un disegno qui sta in tre righe, in app sta in tre righe. */
+  /* Tutti i disegni sono a grandezza vera: 797 pixel, quanto il pannello
+     sul tablet in verticale, coi pezzi veri dell'app -- tasti 42x42,
+     chip alte 42 con l'angolo da 14, numeri Fredoka. */
   *, *::before, *::after { box-sizing: border-box; }
   body { margin: 0; background: #17171E; color: rgba(255,255,255,.92);
     font-family: Inter, ui-sans-serif, -apple-system, "Segoe UI", sans-serif;
-    font-size: 15px; line-height: 1.55; -webkit-text-size-adjust: 100%; }
+    font-size: 15.5px; line-height: 1.6; -webkit-text-size-adjust: 100%; }
   html { overflow-x: hidden; }
   a { color: #9CC4F5; }
+  code { color: #9CC4F5; font-family: ui-monospace, Menlo, monospace; font-size: 13.5px; }
 
   .torna { position: sticky; top: 0; z-index: 5; display: block; background: #1B1B24;
     border-bottom: 1px solid rgba(255,255,255,.09); padding: 11px 18px;
     font-size: 14px; font-weight: 600; color: #9CC4F5; text-decoration: none; }
-  .foglio { max-width: 860px; margin: 0 auto; padding: 26px 16px 70px; }
+  .foglio { max-width: 860px; margin: 0 auto; padding: 26px 16px 80px; }
+  section { margin: 0 0 42px; }
 
   .occhiello { font-size: 11.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
     color: #7FB0EE; margin: 0 0 8px; }
-  h1 { font-family: Fredoka, sans-serif; font-size: clamp(28px, 5.2vw, 40px); line-height: 1.08;
-    font-weight: 700; margin: 0 0 12px; }
-  .sommario { font-size: 17px; color: rgba(255,255,255,.72); margin: 0 0 22px; }
+  h1 { font-family: Fredoka, sans-serif; font-size: clamp(30px, 5.4vw, 42px); line-height: 1.06;
+    font-weight: 700; margin: 0 0 14px; }
+  h2 { font-family: Fredoka, sans-serif; font-size: 23px; font-weight: 700; margin: 0 0 10px; }
+  p { margin: 0 0 12px; color: rgba(255,255,255,.74); }
+  p b, li b, td b { color: #fff; font-weight: 600; }
+  .guida { font-size: 17.5px; color: rgba(255,255,255,.84); }
 
-  .regole { background: #21212B; border-radius: 14px; padding: 16px 18px; margin: 0 0 26px; }
-  .regole h2 { font-size: 15px; margin: 0 0 10px; font-weight: 700; }
-  .regole ul { margin: 0; padding-left: 18px; color: rgba(255,255,255,.7); font-size: 14.5px; }
-  .regole li { margin-bottom: 4px; }
-  .regole b { color: #fff; font-weight: 700; }
+  .sfondo { background: #21212B; border-radius: 14px; padding: 16px 18px; }
+  ul { margin: 0 0 12px; padding-left: 20px; color: rgba(255,255,255,.74); }
+  li { margin-bottom: 5px; }
 
-  .voce { margin: 0 0 30px; }
-  .testa { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 0 0 8px; }
-  .cifra { font-family: Fredoka, sans-serif; font-size: 15px; font-weight: 700; color: #7FB0EE; }
-  .nome { font-family: Fredoka, sans-serif; font-size: 20px; font-weight: 700; margin: 0; }
-  .alta { margin-left: auto; font-size: 12px; font-weight: 700; color: rgba(255,255,255,.55);
-    background: rgba(255,255,255,.08); border-radius: 20px; padding: 3px 10px; }
-  .bollo { font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
-    background: rgba(106,220,175,.18); color: #6ADCAF; padding: 3px 9px; border-radius: 20px; }
-  .dice { margin: 8px 0 0; font-size: 14.5px; color: rgba(255,255,255,.7); }
-  .dice b { color: #fff; font-weight: 600; }
-
-  /* ── la card vera ─────────────────────────────────────────── */
-  .scala { width: 100%; overflow-x: auto; padding-bottom: 2px; }
+  /* ── la card, a grandezza vera ── */
+  .scala { width: 100%; overflow-x: auto; padding-bottom: 3px; }
   .card { width: 797px; background: linear-gradient(150deg, #2261B6 0%, #17498D 100%);
     border-radius: 14px; padding: 9px 11px 11px; color: #fff; }
-  .tit { font-size: 13px; font-weight: 700; color: rgba(255,255,255,.92); margin-bottom: 5px; }
+  .tit { font-size: 13px; font-weight: 700; color: rgba(255,255,255,.92); margin-bottom: 6px;
+    display: flex; align-items: baseline; gap: 8px; }
+  .tit .dx { margin-left: auto; font-size: 11px; font-weight: 600; color: rgba(255,255,255,.5); }
   .r { display: flex; align-items: center; gap: 8px; height: 50px; }
-  .filo { height: 1px; background: rgba(255,255,255,.16); margin: 3px 0; }
   .b { width: 42px; height: 42px; flex: none; border-radius: 10px; background: rgba(255,255,255,.10);
     display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 600; }
   .n { font-family: Fredoka, sans-serif; font-size: 25px; font-weight: 700; }
-  .n.pic { font-size: 19px; }
-  .chip { height: 42px; border-radius: 14px; background: rgba(255,255,255,.16); padding: 0 13px;
-    display: flex; align-items: center; justify-content: center; gap: 5px;
-    font-size: 15px; font-weight: 600; white-space: nowrap; }
+  .chip { height: 42px; border-radius: 14px; background: rgba(255,255,255,.16); padding: 0 12px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 600; white-space: nowrap; line-height: 1.15; }
+  .chip i { font-style: normal; font-size: 10.5px; opacity: .72; font-weight: 600; }
   .chip.on { background: #fff; color: #17498D; }
-  .chip.mini { height: 34px; font-size: 13px; padding: 0 10px; border-radius: 11px; }
-  .chip i { font-style: normal; font-size: 11px; opacity: .75; font-weight: 600; }
-  .chip.due { flex-direction: column; gap: 0; line-height: 1.15; }
+  .chip.sec { background: rgba(255,255,255,.10); }
   .et { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
     color: rgba(255,255,255,.55); }
-  .em { font-size: 15px; }
-  .brac { width: 22px; height: 22px; border-radius: 50%; background: #6ADCAF; flex: none;
-    box-shadow: 0 0 0 2px rgba(255,255,255,.4); }
-  .barra { height: 16px; border-radius: 8px; background: rgba(255,255,255,.16); display: flex;
-    overflow: hidden; flex: 1; }
-  .barra .pag { background: #6ADCAF; }
-  .barra .reg { background: rgba(255,255,255,.42); }
-  .box { background: rgba(255,255,255,.10); border-radius: 12px; padding: 6px 10px;
-    display: flex; flex-direction: column; justify-content: center; }
-  .cresci { flex: 1; min-width: 0; }
   .a-dx { margin-left: auto; }
-  .col { display: flex; flex-direction: column; gap: 6px; }
-  .fila { display: flex; gap: 6px; }
 
-  .chiusa { margin: 40px 0 0; }
-  .chiusa h2 { font-family: Fredoka, sans-serif; font-size: 22px; margin: 0 0 10px; }
-  .chiusa p { color: rgba(255,255,255,.72); margin: 0 0 10px; }
+  /* il nastro */
+  .nastro { display: flex; align-items: stretch; gap: 7px; }
+  .cap { width: 104px; flex: none; border-radius: 12px; padding: 5px 9px;
+    display: flex; flex-direction: column; justify-content: center; }
+  .cap.inizio { background: rgba(106,220,175,.30); box-shadow: inset 0 0 0 2px #6ADCAF; }
+  .cap.fine { background: rgba(255,255,255,.12); }
+  .cap .n { font-size: 21px; line-height: 1.12; }
+  /* le due righe del cappello stanno strette: cosi' il cappello e' alto
+     quanto il nastro (46) invece di sessanta, e la card cala di quindici */
+  .cap .et { line-height: 1; }
+  .via { flex: 1; min-width: 0; position: relative; height: 46px; border-radius: 12px;
+    background: rgba(0,0,0,.22); padding: 4px 4px 10px; display: flex; gap: 3px; }
+  .seg { border-radius: 8px; background: rgba(255,255,255,.26); display: flex; flex-direction: column;
+    align-items: center; justify-content: center; line-height: 1.1; overflow: hidden; min-width: 0; }
+  .seg b { font-family: Fredoka, sans-serif; font-size: 15px; font-weight: 700; }
+  .seg i { font-style: normal; font-size: 10px; opacity: .8; white-space: nowrap; }
+  .seg.scelto { background: #fff; color: #17498D; }
+  .seg.regalo { background: repeating-linear-gradient(135deg, rgba(106,220,175,.42) 0 6px, rgba(106,220,175,.16) 6px 12px);
+    color: #E7FFF5; }
+  .tacche { position: absolute; inset: 4px; border-radius: 8px; pointer-events: none;
+    background: repeating-linear-gradient(90deg, transparent 0 33px, rgba(255,255,255,.13) 33px 34px); }
+  .ago { position: absolute; top: -3px; bottom: -3px; width: 2px; background: #fff; border-radius: 2px; }
+  .ago::before { content: 'adesso'; position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+    font-size: 9px; font-weight: 700; letter-spacing: .06em; color: #fff; }
+  /* quando l'ago e' in fondo, la scritta si sposta a sinistra invece di
+     uscire dal nastro */
+  .ago.infondo::before { left: auto; right: 3px; transform: none; }
+  /* IL FILO DEL PAGATO STA DENTRO IL NASTRO, appoggiato al suo bordo
+     basso: fuori costava sedici pixel di altezza per dire una cosa che
+     qui e' gia' allineata al tempo. */
+  .pagato-sotto { position: absolute; left: 4px; right: 4px; bottom: 3px; height: 5px;
+    border-radius: 3px; background: rgba(0,0,0,.28); display: flex; overflow: hidden; }
+  .pagato-sotto .verde { background: #6ADCAF; }
+  .frecce { display: flex; flex-direction: column; gap: 4px; justify-content: center; }
+  .frecce .b { height: 21px; font-size: 14px; }
+
+  /* richiami numerati */
+  .richiami { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px;
+    margin-top: 14px; }
+  .richiami div { background: #21212B; border-radius: 12px; padding: 10px 12px; font-size: 14px;
+    color: rgba(255,255,255,.74); line-height: 1.5; }
+  .richiami .pallino { display: inline-flex; align-items: center; justify-content: center; width: 20px;
+    height: 20px; border-radius: 50%; background: #7FB0EE; color: #10131A; font-size: 11px;
+    font-weight: 700; margin-right: 7px; vertical-align: 1px; }
+
+  .stato { margin: 0 0 22px; }
+  .quale { font-size: 13px; font-weight: 700; color: #9CC4F5; margin: 0 0 6px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid rgba(255,255,255,.09);
+    vertical-align: top; }
+  th { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.5); }
+  td:first-child { color: #fff; font-weight: 600; white-space: nowrap; }
+  td { color: rgba(255,255,255,.74); }
 </style>
 </head>
 <body>
 <a class="torna" href="./index.html">&larr; torna al parco</a>
 <div class="foglio">
 
-  <p class="occhiello">GestioParco · card del Tempo</p>
-  <h1>Dieci modi di dirlo, alla larghezza che abbiamo</h1>
-  <p class="sommario">Niente si toglie e niente si sposta altrove: cambia solo come le sette cose sono messe in fila. I disegni sono a grandezza vera — 797 pixel, quanto il pannello — e ognuno dice quanto verrebbe alto.</p>
+  <p class="occhiello">GestioParco · card del Tempo · studio</p>
+  <h1>Il nastro</h1>
+  <p class="guida">Una proposta sola, ragionata. La card smette di essere una fila di comandi e diventa <b>un oggetto solo</b>: il tempo di quel gruppo, disegnato. Orologio, durata e scontrino diventano la stessa cosa invece di tre cose accostate.</p>
 
-  <div class="regole">
-    <h2>Le regole del posto</h2>
+  <section>
+    <h2>Perché oggi confonde</h2>
+    <p>Non è disordine: sulla stessa card convivono <b>tre modi di pensare</b> diversi, e nessuno dei tre è dichiarato.</p>
     <ul>
-      <li>La card è larga <b>797</b> e alta <b>151</b> (203 quando compare l'Estendi): abbiamo <b>larghezza da buttare via e altezza no</b>. Ogni cosa messa in colonna costa cinquanta pixel; messa di fianco costa zero.</li>
-      <li>Si costruisce con i pezzi che ci sono già: <b>righe da 50</b>, tasti <b>42×42</b>, chip alte <b>42</b> con l'angolo da 14, numeri <b>Fredoka 25</b>, il filo chiaro fra una riga e l'altra.</li>
-      <li>Le sette cose che devono starci tutte: <b>bracciale · ingresso · uscita · minuti di parco · tagli · pagato fino alle · estendi</b>.</li>
-      <li>Una forma sola: l'Estendi non può comparire solo quando riapri il conto.</li>
+      <li><b>L'orologio</b> — 16:00 → 17:15. Due orari, ognuno coi suoi più e meno.</li>
+      <li><b>La quantità</b> — 45 minuti. Un numero che sale e scende.</li>
+      <li><b>La cassa</b> — 30m più 15m venduti, ognuno al prezzo del suo scaglione. Questo modello <em>esiste già nel codice</em>, ma a video non si vede da nessuna parte.</li>
     </ul>
-  </div>
+    <p>Il tasto «+15m» appartiene al terzo — è una <b>vendita</b> — ma ha la faccia del secondo: sembra un contatore. Da lì il fastidio: premi, cambia un numero, e niente dice che hai appena venduto un pezzo di tempo a 4,50 €. I minuti regalati dal Crazy peggiorano le cose, perché fanno divergere due orari che sembravano uno solo: <b>fin quando hanno pagato</b> e <b>fin quando restano</b>.</p>
+  </section>
 
-  <!-- 1 -->
-  <div class="voce">
-    <div class="testa"><span class="cifra">01</span><p class="nome">Come oggi, ma completa</p><span class="alta">3 righe · 209px, sempre</span></div>
-    <div class="scala"><div class="card">
-      <div class="tit">⏱️ Tempo</div>
-      <div class="r">
-        <span class="em">🕒</span><span class="b">−</span><span class="n">16:00</span><span class="b">+</span><span class="chip">📍 Ora</span>
-        <span class="em">🚪</span><span class="b">−</span><span class="n">17:15</span><span class="b">+</span>
-        <span class="a-dx" style="display:flex; align-items:center; gap:8px"><span class="em">⏱️</span><span class="n">45m</span><span class="brac"></span><span class="et">auto</span></span>
-      </div>
-      <div class="filo"></div>
-      <div class="r">
-        <span class="chip">15m</span><span class="chip on">30m</span><span class="chip">1h</span><span class="chip">1h30</span><span class="chip">⏳ Tempo aperto</span>
-        <span class="a-dx" style="display:flex; align-items:center; gap:8px"><span class="et">pagato fino alle</span><span class="n pic">17:00</span><span class="b">−</span><span class="b">+</span></span>
-      </div>
-      <div class="filo"></div>
-      <div class="r">
-        <span class="et" style="width:58px">estendi</span>
-        <span class="chip">− 5m</span><span class="chip">+ 5m</span>
-        <span class="chip due">+15m<i>4,50 €</i></span><span class="chip due">+30m<i>7,00 €</i></span><span class="chip due">+1h<i>12,00 €</i></span>
-        <span class="a-dx" style="display:flex; align-items:center; gap:6px"><span class="et">fino alle</span><span class="n pic">17:15</span></span>
-      </div>
-    </div></div>
-    <p class="dice">La più prudente: le due righe di oggi restano dove sono, l'Estendi diventa la terza e <b>c'è sempre</b>. Si cambia solo l'abitudine di vederla comparire.</p>
-  </div>
+  <section>
+    <h2>L'idea</h2>
+    <p class="guida">Il tempo di un gruppo è una cosa sola, che va da un'ora a un'altra: disegniamola. <b>Il nastro è insieme l'orologio, la durata e lo scontrino</b> — ogni pezzo venduto è un tratto con scritto quanto dura e quanto costa, i minuti regalati sono un tratto rigato, e il filo verde sotto dice fin dove hanno pagato.</p>
+    <p>Non è una decorazione: è il modello dei dati portato a video. Nel codice quel nastro c'è già — <code>durationMinutes</code> coi blocchi di <code>aggiunte</code> dentro, più i minuti regalati che allungano l'uscita senza entrare nel prezzo. Oggi se ne vede solo la somma.</p>
+  </section>
 
-  <!-- 2 -->
-  <div class="voce">
-    <div class="testa"><span class="cifra">02</span><p class="nome">Il vendere sta in colonna a destra</p><span class="alta">2 righe · 152px</span></div>
+  <section>
+    <h2>Anatomia</h2>
     <div class="scala"><div class="card">
-      <div class="tit">⏱️ Tempo</div>
-      <div style="display:flex; gap:11px">
-        <div class="cresci">
-          <div class="r">
-            <span class="em">🕒</span><span class="b">−</span><span class="n">16:00</span><span class="b">+</span><span class="chip">📍 Ora</span>
-            <span class="em">🚪</span><span class="b">−</span><span class="n">17:15</span><span class="b">+</span>
-          </div>
-          <div class="filo"></div>
-          <div class="r">
-            <span class="brac"></span><span class="n">45m</span>
-            <span class="chip">15m</span><span class="chip on">30m</span><span class="chip">1h</span><span class="chip">aperto</span>
+      <div class="tit">⏱️ Tempo <span class="dx">45m comprati · pagato fino alle 17:00 · +8′ regalati · 11,50 €</span></div>
+      <div class="nastro">
+        <div class="cap inizio"><span class="et">entrano</span><span class="n">16:00</span></div>
+        <div style="flex:1; min-width:0">
+          <div class="via">
+            <div class="tacche"></div>
+            <div class="seg" style="flex:30"><b>30m</b><i>7,00 €</i></div>
+            <div class="seg scelto" style="flex:15"><b>+15m</b><i>4,50 €</i></div>
+            <div class="seg regalo" style="flex:8"><b>+8′</b><i>crazy</i></div>
+            <div class="ago" style="left:41%"></div>
+            <div class="pagato-sotto"><span class="verde" style="flex:45"></span><span style="flex:8"></span></div>
           </div>
         </div>
-        <div class="col" style="width:250px; flex:none; border-left:1px solid rgba(255,255,255,.16); padding-left:11px">
-          <div class="fila"><span class="et" style="align-self:center">vendi</span><span class="chip mini cresci">+15m <i>4,50</i></span><span class="chip mini cresci">+30m <i>7,00</i></span></div>
-          <div class="fila"><span class="chip mini cresci">+1h <i>12,00</i></span><span class="chip mini">−5m</span><span class="chip mini">+5m</span></div>
-          <div class="fila" style="align-items:center"><span class="barra"><span class="pag" style="flex:7"></span><span class="reg" style="flex:1"></span><span style="flex:2"></span></span><span class="et">pagato 17:00</span></div>
-        </div>
+        <div class="cap fine"><span class="et">escono</span><span class="n">17:15</span></div>
+        <div class="frecce"><span class="b">+</span><span class="b">−</span></div>
+      </div>
+      <div class="r" style="margin-top:7px">
+        <span class="et" style="width:50px">vendi</span>
+        <span class="chip">+15m<i>4,50 €</i></span>
+        <span class="chip">+30m<i>7,00 €</i></span>
+        <span class="chip">+1h<i>12,00 €</i></span>
+        <span class="chip sec">− 5m</span><span class="chip sec">+ 5m</span>
+        <span class="chip sec">⏳ Tempo aperto</span>
+        <span class="a-dx" style="display:flex; align-items:center; gap:7px"><span class="et">pagato</span><span class="b">−</span><span class="b">+</span></span>
       </div>
     </div></div>
-    <p class="dice">A sinistra <b>com'è</b>, a destra <b>cosa gli vendi</b>. La colonna di destra è sempre nello stesso punto: la mano impara dove andare e non guarda più.</p>
-  </div>
 
-  <!-- 3 -->
-  <div class="voce">
-    <div class="testa"><span class="cifra">03</span><p class="nome">La barra prende tutta la larghezza</p><span class="alta">3 righe · 217px</span></div>
-    <div class="scala"><div class="card">
-      <div class="tit">⏱️ Tempo</div>
-      <div style="padding:4px 0 6px">
-        <div style="display:flex; align-items:center; gap:9px">
-          <span class="brac"></span><span class="n pic">16:00</span>
-          <span class="barra" style="height:20px"><span class="pag" style="flex:7"></span><span class="reg" style="flex:1"></span><span style="flex:2"></span></span>
-          <span class="n pic">17:15</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-top:3px">
-          <span class="et">entrano</span><span class="et">pagato fino alle 17:00</span><span class="et">+8′ crazy</span><span class="et">escono · 45m</span>
-        </div>
-      </div>
-      <div class="filo"></div>
-      <div class="r">
-        <span class="b">−</span><span class="et">ingresso</span><span class="b">+</span><span class="chip">📍 Ora</span>
-        <span class="b">−</span><span class="et">uscita</span><span class="b">+</span>
-        <span class="a-dx" style="display:flex; gap:6px"><span class="chip">15m</span><span class="chip on">30m</span><span class="chip">1h</span><span class="chip">1h30</span><span class="chip">aperto</span></span>
-      </div>
-      <div class="filo"></div>
-      <div class="r">
-        <span class="et" style="width:58px">estendi</span><span class="chip">− 5m</span><span class="chip">+ 5m</span>
-        <span class="chip due">+15m<i>4,50 €</i></span><span class="chip due">+30m<i>7,00 €</i></span><span class="chip due">+1h<i>12,00 €</i></span>
-      </div>
-    </div></div>
-    <p class="dice">La barra è lunga 500 pixel: è l'unica cosa che sfrutta davvero la larghezza. <b>Quanto manca e fin dove hanno pagato si vedono senza leggere</b>.</p>
-  </div>
+    <div class="richiami">
+      <div><span class="pallino">1</span>Il <b>cappello d'ingresso</b> è verde perché quello <em>è</em> il bracciale: il colore lo decide l'ora d'entrata, quindi il bracciale non è un dato in più da mettere da qualche parte — è il cappello del nastro. Si tocca per cambiarlo o per spostare l'ora.</div>
+      <div><span class="pallino">2</span>Ogni <b>tratto</b> è un pezzo di tempo venduto, con quanto dura e quanto è costato. Il tratto bianco è quello scelto: si corregge o si butta senza toccare gli altri.</div>
+      <div><span class="pallino">3</span>Il tratto <b>rigato verde</b> sono i minuti regalati dal Crazy: si vede che allungano la permanenza e che non si pagano.</div>
+      <div><span class="pallino">4</span>Il <b>filo verde sotto</b> dice fin dove hanno pagato. Quando arriva in fondo il conto è chiuso: è la stessa cosa della fascia verde di oggi, ma allineata al tempo.</div>
+      <div><span class="pallino">5</span>L'<b>ago bianco</b> è adesso, e si muove da solo: quanto manca è la distanza fra l'ago e la fine del nastro.</div>
+      <div><span class="pallino">6</span>Le <b>tacche</b> ogni quarto d'ora danno la scala: un nastro lungo il doppio è il doppio del tempo, non solo una scritta diversa.</div>
+      <div><span class="pallino">7</span>La riga <b>vendi</b> aggiunge un tratto, col prezzo scritto prima di premere. I ±5 stanno staccati: <b>correggere non è vendere</b>, e adesso si vede.</div>
+    </div>
+  </section>
 
-  <!-- 4 -->
-  <div class="voce">
-    <div class="testa"><span class="cifra">04</span><p class="nome">Tre colonne: quando, quanto, quanto pagato</p><span class="alta">2 righe · 174px</span></div>
-    <div class="scala"><div class="card">
-      <div class="tit">⏱️ Tempo</div>
-      <div style="display:flex; gap:9px">
-        <div class="box" style="width:300px"><span class="et">quando</span>
-          <div class="fila" style="align-items:center; margin-top:3px"><span class="b">−</span><span class="n pic">16:00</span><span class="b">+</span><span class="b">−</span><span class="n pic">17:15</span><span class="b">+</span></div>
-        </div>
-        <div class="box cresci"><span class="et">quanto · 45m</span>
-          <div class="fila" style="margin-top:3px"><span class="chip mini cresci">15m</span><span class="chip mini on cresci">30m</span><span class="chip mini cresci">1h</span><span class="chip mini cresci">1h30</span><span class="chip mini cresci">aperto</span></div>
-        </div>
-        <div class="box" style="width:170px"><span class="et">pagato fino alle 17:00</span>
-          <div class="fila" style="align-items:center; margin-top:5px"><span class="barra"><span class="pag" style="flex:7"></span><span style="flex:3"></span></span><span class="brac" style="width:18px; height:18px"></span></div>
-        </div>
-      </div>
-      <div class="r" style="margin-top:6px">
-        <span class="et" style="width:58px">estendi</span><span class="chip">− 5m</span><span class="chip">+ 5m</span>
-        <span class="chip due">+15m<i>4,50 €</i></span><span class="chip due">+30m<i>7,00 €</i></span><span class="chip due">+1h<i>12,00 €</i></span>
-        <span class="a-dx chip">📍 Ora</span>
-      </div>
-    </div></div>
-    <p class="dice">Tre scatole affiancate, una per domanda, e sotto la riga che vende. <b>Ogni domanda ha il suo rettangolo</b>: si guarda quello e basta.</p>
-  </div>
+  <section>
+    <h2>I quattro stati</h2>
+    <p>Una forma sola che cambia contenuto, mai altezza: il pannello non si muove più sotto le dita.</p>
 
-  <!-- 5 -->
-  <div class="voce">
-    <div class="testa"><span class="cifra">05</span><p class="nome">Quattro pastiglie e una tastiera</p><span class="alta">3 righe · 202px</span></div>
-    <div class="scala"><div class="card">
-      <div class="tit">⏱️ Tempo</div>
-      <div class="fila">
-        <div class="box cresci" style="flex-direction:row; align-items:center; gap:8px"><span class="brac"></span><div class="col" style="gap:0"><span class="et">bracciale</span><span style="font-size:13px; font-weight:600">verde · auto</span></div></div>
-        <div class="box cresci" style="flex-direction:row; align-items:center; gap:6px"><span class="col" style="gap:0"><span class="et">ingresso</span><span class="n pic">16:00</span></span><span class="b a-dx">−</span><span class="b">+</span></div>
-        <div class="box cresci" style="flex-direction:row; align-items:center; gap:6px"><span class="col" style="gap:0"><span class="et">uscita</span><span class="n pic">17:15</span></span><span class="b a-dx">−</span><span class="b">+</span></div>
-        <div class="box" style="width:150px; flex-direction:row; align-items:center; gap:8px"><span class="col" style="gap:0"><span class="et">parco</span><span class="n pic">45m</span></span><span class="col a-dx" style="gap:0; align-items:flex-end"><span class="et">pagato</span><span style="font-size:13px; font-weight:700">17:00</span></span></div>
-      </div>
-      <div class="r"><span class="chip">15m</span><span class="chip on">30m</span><span class="chip">1h</span><span class="chip">1h30</span><span class="chip">⏳ aperto</span><span class="a-dx et">i tagli sostituiscono</span></div>
-      <div class="r"><span class="chip">− 5m</span><span class="chip">+ 5m</span><span class="chip due">+15m<i>4,50 €</i></span><span class="chip due">+30m<i>7,00 €</i></span><span class="chip due">+1h<i>12,00 €</i></span><span class="a-dx et">l'estendi aggiunge</span></div>
-    </div></div>
-    <p class="dice">Sopra quattro pastiglie che <b>dicono</b>, sotto due file di chip che <b>fanno</b> — e a destra di ognuna una parola che spiega la differenza fra sostituire e aggiungere.</p>
-  </div>
-
-  <!-- 6 -->
-  <div class="voce">
-    <div class="testa"><span class="cifra">06</span><p class="nome">Una riga che parla, due che fanno</p><span class="alta">3 righe · 209px</span></div>
-    <div class="scala"><div class="card">
-      <div class="tit">⏱️ Tempo</div>
-      <div class="r" style="gap:10px">
-        <span class="brac"></span>
-        <span style="font-family:Fredoka,sans-serif; font-size:23px; font-weight:700">16:00 → 17:15</span>
-        <span class="et">45m di parco</span>
-        <span class="barra" style="max-width:150px"><span class="pag" style="flex:7"></span><span class="reg" style="flex:1"></span><span style="flex:2"></span></span>
-        <span class="et">pagato fino alle 17:00</span>
-      </div>
-      <div class="filo"></div>
-      <div class="r">
-        <span class="et" style="width:58px">sposta</span><span class="b">−</span><span class="chip mini">ingresso</span><span class="b">+</span><span class="chip">📍 Ora</span>
-        <span class="b">−</span><span class="chip mini">uscita</span><span class="b">+</span>
-        <span class="a-dx" style="display:flex; gap:6px"><span class="chip">15m</span><span class="chip on">30m</span><span class="chip">1h</span><span class="chip">aperto</span></span>
-      </div>
-      <div class="filo"></div>
-      <div class="r">
-        <span class="et" style="width:58px">vendi</span><span class="chip">− 5m</span><span class="chip">+ 5m</span>
-        <span class="chip due">+15m<i>4,50 €</i></span><span class="chip due">+30m<i>7,00 €</i></span><span class="chip due">+1h<i>12,00 €</i></span>
-        <span class="a-dx et">fino alle 17:15</span>
-      </div>
-    </div></div>
-    <p class="dice">La prima riga <b>non ha nemmeno un tasto</b>: si legge e basta. Le altre due hanno solo tasti, con il verbo a sinistra: sposta, vendi.</p>
-  </div>
-
-  <!-- 7 -->
-  <div class="voce">
-    <div class="testa"><span class="cifra">07</span><p class="nome">Lo scontrino, ma in orizzontale</p><span class="alta">3 righe · 209px</span><span class="bollo">consigliata</span></div>
-    <div class="scala"><div class="card">
-      <div class="tit">⏱️ Tempo</div>
-      <div class="r">
-        <span class="brac"></span><span class="b">−</span><span class="n">16:00</span><span class="b">+</span><span class="chip">📍 Ora</span>
-        <span class="b">−</span><span class="n">17:15</span><span class="b">+</span>
-        <span class="a-dx" style="display:flex; align-items:center; gap:8px"><span class="et">in tutto</span><span class="n">45m</span></span>
-      </div>
-      <div class="filo"></div>
-      <div class="r">
-        <span class="et" style="width:58px">venduto</span>
-        <span class="chip due">30m<i>7,00 € · entrando</i></span>
-        <span class="chip due">+15m<i>4,50 € · alle 16:30</i></span>
-        <span class="chip due" style="background:rgba(106,220,175,.22)">+8′<i>regalati dal Crazy</i></span>
-        <span class="a-dx" style="display:flex; align-items:center; gap:8px"><span class="barra" style="width:150px"><span class="pag" style="flex:7"></span><span style="flex:3"></span></span><span class="et">pagato 17:00</span></span>
-      </div>
-      <div class="filo"></div>
-      <div class="r">
-        <span class="et" style="width:58px">vendi</span><span class="chip">− 5m</span><span class="chip">+ 5m</span>
-        <span class="chip due">+15m<i>4,50 €</i></span><span class="chip due">+30m<i>7,00 €</i></span><span class="chip due">+1h<i>12,00 €</i></span>
-        <span class="a-dx" style="display:flex; gap:6px"><span class="chip mini">15m</span><span class="chip mini on">30m</span><span class="chip mini">1h</span><span class="chip mini">aperto</span></span>
-      </div>
-    </div></div>
-    <p class="dice">La riga di mezzo dice <b>che cosa hanno comprato e a quanto</b> — in chip, non in colonna, così costa una riga sola. È l'unica in cui il prezzo smette di sembrare uscito a caso.</p>
-  </div>
-
-  <!-- 8 -->
-  <div class="voce">
-    <div class="testa"><span class="cifra">08</span><p class="nome">Due metà: gli orari e il parco</p><span class="alta">2 righe · 145px</span></div>
-    <div class="scala"><div class="card">
-      <div class="tit">⏱️ Tempo</div>
-      <div style="display:flex; gap:11px">
-        <div style="width:370px; flex:none">
-          <div class="r"><span class="b">−</span><span class="n">16:00</span><span class="b">+</span><span class="chip">📍 Ora</span><span class="a-dx brac"></span><span class="et">auto</span></div>
-          <div class="r"><span class="b">−</span><span class="n">17:15</span><span class="b">+</span><span class="et">uscita</span><span class="a-dx" style="display:flex; align-items:center; gap:7px"><span class="barra" style="width:110px"><span class="pag" style="flex:7"></span><span style="flex:3"></span></span><span class="et">17:00</span></span></div>
+    <div class="stato">
+      <p class="quale">1 · Mentre lo registri — il nastro è il piano</p>
+      <div class="scala"><div class="card">
+        <div class="tit">⏱️ Tempo <span class="dx">ancora niente da pagare</span></div>
+        <div class="nastro">
+          <div class="cap inizio"><span class="et">entrano</span><span class="n">16:00</span></div>
+          <div style="flex:1; min-width:0">
+            <div class="via" style="align-items:center; justify-content:center">
+              <div class="tacche"></div>
+              <span class="et" style="position:relative">scegli quanto stanno &rarr;</span>
+              <div class="pagato-sotto"></div>
+            </div>
+          </div>
+          <div class="cap fine" style="opacity:.45"><span class="et">escono</span><span class="n">—</span></div>
+          <div class="frecce"><span class="b">+</span><span class="b">−</span></div>
         </div>
-        <div style="flex:1; border-left:1px solid rgba(255,255,255,.16); padding-left:11px">
-          <div class="r"><span class="n">45m</span><span class="chip">15m</span><span class="chip on">30m</span><span class="chip">1h</span><span class="chip">aperto</span></div>
-          <div class="r"><span class="chip">−5m</span><span class="chip">+5m</span><span class="chip due">+15m<i>4,50</i></span><span class="chip due">+30m<i>7,00</i></span><span class="chip due">+1h<i>12,00</i></span></div>
+        <div class="r" style="margin-top:7px">
+          <span class="et" style="width:50px">quanto</span>
+          <span class="chip">15m<i>4,50 €</i></span><span class="chip">30m<i>7,00 €</i></span>
+          <span class="chip">1h<i>12,00 €</i></span><span class="chip">1h30<i>19,00 €</i></span>
+          <span class="chip sec">⏳ Tempo aperto</span>
+          <span class="a-dx chip sec">📍 Ora</span>
         </div>
-      </div>
-    </div></div>
-    <p class="dice">Un filo verticale divide <b>l'orologio</b> dal <b>parco</b>. A sinistra si guarda l'ora, a destra si vende il tempo: due mestieri diversi, due metà.</p>
-  </div>
+      </div></div>
+      <p>Non c'è ancora niente di venduto: le chip dicono <b>30m</b>, non <b>+30m</b>, e il nastro è vuoto con l'invito dentro. Stesso posto e stesso gesto di dopo — cambia solo la parola sul tasto, esattamente come il codice distingue già la durata iniziale dai blocchi venduti.</p>
+    </div>
 
-  <!-- 9 -->
-  <div class="voce">
-    <div class="testa"><span class="cifra">09</span><p class="nome">La tastiera del tempo</p><span class="alta">2 righe · 145px</span></div>
-    <div class="scala"><div class="card">
-      <div class="tit">⏱️ Tempo</div>
-      <div style="display:flex; gap:11px">
-        <div style="flex:1">
-          <div class="r"><span class="brac"></span><span class="b">−</span><span class="n">16:00</span><span class="b">+</span><span class="chip">📍 Ora</span></div>
-          <div class="r"><span class="n pic">17:15</span><span class="b">−</span><span class="b">+</span><span class="a-dx" style="display:flex; align-items:center; gap:7px"><span class="n">45m</span><span class="et">pagato 17:00</span></span></div>
+    <div class="stato">
+      <p class="quale">2 · Dentro — è quello dell'anatomia qui sopra, con l'ago che cammina</p>
+    </div>
+
+    <div class="stato">
+      <p class="quale">3 · Tempo aperto — il nastro non ha una fine</p>
+      <div class="scala"><div class="card">
+        <div class="tit">⏱️ Tempo <span class="dx">si conta all'uscita</span></div>
+        <div class="nastro">
+          <div class="cap inizio"><span class="et">entrano</span><span class="n">16:00</span></div>
+          <div style="flex:1; min-width:0">
+            <div class="via" style="mask-image:linear-gradient(90deg,#000 62%,transparent); -webkit-mask-image:linear-gradient(90deg,#000 62%,transparent)">
+              <div class="tacche"></div>
+              <div class="seg" style="flex:33"><b>33′ contati</b><i>fascia 40′ · 10,00 €</i></div>
+              <div class="seg regalo" style="flex:8"><b>+8′</b><i>crazy</i></div>
+              <div class="seg" style="flex:22; background:rgba(255,255,255,.10)"></div>
+              <div class="pagato-sotto"><span style="flex:61"></span></div>
+            </div>
+          </div>
+          <div class="cap fine" style="opacity:.45"><span class="et">escono</span><span class="n">?</span></div>
+          <div class="frecce"><span class="b" style="opacity:.35">+</span><span class="b" style="opacity:.35">−</span></div>
         </div>
-        <div class="col" style="width:390px; flex:none">
-          <div class="fila"><span class="chip cresci">15m</span><span class="chip cresci on">30m</span><span class="chip cresci">1h</span><span class="chip cresci">1h30</span><span class="chip cresci">aperto</span></div>
-          <div class="fila"><span class="chip cresci">−5m</span><span class="chip cresci">+5m</span><span class="chip due cresci">+15m<i>4,50</i></span><span class="chip due cresci">+30m<i>7,00</i></span><span class="chip due cresci">+1h<i>12,00</i></span></div>
+        <div class="r" style="margin-top:7px">
+          <span class="et" style="width:50px">chiudi</span>
+          <span class="chip">15m<i>4,50 €</i></span><span class="chip">30m<i>7,00 €</i></span><span class="chip">1h<i>12,00 €</i></span>
+          <span class="chip on">⏳ Tempo aperto</span>
+          <span class="a-dx et">il conto si fa all'uscita, sul tempo passato</span>
         </div>
-      </div>
-    </div></div>
-    <p class="dice">Tutti i tasti del tempo in una tastiera 5×2 a destra: <b>sopra si sostituisce, sotto si aggiunge</b>. A sinistra restano solo i numeri da leggere.</p>
-  </div>
+      </div></div>
+      <p>Il nastro sfuma invece di finire: è l'unico disegno onesto per un tempo che una fine non ce l'ha. Dentro c'è il conto che sale — <b>minuti contati e fascia del cartello</b> — e il filo del pagato resta spento, perché a tempo aperto non si incassa in anticipo.</p>
+    </div>
 
-  <!-- 10 -->
-  <div class="voce">
-    <div class="testa"><span class="cifra">10</span><p class="nome">Il righello delle ore</p><span class="alta">3 righe · 215px</span></div>
-    <div class="scala"><div class="card">
-      <div class="tit">⏱️ Tempo</div>
-      <div style="background:rgba(0,0,0,.18); border-radius:12px; padding:7px 10px">
-        <div style="display:flex; justify-content:space-between"><span class="et">16:00</span><span class="et">16:30</span><span class="et">17:00</span><span class="et">17:30</span><span class="et">18:00</span></div>
-        <div class="barra" style="height:18px; margin:4px 0 3px"><span class="pag" style="flex:7"></span><span class="reg" style="flex:1"></span><span style="flex:2"></span></div>
-        <div style="display:flex; justify-content:space-between"><span class="et">entrano</span><span class="et">pagato</span><span class="et">escono · 45m</span></div>
-      </div>
-      <div class="r">
-        <span class="brac"></span><span class="b">−</span><span class="n pic">16:00</span><span class="b">+</span><span class="chip">📍 Ora</span>
-        <span class="b">−</span><span class="n pic">17:15</span><span class="b">+</span>
-        <span class="a-dx" style="display:flex; gap:6px"><span class="chip">15m</span><span class="chip on">30m</span><span class="chip">1h</span><span class="chip">aperto</span></span>
-      </div>
-      <div class="r">
-        <span class="et" style="width:58px">estendi</span><span class="chip">− 5m</span><span class="chip">+ 5m</span>
-        <span class="chip due">+15m<i>4,50 €</i></span><span class="chip due">+30m<i>7,00 €</i></span><span class="chip due">+1h<i>12,00 €</i></span>
-        <span class="a-dx et">fino alle 17:15</span>
-      </div>
-    </div></div>
-    <p class="dice">Come la 3, ma con <b>le ore vere scritte sopra</b>: ingresso, pagato e uscita diventano tre tacche sulla stessa scala, e il tempo smette di essere tre numeri slegati.</p>
-  </div>
+    <div class="stato">
+      <p class="quale">4 · Sforato — il nastro è finito e l'ago è oltre</p>
+      <div class="scala"><div class="card" style="background:linear-gradient(150deg,#B6392F 0%,#8D2019 100%)">
+        <div class="tit">⏱️ Tempo <span class="dx">sforato da 6 minuti · tutto pagato</span></div>
+        <div class="nastro">
+          <div class="cap inizio" style="background:rgba(255,214,102,.28); box-shadow:inset 0 0 0 2px #FFD666"><span class="et">entrano</span><span class="n">16:00</span></div>
+          <div style="flex:1; min-width:0">
+            <div class="via">
+              <div class="tacche"></div>
+              <div class="seg" style="flex:30"><b>30m</b><i>7,00 €</i></div>
+              <div class="seg" style="flex:15"><b>+15m</b><i>4,50 €</i></div>
+              <div class="seg regalo" style="flex:8"><b>+8′</b><i>crazy</i></div>
+              <div class="ago infondo" style="left:calc(100% - 3px)"></div>
+              <div class="pagato-sotto"><span class="verde" style="flex:53"></span></div>
+            </div>
+          </div>
+          <div class="cap fine"><span class="et">dovevano</span><span class="n">17:15</span></div>
+          <div class="frecce"><span class="b">+</span><span class="b">−</span></div>
+        </div>
+        <div class="r" style="margin-top:7px">
+          <span class="et" style="width:50px">vendi</span>
+          <span class="chip">+15m<i>4,50 €</i></span><span class="chip">+30m<i>7,00 €</i></span><span class="chip">+1h<i>12,00 €</i></span>
+          <span class="chip sec">− 5m</span><span class="chip sec">+ 5m</span>
+          <span class="a-dx et">oppure li fai uscire</span>
+        </div>
+      </div></div>
+      <p>L'ago esce dal nastro: si vede <em>di quanto</em> hanno sforato, non solo che hanno sforato. Il rosso è quello di oggi, e il cappello prende il colore del bracciale di quell'ora.</p>
+    </div>
+  </section>
 
-  <div class="chiusa">
-    <h2>Come sceglierla</h2>
-    <p>Le più basse sono la <b>2</b>, la <b>4</b>, la <b>8</b> e la <b>9</b>: stanno in due righe, cioè nei 151 pixel di oggi, con dentro anche l'Estendi che oggi non c'è. Le altre chiedono la terza riga (185–203), che è comunque l'altezza che la card ha già quando riapri un conto.</p>
-    <p>Continuo a consigliare la <b>7</b>: è l'unica che spiega da dove esce il prezzo, e in orizzontale costa una riga sola invece di una lista. Se ti importa di più vedere quanto manca, la <b>3</b> o la <b>10</b>; se conta solo stare bassi, la <b>9</b>.</p>
-    <p>Si mescolano: la tastiera della 9 dentro la 7, o la barra della 3 al posto della riga «venduto».</p>
-  </div>
+  <section>
+    <h2>Dove è finita ogni cosa</h2>
+    <p>Niente sparisce e niente va in un'altra schermata. Cambia la forma con cui è detta.</p>
+    <table>
+      <tr><th>Prima</th><th>Adesso</th></tr>
+      <tr><td>Bracciale</td><td>È il cappello d'ingresso, del suo colore. Si tocca per cambiarlo — ed è onesto: il colore lo decide già l'ora d'entrata.</td></tr>
+      <tr><td>Ingresso</td><td>Nel cappello di sinistra, coi suoi più e meno e il «📍 Ora».</td></tr>
+      <tr><td>Uscita</td><td>Nel cappello di destra, con le due frecce accanto.</td></tr>
+      <tr><td>Minuti di parco</td><td>Sono la lunghezza del nastro; la somma è scritta in testata.</td></tr>
+      <tr><td>Tagli 15m · 30m · 1h · 1h30</td><td>La riga sotto. A nastro vuoto dicono «30m» e scelgono; a nastro pieno «+30m» e aggiungono un tratto.</td></tr>
+      <tr><td>Tempo aperto</td><td>Una chip nella stessa riga, e il nastro che sfuma a destra.</td></tr>
+      <tr><td>Pagato fino alle</td><td>Il filo verde sotto il nastro, coi suoi più e meno in fondo a destra.</td></tr>
+      <tr><td>Estendi ±5m</td><td>Nella riga vendi ma staccati dalle chip col prezzo: correggere non è vendere.</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>Le misure</h2>
+    <div class="sfondo">
+      <p style="margin:0"><b>Alta 150 pixel, sempre</b> — testata, nastro, riga vendi. È la misura presa a video sui disegni qui sopra, non una stima. Oggi la card è alta <b>151</b> senza l'Estendi e <b>203</b> con l'Estendi: il nastro sta sotto tutte e due <em>avendo dentro tutto</em>, perché usa la larghezza — cinquecento pixel di nastro — invece dell'altezza.<br><br>
+      Larghezza 797, e i pezzi sono quelli dell'app: tasti 42×42 con l'angolo da 10, chip alte 42 con l'angolo da 14, numeri Fredoka 25, il verde e il rosso già in uso.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Cosa costa, detto prima</h2>
+    <ul>
+      <li><b>È un disegno nuovo da imparare</b>, una volta sola. Attenuante: tutti i gesti restano tasti normali — il nastro si può anche solo guardare, trascinarlo non serve mai.</li>
+      <li><b>Un tratto corto diventa stretto</b>: un +5m dentro un'ora è il sette per cento del nastro. Sotto una certa larghezza il tratto perde la scritta e resta il colore; toccandolo, il nome compare in testata.</li>
+      <li><b>Tante vendite riempiono il nastro</b> di scritte. Dalla quinta in poi i tratti uguali si uniscono e la testata dice «6 vendite».</li>
+      <li><b>Va rifatto anche il mini menu</b> della scheda in lista, se vogliamo che le due schermate si somiglino: lì il nastro entra alto sei pixel, senza scritte, come una barra di stato.</li>
+    </ul>
+    <p>E se dopo averlo provato non convince: la riga «vendi» e la testata funzionano identiche anche senza nastro — si torna alle due righe di oggi senza buttare via niente.</p>
+  </section>
 
 </div>
 </body>
