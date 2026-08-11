@@ -553,16 +553,18 @@ gruppo('Estendi tempo: una sezione sua, e i prezzi veri');
      -- Modifica (il Parco), Bar (il bancone), Uscita -- e dal conto si
      torna indietro con «Fatto». */
   prova('l uscita non sta piu nella barra del conto', !APP.includes('data-uscita'));
-  prova('i tre tasti del menu ci sono tutti',
+  prova('i quattro tasti del menu ci sono tutti',
     /const payBtn = mkAct\('[^']*Modifica', 'conto'/.test(APP) &&
     /const barBtn = mkAct\('[^']*Bar', 'conto'/.test(APP) &&
+    /const scBtn = mkAct\('[^']*Scontrino', 'conto'/.test(APP) &&
     /mkAct\('[^']*Uscita', 'forte'/.test(APP));
   prova('e portano ognuno alla sua linguetta',
     /Modifica[\s\S]{0,120}apriConto\('Parco'\)/.test(APP) &&
-    /Bar', 'conto'[\s\S]{0,120}apriConto\(primaCategoriaBar\(\)\)/.test(APP));
+    /Bar', 'conto'[\s\S]{0,120}apriConto\(primaCategoriaBar\(\)\)/.test(APP) &&
+    /Scontrino', 'conto'[\s\S]{0,120}apriConto\('Scontrino'\)/.test(APP));
   prova('l uscita chiude l ingresso', /Uscita', 'forte'[\s\S]{0,120}chiudiIngresso\(entry\)/.test(APP));
-  prova('e i due tasti che aprono il conto si spengono insieme',
-    /function spegniConto[\s\S]{0,220}barBtn\.classList\.remove\('on'\)/.test(APP));
+  prova('e i tre tasti che aprono il conto si spengono insieme',
+    /function spegniConto[\s\S]{0,300}barBtn\.classList\.remove\('on'\)[\s\S]{0,120}scBtn\.classList\.remove\('on'\)/.test(APP));
   prova('a conto aperto il tasto cambia linguetta invece di chiudere',
     /GIA' APERTO, MA SU UN'ALTRA LINGUETTA[\s\S]{0,600}PAN\.cat !== cat\) \{\s*PAN\.cat = cat;/.test(APP));
   prova('rifacendo la scheda si torna sulla linguetta di prima',

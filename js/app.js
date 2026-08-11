@@ -4120,7 +4120,16 @@ function entryCard(entry) {
     apriConto(primaCategoriaBar());
   });
   barBtn.title = 'Da bere, da mangiare, il conto';
-  tastiConto.push(payBtn, barBtn);
+
+  /* e la terza linguetta: cosi' da fuori si arriva a tutte e tre senza
+     dover entrare da un'altra parte e poi cambiare */
+  const scBtn = mkAct('\ud83e\uddfe Scontrino', 'conto', (ev) => {
+    ev.stopPropagation();
+    apriConto('Scontrino');
+  });
+  scBtn.title = 'Tutto il conto in fila: cosa resta da pagare';
+
+  tastiConto.push(payBtn, barBtn, scBtn);
 
   mkAct('\ud83d\udeaa Uscita', 'forte', (ev) => { ev.stopPropagation(); chiudiIngresso(entry); });
 
@@ -4141,7 +4150,7 @@ function entryCard(entry) {
   aperta.onclick = (ev) => ev.stopPropagation();
 
   cardRefs.set(entry.id, {
-    card, count, range, sKids, sCrazy, sTime, solo, barBtn, apriConto,
+    card, count, range, sKids, sCrazy, sTime, solo, barBtn, scBtn, apriConto,
     dueVal: soldiV, soldiK, soldiS, soldi, wrist, bimbiV, crzV, crz, countK,
     payPanel, payBtn,
     /* servono a rivestire la riga quando cambia un vestito */
@@ -5190,6 +5199,7 @@ function spegniConto(r) {
   if (!r) return;
   if (r.payBtn) r.payBtn.classList.remove('on');
   if (r.barBtn) r.barBtn.classList.remove('on');
+  if (r.scBtn) r.scBtn.classList.remove('on');
 }
 
 /* una scheda aperta per volta: due aperte non ci stanno sullo schermo */
