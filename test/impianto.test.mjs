@@ -353,9 +353,32 @@ gruppo('La striscia della lista: tre gruppi, ognuno col suo nome');
      Il resto -- pagare, correggere una volta vecchia, cancellarla --
      lo fa lo Scontrino, che ha lo spazio per farlo bene. */
   prova('ogni gruppo ha il suo nome scritto',
-    /mkCella\('\\ud83e\\uddd2', 'children', 1, 'Bambini'\)/.test(APP) &&
+    /mkCella\('[^']*', 'children', 1, 'Bambini'\)/.test(APP) &&
     /mkCella\(null, 'durationMinutes', 5, 'Tempo'\)/.test(APP) &&
-    /mkCella\('\\ud83e\\udd38', 'crazyJumping', 1, 'Crazy'\)/.test(APP));
+    /e-nome', 'Crazy Jumping'/.test(APP));
+  /* IL CRAZY NON E' PIU' UN NUMERO: e' una lista di giri, e i due
+     tasti dicono cosa fanno. Il piu' e il meno non contano piu' su
+     «l'ultima volta aperta» -- un giro che esisteva solo nella testa
+     di chi premeva -- ma dentro il giro che hai davanti. */
+  prova('il Crazy ha i due tasti dei giri',
+    /Aggiungi giro/.test(APP) && /Modifica giro/.test(APP));
+  prova('«aggiungi» apre davvero un giro nuovo',
+    /gNuovo\.onclick[\s\S]{0,400}giroNuovo\(entry\)/.test(APP));
+  prova('e il salva butta via il giro rimasto vuoto',
+    /d\.gsalva !== undefined[\s\S]{0,220}viaGiro\(entry, \+d\.gsalva\)/.test(APP));
+  prova('«modifica» sceglie, corregge e cancella',
+    /d\.gsel !== undefined[\s\S]{0,80}giroScelto = \+d\.gsel/.test(APP) &&
+    /d\.gvia !== undefined[\s\S]{0,140}viaGiro\(entry, \+d\.gvia\)/.test(APP) &&
+    /d\.gpiu !== undefined[\s\S]{0,140}cambiaGiro\(entry, \+d\.gpiu, 1\)/.test(APP));
+  prova('e i soldi passano dal conto, come sempre',
+    /conConto\(entry, \(\) => cambiaGiro\(entry, \+d\.gmeno, -1\)\)/.test(APP) &&
+    /conConto\(entry, \(\) => viaGiro\(entry, \+d\.gvia\)\)/.test(APP));
+  prova('chiudendo la scheda si chiude anche l editor',
+    /giriDiChi === entry\.id\) \{ chiudiGiri\(\); disegnaGiri\(\); \}/.test(APP));
+  prova('la cella dei giri si prende lo spazio che avanza',
+    /\.e-fila > \.e-cgiri \{ flex: 1 1 auto/.test(CSS));
+  prova('e i tre tasti del conto pure',
+    /\.e-azioni button\.conto \{ flex: 1 1 0/.test(CSS));
   prova('e il nome ha il suo aspetto', /\.e-nome \{/.test(CSS));
   prova('tre gruppi e basta: niente piu celle del pagato',
     !/function mkCellaPagate/.test(APP) && !/function mkCellaCrazy/.test(APP));

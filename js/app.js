@@ -525,6 +525,14 @@ function metteCrazy(c, n) {
   rimettiSoldiCrazy(c);
 }
 
+/* L'EDITOR DEI GIRI APERTO ADESSO, nella striscia di una scheda.
+   Non e' un dato dell'ingresso ma un fatto dello schermo -- come il
+   giro scelto qui sotto -- e vive finche' quella scheda resta aperta:
+   una sola scheda per volta, un solo editor. */
+let giriModo = null;      /* null | 'nuovo' | 'lista' */
+let giriDiChi = null;     /* l'id dell'ingresso a cui appartiene */
+function chiudiGiri() { giriModo = null; giriDiChi = null; }
+
 /* IL GIRO SCELTO: quello su cui lavorano il piu' e il meno della
    card. Di suo e' l'ultimo -- si segna quasi sempre quello che sta
    succedendo adesso -- e si cambia toccando un giro nello storico.
@@ -4034,7 +4042,118 @@ function entryCard(entry) {
      altro giro. */
   const sKids = mkCella('\ud83e\uddd2', 'children', 1, 'Bambini');
   const sTime = mkCella(null, 'durationMinutes', 5, 'Tempo');
-  const sCrazy = mkCella('\ud83e\udd38', 'crazyJumping', 1, 'Crazy');
+
+  /* IL CRAZY NON E' UN NUMERO, E' UNA LISTA DI GIRI.
+     Il piu' e il meno contavano le salite sull'«ultima volta aperta»:
+     un giro che esisteva solo nella testa di chi premeva, e per
+     correggerne uno vecchio bisognava aprire il conto e andare nello
+     Scontrino. Qui ci sono due tasti che dicono cosa fanno, e quello
+     che serve compare sotto. */
+  const sCrazy = { box: el('div', 'e-cella e-cgiri'), val: el('span', 'v num'),
+    minus: el('button'), plus: el('button') };
+  sCrazy.box.appendChild(el('span', 'e-nome', 'Crazy Jumping'));
+  const gDentro = el('span', 'e-dentro-cella');
+  const gNuovo = el('button', 'e-gt');
+  gNuovo.innerHTML = '<span class="em">\u2795</span>Aggiungi giro';
+  const gLista = el('button', 'e-gt');
+  gLista.innerHTML = '<span class="em">\u270f\ufe0f</span>Modifica giro';
+  gDentro.appendChild(gNuovo);
+  gDentro.appendChild(gLista);
+  sCrazy.box.appendChild(gDentro);
+  fila.appendChild(sCrazy.box);
+
+  /* qui sotto compare quello che il tasto ha chiesto: il conteggio del
+     giro nuovo, o la lista di quelli fatti */
+  const giriBox = el('div', 'e-giri hidden');
+
+  const disegnaGiri = () => {
+    const mio = giriDiChi === entry.id ? giriModo : null;
+    gNuovo.classList.toggle('on', mio === 'nuovo');
+    gLista.classList.toggle('on', mio === 'lista');
+    giriBox.classList.toggle('hidden', !mio);
+    if (!mio) { giriBox.innerHTML = ''; return; }
+    const g = giriCrazy(entry);
+    const prezzo = num(settings.crazyJumpingPrice, 0);
+    const conta = (i, n) =>
+      '<button class="gr-m" data-gmeno="' + i + '"' + (n <= 0 ? ' disabled' : '') +
+        ' aria-label="uno in meno">\u2212</button>' +
+      '<b class="num">' + n + '</b>' +
+      '<button class="gr-p" data-gpiu="' + i + '" aria-label="uno in piu\u2019">+</button>';
+
+    if (mio === 'nuovo') {
+      const i = Math.max(0, g.length - 1);
+      const n = g[i] || 0;
+      giriBox.innerHTML = '<div class="gr-riga">' +
+        '<span class="gr-k">\ud83e\udd38 Chi sale?</span>' +
+        '<span class="gr-q">' + conta(i, n) + '</span>' +
+        '<span class="gr-eur">' + eur(n * prezzo) + '</span>' +
+        '<button class="gr-ok" data-gsalva="' + i + '">\u2713 Salva il giro</button>' +
+      '</div>';
+      return;
+    }
+
+    /* la lista: una riga per giro, quello scelto ha sotto i comandi */
+    if (!g.length) {
+      giriBox.innerHTML = '<div class="gr-vuoto">Nessun giro segnato. ' +
+        'Usa <b>Aggiungi giro</b> quando salgono.</div>';
+      return;
+    }
+    const sel = giroOra(entry);
+    giriBox.innerHTML = '<div class="gr-lista">' + g.map((n, i) => {
+      const pagate = conConto(entry, () => pagateDelGiro(entry, i));
+      const saldo = n > 0 && pagate >= n;
+      return '<button class="gr-uno' + (i === sel ? ' on' : '') + (saldo ? ' saldato' : '') +
+        '" data-gsel="' + i + '">' +
+        '<span class="gr-n">' + (i + 1) + '\u00ba</span>' +
+        '<b>' + n + '</b><span class="gr-q2">' + (n === 1 ? 'salito' : 'saliti') + '</span>' +
+        '<span class="gr-p2">' + (saldo ? '\u2713 pagato' : eur(n * prezzo)) + '</span>' +
+      '</button>';
+    }).join('') + '</div>' +
+    '<div class="gr-riga">' +
+      '<span class="gr-k">' + (sel + 1) + '\u00ba giro</span>' +
+      '<span class="gr-q">' + conta(sel, g[sel] || 0) + '</span>' +
+      '<button class="gr-via" data-gvia="' + sel + '">\ud83d\uddd1\ufe0f Elimina</button>' +
+      '<button class="gr-ok" data-gfine>\u2713 Fatto</button>' +
+    '</div>';
+  };
+
+  gNuovo.onclick = (ev) => {
+    ev.stopPropagation();
+    if (giriDiChi === entry.id && giriModo === 'nuovo') { chiudiGiri(); disegnaGiri(); return; }
+    /* aprire un giro e' gia' una modifica: si apre subito, e il tasto
+       «salva» serve a chiuderlo -- se resta vuoto se ne va da solo */
+    conConto(entry, () => giroNuovo(entry));
+    giriModo = 'nuovo'; giriDiChi = entry.id;
+    saveEntries(); syncCard(entry); disegnaGiri(); tick();
+  };
+  gLista.onclick = (ev) => {
+    ev.stopPropagation();
+    if (giriDiChi === entry.id && giriModo === 'lista') { chiudiGiri(); disegnaGiri(); return; }
+    giriModo = 'lista'; giriDiChi = entry.id;
+    disegnaGiri();
+  };
+
+  giriBox.onclick = (ev) => {
+    const b = ev.target.closest('button');
+    if (!b) return;
+    ev.stopPropagation();
+    const d = b.dataset;
+    const rifai = () => { saveEntries(); syncCard(entry); disegnaGiri(); tick(); };
+    if (d.gmeno !== undefined) { conConto(entry, () => cambiaGiro(entry, +d.gmeno, -1)); rifai(); return; }
+    if (d.gpiu !== undefined) { conConto(entry, () => cambiaGiro(entry, +d.gpiu, 1)); rifai(); return; }
+    if (d.gsel !== undefined) { giroScelto = +d.gsel; disegnaGiri(); return; }
+    if (d.gvia !== undefined) {
+      conConto(entry, () => viaGiro(entry, +d.gvia));
+      if (!giriCrazy(entry).length) chiudiGiri();
+      rifai(); return;
+    }
+    if (d.gsalva !== undefined) {
+      /* un giro salvato vuoto non e' un giro */
+      if (!(giriCrazy(entry)[+d.gsalva] > 0)) conConto(entry, () => viaGiro(entry, +d.gsalva));
+      chiudiGiri(); rifai(); return;
+    }
+    if (d.gfine !== undefined) { chiudiGiri(); disegnaGiri(); return; }
+  };
   if (entry.payLater) {
     sTime.box.classList.add('hidden');
     fila.appendChild(el('div', 'e-later-tag', '\u23f3 Tempo aperto'));
@@ -4050,6 +4169,8 @@ function entryCard(entry) {
   };
   fila.appendChild(azioni);
   dentro.appendChild(fila);
+  dentro.appendChild(giriBox);
+  disegnaGiri();
 
   /* Il guscio del conto: qui dentro ci entra IL pannello -- lo stesso
      di "+ Nuovo" -- spostato di peso. Prima c'erano due strade per la
@@ -4144,13 +4265,17 @@ function entryCard(entry) {
   riga.onclick = () => {
     if (voloOccupato) return;
     const gia = card.classList.contains('aperto');
+    /* chiudendo la scheda si chiude anche l'editor dei giri: riaprirla
+       e ritrovarcelo aperto su un giro di mezz'ora fa non vuol dire
+       niente */
+    if (giriDiChi === entry.id) { chiudiGiri(); disegnaGiri(); }
     chiudiSchede(null);
     if (!gia) card.classList.add('aperto');
   };
   aperta.onclick = (ev) => ev.stopPropagation();
 
   cardRefs.set(entry.id, {
-    card, count, range, sKids, sCrazy, sTime, solo, barBtn, scBtn, apriConto,
+    card, count, range, sKids, sCrazy, sTime, solo, barBtn, scBtn, apriConto, disegnaGiri,
     dueVal: soldiV, soldiK, soldiS, soldi, wrist, bimbiV, crzV, crz, countK,
     payPanel, payBtn,
     /* servono a rivestire la riga quando cambia un vestito */
@@ -5764,6 +5889,10 @@ function syncCard(entry) {
   r.sCrazy.minus.disabled = crazy <= 0;
   r.sCrazy.box.classList.toggle('pagata',
     crazy > 0 && conConto(entry, () => bcPag('crazy')) >= crazy);
+  /* i giri si cambiano anche dal conto (Scontrino) e dalla card del
+     Crazy: se l'editor della striscia e' aperto, deve dire la stessa
+     cosa senza aspettare che lo si riapra */
+  if (typeof r.disegnaGiri === 'function') r.disegnaGiri();
   r.sKids.box.classList.toggle('pagata',
     kids > 0 && conConto(entry, () => bcPag('bimbi')) >= kids);
   /* gli stessi minuti che stanno nella fascia Tempo, scritti allo

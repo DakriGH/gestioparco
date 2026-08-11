@@ -1625,8 +1625,24 @@ main {
    cancellarla -- lo fa lo Scontrino, dove ogni riga ha il suo posto e
    c'e' spazio per scrivere cos'e'.
    ══════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════
+   IL MENU DELLA SCHEDA E' UNA GRIGLIA, NON UNA FILA DI AVANZI
+   Le tre celle erano larghe quanto capitava -- centoquarantadue,
+   centotrentacinque, centoquarantadue -- e i quattro tasti pure
+   (ottantanove, cinquantaquattro, novantacinque): roba messa in fila
+   nell'ordine in cui era stata scritta. Adesso le tre celle valgono
+   uguale e i tre tasti del conto anche, su una riga tutta loro: si
+   vede dove si tocca senza cercarlo.
+   ══════════════════════════════════════════════════════════ */
 .e-fila { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; }
-.e-fila > .e-azioni { margin-left: auto; align-self: center; }
+/* Bambini e Tempo restano della loro misura -- un numero e due tasti
+   -- e il Crazy si prende quello che avanza: dentro ci sono due tasti
+   con le parole scritte, e strizzati alla larghezza degli altri le
+   parole si tagliavano a meta' («Aggiungi gir...»). */
+.e-fila > .e-cella { flex: 0 1 auto; min-width: 0; }
+.e-fila > .e-cgiri { flex: 1 1 auto; }
+/* i quattro tasti su una riga loro, larga tutta la scheda */
+.e-fila > .e-azioni { flex: 1 0 100%; margin-left: 0; align-self: stretch; }
 .e-cella { flex-direction: column; align-items: center; gap: 1px;
   padding: 4px 9px 6px; }
 .e-nome { font-size: 9.5px; font-weight: 800; letter-spacing: .07em;
@@ -1670,6 +1686,11 @@ main {
    di stacco. I nomi restano interi -- accorciarli voleva dire non
    sapere piu' dove porta un tasto. */
 .e-azioni { display: flex; gap: 5px; margin-left: auto; flex-wrap: nowrap; }
+/* i tre che aprono il conto sono la stessa cosa vista da tre porte:
+   larghi uguale. L'uscita no -- e' l'unico tasto che porta via da qui,
+   e si vede che e' un'altra cosa anche dalla misura. */
+.e-azioni button.conto { flex: 1 1 0; min-width: 0; }
+.e-azioni button.forte { flex: 0 0 auto; }
 .e-azioni button {
   position: relative;
   background: rgba(255, 255, 255, 0.16);
@@ -1685,6 +1706,55 @@ main {
 }
 .e-azioni button.forte { background: #fff; color: #123A2C; }
 .e-azioni button.on { background: #fff; color: #123A2C; }
+
+/* ══════════════════════════════════════════════════════════
+   I GIRI DEL CRAZY, NELLA STRISCIA
+   Due tasti che dicono cosa fanno, e sotto quello che hanno chiesto:
+   il conteggio del giro nuovo, o la lista di quelli fatti.
+   ══════════════════════════════════════════════════════════ */
+.e-cgiri .e-dentro-cella { gap: 5px; width: 100%; }
+.e-gt { flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center;
+  gap: 4px; height: 34px; padding: 0 7px; border: none; border-radius: 10px; cursor: pointer;
+  background: rgba(182, 158, 255, .18); color: #EDE6FF; font: inherit; font-size: 12px;
+  font-weight: 700; white-space: nowrap; }
+.e-gt .em { font-size: 11px; }
+.e-gt.on { background: #C9B6FF; color: #241A46; }
+.e-gt:active { transform: scale(.97); }
+
+.e-giri { margin-top: 9px; display: flex; flex-direction: column; gap: 6px;
+  background: rgba(182, 158, 255, .10); border-radius: 14px; padding: 8px; }
+.e-giri.hidden { display: none; }
+.gr-riga { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.gr-k { font-size: 11.5px; font-weight: 800; color: rgba(255, 255, 255, .72);
+  letter-spacing: .02em; }
+.gr-q { display: flex; align-items: center; gap: 7px; }
+.gr-q button { width: 38px; height: 34px; border: none; border-radius: 10px; cursor: pointer;
+  background: rgba(255, 255, 255, .16); color: #fff; font: inherit; font-size: 17px;
+  font-weight: 700; }
+.gr-q button:disabled { opacity: .3; }
+.gr-q b { font-family: 'Fredoka', sans-serif; font-size: 19px; min-width: 20px;
+  text-align: center; }
+.gr-eur { font-family: 'Fredoka', sans-serif; font-size: 14px; font-weight: 700;
+  color: #C9B6FF; }
+.gr-ok, .gr-via { margin-left: auto; height: 34px; padding: 0 12px; border: none;
+  border-radius: 10px; cursor: pointer; font: inherit; font-size: 12.5px; font-weight: 700; }
+.gr-ok { background: #6ADCAF; color: #10281F; }
+.gr-via { margin-left: 0; background: rgba(228, 87, 79, .22); color: #FFC7C3; }
+.gr-via:active { background: rgba(228, 87, 79, .6); color: #fff; }
+.gr-vuoto { font-size: 12px; line-height: 1.5; color: rgba(255, 255, 255, .5); padding: 2px 4px; }
+.gr-vuoto b { color: rgba(255, 255, 255, .8); }
+/* la lista dei giri: si scorre di lato solo se ce ne sono tanti, e i
+   giri sono pochi per definizione -- un pomeriggio ne fa cinque o sei */
+.gr-lista { display: flex; flex-wrap: wrap; gap: 5px; }
+.gr-uno { display: flex; align-items: center; gap: 6px; height: 34px; padding: 0 10px;
+  border: none; border-radius: 10px; cursor: pointer; font: inherit;
+  background: rgba(255, 255, 255, .10); color: #EDE6FF; }
+.gr-uno.on { background: rgba(182, 158, 255, .38); box-shadow: inset 0 0 0 1.5px #C9B6FF; }
+.gr-uno.saldato .gr-p2 { color: #8DEBBB; }
+.gr-uno .gr-n { font-size: 10px; font-weight: 800; color: rgba(255, 255, 255, .5); }
+.gr-uno b { font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 700; }
+.gr-uno .gr-q2 { font-size: 11px; font-weight: 700; color: rgba(255, 255, 255, .6); }
+.gr-uno .gr-p2 { font-size: 11px; font-weight: 700; color: rgba(255, 255, 255, .45); }
 
 .e-later-tag {
   background: rgba(0, 0, 0, 0.26);
