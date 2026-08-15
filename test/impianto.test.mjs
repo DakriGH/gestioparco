@@ -651,12 +651,24 @@ gruppo('Il tempo si muove da un posto solo');
   /* ALLUNGARE A UN GRUPPO GIA' SFORATO: lo sforo si mangiava il tempo
      nuovo. Sotto i dieci minuti si condona da se', sopra si chiede. */
   prova('e allungando a chi ha sforato si passa dal guardiano',
-    /function conSforo/.test(APP) && /conSforo\(entry, \(\) => ritoccaTempo\(entry, d\)\)/.test(APP));
+    /function conSforo/.test(APP) && /if \(d > 0\) conSforo\(entry, fatto\); else fatto\(\);/.test(APP));
   prova('sotto i dieci minuti si condona senza chiedere',
     /const SFORO_CONDONATO = 10 \* 60000/.test(APP) &&
     /sforo < SFORO_CONDONATO\) \{ condonaSforo\(c\); applica\(\); return; \}/.test(APP));
   prova('sopra si chiede, con le due strade scritte',
     /function foglioSforo/.test(APP) && /Riparti da adesso/.test(APP) && /Scala lo sforo/.test(APP));
+  /* IL FOGLIO DELLO SFORO RISPONDE DOPO: salvare prima della scelta
+     voleva dire salvare il tempo di prima. Il tempo cambiava, la scheda
+     non lo diceva, e al ricaricamento non c'era piu'. */
+  prova('e quello che va fatto dopo la scelta sta DENTRO la scelta',
+    /const chiudiIlGiro = \(\) => \{ saveEntries\(\); syncCard\(entry\); tick\(\); \};/.test(APP) &&
+    /ritoccaTempo\(entry, d\); chiudiIlGiro\(\);/.test(APP));
+  /* e la sigla si ricontrolla quando si registra: il foglio nasce prima
+     che gli ingressi siano letti, e a lista vuota rispondeva sempre AA */
+  prova('la sigla si ricontrolla al momento della registrazione',
+    /function siglaLibera/.test(APP) && /sigla: siglaLibera\(draft\.sigla, draft\.startTime\)/.test(APP));
+  prova('e all avvio il foglio si rimette in pari',
+    /draft\.sigla = siglaLibera\(draft\.sigla, draft\.startTime\);/.test(APP));
   prova('e un giro fatto a tempo scaduto regala davvero',
     /function regalaDaAdesso/.test(APP) && /Math\.max\(base, num\(e\.regaloFinoA, 0\)\)/.test(APP));
   prova('e i minuti si leggono come nel pannello',
@@ -922,7 +934,8 @@ gruppo('La sigla sta col bracciale, dove finisce scritta');
   prova('si assegna al foglio nuovo, non alla registrazione',
     /sigla: nuovaSigla\(\)/.test(APP),
     'serve PRIMA: e quella che si scrive sul bracciale');
-  prova('e viene con lui quando si registra', /sigla: String\(draft\.sigla \|\| ''\)/.test(APP));
+  prova('e viene con lui quando si registra, se e ancora libera',
+    /sigla: siglaLibera\(draft\.sigla, draft\.startTime\)/.test(APP));
   prova('nel pannello sta accanto al bracciale',
     /brc-sigla pc-sigla/.test(HTML + APP) && /\.brc-sigla \{/.test(CSS));
   prova('e nella scheda pure',

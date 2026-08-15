@@ -191,6 +191,14 @@ function sigleDellaGiornata(quando) {
    cassa, non tre lettere invece di due.
    Se finissero anche quelle si torna senza sigla, che e' meglio di una
    doppia: un codice che indica due gruppi non e' un riferimento. */
+/* La sigla che si ha in mano, se e' ancora libera per quella giornata;
+   se no una nuova. */
+function siglaLibera(sigla, quando) {
+  const s = String(sigla || '');
+  if (/^[A-Z]{2,3}$/.test(s) && !sigleDellaGiornata(quando).has(s)) return s;
+  return nuovaSigla(quando);
+}
+
 function nuovaSigla(quando, ancheQueste) {
   const usate = sigleDellaGiornata(quando);
   lista(ancheQueste).forEach(x => { if (x) usate.add(x); });
@@ -4058,9 +4066,14 @@ function commitDa(draft, opz) {
        nuove: senza questa riga la nota appena scritta nel Parco
        spariva premendo Registra. */
     note: String(draft.note || ''),
-    /* la sigla del modulo viene con lui; se per qualsiasi motivo non ce
-       l'ha (foglio vecchio, dato da fuori) se ne prende una adesso */
-    sigla: String(draft.sigla || '') || nuovaSigla(draft.startTime),
+    /* LA SIGLA DEL MODULO VIENE CON LUI, MA SOLO SE E' ANCORA LIBERA.
+       Il foglio nasce col caricamento dell'app -- `let draft =
+       freshDraft()` -- e a quel punto gli ingressi salvati non sono
+       ancora stati letti: `nuovaSigla()` vedeva una lista vuota e
+       rispondeva sempre AA. Otto riavvii, otto gruppi chiamati AA.
+       Qui si controlla al momento buono, che e' l'unico in cui si sa
+       davvero chi c'e'. */
+    sigla: siglaLibera(draft.sigla, draft.startTime),
     braceletColor: draft.braceletColor, braceletCustom: draft.braceletCustom,
     status: 'active',
     /* quello che e' gia' stato incassato al banco entra subito nei conti
@@ -4483,6 +4496,9 @@ function entryCard(entry) {
     plus.textContent = step > 1 ? '+' + step : '+';
     const bump = (d) => (ev) => {
       ev.stopPropagation();
+      /* quello che va fatto a cose finite, da qualunque strada si arrivi:
+         anche dal foglio dello sforo, che risponde piu' tardi */
+      const chiudiIlGiro = () => { saveEntries(); syncCard(entry); tick(); };
       /* passano dal conto anche questi: cambiare i bambini qui e non di
          la' voleva dire lasciare le righe pagate scollegate dai soldi */
       const voce = key === 'children' ? 'bimbi' : key === 'crazyJumping' ? 'crazy' : null;
@@ -4504,17 +4520,19 @@ function entryCard(entry) {
          ritocco entra nell'ultima vendita invece di aggiungersene una
          nuova -- ed e' gia' quello che usa il pannello. */
       else if (key === 'durationMinutes') {
-        /* allungando a un gruppo gia' sforato lo sforo si mangiava il
-           tempo nuovo: sotto i dieci minuti si condona, sopra si chiede */
+        /* IL FOGLIO DELLO SFORO RISPONDE DOPO, e questo cambia tutto:
+           salvare e ridisegnare qui sotto voleva dire farlo PRIMA che la
+           scelta fosse fatta -- il tempo cambiava e la scheda non lo
+           diceva, e al ricaricamento non c'era piu'. Quello che va fatto
+           dopo si porta dentro, e da qui si esce. */
         conConto(entry, () => {
-          if (d > 0) conSforo(entry, () => ritoccaTempo(entry, d));
-          else ritoccaTempo(entry, d);
+          const fatto = () => { ritoccaTempo(entry, d); chiudiIlGiro(); };
+          if (d > 0) conSforo(entry, fatto); else fatto();
         });
+        return;
       }
       else entry[key] = clamp(num(entry[key], 0) + d, 0, 99999);
-      saveEntries();
-      syncCard(entry);
-      tick();
+      chiudiIlGiro();
     };
     minus.onclick = bump(-step);
     plus.onclick = bump(step);
@@ -8503,6 +8521,11 @@ function init() {
     save(SK.settings, settings);
   }
   entries = normalizeEntries(load(SK.entries));
+  /* IL FOGLIO E' NATO PRIMA DI LEGGERE GLI INGRESSI, quindi la sua sigla
+     l'ha scelta guardando una lista vuota: adesso che si sa chi c'e' si
+     rimette in pari. Senza, il primo gruppo registrato dopo ogni riavvio
+     si prendeva la sigla di uno che era gia' dentro. */
+  draft.sigla = siglaLibera(draft.sigla, draft.startTime);
   presets = load(SK.presets) || [];
   if (!presets.length) {
     presets = AV.ROLES.slice(0, 6).map(r => ({ id: uid(), name: r.label, role: r.key, avatar: AV.defaultFor(r.key) }));

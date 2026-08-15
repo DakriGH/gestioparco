@@ -1190,6 +1190,38 @@ gruppo('La sigla: due lettere per dire QUALE gruppo', () => {
          !!senza.find(e => e.id === 'v3').sigla && !!senza.find(e => e.id === 'v4').sigla);
     vero('tutte diverse', new Set(senza.map(e => e.sigla)).size === senza.length);
 
+    /* IL FOGLIO NASCE PRIMA CHE GLI INGRESSI SIANO LETTI.
+       `let draft = freshDraft()` gira al caricamento dell'app, quando la
+       lista salvata non e' ancora stata letta: `nuovaSigla()` vedeva
+       una lista vuota e rispondeva sempre AA. Otto riavvii, otto gruppi
+       chiamati AA -- visto al banco. Adesso la sigla si ricontrolla al
+       momento della registrazione, che e' l'unico in cui si sa davvero
+       chi c'e' dentro. */
+    ctx.entries = ctx.normalizeEntries([
+      { id: 'a', startTime: ora - 5000, createdAt: ora - 5000, children: 2, durationMinutes: 30, baseMinutes: 30, sigla: 'AA' },
+      { id: 'b', startTime: ora - 4000, createdAt: ora - 4000, children: 2, durationMinutes: 30, baseMinutes: 30, sigla: 'AB' }
+    ]);
+    ctx.draft = Object.assign(ctx.freshDraft(), { sigla: 'AA' });
+    ctx.PAN.conto = ctx.draft; ctx.PAN.ingresso = null;
+    ctx.bcSetQ('bimbi', 2);
+    const doppio = ctx.commitDa(ctx.draft, {});
+    ctx.draft = ctx.freshDraft();
+    vero('una sigla gia presa non si assegna una seconda volta', doppio.sigla !== 'AA');
+    vero('e in lista non ce ne sono due uguali',
+         new Set(ctx.entries.map(e => e.sigla)).size === ctx.entries.length);
+
+    /* otto riavvii di fila: otto sigle diverse */
+    const dopoRiavvii = [];
+    for (let k = 0; k < 8; k++) {
+      ctx.draft = Object.assign(ctx.freshDraft(), { sigla: 'AA' });
+      ctx.draft.sigla = ctx.siglaLibera(ctx.draft.sigla, ctx.draft.startTime);
+      ctx.PAN.conto = ctx.draft; ctx.PAN.ingresso = null;
+      ctx.bcSetQ('bimbi', 1);
+      dopoRiavvii.push(ctx.commitDa(ctx.draft, {}).sigla);
+      ctx.draft = ctx.freshDraft();
+    }
+    ok('otto riavvii, otto sigle diverse', new Set(dopoRiavvii).size, 8);
+
     /* FINITE LE 576 SI PASSA A TRE LETTERE, invece di restare senza: un
        gruppo senza riferimento e' peggio di uno con una sigla piu'
        lunga. */
