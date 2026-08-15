@@ -717,6 +717,70 @@ gruppo('Lo stesso tempo costa lo stesso, da qualunque tasto passi', () => {
   ok('mille ritocchi a caso e nessun conto storto', storti.slice(0, 3), []);
 });
 
+gruppo('Memoria e disco non possono dire due cose diverse', () => {
+  /* Un ingresso che in memoria vale una cosa e dopo un ricaricamento ne
+     vale un'altra e' il guasto peggiore che ci sia: al banco funziona,
+     la sera i conti non tornano, e nessuno sa perche'.
+     `parcoDa` ci finiva dentro: arrotondando ai cinque si puo' scendere
+     di due minuti e mezzo, e su un gruppo appena entrato il tempo di
+     parco cominciava PRIMA che arrivassero. La riparazione lo
+     raddrizzava alla rilettura -- cioe' memoria e disco dicevano due
+     cose diverse fino al ricaricamento. */
+  let seme = 8675309;
+  const caso = k => { seme = (seme * 1103515245 + 12345) % 2147483648; return seme % k; };
+  const barIds = ctx.settings.barMenu.slice(0, 3).map(v => v.id);
+  const guai = [];
+  const MOSSE = ['bimbi', 'crazy', 'piu5', 'meno5', 'taglio', 'blocco',
+    'condona', 'regalo', 'bar', 'paga', 'pagaTutto', 'togliCrazy'];
+
+  for (let giro = 0; giro < 500 && !guai.length; giro++) {
+    ctx.settings.tariffaSuTotale = caso(2) === 0;
+    /* -30 vuol dire «appena entrato»: e' li' che l'arrotondamento
+       poteva far cominciare il parco prima dell'ingresso */
+    const sforo = [-30, -5, 0, 3, 12, 40][caso(6)];
+    const ms5 = 5 * 60000;
+    const t0 = Math.round((Date.now() - (30 + sforo) * 60000) / ms5) * ms5;
+    const c = conto({ children: caso(4) === 0 ? 0 : 1 + caso(3),
+      durationMinutes: caso(4) === 0 ? 0 : [15, 30, 60][caso(3)],
+      baseMinutes: 30, startTime: t0, createdAt: t0 });
+    ctx.PAN.conto = c; ctx.PAN.ingresso = null;
+    if (!c.children) ctx.metteCrazy(c, 1);
+    const fatte = [];
+
+    for (let k = 0; k < 12; k++) {
+      const m = MOSSE[caso(MOSSE.length)];
+      fatte.push(m);
+      try {
+        if (m === 'bimbi') ctx.bcSetQ('bimbi', caso(5));
+        else if (m === 'crazy') ctx.contaSalita(caso(2) ? 1 : -1);
+        else if (m === 'piu5') ctx.ritoccaTempo(c, 5);
+        else if (m === 'meno5') ctx.ritoccaTempo(c, -5);
+        else if (m === 'taglio') { c.durationMinutes = [15, 30, 60, 90][caso(4)]; ctx.sistemaAggiunte(c); }
+        else if (m === 'blocco') ctx.vendiBlocco(c, [15, 30][caso(2)]);
+        else if (m === 'condona') ctx.condonaSforo(c);
+        else if (m === 'regalo') ctx.toccoCrazy({ giro: 'crazy' });
+        else if (m === 'bar') ctx.bcSetQ(barIds[caso(barIds.length)], caso(4));
+        else if (m === 'paga') ctx.segnaPagate(caso(2) ? 'bimbi' : 'crazy', caso(4));
+        else if (m === 'pagaTutto') ctx.pagaTutto();
+        else ctx.metteCrazy(c, 0);
+      } catch (e) { guai.push('esplode su ' + m + ': ' + e.message); break; }
+
+      const dove = ' [' + fatte.join('>') + ']';
+      /* il parco non puo' cominciare prima che siano arrivati */
+      if (ctx.inizioParco(c) < c.startTime - 1) guai.push('il parco comincia prima dell ingresso' + dove);
+      /* e una rilettura non deve cambiare niente: se cambia, il dato
+         salvato non e' quello che si vede a video */
+      const ri = ctx.normalizeEntries([JSON.parse(JSON.stringify(c))])[0];
+      if (Math.abs(ctx.endTimeOf(ri) - ctx.endTimeOf(c)) > 1000) guai.push('rileggendolo cambia l uscita' + dove);
+      if (ctx.r2(ctx.costOf(ri).parkTotal) !== ctx.r2(ctx.costOf(c).parkTotal)) {
+        guai.push('rileggendolo cambia il prezzo' + dove);
+      }
+      if (guai.length) break;
+    }
+  }
+  ok('cinquecento sequenze, e rileggere non cambia mai niente', guai.slice(0, 2), []);
+});
+
 gruppo('Gli orari cadono sempre sui cinque minuti', () => {
   /* L'app lavora a passi di cinque minuti da sempre: l'ora d'ingresso si
      arrotonda, i tagli sono 15/30/60/90, il piu' e il meno vanno di
@@ -725,14 +789,21 @@ gruppo('Gli orari cadono sempre sui cinque minuti', () => {
      secco, e uscivano cose come «la mezz'ora finisce alle 23:53:45».
      Un orario che al banco non si dice. */
   const a5 = t => { const d = new Date(t); return d.getMinutes() % 5 === 0 && d.getSeconds() === 0 && d.getMilliseconds() === 0; };
+  /* L'ORA D'INGRESSO NELL'APP E' GIA' SUI CINQUE: la mette `roundTo5`
+     quando si apre il modulo. Partire qui da un orario sporco vorrebbe
+     dire provare uno stato che l'app non produce -- e siccome
+     `parcoDa` non puo' MAI tornare prima dell'ingresso, un ingresso
+     sporco si porterebbe dietro la sua sporcizia. */
+  const su5 = t => { const ms = 5 * 60000; return Math.round(t / ms) * ms; };
   const mk = (sforo) => {
-    const t0 = Date.now() - (30 + sforo) * 60000;
-    const c = conto({ children: 2, durationMinutes: 30, baseMinutes: 30, startTime: t0 });
+    const t0 = su5(Date.now() - (30 + sforo) * 60000);
+    const c = conto({ children: 2, durationMinutes: 30, baseMinutes: 30, startTime: t0, createdAt: t0 });
     ctx.PAN.conto = c; ctx.PAN.ingresso = null;
     return c;
   };
   const soloCrazy = () => {
-    const c = conto({ children: 0, durationMinutes: 0, baseMinutes: 0, startTime: Date.now() - 30 * 60000 });
+    const t0 = su5(Date.now() - 30 * 60000);
+    const c = conto({ children: 0, durationMinutes: 0, baseMinutes: 0, startTime: t0, createdAt: t0 });
     ctx.PAN.conto = c; ctx.PAN.ingresso = null;
     ctx.metteCrazy(c, 1);
     return c;

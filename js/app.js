@@ -1949,8 +1949,13 @@ function segnaInizioParco(c, prima, dopo) {
      d'ingresso si arrotonda ai cinque da sempre; questo e' l'ora
      d'ingresso del PARCO, e non c'era motivo perche' facesse eccezione.
      Senza, uscivano orari come «23:23:45» e la mezz'ora comprata
-     finiva alle 23:53:45 -- un orario che al banco non si dice. */
-  c.parcoDa = roundTo5(new Date()).getTime();
+     finiva alle 23:53:45 -- un orario che al banco non si dice.
+     E MAI PRIMA DELL'INGRESSO: arrotondando si puo' scendere di due
+     minuti e mezzo, e su un gruppo appena entrato il tempo di parco
+     sarebbe cominciato prima che arrivassero. La riparazione lo
+     raddrizzava alla rilettura, il che vuol dire che memoria e disco
+     dicevano due cose diverse fino al ricaricamento. */
+  c.parcoDa = Math.max(roundTo5(new Date()).getTime(), num(c.startTime, 0));
 }
 
 /* QUANTO SFORO SI CONDONA SENZA CHIEDERE quando si allunga il tempo.
@@ -2024,7 +2029,9 @@ function condonaSforo(c) {
      subito dopo cade su un orario che si dice: mezz'ora dalle 23:15
      fanno le 23:45, non le 23:43:45. */
   const spostamento = roundTo5(new Date()).getTime() - endTimeOf(c);
-  c.parcoDa = inizioParco(c) + spostamento;
+  /* nemmeno qui si torna prima dell'ingresso: il condono sposta in
+     avanti, non indietro */
+  c.parcoDa = Math.max(inizioParco(c) + spostamento, num(c.startTime, 0));
   /* anche il regalo del Crazy si sposta con lui, se no resterebbe
      indietro e non farebbe piu' niente */
   if (num(c.regaloFinoA, 0) > 0) c.regaloFinoA = num(c.regaloFinoA, 0) + spostamento;
