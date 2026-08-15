@@ -559,9 +559,13 @@ gruppo('Estendi tempo: una sezione sua, e i prezzi veri');
   prova('e ha il suo aspetto nel foglio di stile', /\.tp-est \{/.test(CSS));
   prova('compare solo su chi e gia dentro', /classList\.toggle\('hidden', !suUno\)/.test(APP));
   prova('i tasti aggiungono, non sostituiscono',
-    /d\.a === 'est'[\s\S]{0,500}durationMinutes = clamp\(m \+ quanti/.test(APP));
+    /function vendiBlocco[\s\S]{0,400}durationMinutes = clamp\(m \+ quanti/.test(APP));
+  /* la vendita del blocco sta in `vendiBlocco`, fuori dal gestore dei
+     tocchi: ci arriva anche dal foglio dello sforo, che risponde piu'
+     tardi, e due strade per la stessa cosa divergerebbero */
   prova('e ogni vendita di tempo resta scritta',
-    /d\.a === 'est'[\s\S]{0,700}c\.aggiunte = lista\(c\.aggiunte\)\.concat/.test(APP));
+    /function vendiBlocco[\s\S]{0,700}c\.aggiunte = lista\(c\.aggiunte\)\.concat/.test(APP) &&
+    /d\.a === 'est'[\s\S]{0,300}vendiBlocco\(c, quanti\)/.test(APP));
   prova('il prezzo e quello del cartello per QUEL blocco',
     /vendute\.reduce\(\(a, m\) => a \+ priceFor\(up5\(m\)\), 0\)/.test(APP));
   prova('e le vendite non possono valere piu del tempo che c e',
@@ -643,7 +647,18 @@ gruppo('Il tempo si muove da un posto solo');
      pannello: e' l'unico che sa che un ritocco entra nell'ultima
      vendita invece di lasciarla li' intera. */
   prova('la striscia non scrive i minuti a mano',
-    /key === 'durationMinutes'\) conConto\(entry, \(\) => ritoccaTempo\(entry, d\)\)/.test(APP));
+    /key === 'durationMinutes'[\s\S]{0,420}ritoccaTempo\(entry, d\)/.test(APP));
+  /* ALLUNGARE A UN GRUPPO GIA' SFORATO: lo sforo si mangiava il tempo
+     nuovo. Sotto i dieci minuti si condona da se', sopra si chiede. */
+  prova('e allungando a chi ha sforato si passa dal guardiano',
+    /function conSforo/.test(APP) && /conSforo\(entry, \(\) => ritoccaTempo\(entry, d\)\)/.test(APP));
+  prova('sotto i dieci minuti si condona senza chiedere',
+    /const SFORO_CONDONATO = 10 \* 60000/.test(APP) &&
+    /sforo < SFORO_CONDONATO\) \{ condonaSforo\(c\); applica\(\); return; \}/.test(APP));
+  prova('sopra si chiede, con le due strade scritte',
+    /function foglioSforo/.test(APP) && /Riparti da adesso/.test(APP) && /Scala lo sforo/.test(APP));
+  prova('e un giro fatto a tempo scaduto regala davvero',
+    /function regalaDaAdesso/.test(APP) && /Math\.max\(base, num\(e\.regaloFinoA, 0\)\)/.test(APP));
   prova('e i minuti si leggono come nel pannello',
     /r\.sTime\.val\.textContent = entry\.payLater \? '\\u2014' : fmtMin\(/.test(APP));
 }

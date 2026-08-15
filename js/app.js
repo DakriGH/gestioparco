@@ -858,7 +858,16 @@ function endTimeOf(e) {
      il tempo per salire e scendere, ed e' gia' stato speso prima che il
      tempo di parco cominciasse. Sommarlo voleva dire darglielo due
      volte. */
-  return inizioParco(e) + (min + minutiCrazy(e)) * 60000;
+  const base = inizioParco(e) + (min + minutiCrazy(e)) * 60000;
+  /* UN GIRO FATTO A TEMPO SCADUTO REGALA DAVVERO.
+     I minuti del Crazy partono da dove finisce il tempo di parco: se
+     quel tempo e' gia' finito da un pezzo, il regalo cadeva nel passato
+     e non valeva niente -- otto minuti dati a chi ne aveva sforati
+     dieci sono zero minuti. Ma il giro l'hanno fatto adesso, e mentre
+     si preparavano il tempo correva lo stesso.
+     `regaloFinoA` lo segna chi apre il giro: da quel momento hanno i
+     loro minuti, comunque. */
+  return Math.max(base, num(e.regaloFinoA, 0));
 }
 /* IL COLORE DELLA SCHEDA E' L'OROLOGIO, e cambia quando cambia
    davvero qualcosa:
@@ -1440,9 +1449,10 @@ function costruisciPannello() {
        Il ritocco entra nell'ULTIMA vendita, se c'e'; se no allunga il
        tempo iniziale, che si paga sul totale come ha sempre fatto. */
     if (d.a === 'corr') {
-      ritoccaTempo(c, num(d.v, 0));
-      pcSalva();
-      aggiornaPannello();
+      const quanti = num(d.v, 0);
+      const fai = () => { ritoccaTempo(c, quanti); pcSalva(); aggiornaPannello(); };
+      /* solo allungando: accorciare non ha niente da condonare */
+      if (quanti > 0) conSforo(c, fai); else fai();
       return;
     }
     /* ALLUNGARE E' UN'ALTRA COSA DAL SOSTITUIRE. I tagli qui sopra
@@ -1452,29 +1462,9 @@ function costruisciPannello() {
        la differenza viene contata come scaglione a se'. */
     if (d.a === 'est') {
       if (c.payLater) return;
-      const m = clamp(num(c.durationMinutes, 60), 0, 1e6);
       const quanti = num(d.v, 0);
-      c.durationMinutes = clamp(m + quanti, 5, 100000);
-      /* quello che si e' venduto resta scritto: e' quello che fa il
-         prezzo. Il meno toglie dall'ultima vendita, non dal tempo
-         iniziale -- se no si sarebbe reso un pezzo di tempo che il
-         cliente non aveva comprato in quel momento. */
-      if (quanti > 0) { c.aggiunte = lista(c.aggiunte).concat([quanti]); }
-      else {
-        /* si disdice l'ULTIMA vendita, non il tempo d'ingresso: e' quella
-           che si sta rimangiando */
-        let togli = -quanti;
-        const vendite = lista(c.aggiunte);
-        while (togli > 0 && vendite.length) {
-          const ultima = num(vendite[vendite.length - 1], 0);
-          if (ultima > togli) { vendite[vendite.length - 1] = ultima - togli; togli = 0; }
-          else { vendite.pop(); togli -= ultima; }
-        }
-        c.aggiunte = vendite;
-      }
-      sistemaAggiunte(c);
-      pcSalva();
-      aggiornaPannello();
+      if (quanti > 0 && sforoDi(c) > 0) { conSforo(c, () => vendiBlocco(c, quanti)); return; }
+      vendiBlocco(c, quanti);
       return;
     }
     /* un altro giro di Crazy: altri minuti regalati, stessi soldi.
@@ -1947,6 +1937,78 @@ function segnaInizioParco(c, prima, dopo) {
   c.parcoDa = Date.now();
 }
 
+/* QUANTO SFORO SI CONDONA SENZA CHIEDERE quando si allunga il tempo.
+   Sotto i dieci minuti si perdona: stavano uscendo, si sono attardati,
+   e mettersi a discutere per cinque minuti al banco non conviene a
+   nessuno. Sopra, la cassiera deve poter scegliere -- mezz'ora di sforo
+   regalata in silenzio e' un'altra cosa. */
+const SFORO_CONDONATO = 10 * 60000;
+
+/* ALLUNGARE IL TEMPO A UN GRUPPO GIA' SFORATO.
+   Lo sforo si mangiava il tempo nuovo: quindici minuti comprati a chi ne
+   aveva sforati dieci diventavano cinque, e al banco sembrava che
+   l'estensione non funzionasse.
+   Sotto i dieci minuti si condona da se': stavano uscendo, si sono
+   attardati, e mettersi a discutere per cinque minuti non conviene a
+   nessuno. Sopra si CHIEDE -- mezz'ora regalata in silenzio e' un'altra
+   cosa, e la cassiera deve poter scegliere col cliente davanti. */
+function conSforo(c, applica) {
+  const sforo = sforoDi(c);
+  if (sforo <= 0) { applica(); return; }
+  if (sforo < SFORO_CONDONATO) { condonaSforo(c); applica(); return; }
+  foglioSforo(c, sforo, applica);
+}
+
+function foglioSforo(c, sforo, applica) {
+  const min = Math.round(sforo / 60000);
+  const s = sheet('Sforano da ' + fmtMin(min));
+  s.body.appendChild(el('div', 'hint',
+    'Il tempo comprato e’ finito da ' + fmtMin(min) + '. Se non si fa niente, ' +
+    'quei minuti si mangiano il tempo che stai per vendere.'));
+
+  const scelta = (em, titolo, sotto, fn) => {
+    const b = el('button', 'scelta-riga');
+    b.appendChild(el('span', 'sc-em', em));
+    const t = el('span', 'sc-txt');
+    t.appendChild(el('b', null, titolo));
+    t.appendChild(el('span', null, sotto));
+    b.appendChild(t);
+    b.onclick = () => { s.close(); fn(); };
+    s.body.appendChild(b);
+  };
+
+  scelta('\u23f1\ufe0f', 'Riparti da adesso',
+    'Lo sforo si condona: il tempo che vendi lo hanno tutto, da questo momento.',
+    () => { condonaSforo(c); applica(); });
+
+  scelta('\u2796', 'Scala lo sforo',
+    'Il tempo venduto comincia da dove era finito quello di prima, quindi ' +
+    fmtMin(min) + ' se ne vanno.',
+    () => applica());
+
+  footBtn(s.foot, 'Lascia stare', 'btn-ghost', s.close);
+}
+
+function sforoDi(c) {
+  c = c || C();
+  if (c.payLater) return 0;
+  return Math.max(0, Date.now() - endTimeOf(c));
+}
+
+/* Sposta avanti l'inizio del parco di tutto lo sforo: l'effetto e' che
+   il tempo che si sta comprando parte da ADESSO invece di essere
+   mangiato da quello gia' passato. */
+function condonaSforo(c) {
+  c = c || C();
+  const sforo = sforoDi(c);
+  if (sforo <= 0) return 0;
+  c.parcoDa = inizioParco(c) + sforo;
+  /* anche il regalo del Crazy si sposta con lui, se no resterebbe
+     indietro e non farebbe piu' niente */
+  if (num(c.regaloFinoA, 0) > 0) c.regaloFinoA = num(c.regaloFinoA, 0) + sforo;
+  return sforo;
+}
+
 function ritoccaTempo(c, delta) {
   c = c || C();
   if (c.payLater) return;
@@ -1970,6 +2032,34 @@ function ritoccaTempo(c, delta) {
     c.aggiunte = vendite.filter(x => x > 0);
   }
   sistemaAggiunte(c);
+}
+
+/* VENDE UN BLOCCO DI TEMPO. Sta fuori dal gestore dei tocchi perche' ci
+   arriva anche dal foglio dello sforo, che risponde piu' tardi: una
+   funzione sola, cosi' le due strade non possono divergere. */
+function vendiBlocco(c, quanti) {
+  c = c || C();
+  if (c.payLater) return;
+  const m = clamp(num(c.durationMinutes, 60), 0, 1e6);
+  c.durationMinutes = clamp(m + quanti, 5, 100000);
+  /* quello che si e' venduto resta scritto: e' quello che fa il prezzo.
+     Il meno toglie dall'ultima vendita, non dal tempo iniziale -- se no
+     si sarebbe reso un pezzo di tempo che il cliente non aveva comprato
+     in quel momento. */
+  if (quanti > 0) { c.aggiunte = lista(c.aggiunte).concat([quanti]); }
+  else {
+    let togli = -quanti;
+    const vendite = lista(c.aggiunte);
+    while (togli > 0 && vendite.length) {
+      const ultima = num(vendite[vendite.length - 1], 0);
+      if (ultima > togli) { vendite[vendite.length - 1] = ultima - togli; togli = 0; }
+      else { vendite.pop(); togli -= ultima; }
+    }
+    c.aggiunte = vendite;
+  }
+  sistemaAggiunte(c);
+  pcSalva();
+  aggiornaPannello();
 }
 
 /* quanto costa allungare di tot: il prezzo di dopo meno quello di
@@ -3983,6 +4073,7 @@ function commitDa(draft, opz) {
     oraManuale: true,
     /* da quando conta il tempo di parco, se e' cominciato dopo l'ingresso */
     parcoDa: soloBar ? undefined : (num(draft.parcoDa, 0) || undefined),
+    regaloFinoA: soloBar ? undefined : (num(draft.regaloFinoA, 0) || undefined),
     baseMinutes: soloBar ? 0 : draft.durationMinutes,
     /* QUELLO CHE NASCE NEL MODULO DEVE ARRIVARE INTERO.
        Questo elenco e' scritto a mano, campo per campo, e chi ne
@@ -4412,7 +4503,14 @@ function entryCard(entry) {
          toccato nel pannello. `ritoccaTempo` e' l'unico che sa che un
          ritocco entra nell'ultima vendita invece di aggiungersene una
          nuova -- ed e' gia' quello che usa il pannello. */
-      else if (key === 'durationMinutes') conConto(entry, () => ritoccaTempo(entry, d));
+      else if (key === 'durationMinutes') {
+        /* allungando a un gruppo gia' sforato lo sforo si mangiava il
+           tempo nuovo: sotto i dieci minuti si condona, sopra si chiede */
+        conConto(entry, () => {
+          if (d > 0) conSforo(entry, () => ritoccaTempo(entry, d));
+          else ritoccaTempo(entry, d);
+        });
+      }
       else entry[key] = clamp(num(entry[key], 0) + d, 0, 99999);
       saveEntries();
       syncCard(entry);
@@ -4714,8 +4812,25 @@ function aggiornaPaga(btn, entry) {
    il giro, i minuti regalati non arrivano -- quelli li porta il giro. */
 function contaSalita(d) {
   const c = C();
+  const prima = minutiCrazy(c);
   if (!giriCrazy(c).length) giroNuovo(c);
   cambiaGiro(c, giroOra(c), d);
+  if (minutiCrazy(c) > prima) regalaDaAdesso(c);
+}
+
+/* IL REGALO DI UN GIRO PARTE DA QUANDO IL GIRO SI FA, se il tempo di
+   parco e' gia' finito. Se invece sono ancora dentro non serve: li' i
+   minuti si sommano in fondo come hanno sempre fatto. */
+function regalaDaAdesso(c) {
+  c = c || C();
+  const extra = clamp(num(settings.crazyExtraMinutes, 0), 0, 1e6);
+  if (extra <= 0) return;
+  const ora = Date.now();
+  /* si guarda la fine SENZA il regalo appena segnato, cioe' quella del
+     tempo di parco: e' quella che dice se erano gia' fuori tempo */
+  const finePar = inizioParco(c) + (num(c.durationMinutes, 0) + minutiCrazy(c)) * 60000;
+  if (finePar > ora) return;
+  c.regaloFinoA = Math.max(num(c.regaloFinoA, 0), ora + extra * 60000);
 }
 
 /* I TOCCHI DELLA CARD DEL CRAZY, IN UN POSTO SOLO.
@@ -8169,6 +8284,8 @@ function riparaConto(o) {
   const da = num(o.parcoDa, NaN);
   if (Number.isFinite(da) && da > 0) o.parcoDa = Math.max(da, num(o.startTime, 0));
   else delete o.parcoDa;
+  /* il regalo dato a tempo scaduto: un orario vero, o niente */
+  if (!Number.isFinite(num(o.regaloFinoA, NaN)) || num(o.regaloFinoA, 0) <= 0) delete o.regaloFinoA;
   /* la sigla e' due lettere maiuscole, o niente */
   o.sigla = /^[A-Z]{2,3}$/.test(String(o.sigla || '')) ? o.sigla : '';
   /* una vendita al banco resta tale anche dopo un ricaricamento */
