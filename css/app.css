@@ -1678,7 +1678,18 @@ main {
    attorno: la card larga si prende due colonne (`con-storico`), meta'
    per i tasti e meta' per lo storico dei giri. Si prende una riga sua
    nella fila, subito sotto le celle di bambini e tempo. */
-.e-fila > .e-crazycard { flex: 1 0 100%; margin-top: 2px; }
+/* ACCANTO AL TEMPO, NON SOTTO. Lo spazio c'e': le due celle prendono
+   275 pixel dei 736 della riga, e la card larga ne chiede 442 (due
+   colonne da 215 piu' il vuoto in mezzo). Ci sta, e la scheda si
+   accorcia di tutta l'altezza che prima si prendeva da sola.
+   `flex-basis` a 442 e' quello che decide: se la riga non li ha --
+   schermo stretto, o una cella che cresce -- va a capo da sola invece
+   di schiacciare la griglia dentro. */
+.e-fila > .e-crazycard { flex: 1 0 442px; margin-top: 0; }
+/* le celle non si stirano all'altezza della card: starebbero in piedi
+   vuote per centosettanta pixel. Restano alte quanto il loro contenuto,
+   appoggiate in cima come la card. */
+.e-fila > .e-cella { align-self: flex-start; }
 .e-cella { flex-direction: column; align-items: center; gap: 1px;
   padding: 4px 9px 6px; }
 .e-nome { font-size: 9.5px; font-weight: 800; letter-spacing: .07em;
@@ -3298,6 +3309,18 @@ html:not(.anima) .view.entra-dx { animation: none; }
   .bc-card.con-storico .bc-lato { flex: 1 1 auto; }
   .bc-storico { flex: 0 0 118px; }
   .bc-storico .st-g .st-q, .bc-storico .st-g .st-m { display: none; }
+  /* e nella scheda la card del Crazy torna a riga sua, e soprattutto
+     torna a potersi stringere: la base fissa a 442 -- quella che le fa
+     stare accanto al Tempo sulla tavoletta -- qui non ci sta, e senza
+     questa riga la pagina scorreva di lato. */
+  .e-fila > .e-crazycard { flex: 1 1 100%; }
+  /* i comandi vanno a capo. Erano quattro e ci stavano in fila; col
+     tasto «Paga» sono cinque, e su uno schermo stretto la riga usciva
+     dallo schermo trascinandosi dietro tutta la pagina. Sulla tavoletta
+     (800) restano in fila come prima. */
+  .e-azioni { flex-wrap: wrap; }
+  .e-azioni button.conto { flex: 1 1 40%; }
+  .e-azioni button.forte { flex: 1 1 100%; }
 }
 
 /* le due card non sono piu' gemelle quando c'e' il Crazy: la sua tiene

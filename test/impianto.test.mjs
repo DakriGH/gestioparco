@@ -727,8 +727,23 @@ gruppo('Nella scheda lunga, il Crazy si apre sotto la sua cella');
   prova('e non è appesa in fondo alla scheda',
     APP.indexOf('dentro.appendChild(giriBox)') < 0 &&
     APP.indexOf('dentro.appendChild(crazyBox)') < 0);
-  prova('e si prende una riga sua',
-    /\.e-fila > \.e-crazycard \{[^}]*flex: 1 0 100%/.test(CSS));
+  /* ACCANTO AL TEMPO, non sotto: lo spazio c'e' -- le due celle prendono
+     275 pixel dei 736 della riga, e la card larga ne chiede 442 -- e la
+     scheda si accorcia di tutta l'altezza che prima si prendeva da sola.
+     Sotto i 759 torna a riga sua E torna a potersi stringere: con la
+     base fissa la pagina scorreva di lato. */
+  prova('la card sta accanto al Tempo, con la sua base',
+    /\.e-fila > \.e-crazycard \{ flex: 1 0 442px/.test(CSS));
+  prova('e sugli schermi stretti torna a riga sua e si stringe',
+    /@media \(max-width: 759px\)[\s\S]{0,900}?\.e-fila > \.e-crazycard \{ flex: 1 1 100%/.test(CSS));
+  prova('le celle non si stirano all altezza della card',
+    /\.e-fila > \.e-cella \{ align-self: flex-start/.test(CSS));
+  /* i comandi sono cinque da quando c'e' «Paga»: su uno schermo stretto
+     la riga usciva dallo schermo trascinandosi dietro la pagina */
+  prova('e i comandi vanno a capo quando non ci stanno',
+    /@media \(max-width: 759px\)[\s\S]{0,1100}?\.e-azioni \{ flex-wrap: wrap/.test(CSS));
+  prova('il tasto del tempo si chiama «Tempo aperto»',
+    /textContent = '\\u23f3 Tempo aperto'/.test(APP));
 
   /* IL «PAGA TUTTO» RAPIDO: per incassare bisognava aprire il conto,
      andare nello Scontrino e premere il tasto la' dentro -- tre tocchi

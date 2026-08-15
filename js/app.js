@@ -6053,7 +6053,10 @@ function syncCard(entry) {
      di la' e "90" di qua */
   if (r.sTime.apri) {
     r.sTime.apri.classList.toggle('on', !!entry.payLater);
-    r.sTime.apri.textContent = entry.payLater ? '\u23f3 Aperto' : '\u23f3 Apri';
+    /* la scritta e' la stessa del pannello -- «Tempo aperto» -- e non
+       cambia accendendosi: e' il nome della cosa, non il suo stato. Che
+       sia acceso lo dice il colore, come per la pastiglia di la'. */
+    r.sTime.apri.textContent = '\u23f3 Tempo aperto';
     r.sTime.apri.title = entry.payLater
       ? 'Torna a un tempo comprato, con un orario di uscita'
       : 'Tempo aperto: resta senza orario di fine, il conto si fa all\u2019uscita';
