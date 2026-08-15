@@ -695,6 +695,28 @@ gruppo('Ogni linguetta apre dove dice il suo nome');
     /montaPannello\(\$\('#view-bar'\), draftBar, \{ cat: primaCategoriaBar\(\) \}\)/.test(APP));
 }
 
+gruppo('Il banner della scheda dice anche quanto dura');
+{
+  /* C'erano solo «dalle» e «alle»: per sapere se erano mezz'ora o un'ora
+     bisognava fare la sottrazione a mente, su ogni scheda, mentre si
+     guarda la lista di colpo d'occhio -- che e' il modo in cui questa
+     lista si guarda.
+     I minuti sono quelli che i due orari BRACCIANO -- cioe' compresi i
+     regalati dal Crazy -- e non `durationMinutes`: con due giri l'uscita
+     e' alle 20:23 partendo dalle 19:45, e li' va letto 38m, non 30m. Se
+     no il banner direbbe due cose diverse nella stessa riga. Quanto
+     hanno COMPRATO, che e' un altro numero, sta nella fascia del Tempo. */
+  prova('la durata si ricava dai due orari, non dai minuti comprati',
+    /const durata = Math\.round\(\(endTimeOf\(entry\) - entry\.startTime\) \/ 60000\)/.test(APP),
+    'se usasse durationMinutes non tornerebbe col Crazy');
+  prova('e finisce nel banner accanto agli orari',
+    /<b class="dur">' \+ fmtMin\(durata\)/.test(APP));
+  prova('a tempo aperto non si scrive nessuna durata',
+    /entry\.payLater \? '' : '<b class="dur">/.test(APP),
+    'senza un orario di fine non c’è una durata da scrivere');
+  prova('e la durata ha il suo stile nella pastiglia', /\.e-orari \.dur \{/.test(CSS));
+}
+
 gruppo('Nella scheda lunga, il Crazy si apre sotto la sua cella');
 {
   /* Il riquadro dei giri stava fuori dalla fila, cioe' in fondo alla

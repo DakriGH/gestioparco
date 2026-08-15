@@ -6126,8 +6126,20 @@ function syncCard(entry) {
     aggiornaPannello();
   }
 
+  /* QUANTO DURA, accanto ai due orari. Prima c'erano solo «dalle» e
+     «alle» e per sapere se erano mezz'ora o un'ora bisognava fare la
+     sottrazione a mente, su ogni scheda, mentre si guarda la lista di
+     colpo d'occhio -- che e' il modo in cui questa lista si guarda.
+     I minuti sono quelli che i due orari BRACCIANO davvero, cioe'
+     compresi quelli regalati dal Crazy: se l'uscita e' alle 14:48
+     perche' hanno fatto due giri, qui si legge 38m e non 30m, se no il
+     banner direbbe due cose diverse nella stessa riga. Quanto tempo
+     hanno COMPRATO -- che e' un altro numero -- sta nella fascia del
+     Tempo dentro la scheda. */
+  const durata = Math.round((endTimeOf(entry) - entry.startTime) / 60000);
   r.range.innerHTML = '<span class="fr">dalle</span>' + fmtTime(entry.startTime) +
-    '<span class="fr">alle</span>' + (entry.payLater ? '?' : fmtTime(endTimeOf(entry)));
+    '<span class="fr">alle</span>' + (entry.payLater ? '?' : fmtTime(endTimeOf(entry))) +
+    (entry.payLater ? '' : '<b class="dur">' + fmtMin(durata) + '</b>');
   updateBadge();
 }
 

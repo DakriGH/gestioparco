@@ -1457,6 +1457,14 @@ main {
   font-variant-numeric: tabular-nums;
 }
 .e-orari .fr { font-size: 11px; line-height: normal; color: rgba(255, 255, 255, 0.6); margin: 0 2px; }
+/* quanto dura, in fondo alla stessa pastiglia: staccato da una barretta
+   perche' e' un'altra unita' di misura, non un terzo orario */
+.e-orari .dur {
+  margin-left: 6px;
+  padding-left: 8px;
+  border-left: 1px solid rgba(255, 255, 255, 0.22);
+  font-weight: 700;
+}
 .e-sotto { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
 /* quanti bambini, senza dover aprire niente */
 /* SOLO CRAZY: nessun bambino in sala, solo qualcuno che salta.
