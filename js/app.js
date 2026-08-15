@@ -4212,8 +4212,14 @@ function entryCard(entry) {
   fila.appendChild(sCrazy.box);
 
   /* qui sotto compare quello che il tasto ha chiesto: il conteggio del
-     giro nuovo, o la lista di quelli fatti */
+     giro nuovo, o la lista di quelli fatti.
+     E COMPARE SOTTO LA SUA CELLA, non in fondo alla scheda: stava dopo
+     la riga dei tasti -- Modifica, Bar, Scontrino, Uscita -- quindi si
+     toccava «Aggiungi giro» qui in alto e la cosa si apriva in fondo,
+     oltre quattro pulsanti che non c'entravano. La fila va a capo, e
+     questo riquadro si prende una riga sua subito dopo il Crazy. */
   const giriBox = el('div', 'e-giri hidden');
+  fila.appendChild(giriBox);
 
   const disegnaGiri = () => {
     const mio = giriDiChi === entry.id ? giriModo : null;
@@ -4318,7 +4324,6 @@ function entryCard(entry) {
   };
   fila.appendChild(azioni);
   dentro.appendChild(fila);
-  dentro.appendChild(giriBox);
   disegnaGiri();
 
   /* Il guscio del conto: qui dentro ci entra IL pannello -- lo stesso
@@ -4401,6 +4406,38 @@ function entryCard(entry) {
 
   tastiConto.push(payBtn, barBtn, scBtn);
 
+  /* PAGA TUTTO, DA QUI. Per incassare bisognava aprire il conto, andare
+     nello Scontrino e premere il tasto la' dentro: tre tocchi e un
+     pannello che si apre, per la cosa piu' frequente che succede a una
+     scheda di chi sta uscendo. Il tasto dice la cifra, cosi' non serve
+     nemmeno aprire per sapere quanto e'.
+     Compare SOLO se c'e' qualcosa da incassare: a conto saldato non e'
+     un tasto spento, non c'e' proprio -- se no la riga dei comandi si
+     riempie di roba da non toccare. */
+  const pagaBtn = mkAct('', 'conto paga', (ev) => {
+    ev.stopPropagation();
+    const foto = fotografia(entry);
+    const prima = r2(num(entry.paidPark, 0) + num(entry.paidBar, 0));
+    conConto(entry, () => pagaTutto());
+    saveEntries();
+    syncCard(entry);
+    /* se il pannello di questo ingresso e' aperto, deve dirlo anche lui */
+    if (PAN.ingresso === entry) aggiornaPannello();
+    const entrati = r2(r2(num(entry.paidPark, 0) + num(entry.paidBar, 0)) - prima);
+    if (entrati > 0.005) {
+      fatto('Incassati ' + eur(entrati), () => {
+        rimetti(entry, foto);
+        saveEntries();
+        syncCard(entry);
+        if (PAN.ingresso === entry) aggiornaPannello();
+        toast('Incasso annullato \u21a9\ufe0e');
+      });
+    }
+  });
+  pagaBtn.title = 'Segna come pagato tutto quello che resta';
+  /* la cifra si rinfresca insieme al resto della scheda: vedi syncCard */
+  aggiornaPaga(pagaBtn, entry);
+
   mkAct('\ud83d\udeaa Uscita', 'forte', (ev) => { ev.stopPropagation(); chiudiIngresso(entry); });
 
   /* la nota del GRUPPO. Le note delle persone, quando ce n'erano,
@@ -4427,7 +4464,7 @@ function entryCard(entry) {
   cardRefs.set(entry.id, {
     card, count, range, sKids, sCrazy, sTime, solo, barBtn, scBtn, apriConto, disegnaGiri,
     dueVal: soldiV, soldiK, soldiS, soldi, wrist, bimbiV, crzV, crz, countK,
-    payPanel, payBtn,
+    payPanel, payBtn, pagaBtn,
     /* servono a rivestire la riga quando cambia un vestito */
     avBox, nome, tratti, apriParco, sigGente: firmaGente(entry)
   });
@@ -4463,6 +4500,16 @@ const tocchi = { id: null, nato: null };
 const C = () => PAN.conto || draft;
 /* fa lavorare le funzioni del conto su un oggetto diverso da quello
    aperto nel pannello, e poi rimette a posto */
+/* La faccia del tasto «Paga tutto» della scheda: dice la cifra, e a
+   conto saldato non c'e'. Sta fuori dal disegno cosi' la usano sia chi
+   crea la scheda sia syncCard, e non possono dire cose diverse. */
+function aggiornaPaga(btn, entry) {
+  if (!btn) return;
+  const resta = dueOf(entry).total;
+  btn.classList.toggle('hidden', !(resta > 0.005));
+  if (resta > 0.005) btn.textContent = '\u2705 Paga ' + eur(resta);
+}
+
 function conConto(obj, fn) {
   const prima = PAN.conto;
   PAN.conto = obj;
@@ -6018,6 +6065,10 @@ function syncCard(entry) {
   const due = dueOf(entry);
   const kids = clamp(entry.children, 0, 1e6);
   const crazy = clamp(entry.crazyJumping, 0, 1e6);
+
+  /* il tasto «Paga» dice la cifra che resta, e a conto saldato sparisce:
+     va rinfrescato qui, perche' quella cifra cambia a ogni tocco */
+  aggiornaPaga(r.pagaBtn, entry);
 
   r.sKids.val.textContent = kids;
   if (r.bimbiV) r.bimbiV.textContent = kids;
@@ -7709,7 +7760,12 @@ function switchTab(t) {
     if (!draft.touched) draft.startTime = roundTo5(new Date()).getTime();
     /* il pannello torna a casa: se stava dentro una scheda che volava,
        posaSubito l'ha gia' rimesso qui sopra */
-    montaPannello($('#view-new'), draft, { cat: PAN.ingresso ? 'Parco' : PAN.cat });
+    /* «+ NUOVO» APRE SEMPRE SUL PARCO. Prima si ricordava l'ultima
+       linguetta: uscendo dal Bar e tornando qui ci si trovava il bancone
+       al posto dei bambini, cioe' la schermata che fa la cosa piu'
+       frequente dell'app si apriva sulla seconda. Ognuna delle due
+       linguette in alto adesso porta dove dice il suo nome. */
+    montaPannello($('#view-new'), draft, { cat: 'Parco' });
   }
   if (t === 'bar') {
     /* IL BANCONE E' GIA' APERTO: e' tutto il senso di questa linguetta.
@@ -7717,8 +7773,9 @@ function switchTab(t) {
        dentro il Bar, tornandoci si ritrova dov'era: cambiare vista non
        deve rimettere le cose a modo mio. */
     if (!draftBar.touched) draftBar.startTime = roundTo5(new Date()).getTime();
-    const dove = (PAN.conto === draftBar && PAN.cat !== 'Parco') ? PAN.cat : primaCategoriaBar();
-    montaPannello($('#view-bar'), draftBar, { cat: dove });
+    /* e il Bar apre sempre sul bancone: e' tutto il senso della
+       linguetta, e ricordarsi dov'eri vuol dire aprirla dove non dice */
+    montaPannello($('#view-bar'), draftBar, { cat: primaCategoriaBar() });
   }
   if (t === 'active') buildActiveView();   // ridisegna: cosi' la scheda in modifica si segna o si libera
   if (t === 'settings') buildSettingsView();

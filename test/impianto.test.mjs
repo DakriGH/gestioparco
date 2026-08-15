@@ -683,6 +683,42 @@ gruppo('I file di prova ci sono tutti e si chiamano fra loro');
   });
 }
 
+gruppo('Ogni linguetta apre dove dice il suo nome');
+{
+  /* Si ricordavano l'ultima linguetta aperta: uscendo dal Bar e tornando
+     su «+ Nuovo» ci si trovava il bancone al posto dei bambini, cioe' la
+     schermata che fa la cosa piu' frequente dell'app si apriva sulla
+     seconda. */
+  prova('+ Nuovo apre sul Parco, sempre',
+    /montaPannello\(\$\('#view-new'\), draft, \{ cat: 'Parco' \}\)/.test(APP));
+  prova('e il Bar sul bancone, sempre',
+    /montaPannello\(\$\('#view-bar'\), draftBar, \{ cat: primaCategoriaBar\(\) \}\)/.test(APP));
+}
+
+gruppo('Nella scheda lunga, il Crazy si apre sotto la sua cella');
+{
+  /* Il riquadro dei giri stava fuori dalla fila, cioe' in fondo alla
+     scheda, sotto i quattro tasti: si toccava «Aggiungi giro» in alto e
+     la cosa compariva dall'altra parte, oltre roba che non c'entrava. */
+  prova('il riquadro dei giri sta dentro la fila, subito dopo il Crazy',
+    /fila\.appendChild\(sCrazy\.box\);[\s\S]{0,900}?fila\.appendChild\(giriBox\);/.test(APP));
+  prova('e non è più appeso in fondo alla scheda',
+    APP.indexOf('dentro.appendChild(giriBox)') < 0);
+  prova('e si prende una riga sua', /\.e-fila > \.e-giri \{[^}]*flex: 1 0 100%/.test(CSS));
+
+  /* IL «PAGA TUTTO» RAPIDO: per incassare bisognava aprire il conto,
+     andare nello Scontrino e premere il tasto la' dentro -- tre tocchi
+     per la cosa piu' frequente che succede a chi sta uscendo. */
+  prova('c’è il tasto Paga nella riga dei comandi', /'conto paga'/.test(APP));
+  prova('dice la cifra che resta', /Paga ' \+ eur\(resta\)/.test(APP));
+  prova('e a conto saldato sparisce invece di restare spento',
+    /btn\.classList\.toggle\('hidden', !\(resta > 0\.005\)\)/.test(APP));
+  prova('si rinfresca insieme al resto della scheda',
+    /aggiornaPaga\(r\.pagaBtn, entry\)/.test(APP));
+  prova('e quello che incassa si può annullare',
+    /fatto\('Incassati ' \+ eur\(entrati\)[\s\S]{0,220}rimetti\(entry, foto\)/.test(APP));
+}
+
 gruppo('L’app si apre anche quando la rete c’è a metà');
 {
   /* Senza linea `fetch` fallisce subito e si passa alla copia offline: un

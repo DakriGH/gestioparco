@@ -1661,6 +1661,11 @@ main {
 .e-fila > .e-cgiri { flex: 1 1 auto; }
 /* i quattro tasti su una riga loro, larga tutta la scheda */
 .e-fila > .e-azioni { flex: 1 0 100%; margin-left: 0; align-self: stretch; }
+/* Il riquadro dei giri si prende una riga sua, subito dopo la cella del
+   Crazy: e' quella che l'ha aperto. Prima stava fuori dalla fila, cioe'
+   in fondo alla scheda, sotto i quattro tasti -- si toccava «Aggiungi
+   giro» in alto e la cosa compariva dall'altra parte. */
+.e-fila > .e-giri { flex: 1 0 100%; margin-top: 0; }
 .e-cella { flex-direction: column; align-items: center; gap: 1px;
   padding: 4px 9px 6px; }
 .e-nome { font-size: 9.5px; font-weight: 800; letter-spacing: .07em;
@@ -1724,6 +1729,15 @@ main {
 }
 .e-azioni button.forte { background: #fff; color: #123A2C; }
 .e-azioni button.on { background: #fff; color: #123A2C; }
+/* «Paga» e' l'unico di questa riga che MUOVE DEI SOLDI: si vede che e'
+   un'altra cosa. Verde come il saldato, e mai spento -- quando non c'e'
+   niente da incassare sparisce del tutto (vedi aggiornaPaga). */
+.e-azioni button.paga {
+  background: var(--ok, #6ADCAF);
+  color: #0C3826;
+  flex: 1 1 auto;
+}
+.e-azioni button.paga.hidden { display: none; }
 
 /* ══════════════════════════════════════════════════════════
    I GIRI DEL CRAZY, NELLA STRISCIA
