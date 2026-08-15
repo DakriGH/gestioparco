@@ -640,10 +640,27 @@ function rimettiSoldiCrazy(c) {
 function cambiaGiro(c, i, delta) {
   const g = giriCrazy(c);
   if (i < 0 || i >= g.length) return;
+  const era = g[i];
   g[i] = Math.max(0, g[i] + num(delta, 0));
-  /* i giri VUOTI restano: quello in fondo e' aperto e lo stai
-     riempiendo, e gli altri li cancella il suo tasto, non il meno --
-     che se no farebbe sparire una riga sotto le dita */
+  /* UN GIRO SVUOTATO COL MENO SE NE VA.
+     Prima restava: la riga «0 · da contare» rimaneva in lista, e per
+     toglierla bisognava anche premere la sua ✕. Due gesti per dire una
+     cosa sola -- «no, su questo non e' salito nessuno» -- e intanto lo
+     storico si riempiva di righe vuote che sembravano giri veri.
+     Il giro APPENA APERTO invece resta, ed e' un'altra cosa: quello e'
+     lo zero da riempire, e sparirgli sotto le dita renderebbe
+     impossibile aprirne uno. Si distinguono da come ci sono arrivati:
+     qui si toglie (era > 0), li' si apre e basta.
+     Vale anche per l'ULTIMO rimasto: svuotandolo la lista torna vuota e
+     lo storico dice «Nessun giro», che e' la verita' -- meglio di una
+     riga «0 · da contare» che sembra un giro vero. */
+  if (g[i] === 0 && era > 0) {
+    g.splice(i, 1);
+    /* il giro scelto non deve restare puntato oltre la fine, ne' su
+       quello che ha preso il posto di questo */
+    if (giroScelto >= g.length) giroScelto = g.length - 1;
+    else if (giroScelto > i) giroScelto--;
+  }
   c.crazyJumping = g.reduce((a, b) => a + b, 0);
   c.crazyGiri = g;
   soloCrazy(c);

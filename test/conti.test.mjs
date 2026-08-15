@@ -717,6 +717,74 @@ gruppo('Lo stesso tempo costa lo stesso, da qualunque tasto passi', () => {
   ok('mille ritocchi a caso e nessun conto storto', storti.slice(0, 3), []);
 });
 
+gruppo('Un giro svuotato se ne va, quello appena aperto resta', () => {
+  /* Togliendo tutti i saliti con il meno, la riga «0 · da contare»
+     restava in lista e per farla sparire bisognava anche premere la sua
+     ✕: due gesti per dire una cosa sola -- «no, su questo non e' salito
+     nessuno» -- e intanto lo storico si riempiva di righe vuote che
+     sembravano giri veri.
+     Il giro APPENA APERTO invece deve restare: quello e' lo zero da
+     riempire, e sparirgli sotto le dita renderebbe impossibile aprirne
+     uno. Si distinguono da come ci si arriva. */
+  const nuovo = () => {
+    const c = conto({ children: 2, durationMinutes: 30, baseMinutes: 30 });
+    ctx.PAN.conto = c; ctx.PAN.ingresso = null;
+    return c;
+  };
+
+  let c = nuovo();
+  ctx.metteCrazy(c, 2); ctx.giroNuovo(c); ctx.cambiaGiro(c, 1, 3);
+  ok('due giri segnati', ctx.giriCrazy(c), [2, 3]);
+  const regalatiPrima = ctx.regalatiDi(c);
+  ctx.cambiaGiro(c, 1, -3);
+  ok('svuotando il secondo, sparisce', ctx.giriCrazy(c), [2]);
+  ok('e coi giri se ne vanno i suoi minuti', ctx.regalatiDi(c) < regalatiPrima, true);
+
+  c = nuovo();
+  ctx.metteCrazy(c, 2); ctx.giroNuovo(c);
+  ok('il giro appena aperto resta, che e lo zero da riempire', ctx.giriCrazy(c), [2, 0]);
+  ctx.cambiaGiro(c, 1, 1);
+  ok('e ci si conta dentro', ctx.giriCrazy(c), [2, 1]);
+
+  c = nuovo();
+  ctx.metteCrazy(c, 1); ctx.giroNuovo(c); ctx.cambiaGiro(c, 1, 2);
+  ctx.giroNuovo(c); ctx.cambiaGiro(c, 2, 4);
+  ok('tre giri', ctx.giriCrazy(c), [1, 2, 4]);
+  ctx.cambiaGiro(c, 1, -2);
+  ok('si puo svuotare anche quello in mezzo', ctx.giriCrazy(c), [1, 4]);
+
+  c = nuovo();
+  ctx.metteCrazy(c, 3);
+  ctx.cambiaGiro(c, 0, -3);
+  ok('svuotando l unico, non resta una riga vuota', ctx.giriCrazy(c), []);
+  ok('e niente minuti regalati', ctx.regalatiDi(c), 0);
+  ctx.giroNuovo(c);
+  ok('e se ne puo riaprire uno', ctx.giriCrazy(c), [0]);
+
+  /* i minuti regalati NON arrivano mai da un giro vuoto */
+  const storti = [];
+  let seme = 31415;
+  const caso = n => { seme = (seme * 1103515245 + 12345) % 2147483648; return seme % n; };
+  for (let giro = 0; giro < 400 && !storti.length; giro++) {
+    const x = nuovo();
+    for (let k = 0; k < 8; k++) {
+      if (caso(3) === 0) ctx.giroNuovo(x);
+      else ctx.cambiaGiro(x, caso(Math.max(1, ctx.giriCrazy(x).length)), caso(2) ? 1 : -1);
+    }
+    const g = ctx.giriCrazy(x);
+    const vuoti = g.filter(n => n === 0).length;
+    /* al massimo UNO: quello aperto adesso, e solo se sta in fondo */
+    if (vuoti > 1) storti.push('giri vuoti: ' + JSON.stringify(g));
+    if (vuoti === 1 && g[g.length - 1] !== 0) storti.push('un vuoto non in fondo: ' + JSON.stringify(g));
+    const attesi = ctx.settings.crazyExtraMinutes * Math.max(0, g.filter(n => n > 0).length - (x.omaggio ? 1 : 0));
+    if (ctx.regalatiDi(x) !== attesi + (x.omaggio || 0)) {
+      storti.push('minuti regalati storti su ' + JSON.stringify(g) + ': ' + ctx.regalatiDi(x));
+    }
+  }
+  ok('quattrocento sequenze e mai piu di un giro vuoto, ne un minuto regalato di troppo',
+     storti.slice(0, 2), []);
+});
+
 gruppo('Aprire e richiudere il tempo non cambia il prezzo', () => {
   /* Nella scheda c'e' un interruttore che passa da tempo comprato a
      tempo aperto e ritorno. A tempo aperto `costOf` non guarda i blocchi
