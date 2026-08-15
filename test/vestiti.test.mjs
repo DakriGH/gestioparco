@@ -1007,6 +1007,49 @@ gruppo('La fascia del tempo: una sola, e dice fin quando e pagato');
 
 }
 
+gruppo('I colori sono colori, i capi sono capi');
+{
+  /* Nella tavolozza c'era «jeans», che e' un TESSUTO. Usato come nome di
+     colore usciva «camicia jeans» per una camicia blu -- che si legge
+     come una camicia di denim, non come il suo colore -- e «bracciale
+     jeans», che non vuol dire niente.
+     Il capo `jeans` esiste e sta in capi.js, ed e' giusto che ci stia:
+     uno puo' averli neri e restano jeans. Ma un COLORE si chiama col
+     nome di un colore. */
+  const capi = new Set(AV.TOP.map(t => t.key).concat(AV.PANTS.map(t => t.key)));
+  const tessuti = ['jeans', 'denim', 'pelle', 'lana', 'cotone', 'velluto', 'seta', 'pile'];
+  const storti = [];
+  AV.COLORS.forEach(c => {
+    c.n.forEach(nome => {
+      const parole = String(nome).toLowerCase().split(/\s+/);
+      parole.forEach(w => {
+        if (capi.has(w)) storti.push(c.c + ' si chiama come un capo: ' + nome);
+        else if (tessuti.indexOf(w) >= 0) storti.push(c.c + ' si chiama come un tessuto: ' + nome);
+      });
+    });
+  });
+  prova('nessun colore porta il nome di un capo o di un tessuto',
+    storti.length === 0, storti.slice(0, 3).join(' | '));
+
+  /* e il blu di prima adesso si legge come un colore */
+  const av = AV.defaultFor('mamma');
+  av.top = { capo: 'camicia', color: '#3B5C88' };
+  const detti = AV.traits(av, 4, true).map(t => t.txt).join(' | ');
+  prova('la camicia blu si legge «blu grigio», non «jeans»',
+    /blu grigio/.test(detti) && !/jeans/i.test(detti), detti);
+  prova('e il bracciale pure', AV.colorName('#3B5C88', 0) === 'blu grigio');
+
+  /* ogni colore deve avere le sue quattro forme, e nessuna vuota */
+  const vuoti = AV.COLORS.filter(c => !Array.isArray(c.n) || c.n.length !== 4 || c.n.some(x => !x));
+  prova('ogni colore ha le sue quattro forme', vuoti.length === 0,
+    vuoti.map(c => c.c).join(', '));
+  /* e due colori non possono chiamarsi uguale */
+  const nomi = AV.COLORS.map(c => c.n[0]);
+  prova('nessun colore ha lo stesso nome di un altro',
+    new Set(nomi).size === nomi.length,
+    nomi.filter((x, i) => nomi.indexOf(x) !== i).join(', '));
+}
+
 gruppo('Il vuoto sopra la scheda che vola');
 {
   /* La rimpicciolitura non c'e' piu': il pannello e' UNO SOLO e vive in

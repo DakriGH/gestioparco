@@ -28,7 +28,15 @@
     { c: '#4F6B3A', n: ['verde militare', 'verde militare', 'verdi militare', 'verdi militare'] },
     { c: '#7DD3FC', n: ['azzurro chiaro', 'azzurra chiara', 'azzurri chiari', 'azzurre chiare'] },
     { c: '#0EA5E9', n: ['azzurro', 'azzurra', 'azzurri', 'azzurre'] },
-    { c: '#3B5C88', n: ['jeans', 'jeans', 'jeans', 'jeans'] },
+    /* I COLORI SONO COLORI, I CAPI SONO CAPI. Qui c'era «jeans», che e'
+       un tessuto: usato come nome di colore usciva «camicia jeans» per
+       una camicia blu -- che si legge come una camicia di denim, non
+       come il suo colore -- e «bracciale jeans», che non vuol dire
+       niente. Il capo `jeans` esiste, sta in capi.js ed e' giusto che ci
+       stia: uno puo' averli neri e restano jeans. Il COLORE invece si
+       chiama col suo nome. Invariabile come «blu scuro», per la stessa
+       ragione: blu non si accorda. */
+    { c: '#3B5C88', n: ['blu grigio', 'blu grigio', 'blu grigio', 'blu grigio'] },
     { c: '#2547C4', n: ['blu', 'blu', 'blu', 'blu'] },
     /* blu resta invariabile anche accompagnato: "maglietta blu scuro",
        come si dice al banco */
