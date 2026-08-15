@@ -7550,6 +7550,13 @@ function riparaConto(o) {
   o.crazyGiri = lista(o.crazyGiri).map(n => int(n, 9999)).filter(n => n > 0);
   if (o.crazyJumping > 0) o.crazyGiri = giriCrazy(o);
   else delete o.crazyGiri;
+  /* L'ORA D'INGRESSO DEV'ESSERE UN ORARIO VERO.
+     Con un NaN li' dentro `endTimeOf` restituiva NaN, e da li' in poi
+     tutti i confronti del countdown erano falsi: la scheda restava verde
+     per sempre, cioe' un gruppo scaduto non lo diceva a nessuno. */
+  if (!Number.isFinite(num(o.startTime, NaN))) {
+    o.startTime = Number.isFinite(num(o.createdAt, NaN)) ? num(o.createdAt, 0) : Date.now();
+  }
   /* ZERO E' UN VALORE BUONO: e' chi non ha comprato tempo di parco --
      solo Crazy -- e la sua permanenza sta nei minuti in omaggio */
   o.durationMinutes = int(o.durationMinutes, 99999);
@@ -7605,14 +7612,25 @@ function normalizeEntries(list) {
      esplode qui, al banco non compare piu' nessuno.
      I buchi (null, undefined, un numero finito li' per sbaglio) si
      buttano prima di guardarci dentro: un ingresso che non c'e' non e'
-     un ingresso da riparare. */
+     un ingresso da riparare.
+     E per quello che nemmeno la riparazione regge c'e' la rete qui
+     sotto: si perde QUELL'ingresso, con un grido nella console, invece
+     di perdere il banco intero. Un ingresso in meno lo si rimette a
+     mano; una lista che non si apre ferma la cassa. */
   return lista(list).filter(e => e && typeof e === 'object').map(e => {
+   try {
     const o = Object.assign({
       status: 'active', barItems: [], barPaid: 0, parkPaid: false,
       braceletColor: null, braceletCustom: false, paidLines: {},
       children: 1, crazyJumping: 0, durationMinutes: 60, people: []
     }, e, {
       paidLines: e.paidLines || {},
+      /* LE VOCI DEL BAR SI RIPULISCONO QUI, non piu' in giu'.
+         `riparaConto` le setacciava gia', ma `traduciImporti` gira PRIMA
+         di lui e leggeva `bi.qty` senza guardare se `bi` c'era: un null
+         in mezzo alla lista -- da un backup rovinato o da una versione
+         vecchia -- faceva saltare tutto l'elenco, non quell'ingresso. */
+      barItems: lista(e.barItems).filter(b => b && typeof b === 'object'),
       people: lista(e.people).filter(p => p && typeof p === 'object')
         .map(p => (p.avatar = AV.normalize(p.avatar, p.role), p))
     });
@@ -7627,7 +7645,11 @@ function normalizeEntries(list) {
     }
     if (o.paidBar == null) o.paidBar = Math.max(0, num(o.barPaid, 0));
     return o;
-  });
+   } catch (err) {
+     console.error('ingresso illeggibile, lo salto', e && e.id, err);
+     return null;
+   }
+  }).filter(Boolean);
 }
 
 function init() {

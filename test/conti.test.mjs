@@ -717,6 +717,65 @@ gruppo('Lo stesso tempo costa lo stesso, da qualunque tasto passi', () => {
   ok('mille ritocchi a caso e nessun conto storto', storti.slice(0, 3), []);
 });
 
+gruppo('Un ingresso marcio non porta giu tutto il banco', () => {
+  /* `normalizeEntries` e' la porta da cui entra la roba di fuori: cloud
+     scritto da un'altra versione, backup ripristinati, copie del giorno.
+     Se esplode li', al banco non compare piu' NESSUNO -- non l'ingresso
+     rotto: tutti. Ed e' successo: un `null` in mezzo a `barItems` faceva
+     saltare l'elenco intero, perche' `traduciImporti` gira prima della
+     riparazione e leggeva `bi.qty` senza guardare se `bi` c'era. */
+  const buoni = [
+    { id: 'buono1', startTime: Date.now(), children: 2, durationMinutes: 30, baseMinutes: 30 },
+    { id: 'buono2', startTime: Date.now(), children: 1, durationMinutes: 60, baseMinutes: 60 }
+  ];
+  const marcio = { id: 'marcio', startTime: Date.now(), children: 1, barItems: [null, 3, { id: 'b1', name: 'Birra', price: NaN, qty: -2 }] };
+
+  let usciti = null, esploso = null;
+  try { usciti = ctx.normalizeEntries([buoni[0], marcio, buoni[1]]); }
+  catch (e) { esploso = e.message; }
+  ok('un null dentro barItems non fa esplodere niente', esploso, null);
+  vero('e i due ingressi sani sopravvivono',
+       !!usciti && ['buono1', 'buono2'].every(id => usciti.some(e => e.id === id)));
+
+  /* i veleni classici, uno per uno: nessuno deve produrre un conto storto */
+  const veleni = [
+    ['bambini NaN', { children: NaN }],
+    ['bambini stringa', { children: 'tre' }],
+    ['durata negativa', { durationMinutes: -60 }],
+    ['crazy infinito', { crazyJumping: Infinity }],
+    ['paidPark NaN', { paidPark: NaN }],
+    ['paidAmt con chiavi finte', { paidAmt: { pippo: 50, bimbi: 'tanti' } }],
+    ['spunte oltre la quantita', { children: 1, paidLines: { bimbi: 99 } }],
+    ['barItems non e una lista', { barItems: 'birra' }],
+    ['aggiunte avvelenate', { aggiunte: [null, -5, 'x', Infinity, 15] }],
+    ['people non e una lista', { people: 'io' }]
+  ];
+  const guai = [];
+  veleni.forEach(([nome, veleno]) => {
+    let o;
+    try { o = ctx.normalizeEntries([Object.assign({ id: 'v', startTime: Date.now() }, veleno)])[0]; }
+    catch (err) { guai.push(nome + ': ESPLODE'); return; }
+    if (!o) { guai.push(nome + ': sparito'); return; }
+    const k = ctx.costOf(o), d = ctx.dueOf(o);
+    if (!(Number.isFinite(k.parkTotal) && k.parkTotal >= 0)) guai.push(nome + ': tempo ' + k.parkTotal);
+    if (!(Number.isFinite(d.total) && d.total >= 0)) guai.push(nome + ': dovuto ' + d.total);
+    if (!(Number.isFinite(ctx.minutiPagati(o)))) guai.push(nome + ': minuti pagati storti');
+    if (!Array.isArray(o.barItems)) guai.push(nome + ': barItems non e una lista');
+    if (!Array.isArray(o.people)) guai.push(nome + ': people non e una lista');
+  });
+  ok('nessun veleno produce un conto storto', guai.slice(0, 3), []);
+
+  /* L'ORA D'INGRESSO: con un NaN li' dentro, endTimeOf tornava NaN e tutti
+     i confronti del countdown diventavano falsi -- la scheda restava verde
+     per sempre, cioe' un gruppo scaduto non lo diceva a nessuno. */
+  const senzOra = ctx.normalizeEntries([{ id: 's', startTime: NaN, children: 1, durationMinutes: 30 }])[0];
+  vero('un orario d ingresso rotto viene rimesso a posto', Number.isFinite(senzOra.startTime));
+  vero('e l ora di uscita torna un orario vero', Number.isFinite(ctx.endTimeOf(senzOra)));
+  const vecchio = ctx.normalizeEntries([{ id: 'x', startTime: NaN, children: 1, durationMinutes: 1 }])[0];
+  vecchio.startTime = Date.now() - 3600000;   // entrato un'ora fa, per mezz'ora
+  ok('e una scheda scaduta lo dice', ctx.stateOf(vecchio, Date.now()), 'danger');
+});
+
 gruppo('Il Crazy non entra MAI nel prezzo del tempo di parco', () => {
   /* LA REGOLA, per intero: il Crazy si paga a parte, col suo prezzo, e in
      cambio si sta dentro di piu'. Quei minuti in piu' NON sono tempo da
