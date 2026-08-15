@@ -829,8 +829,36 @@ function regalatiDi(e) {
   return minutiCrazy(e) + omaggioDi(e);
 }
 
+/* DA QUANDO CONTA IL TEMPO DI PARCO.
+   Di norma dall'ingresso: si entra e si comincia. Ma chi arriva per
+   saltare e SOLO DOPO decide di fermarsi al parco compra quel tempo in
+   un altro momento, e contarglielo dall'arrivo voleva dire regalargli
+   -- o piu' spesso RUBARGLI -- tutto quello che era passato nel
+   frattempo.
+   E' il guasto visto al banco: un papa' entrato alle 21:40 per due giri,
+   che alle 22:10 compra dieci minuti di parco per tre bambini, si vedeva
+   scritto «esce alle 22:00». Dieci minuti nel passato, scaduto prima
+   ancora di cominciare.
+   `parcoDa` si scrive da se' quando i minuti di parco passano da zero a
+   qualcosa: e' il momento in cui quel tempo e' stato comprato. */
+function inizioParco(e) {
+  e = e || C();
+  const d = num(e.parcoDa, NaN);
+  return Number.isFinite(d) && d > 0 ? d : num(e.startTime, 0);
+}
+
 function endTimeOf(e) {
-  return e.startTime + (num(e.durationMinutes, 0) + regalatiDi(e)) * 60000;
+  const min = num(e.durationMinutes, 0);
+  /* SENZA TEMPO DI PARCO restano dentro coi minuti regalati, che partono
+     dall'ingresso: e' il solo-Crazy, e li' non c'e' niente di comprato. */
+  if (min <= 0) return e.startTime + regalatiDi(e) * 60000;
+  /* COL TEMPO DI PARCO si conta da quando l'hanno comprato, e i minuti
+     dei giri si sommano perche' durante una salita non stanno usando il
+     tempo del parco. L'omaggio del solo-Crazy invece NON si somma: era
+     il tempo per salire e scendere, ed e' gia' stato speso prima che il
+     tempo di parco cominciasse. Sommarlo voleva dire darglielo due
+     volte. */
+  return inizioParco(e) + (min + minutiCrazy(e)) * 60000;
 }
 /* IL COLORE DELLA SCHEDA E' L'OROLOGIO, e cambia quando cambia
    davvero qualcosa:
@@ -873,8 +901,10 @@ function costOf(entry) {
   const regalati = regalatiDi(entry);
   let base;
   if (entry.payLater) {
-    // paga il tempo passato dentro, meno quello regalato dal Crazy
-    const stato = Math.max(0, (Date.now() - entry.startTime) / 60000 - regalati);
+    /* paga il tempo passato dentro, meno quello regalato dal Crazy. Si
+       conta da quando e' cominciato il PARCO: a chi si e' fermato dopo
+       due giri non si fa pagare anche l'attesa di prima. */
+    const stato = Math.max(0, (Date.now() - inizioParco(entry)) / 60000 - regalati);
     base = priceFor(up5(stato));
   } else {
     const totMin = clamp(entry.durationMinutes, 0, 1e6);
@@ -1141,6 +1171,7 @@ function costruisciPannello() {
           </span>
         </div>
         <span class="tp-om hidden"></span>
+        <span class="tp-parcoda hidden"></span>
         <div class="tp-filo"><i class="pc-filo"></i></div>
         <div class="tp-riga">
           <div class="chips pc-dur"></div>
@@ -1383,9 +1414,13 @@ function costruisciPannello() {
       return;
     }
     if (d.a === 'min') {
-      const m = clamp(c.durationMinutes, 1, 99999);
-      c.durationMinutes = d.v === '-5' ? Math.max(5, m - 5)
+      const m = clamp(c.durationMinutes, 0, 99999);
+      const nuovo = d.v === '-5' ? Math.max(5, m - 5)
         : d.v === '+5' ? Math.min(99999, m + 5) : clamp(parseInt(d.v, 10), 1, 99999);
+      /* anche da qui il tempo di parco puo' partire da zero: e' la
+         stessa cosa del piu' del mini menu, e va segnata uguale */
+      segnaInizioParco(c, m, nuovo);
+      c.durationMinutes = nuovo;
       /* i tagli rapidi SCRIVONO la durata: quello che era stato
          venduto prima non c'entra piu' niente */
       delete c.aggiunte;
@@ -1847,6 +1882,20 @@ function disegnaFascia(p, c) {
           : 'non entrano nel prezzo') + '</small>';
     }
   }
+  /* DA QUANDO CONTA IL TEMPO DI PARCO. Si scrive solo quando NON e'
+     l'ora d'ingresso: chi entra e compra subito non ha niente da
+     spiegare. Chi invece arriva per saltare e si ferma dopo, si', e
+     senza questa riga l'uscita sembrava sbagliata -- era proprio il
+     numero che non tornava al banco. */
+  const dq = p.querySelector('.tp-parcoda');
+  if (dq) {
+    const da = inizioParco(c);
+    const mostra = num(c.durationMinutes, 0) > 0 && Math.abs(da - num(c.startTime, 0)) > 60000;
+    dq.classList.toggle('hidden', !mostra);
+    dq.innerHTML = mostra
+      ? '\u23f1\ufe0f il parco conta dalle <b>' + fmtTime(da) + '</b>'
+      : '';
+  }
   p.querySelector('.pc-pag').innerHTML = pastigliaPagato(c);
   disegnaEstendi(p, c);
 }
@@ -1890,6 +1939,14 @@ function minimoTempo(c) {
   return omaggioDi(c || C()) > 0 ? 0 : 5;
 }
 
+/* Il tempo di parco passa da zero a qualcosa: e' adesso che comincia a
+   contare. Si segna una volta sola -- quando si comprano altri minuti
+   dopo, il tempo continua da dove stava, non riparte. */
+function segnaInizioParco(c, prima, dopo) {
+  if (prima > 0 || dopo <= 0) return;
+  c.parcoDa = Date.now();
+}
+
 function ritoccaTempo(c, delta) {
   c = c || C();
   if (c.payLater) return;
@@ -1905,6 +1962,7 @@ function ritoccaTempo(c, delta) {
   const dopo = clamp(m + num(delta, 0), minimo, 100000);
   const vero = dopo - m;                 /* quello che si e' mosso davvero */
   if (!vero) return;
+  segnaInizioParco(c, m, dopo);
   c.durationMinutes = dopo;
   const vendite = lista(c.aggiunte).map(x => Math.max(0, Math.round(num(x, 0))));
   if (vendite.length) {
@@ -3923,6 +3981,8 @@ function commitDa(draft, opz) {
     barPaid: 0, parkPaid: false,
     /* registrato, l'orario e' quello: non insegue piu' l'orologio */
     oraManuale: true,
+    /* da quando conta il tempo di parco, se e' cominciato dopo l'ingresso */
+    parcoDa: soloBar ? undefined : (num(draft.parcoDa, 0) || undefined),
     baseMinutes: soloBar ? 0 : draft.durationMinutes,
     /* QUELLO CHE NASCE NEL MODULO DEVE ARRIVARE INTERO.
        Questo elenco e' scritto a mano, campo per campo, e chi ne
@@ -6331,8 +6391,15 @@ function syncCard(entry) {
      banner direbbe due cose diverse nella stessa riga. Quanto tempo
      hanno COMPRATO -- che e' un altro numero -- sta nella fascia del
      Tempo dentro la scheda. */
-  const durata = Math.round((endTimeOf(entry) - entry.startTime) / 60000);
+  /* LA DURATA E' QUELLA DEL TEMPO DI PARCO, contata da quando e'
+     cominciato. Per chi entra e compra subito e' la stessa cosa; per chi
+     si e' fermato dopo due giri no, e prima qui si leggeva la distanza
+     dall'INGRESSO -- quaranta minuti per dieci minuti comprati. */
+  const da = inizioParco(entry);
+  const dopo = Math.abs(da - num(entry.startTime, 0)) > 60000;
+  const durata = Math.round((endTimeOf(entry) - da) / 60000);
   r.range.innerHTML = '<span class="fr">dalle</span>' + fmtTime(entry.startTime) +
+    (dopo ? '<span class="fr">parco</span>' + fmtTime(da) : '') +
     '<span class="fr">alle</span>' + (entry.payLater ? '?' : fmtTime(endTimeOf(entry))) +
     (entry.payLater ? '' : '<b class="dur">' + fmtMin(durata) + '</b>');
   updateBadge();
@@ -8096,6 +8163,12 @@ function riparaConto(o) {
   o.crazyGiri = lista(o.crazyGiri).map(n => int(n, 9999)).filter(n => n > 0);
   if (o.crazyJumping > 0) o.crazyGiri = giriCrazy(o);
   else delete o.crazyGiri;
+  /* da quando conta il tempo di parco: un orario vero, o niente -- e mai
+     prima dell'ingresso, che sarebbe un tempo cominciato prima di
+     entrare */
+  const da = num(o.parcoDa, NaN);
+  if (Number.isFinite(da) && da > 0) o.parcoDa = Math.max(da, num(o.startTime, 0));
+  else delete o.parcoDa;
   /* la sigla e' due lettere maiuscole, o niente */
   o.sigla = /^[A-Z]{2,3}$/.test(String(o.sigla || '')) ? o.sigla : '';
   /* una vendita al banco resta tale anche dopo un ricaricamento */

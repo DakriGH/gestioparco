@@ -824,6 +824,13 @@ main {
   font-size: 12px; color: rgba(255, 255, 255, 0.75); }
 .tp-om b { font-family: 'Fredoka', sans-serif; font-size: 15px; color: #C9B6FF; }
 .tp-om small { font-size: 10.5px; color: rgba(255, 255, 255, 0.5); }
+/* da quando conta il tempo di parco: compare solo quando NON e' l'ora
+   d'ingresso, cioe' quando c'e' qualcosa da spiegare */
+.tp-parcoda { display: inline-flex; align-items: baseline; gap: 5px; margin-top: 6px;
+  padding: 3px 10px; border-radius: 10px; background: rgba(56, 189, 248, .14);
+  font-size: 12px; color: rgba(255, 255, 255, .78); }
+.tp-parcoda b { font-family: 'Fredoka', sans-serif; font-size: 14px; color: #9BD9F5; }
+.tp-parcoda.hidden { display: none; }
 /* SOLI SALTI: L'AVVISO STA AL POSTO DEI TAGLI. Prima era un
    cartellone di quattro righe sopra i tagli, che intanto restavano
    accesi -- tanto testo per dire una cosa sola, e proprio sopra

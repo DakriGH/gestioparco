@@ -498,7 +498,17 @@ gruppo('I giri del Crazy stanno nella sua card');
     /primoGratis = omaggioDi\(e\) > 0 \? 1 : 0/.test(APP));
   prova('e il tempo regalato si chiede a una funzione sola',
     /function regalatiDi/.test(APP) &&
-    /startTime \+ \(num\(e\.durationMinutes, 0\) \+ regalatiDi\(e\)\)/.test(APP));
+    /e\.startTime \+ regalatiDi\(e\) \* 60000/.test(APP));
+  /* IL TEMPO DI PARCO CONTA DA QUANDO E' STATO COMPRATO, non
+     dall'ingresso: chi arriva per saltare e si ferma dopo comprava dieci
+     minuti e se li vedeva scadere nel passato. */
+  prova('e il tempo di parco conta da quando e stato comprato',
+    /function inizioParco/.test(APP) &&
+    /inizioParco\(e\) \+ \(min \+ minutiCrazy\(e\)\) \* 60000/.test(APP));
+  prova('il momento si segna da se quando i minuti partono da zero',
+    /function segnaInizioParco/.test(APP) && /segnaInizioParco\(c, m, dopo\)/.test(APP));
+  prova('e si legge a video da quando conta',
+    /tp-parcoda/.test(APP) && /il parco conta dalle/.test(APP) && /\.tp-parcoda \{/.test(CSS));
   /* LA CARD RESTA QUELLA DELLE ALTRE: il piu' e il meno di sempre.
      Quello che cambiano dentro e' il GIRO SCELTO, e il giro si sceglie
      toccandolo nello storico qui accanto. Cosi' si corregge un giro

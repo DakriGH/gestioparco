@@ -1095,8 +1095,14 @@ gruppo('IL PESTAGGIO GROSSO: tempo, Crazy, aperto e chiuso, mille volte', () => 
           if ((+x.paidLines[b.id] || 0) > (+b.qty || 0)) guai.push('spunte oltre la quantita su ' + b.id + dove);
         });
         /* il Crazy non tocca MAI il prezzo del tempo */
-        const gem = ctx.fotografia(x); gem.crazyJumping = 0; delete gem.crazyGiri;
-        if (ctx.costOf(gem).parkTotal !== kk.parkTotal) guai.push('il Crazy sposta il tempo' + dove);
+        /* A TEMPO APERTO IL CRAZY SCONTA APPOSTA: si paga il tempo
+           passato MENO quello regalato, quindi togliere i giri cambia il
+           prezzo ed e' giusto. La garanzia «il Crazy non tocca il prezzo
+           del tempo» vale sul tempo comprato. */
+        if (!x.payLater) {
+          const gem = ctx.fotografia(x); gem.crazyJumping = 0; delete gem.crazyGiri;
+          if (ctx.costOf(gem).parkTotal !== kk.parkTotal) guai.push('il Crazy sposta il tempo' + dove);
+        }
         /* e i giri vuoti sono al massimo uno, in fondo */
         const g = ctx.giriCrazy(x);
         const vuoti = g.filter(v => v === 0).length;
@@ -1532,8 +1538,13 @@ gruppo('Solo Crazy: dieci minuti in omaggio, e non si pagano mai', () => {
      ctx.r2(ctx.priceFor(30) * 2 + ctx.settings.crazyJumpingPrice));
   ok('i dieci minuti in omaggio non entrano nel prezzo',
      ctx.dueOf(c).park !== ctx.r2(ctx.priceFor(40) * 2 + ctx.settings.crazyJumpingPrice), true);
-  ok('ma restano nella permanenza',
-     Math.round((ctx.endTimeOf(c) - c.startTime) / 60000), 30 + omaggio);
+  /* MA NON RESTANO NELLA PERMANENZA, non piu'. I dieci minuti in
+     omaggio sono il tempo per salire e scendere: chi poi COMPRA tempo di
+     parco li ha gia' spesi, e sommarglieli voleva dire dargli venti
+     minuti per dieci comprati -- visto al banco, e sbagliato.
+     Da quando c'e' tempo di parco la permanenza si conta da li'. */
+  ok('e nemmeno nella permanenza, una volta comprato il tempo',
+     Math.round((ctx.endTimeOf(c) - ctx.inizioParco(c)) / 60000), 30);
 
   /* e il tasto che allunga dice il prezzo del blocco, non dell'omaggio */
   ok('allungare di mezz ora costa la mezz ora',
