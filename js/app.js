@@ -184,16 +184,26 @@ function sigleDellaGiornata(quando) {
   return usate;
 }
 
-/* La prima libera della giornata. Se sono finite tutte -- cinquecento
-   settantasei gruppi in un giorno solo -- si torna senza sigla invece di
-   darne una doppia: meglio niente riferimento che uno che ne indica due. */
+/* La prima libera della giornata. Finite le 576 da due lettere si passa
+   a TRE -- altre 13.824 -- invece di restare senza: un gruppo senza
+   riferimento e' peggio di uno con una sigla piu' lunga, e il giorno che
+   si arriva a cinquecento gruppi il problema e' avere la coda alla
+   cassa, non tre lettere invece di due.
+   Se finissero anche quelle si torna senza sigla, che e' meglio di una
+   doppia: un codice che indica due gruppi non e' un riferimento. */
 function nuovaSigla(quando, ancheQueste) {
   const usate = sigleDellaGiornata(quando);
   lista(ancheQueste).forEach(x => { if (x) usate.add(x); });
   for (const a of SIGLA_LETTERE) {
     for (const b of SIGLA_LETTERE) {
-      const s = a + b;
-      if (!usate.has(s)) return s;
+      if (!usate.has(a + b)) return a + b;
+    }
+  }
+  for (const a of SIGLA_LETTERE) {
+    for (const b of SIGLA_LETTERE) {
+      for (const c of SIGLA_LETTERE) {
+        if (!usate.has(a + b + c)) return a + b + c;
+      }
     }
   }
   return '';
@@ -8087,7 +8097,7 @@ function riparaConto(o) {
   if (o.crazyJumping > 0) o.crazyGiri = giriCrazy(o);
   else delete o.crazyGiri;
   /* la sigla e' due lettere maiuscole, o niente */
-  o.sigla = /^[A-Z]{2}$/.test(String(o.sigla || '')) ? o.sigla : '';
+  o.sigla = /^[A-Z]{2,3}$/.test(String(o.sigla || '')) ? o.sigla : '';
   /* una vendita al banco resta tale anche dopo un ricaricamento */
   if (o.soloBar) {
     o.soloBar = true;
@@ -8216,21 +8226,41 @@ function normalizeEntries(list) {
      Vince chi e' entrato prima, che e' anche chi il bracciale ce l'ha
      gia' scritto addosso. */
   const perGiornata = new Map();
-  fatti.slice().sort((a, b) => num(a.createdAt, 0) - num(b.createdAt, 0)).forEach(o => {
-    if (!o.sigla) return;
+  const usateDi = (o) => {
     const g = giornataDi(num(o.startTime, num(o.createdAt, 0)));
     if (!perGiornata.has(g)) perGiornata.set(g, new Set());
-    const usate = perGiornata.get(g);
-    if (!usate.has(o.sigla)) { usate.add(o.sigla); return; }
-    let libera = '';
-    for (const x of SIGLA_LETTERE) {
-      for (const y of SIGLA_LETTERE) {
-        if (!usate.has(x + y)) { libera = x + y; break; }
-      }
-      if (libera) break;
+    return perGiornata.get(g);
+  };
+  /* la prima libera fra quelle gia' prese in QUESTA giornata: due
+     lettere, e se sono finite tre */
+  const primaLibera = (usate) => {
+    for (const x of SIGLA_LETTERE) for (const y of SIGLA_LETTERE) if (!usate.has(x + y)) return x + y;
+    for (const x of SIGLA_LETTERE) for (const y of SIGLA_LETTERE) for (const z of SIGLA_LETTERE) {
+      if (!usate.has(x + y + z)) return x + y + z;
     }
-    o.sigla = libera;
-    if (libera) usate.add(libera);
+    return '';
+  };
+  const inOrdine = fatti.slice().sort((a, b) => num(a.createdAt, 0) - num(b.createdAt, 0));
+  /* prima chi una sigla ce l'ha gia': se la tiene, ed e' giusto -- ce
+     l'ha scritta addosso sul bracciale */
+  inOrdine.forEach(o => {
+    if (!o.sigla) return;
+    const usate = usateDi(o);
+    if (!usate.has(o.sigla)) { usate.add(o.sigla); return; }
+    /* doppione: al secondo arrivato se ne da' un'altra */
+    o.sigla = primaLibera(usate);
+    if (o.sigla) usate.add(o.sigla);
+  });
+  /* POI CHI NON CE L'HA. Sono gli ingressi registrati prima che le
+     sigle esistessero: senza questo restavano senza per sempre, e in
+     lista si vedeva il codice solo sui nuovi -- cioe' proprio quando
+     serve indicarne uno a voce, meta' dei gruppi non ne aveva.
+     Ne prendono una a testa, in ordine di arrivo. */
+  inOrdine.forEach(o => {
+    if (o.sigla) return;
+    const usate = usateDi(o);
+    o.sigla = primaLibera(usate);
+    if (o.sigla) usate.add(o.sigla);
   });
   return fatti;
 }

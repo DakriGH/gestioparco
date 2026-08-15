@@ -907,7 +907,14 @@ gruppo('La sigla sta col bracciale, dove finisce scritta');
   prova('e due doppioni dal cloud si separano da soli',
     /const perGiornata = new Map\(\)/.test(APP));
   prova('una sigla storta diventa nessuna sigla',
-    /o\.sigla = \/\^\[A-Z\]\{2\}\$\/\.test/.test(APP));
+    /o\.sigla = \/\^\[A-Z\]\{2,3\}\$\/\.test/.test(APP));
+  prova('finite le 576 si passa a tre lettere invece di restare senza',
+    /for \(const c of SIGLA_LETTERE\)[\s\S]{0,120}a \+ b \+ c/.test(APP));
+  prova('e chi non ce l ha se la prende alla lettura',
+    /POI CHI NON CE L'HA/.test(APP) && /if \(o\.sigla\) return;[\s\S]{0,160}primaLibera\(usate\)/.test(APP));
+  prova('la sigla sta a SINISTRA del bracciale, non sopra',
+    /\.brc \{[^}]*display: flex/.test(CSS),
+    'senza flex lo span e il bottone si impilavano');
 }
 
 gruppo('La scheda in archivio dice chi era e quanto ha pagato');

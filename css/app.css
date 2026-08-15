@@ -947,7 +947,10 @@ main {
    che si sceglie UNA volta e non si tocca piu'. Qui e' un pallino col
    nome del colore; toccandolo compaiono i sei, in un menu che
    galleggia -- cosi' aprirlo non allunga la fascia. */
-.brc { position: relative; }
+/* IN RIGA, non impilati: la sigla sta a SINISTRA del bracciale, non
+   sopra. Senza `flex` qui, lo span e il bottone si mettevano uno sotto
+   l'altro -- `position: relative` da solo non allinea niente. */
+.brc { position: relative; display: flex; align-items: center; gap: 8px; }
 .brc-b { display: flex; align-items: center; gap: 7px; height: 44px; padding: 0 12px 0 8px;
   border: none; border-radius: 13px; background: rgba(0, 0, 0, 0.28); color: var(--txt);
   font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; }

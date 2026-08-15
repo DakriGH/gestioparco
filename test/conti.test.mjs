@@ -1156,13 +1156,50 @@ gruppo('La sigla: due lettere per dire QUALE gruppo', () => {
          new Set(doppi.map(e => e.sigla)).size === 3);
     ok('e la tiene chi e entrato prima', doppi.find(e => e.id === 'x1').sigla, 'QQ');
 
-    /* e da fuori puo' arrivare qualunque cosa al posto di due lettere */
+    /* e da fuori puo' arrivare qualunque cosa al posto delle lettere:
+       si butta e se ne da' una buona, che e' meglio di lasciare
+       l'ingresso senza riferimento */
     const storte = ctx.normalizeEntries([
       { id: 's1', startTime: ora, sigla: 'ab' }, { id: 's2', startTime: ora, sigla: 'A' },
       { id: 's3', startTime: ora, sigla: 'A1' }, { id: 's4', startTime: ora, sigla: 123 },
       { id: 's5', startTime: ora, sigla: null }, { id: 's6', startTime: ora, sigla: {} }
     ]).map(e => e.sigla);
-    ok('una sigla storta diventa nessuna sigla', storte, ['', '', '', '', '', '']);
+    vero('una sigla storta viene sostituita con una buona',
+         storte.every(x => /^[A-Z]{2,3}$/.test(x)));
+    vero('e non se ne ripetono', new Set(storte).size === storte.length);
+
+    /* CHI NON CE L'HA SE LA PRENDE. Sono gli ingressi registrati prima
+       che le sigle esistessero: senza questo restavano senza per
+       sempre, e in lista il codice si vedeva solo sui nuovi -- cioe'
+       proprio quando serve indicarne uno a voce, meta' dei gruppi non
+       ne aveva. Vale per TUTTI: gruppo, solo Crazy, Solo BAR. */
+    const senza = ctx.normalizeEntries([
+      { id: 'v1', startTime: ora - 3000, createdAt: ora - 3000, children: 2, durationMinutes: 30, baseMinutes: 30 },
+      { id: 'v2', startTime: ora - 2000, createdAt: ora - 2000, children: 1, durationMinutes: 30, baseMinutes: 30 },
+      { id: 'v3', startTime: ora - 1000, createdAt: ora - 1000, children: 0, durationMinutes: 0, baseMinutes: 0, crazyJumping: 1, omaggio: 10 },
+      { id: 'v4', startTime: ora, createdAt: ora, children: 0, durationMinutes: 0, baseMinutes: 0, soloBar: true, barItems: [{ id: 'b1', name: 'Acqua', price: 1, qty: 1 }] }
+    ]);
+    vero('anche gli ingressi vecchi ne ricevono una', senza.every(e => !!e.sigla));
+    vero('e ce l ha anche il solo Crazy e il Solo BAR',
+         !!senza.find(e => e.id === 'v3').sigla && !!senza.find(e => e.id === 'v4').sigla);
+    vero('tutte diverse', new Set(senza.map(e => e.sigla)).size === senza.length);
+
+    /* FINITE LE 576 SI PASSA A TRE LETTERE, invece di restare senza: un
+       gruppo senza riferimento e' peggio di uno con una sigla piu'
+       lunga. */
+    const tanti = [];
+    let i = 0;
+    for (const a of ctx.SIGLA_LETTERE) {
+      for (const b of ctx.SIGLA_LETTERE) {
+        tanti.push({ id: 'e' + (i++), startTime: ora, createdAt: ora + i, children: 1, durationMinutes: 30, baseMinutes: 30, sigla: a + b });
+      }
+    }
+    ctx.entries = ctx.normalizeEntries(tanti);
+    ok('cinquecentosettantasei sigle da due lettere', ctx.entries.length, 576);
+    vero('tutte diverse', new Set(ctx.entries.map(e => e.sigla)).size === 576);
+    const dopoIlLimite = ctx.nuovaSigla();
+    ok('la cinquecentosettantasettesima ha tre lettere', dopoIlLimite.length, 3);
+    ok('e comincia da AAA', dopoIlLimite, 'AAA');
   } finally {
     ctx.mondo.switchTab = veroSwitch;
   }
