@@ -135,6 +135,13 @@ function giornataDi(ts) {
   d.setHours(ORA_CAMBIO_GIORNO, 0, 0, 0);
   return d.getTime();
 }
+/* `dati.js` si carica PRIMA di questo file e non puo' chiamare
+   `giornataDi` direttamente: gliela si affaccia qui, cosi' le copie del
+   giorno si archiviano con la stessa regola delle quattro del mattino
+   invece che con la mezzanotte del calendario. Se manca (dati.js da
+   solo, nei test) lui ripiega sul giorno solare come prima. */
+window.GIORNATA_DI = giornataDi;
+
 function nomeGiornata(inizio) {
   const oggi = giornataDi(Date.now());
   if (inizio === oggi) return 'oggi';
@@ -203,8 +210,27 @@ const savePresets = () => { save(SK.presets, presets); spingiMeta('presets', pre
 function firma(o) {
   if (o === null || typeof o !== 'object') return JSON.stringify(o);
   if (Array.isArray(o)) return '[' + o.map(firma).join(',') + ']';
-  return '{' + Object.keys(o).filter(k => k !== 'agg' && k !== 'aggDa').sort()
+  /* `aggS` sta qui insieme ad `agg`: sono il timbro di QUANDO e' stato
+     scritto, non parte del contenuto. Lasciarlo dentro avrebbe fatto
+     sembrare diverso ogni ritorno dal cloud -- il timbro del server
+     arriva sempre nuovo -- e ogni ingresso si sarebbe riscritto da solo
+     a ogni giro. */
+  return '{' + Object.keys(o).filter(k => k !== 'agg' && k !== 'aggS' && k !== 'aggDa').sort()
     .map(k => JSON.stringify(k) + ':' + firma(o[k])).join(',') + '}';
+}
+
+/* Quando e' stato scritto un ingresso, in millisecondi. Il timbro del
+   server (`aggS`) e' l'unico che tutti i banchi leggono allo stesso
+   modo, ma non c'e' sempre: appena scritto, e finche' la riga non ha
+   fatto il giro, Firestore lo lascia vuoto. In quel caso si ripiega
+   sull'ora del tablet, che e' come si faceva prima. */
+function quandoAgg(o) {
+  const s = o && o.aggS;
+  if (s) {
+    if (typeof s.toMillis === 'function') return s.toMillis();
+    if (typeof s.seconds === 'number') return s.seconds * 1000;
+  }
+  return num(o && o.agg, 0);
 }
 const inviati = new Map();     // id ingresso -> firma dell'ultima versione vista
 const inviatiMeta = new Map(); // impostazioni/presets -> firma
@@ -785,7 +811,15 @@ function costOf(entry) {
     const prezzoVendute = vendute.reduce((a, m) => a + priceFor(up5(m)), 0);
     if (settings.tariffaSuTotale === false) {
       // a scaglioni: la durata iniziale al suo prezzo, il tempo aggiunto al suo
-      const iniz = clamp(num(entry.baseMinutes, iniziale), 0, 1e6);
+      /* IL PEZZO INIZIALE NON PUO' ESSERE PIU' LUNGO DEL TEMPO CHE C'E'.
+         `baseMinutes` e' la durata al momento della registrazione e non si
+         muove piu'; il tempo invece si accorcia col meno. Senza questo
+         tetto un'ora riportata a mezz'ora continuava a pagare l'ora --
+         dodici euro invece di sette -- perche' lo scaglione si prendeva
+         da `baseMinutes` e l'aggiunta finiva a zero. Stessi minuti
+         sull'orologio, due prezzi a seconda di come ci si era arrivati:
+         la stessa famiglia dei "17 euro a caso". */
+      const iniz = Math.min(clamp(num(entry.baseMinutes, iniziale), 0, 1e6), iniziale);
       const agg = Math.max(0, iniziale - iniz);
       base = priceFor(up5(iniz)) + (agg > 0 ? priceFor(up5(agg)) : 0) + prezzoVendute;
     } else {
@@ -2804,7 +2838,7 @@ function arrivanoIngressi(cambi) {
     }
     const remoto = normalizeEntries([c.dato])[0];
     if (i < 0) { entries.push(remoto); cambiato = true; }
-    else if (num(c.dato.agg, 0) > num(entries[i].agg, 0) && firma(c.dato) !== firma(entries[i])) {
+    else if (quandoAgg(c.dato) > quandoAgg(entries[i]) && firma(c.dato) !== firma(entries[i])) {
       entries[i] = remoto; cambiato = true;
     }
     // segno com'è adesso: così non lo rimando su a specchio
@@ -2962,9 +2996,13 @@ function aggiornaCartaCloud() {
   su.style.marginTop = '10px';
   su.onclick = () => {
     su.disabled = true;
+    const quanti = entries.filter(e => e && e.id).length;
     CLOUD.primaSalita(entries, settings, presets).then(n => {
       su.disabled = false;
-      toast('Mandati ' + n + ' ingressi in cloud ☁️');
+      /* se non sono saliti tutti bisogna dirlo: prima il numero era
+         sempre quello "giusto" anche quando il caricamento era fallito */
+      if (n >= quanti) toast('Mandati ' + n + ' ingressi in cloud ☁️');
+      else toast('⚠️ Saliti ' + n + ' ingressi su ' + quanti + ': riprova quando la linea è stabile');
     });
   };
   box.appendChild(su);
@@ -4471,7 +4509,7 @@ function pagaTutto() {
   }
 }
 
-/* le categorie: il Parco davanti/* le categorie: il Parco davanti, poi quelle vere del menu */
+/* le categorie: il Parco davanti, poi quelle vere del menu */
 /* DUE LINGUETTE, NON SEI.
    Prima ce n'era una per categoria -- Bevande, Snack, Birre, Alcolici
    -- e per due birre e un caffe' bisognava cambiare linguetta tre

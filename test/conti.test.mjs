@@ -717,6 +717,73 @@ gruppo('Lo stesso tempo costa lo stesso, da qualunque tasto passi', () => {
   ok('mille ritocchi a caso e nessun conto storto', storti.slice(0, 3), []);
 });
 
+gruppo('Anche a scaglioni lo stesso tempo costa lo stesso', () => {
+  /* L'INTERRUTTORE «ogni aggiunta si paga a parte» (settings.tariffaSuTotale
+     = false) apre una seconda strada dentro costOf, e quella strada non era
+     provata da nessuno: si e' scoperto che un'ora riportata a mezz'ora col
+     meno continuava a costare l'ora -- dodici euro invece di sette.
+     Il motivo: `baseMinutes` e' la durata al momento della registrazione e
+     non si muove piu', ma lo scaglione iniziale si prendeva da li' senza
+     guardare quanto tempo fosse rimasto davvero.
+     Le due tariffe possono dare numeri diversi quando si ALLUNGA -- e'
+     esattamente il loro mestiere -- ma su un ingresso senza aggiunte devono
+     dire la stessa cifra: il tempo comprato e' uno solo. */
+  const eraSuTotale = ctx.settings.tariffaSuTotale;
+  try {
+    ctx.settings.tariffaSuTotale = false;
+
+    const a = conto({ children: 1, durationMinutes: 60, baseMinutes: 60 });
+    for (let i = 0; i < 6; i++) ctx.ritoccaTempo(a, -5);
+    ok('sei meno riportano a mezz ora', a.durationMinutes, 30);
+    ok('e si paga la mezz ora, non l ora di quando erano entrati',
+       ctx.costOf(a).parkTotal, ctx.r2(ctx.priceFor(30)));
+    ok('baseMinutes resta quello della registrazione', a.baseMinutes, 60);
+
+    /* allungando, invece, i due conti restano due conti: la durata
+       iniziale al suo prezzo e ogni blocco venduto al suo */
+    const b = conto({ children: 1, durationMinutes: 30, baseMinutes: 30 });
+    b.aggiunte = [30];
+    b.durationMinutes = 60;
+    ok('mezz ora piu una mezz ora venduta fanno due scaglioni da mezz ora',
+       ctx.costOf(b).parkTotal, ctx.r2(ctx.priceFor(30) * 2));
+
+    /* senza aggiunte le due tariffe devono coincidere, a ogni durata */
+    const discordi = [];
+    for (const m of [10, 15, 20, 30, 40, 50, 60, 90, 120, 180]) {
+      const c = conto({ children: 2, durationMinutes: m, baseMinutes: m });
+      ctx.settings.tariffaSuTotale = false;
+      const scaglioni = ctx.costOf(c).parkTotal;
+      ctx.settings.tariffaSuTotale = true;
+      const totale = ctx.costOf(c).parkTotal;
+      if (scaglioni !== totale) discordi.push(m + ': a scaglioni ' + scaglioni + ', sul totale ' + totale);
+    }
+    ok('senza aggiunte le due tariffe dicono la stessa cifra', discordi.slice(0, 3), []);
+
+    /* e la garanzia in generale, come per l'altra tariffa */
+    ctx.settings.tariffaSuTotale = false;
+    let seme = 20260815;
+    const caso = (n) => { seme = (seme * 1103515245 + 12345) % 2147483648; return seme % n; };
+    const storti = [];
+    for (let giro = 0; giro < 1000 && !storti.length; giro++) {
+      const c = conto({ children: 1, durationMinutes: [15, 30, 45, 60, 90][caso(5)] });
+      c.baseMinutes = c.durationMinutes;
+      c.aggiunte = caso(3) === 0 ? [] : caso(2) === 0 ? [15] : [30, 15];
+      for (let k = 0; k < 8; k++) ctx.ritoccaTempo(c, caso(2) ? 5 : -5);
+      const p = ctx.costOf(c).parkTotal;
+      if (!(p >= 0) || !Number.isFinite(p)) storti.push('prezzo storto: ' + p);
+      /* non si puo' mai pagare piu' del massimo del cartello per ogni
+         pezzo di tempo che c'e' davvero */
+      const tetto = ctx.r2(ctx.priceFor(120) * (1 + ctx.lista(c.aggiunte).length));
+      if (p > tetto) storti.push('sopra il tetto: ' + p + ' con ' + c.durationMinutes + ' minuti');
+    }
+    ok('mille ritocchi a scaglioni e nessun conto storto', storti.slice(0, 3), []);
+  } finally {
+    /* le impostazioni sono di tutti: se restassero girate, i gruppi che
+       vengono dopo proverebbero l'altra tariffa senza saperlo */
+    ctx.settings.tariffaSuTotale = eraSuTotale;
+  }
+});
+
 gruppo('Solo Crazy: dieci minuti in omaggio, e non si pagano mai', () => {
   /* Chi entra solo per saltare non compra tempo di parco: gli si da'
      la permanenza che serve -- salire, saltare, uscire -- e non si
