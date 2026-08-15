@@ -7640,6 +7640,15 @@ function init() {
   });
 
 
+  /* Il numero di versione nella barra. Stesso VERSIONE della carta nelle
+     Impostazioni -- letto dal `?v=` con cui e' stato caricato app.js --
+     cosi' i due non possono dire cose diverse. */
+  const pill = $('#verPill');
+  if (pill) {
+    pill.textContent = 'Ver ' + VERSIONE;
+    pill.title = 'Versione di questa cassa. Se due tavolette hanno numeri diversi, una è rimasta indietro.';
+  }
+
   const clock = () => { $('#clock').textContent = fmtTime(Date.now()); };
   clock();
   clearInterval(clockT);
