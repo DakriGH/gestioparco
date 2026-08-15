@@ -717,6 +717,45 @@ gruppo('Lo stesso tempo costa lo stesso, da qualunque tasto passi', () => {
   ok('mille ritocchi a caso e nessun conto storto', storti.slice(0, 3), []);
 });
 
+gruppo('La nota e del gruppo, e quelle vecchie non si perdono', () => {
+  /* Era un campo di ogni PERSONA, dentro il guardaroba: per scrivere
+     «hanno la torta in macchina» bisognava aprire una persona e vestirla,
+     e spesso una persona non la si vuole proprio mettere. Adesso e' del
+     gruppo e sta nel Parco, in una card sua.
+     Gli ingressi gia' salvati hanno le note sulle persone: si riversano
+     nella nota del gruppo alla lettura, una volta sola. */
+  const vecchio = ctx.normalizeEntries([{
+    id: 'v', startTime: Date.now(), children: 2,
+    people: [
+      { id: 'p1', role: 'mamma', name: 'Anna', note: 'zaino giallo' },
+      { id: 'p2', role: 'papa', name: '', note: 'gamba ingessata' }
+    ]
+  }])[0];
+  ok('le note delle persone finiscono nella nota del gruppo',
+     vecchio.note, 'zaino giallo · gamba ingessata');
+  vero('e sulle persone non restano', ctx.lista(vecchio.people).every(p => !('note' in p)));
+
+  const suo = ctx.normalizeEntries([{
+    id: 'w', startTime: Date.now(), note: 'la sua',
+    people: [{ id: 'p', role: 'mamma', note: 'altra' }]
+  }])[0];
+  ok('un gruppo che una nota ce l ha gia non si tocca', suo.note, 'la sua');
+
+  const vuoto = ctx.normalizeEntries([{ id: 'z', startTime: Date.now() }])[0];
+  ok('senza note, la nota e una stringa vuota', vuoto.note, '');
+
+  /* e dal cloud o da un salvataggio vecchio ci puo' arrivare di tutto */
+  const veleni = [null, 5, {}, [], true, NaN];
+  const guai = [];
+  veleni.forEach(v => {
+    const o = ctx.normalizeEntries([{ id: 'n', startTime: Date.now(), note: v }])[0];
+    if (typeof o.note !== 'string') guai.push(JSON.stringify(v) + ' -> ' + typeof o.note);
+  });
+  ok('qualunque schifezza al posto della nota diventa testo', guai, []);
+  const lunga = ctx.normalizeEntries([{ id: 'l', startTime: Date.now(), note: 'a'.repeat(9000) }])[0];
+  vero('e una nota lunghissima viene accorciata', lunga.note.length <= 500);
+});
+
 gruppo('Un ingresso marcio non porta giu tutto il banco', () => {
   /* `normalizeEntries` e' la porta da cui entra la roba di fuori: cloud
      scritto da un'altra versione, backup ripristinati, copie del giorno.

@@ -370,6 +370,8 @@ function freshDraft() {
     crazyJumping: 0,
     people: [],
     barItems: [],
+    /* la nota del gruppo: sta nel Parco, non dentro una persona */
+    note: '',
     braceletColor: null,
     /* SI PARTE SU AUTO. Prima si partiva "senza", con l'idea che il
        colore andasse messo apposta per non scordarselo -- ma al banco
@@ -1086,6 +1088,22 @@ function costruisciPannello() {
         </div>
         <div class="blk-in">
           <div class="person-list pc-people"></div>
+        </div>
+      </div>
+
+      <!-- LA NOTA E' DEL GRUPPO, NON DI UNA PERSONA.
+           Stava dentro il guardaroba, come campo di chi accompagna: per
+           scrivere «hanno la torta in macchina» bisognava prima aprire
+           una persona e vestirla, e spesso una persona non la si vuole
+           proprio mettere. Sono due cose diverse -- il segno che fa
+           riconoscere QUELLA persona, e la cosa da ricordarsi su tutto
+           il gruppo -- e adesso la seconda ha il suo posto, sempre a
+           vista, un tocco e ci scrivi. -->
+      <div class="card blk c-ambra sec-nota">
+        <h2><span class="em">📝</span> Note</h2>
+        <div class="blk-in">
+          <input class="libero grosso pc-nota"
+            placeholder="Qualcosa che salta all’occhio, o da ricordare: «zaino giallo», «torta in frigo»…">
         </div>
       </div>
     </div>
@@ -2000,6 +2018,21 @@ function aggiornaPannello(opz) {
     dur.classList.toggle('solo', avviso);
     c.people = lista(c.people);
     syncPeople(p.querySelector('.pc-people'), c.people, () => { pcSalva(); });
+
+    /* LA NOTA NON SI RIDISEGNA MENTRE CI SI SCRIVE DENTRO.
+       Riscrivere `value` a ogni giro riporterebbe il cursore in fondo a
+       ogni lettera -- e questo campo si aggiorna a ogni battuta, perche'
+       ogni battuta salva. Si tocca solo quando il valore e' davvero
+       diverso E il dito non e' li' dentro. */
+    const nota = p.querySelector('.pc-nota');
+    if (nota) {
+      const suo = String(c.note || '');
+      if (nota.value !== suo && document.activeElement !== nota) nota.value = suo;
+      if (!nota.dataset.legato) {
+        nota.dataset.legato = '1';
+        nota.oninput = () => { C().note = nota.value; pcSalva(); };
+      }
+    }
   } else if (!inScontrino) {
     pcGriglia();
   }
@@ -2168,7 +2201,8 @@ function syncPeople(container, people, onChange) {
     container.dataset.apri = '';
     container.dataset.tav = '';
   }
-  const sig = people.map(p => p.id + '|' + p.role + '|' + (p.name || '') + '|' + (p.note || '') +
+  /* la nota non e' piu' un campo della persona: fuori dalla firma */
+  const sig = people.map(p => p.id + '|' + p.role + '|' + (p.name || '') +
     '|' + JSON.stringify(p.avatar)).join('\u00a7') + '>' + (container.dataset.apri || '') +
     '>' + (container.dataset.tav || '');
   if (container.dataset.sig === sig) return;
@@ -2266,7 +2300,7 @@ function syncPeople(container, people, onChange) {
       /* la firma si aggiorna a mano: ridisegnare mentre scrive gli
          porterebbe via il cursore da sotto le dita */
       container.dataset.sig = people.map(q => q.id + '|' + q.role + '|' + (q.name || '') + '|' +
-        (q.note || '') + '|' + JSON.stringify(q.avatar)).join('\u00a7') + '>' + (container.dataset.apri || '') +
+        JSON.stringify(q.avatar)).join('\u00a7') + '>' + (container.dataset.apri || '') +
         '>' + (container.dataset.tav || '');
       avvisa();
     });
@@ -2689,11 +2723,11 @@ function armadioDi(p, tavolozzaAperta) {
       '<span class="et">Fantasia</span>' + fantasieSotto + STACCO_FORTE +
       tinte('pants') +
     '</div>' +
-    /* la riga libera passa SOTTO a tutta larghezza: al banco e' quella
-       che si usa di corsa, e va vista prima di tutte */
-    '<div class="largo">' +
-      '<input class="libero grosso" data-campo="note" value="' + esc(p.note || '') + '" ' +
-      'placeholder="Qualcosa che salta all\u2019occhio: \u00abzaino giallo\u00bb, \u00abgamba ingessata\u00bb\u2026"></div>' +
+    /* LA RIGA LIBERA NON STA PIU' QUI. Era un campo della persona, e per
+       scriverci sopra bisognava aprire una persona e vestirla: adesso la
+       Nota e' del gruppo e sta nel Parco, sempre a vista. Il guardaroba
+       torna a fare una cosa sola -- vestire -- che e' gia' la piu'
+       affollata dell'app. */
     '</div>';
 }
 
@@ -3362,7 +3396,7 @@ function pickRole(onPick) {
       s.close();
       const nato = AV.defaultFor(r.key);
       nato.scelti = {};
-      onPick({ id: uid(), role: r.key, name: '', avatar: nato, note: '' });
+      onPick({ id: uid(), role: r.key, name: '', avatar: nato });
     };
     grid.appendChild(b);
   });
@@ -3399,11 +3433,9 @@ function buildAvatarEditor(box, person, onChange, opts) {
 
   let figuraViva = null, trattiVivi = null;
 
-  /* la nota: l'unico campo che non sta gi\u00e0 nella riga */
-  const nota = el('input', 'ed-nota');
-  nota.placeholder = 'Segno particolare, nota\u2026';
-  nota.value = person.note || '';
-  nota.oninput = () => { person.note = nota.value; onChange(); };
+  /* NIENTE NOTA QUI DENTRO: adesso e' del gruppo e sta nel Parco, sempre
+     a vista. Questo editor fa una cosa sola -- vestire -- ed e' gia' la
+     schermata piu' affollata dell'app. */
 
   const aggiorna = (avvisa) => {
     if (figuraViva) {
@@ -3692,7 +3724,6 @@ function buildAvatarEditor(box, person, onChange, opts) {
   colonna.appendChild(tratti);
   figuraViva = figura;
   trattiVivi = tratti;
-  colonna.appendChild(nota);
   const lato = el('div', 'ed-lato');
   palco.appendChild(colonna);
   palco.appendChild(lato);
@@ -4309,10 +4340,11 @@ function entryCard(entry) {
 
   mkAct('\ud83d\udeaa Uscita', 'forte', (ev) => { ev.stopPropagation(); chiudiIngresso(entry); });
 
-  const notes = people.filter(p => p.note && p.note.trim());
-  if (notes.length) {
-    dentro.appendChild(el('div', 'e-note', notes.map(p => '\ud83d\udcdd ' + p.note.trim()).join(' \u00b7 ')));
-  }
+  /* la nota del GRUPPO. Le note delle persone, quando ce n'erano,
+     finivano qui una in fila all'altra: adesso e' una sola e le vecchie
+     ci sono state riversate dentro alla lettura (normalizeEntries). */
+  const nota = String(entry.note || '').trim();
+  if (nota) dentro.appendChild(el('div', 'e-note', '\ud83d\udcdd ' + nota));
 
   card.appendChild(aperta);
 
@@ -7550,6 +7582,9 @@ function riparaConto(o) {
   o.crazyGiri = lista(o.crazyGiri).map(n => int(n, 9999)).filter(n => n > 0);
   if (o.crazyJumping > 0) o.crazyGiri = giriCrazy(o);
   else delete o.crazyGiri;
+  /* LA NOTA E' UNA RIGA DI TESTO, e nient'altro. Dal cloud o da un
+     salvataggio vecchio puo' arrivarci dentro qualunque cosa. */
+  o.note = typeof o.note === 'string' ? o.note.slice(0, 500) : '';
   /* L'ORA D'INGRESSO DEV'ESSERE UN ORARIO VERO.
      Con un NaN li' dentro `endTimeOf` restituiva NaN, e da li' in poi
      tutti i confronti del countdown erano falsi: la scheda restava verde
@@ -7635,6 +7670,17 @@ function normalizeEntries(list) {
         .map(p => (p.avatar = AV.normalize(p.avatar, p.role), p))
     });
     if (o.baseMinutes == null) o.baseMinutes = o.durationMinutes;
+    /* LE NOTE VECCHIE, QUELLE SCRITTE SULLE PERSONE, SI RIVERSANO QUI.
+       Erano un campo di chi accompagna; adesso la nota e' del gruppo. Si
+       fa una volta sola -- se il gruppo una nota ce l'ha gia', non si
+       tocca -- e le si mette in fila con lo stesso separatore con cui le
+       mostrava la scheda, cosi' al banco si rilegge uguale a prima. */
+    if (o.note == null) {
+      const vecchie = lista(o.people).map(p => p && typeof p.note === 'string' ? p.note.trim() : '')
+        .filter(Boolean);
+      o.note = vecchie.join(' · ');
+    }
+    lista(o.people).forEach(p => { if (p && 'note' in p) delete p.note; });
     o.paidLines = traduciPagate(o.paidLines);
     o.paidAmt = traduciImporti(o);
     riparaConto(o);

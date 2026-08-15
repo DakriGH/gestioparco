@@ -4084,6 +4084,26 @@ html:not(.anima) .card.evidenzia::after { animation: none; }
 .armadio .libero.chi { flex: 0 0 auto; width: 100%; box-sizing: border-box; text-align: center;
   font-weight: 700; font-size: 13px; min-height: 30px; padding: 4px 6px; border-radius: 10px; }
 .armadio .libero::placeholder { color: rgba(255,255,255,.45); }
+
+/* LA NOTA DEL GRUPPO. Stessa riga ambrata di quando stava nel
+   guardaroba -- al banco si riconosce da quella -- ma adesso e' una
+   card sua nel Parco, e lo stile non puo' piu' venire da `.armadio`. */
+/* la specificita e alzata apposta: `.blk input` vale (0,1,1) e
+   vincerebbe su una classe sola, ridipingendo la nota di grigio */
+.blk input.pc-nota {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(232, 180, 76, .55);
+  border-radius: 12px;
+  background: rgba(232, 180, 76, .09);
+  color: var(--txt);
+  font: inherit;
+  font-size: 15.5px;
+  padding: 10px 13px;
+  min-height: 46px;
+}
+.blk input.pc-nota::placeholder { color: var(--txt-3); }
+.blk input.pc-nota:focus { outline: none; border-color: var(--accent); background: rgba(232, 180, 76, .16); }
 /* Il riquadro delle persone tiene il posto del guardaroba anche da
    chiuso (vedi altezzaArmadio): l'invito si mette in mezzo a quel
    posto invece di lasciarlo vuoto sopra. */

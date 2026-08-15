@@ -275,8 +275,14 @@ gruppo('La scheda del banco: c’è tutto e nell’ordine giusto');
     conta(h, /data-col="top\|/g) === AV.COLORS.length &&
     conta(h, /data-col="pants\|/g) === AV.COLORS.length);
   prova('le due ruote per la tinta che manca', conta(h, /data-ruota="/g) === 2);
-  prova('la riga libera grande in fondo',
-    h.indexOf('libero grosso') >= 0 && h.indexOf('data-campo="note"') >= 0);
+  /* LA RIGA LIBERA NON STA PIU' QUI. Era un campo della persona: per
+     scrivere «hanno la torta in macchina» bisognava aprire una persona e
+     vestirla, e spesso una persona non la si vuole proprio mettere. Ora
+     la Nota e' del GRUPPO e sta nel Parco, in una card sua, sempre a
+     vista. Il guardaroba fa una cosa sola: vestire. */
+  prova('la riga della nota NON sta piu’ nel guardaroba',
+    h.indexOf('data-campo="note"') < 0,
+    'c’è ancora un campo nota dentro l’armadio');
 
   /* OGNI FILA HA TANTE COLONNE QUANTI PULSANTI.
      Le colonne sono scritte nello style perché sono un dato, ma il
