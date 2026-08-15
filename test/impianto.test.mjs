@@ -354,39 +354,36 @@ gruppo('La striscia della lista: tre gruppi, ognuno col suo nome');
      lo fa lo Scontrino, che ha lo spazio per farlo bene. */
   prova('ogni gruppo ha il suo nome scritto',
     /mkCella\('[^']*', 'children', 1, 'Bambini'\)/.test(APP) &&
-    /mkCella\(null, 'durationMinutes', 5, 'Tempo'\)/.test(APP) &&
-    /e-nome', 'Crazy Jumping'/.test(APP));
-  /* IL CRAZY NON E' PIU' UN NUMERO: e' una lista di giri, e i due
-     tasti dicono cosa fanno. Il piu' e il meno non contano piu' su
-     «l'ultima volta aperta» -- un giro che esisteva solo nella testa
-     di chi premeva -- ma dentro il giro che hai davanti. */
-  prova('il Crazy ha i due tasti dei giri',
-    /Aggiungi giro/.test(APP) && /Modifica giro/.test(APP));
-  prova('«aggiungi» apre davvero un giro nuovo',
-    /gNuovo\.onclick[\s\S]{0,400}giroNuovo\(entry\)/.test(APP));
-  prova('e il salva butta via il giro rimasto vuoto',
-    /d\.gsalva !== undefined[\s\S]{0,220}viaGiro\(entry, \+d\.gsalva\)/.test(APP));
-  prova('«modifica» sceglie, corregge e cancella',
-    /d\.gsel !== undefined[\s\S]{0,80}giroScelto = \+d\.gsel/.test(APP) &&
-    /d\.gvia !== undefined[\s\S]{0,140}viaGiro\(entry, \+d\.gvia\)/.test(APP) &&
-    /d\.gpiu !== undefined[\s\S]{0,140}cambiaGiro\(entry, \+d\.gpiu, 1\)/.test(APP));
-  prova('e i soldi passano dal conto, come sempre',
-    /conConto\(entry, \(\) => cambiaGiro\(entry, \+d\.gmeno, -1\)\)/.test(APP) &&
-    /conConto\(entry, \(\) => viaGiro\(entry, \+d\.gvia\)\)/.test(APP));
-  prova('chiudendo la scheda si chiude anche l editor',
-    /giriDiChi === entry\.id\) \{ chiudiGiri\(\); disegnaGiri\(\); \}/.test(APP));
-  prova('la cella dei giri si prende lo spazio che avanza',
-    /\.e-fila > \.e-cgiri \{ flex: 1 1 auto/.test(CSS));
-  prova('e i tre tasti del conto pure',
+    /mkCella\(null, 'durationMinutes', 5, 'Tempo'\)/.test(APP));
+  /* IL CRAZY NELLA SCHEDA E' LA CARD VERA, la stessa di «+ Nuovo».
+     C'era una gestione sua -- due tasti «Aggiungi giro» e «Modifica
+     giro» e un riquadro che si apriva sotto -- che faceva le stesse cose
+     con un'altra faccia e un'altra logica: due strade per la stessa
+     cosa, che divergono alla prima modifica (ed erano gia' divergenti).
+     Adesso e' `bcCard('crazy')` col suo storico, disegnata dalla STESSA
+     funzione del pannello e coi tocchi della STESSA funzione. */
+  prova('la scheda disegna la card vera del Crazy',
+    /crazyBox\.innerHTML = conConto\(entry, \(\) => bcCard\(bcVoce\('crazy'\), true\)\)/.test(APP));
+  prova('e non ha piu una gestione sua dei giri',
+    APP.indexOf('const giriBox') < 0 && APP.indexOf('function chiudiGiri') < 0 &&
+    !/class="e-gt"/.test(APP));
+  prova('i tocchi passano dalla stessa funzione del pannello',
+    /function toccoCrazy\(d\)/.test(APP) &&
+    /conConto\(entry, \(\) => toccoCrazy\(b\.dataset\)\)/.test(APP));
+  prova('e il pannello ci passa anche lui',
+    /const esitoCrazy = toccoCrazy\(d\)/.test(APP));
+  prova('scegliere un giro non salva niente: non ha cambiato dati',
+    /return 'scelta'/.test(APP) && /esito !== 'scelta'/.test(APP));
+  prova('il piu del Crazy conta dentro una volta, e se non c e la apre',
+    /function contaSalita\(d\)[\s\S]{0,220}giroNuovo\(c\)[\s\S]{0,80}cambiaGiro\(c, giroOra\(c\), d\)/.test(APP));
+  prova('la card si ridisegna quando la scheda si rinfresca',
+    /r\.disegnaCrazy === 'function'\) r\.disegnaCrazy\(\)/.test(APP));
+  prova('e ha lo spazio di una riga sua', /\.e-crazycard \{/.test(CSS));
+  prova('e i tre tasti del conto restano larghi uguale',
     /\.e-azioni button\.conto \{ flex: 1 1 0/.test(CSS));
   prova('e il nome ha il suo aspetto', /\.e-nome \{/.test(CSS));
-  prova('tre gruppi e basta: niente piu celle del pagato',
-    !/function mkCellaPagate/.test(APP) && !/function mkCellaCrazy/.test(APP));
   prova('niente piu giro scelto da tenere a mente',
     !/giroDiLista/.test(APP) && !/giroLista/.test(APP));
-  /* il piu' del Crazy apre lo stesso una volta, se non ce n'e' una */
-  prova('il piu del Crazy conta dentro una volta',
-    /if \(voce === 'crazy'\)[\s\S]{0,220}giroNuovo\(entry\)[\s\S]{0,120}cambiaGiro\(entry, giroOra\(entry\), d\)/.test(APP));
   /* e quello che e' sparito da qui c'e' nello Scontrino */
   prova('le volte si sistemano nello scontrino',
     /data-gpiu="/.test(APP) && /data-gvia="/.test(APP) && /sc-g-nuovo/.test(APP));
@@ -416,7 +413,7 @@ gruppo('Il vestito cambiato si vede subito anche nella lista');
      VERDE quando e' tutto pagato, che e' un colore, non un tasto. */
   prova('il gruppo diventa verde quando e tutto pagato',
     /r\.sKids\.box\.classList\.toggle\('pagata'/.test(APP) &&
-    /r\.sCrazy\.box\.classList\.toggle\('pagata'/.test(APP));
+    /saldata \? ' saldata'/.test(APP));
   prova('e il pagato si segna nello scontrino',
     /data-scpiu="/.test(APP) && /data-sctutta="/.test(APP));
   prova('la scheda si tiene i pezzi da rivestire',
@@ -722,11 +719,16 @@ gruppo('Nella scheda lunga, il Crazy si apre sotto la sua cella');
   /* Il riquadro dei giri stava fuori dalla fila, cioe' in fondo alla
      scheda, sotto i quattro tasti: si toccava «Aggiungi giro» in alto e
      la cosa compariva dall'altra parte, oltre roba che non c'entrava. */
-  prova('il riquadro dei giri sta dentro la fila, subito dopo il Crazy',
-    /fila\.appendChild\(sCrazy\.box\);[\s\S]{0,900}?fila\.appendChild\(giriBox\);/.test(APP));
-  prova('e non è più appeso in fondo alla scheda',
-    APP.indexOf('dentro.appendChild(giriBox)') < 0);
-  prova('e si prende una riga sua', /\.e-fila > \.e-giri \{[^}]*flex: 1 0 100%/.test(CSS));
+  /* la card del Crazy sta DENTRO la fila, non appesa in fondo alla
+     scheda: si tocca il piu' qui e la cosa succede qui, non oltre
+     quattro tasti che non c'entrano */
+  prova('la card del Crazy sta dentro la fila',
+    /fila\.appendChild\(crazyBox\)/.test(APP));
+  prova('e non è appesa in fondo alla scheda',
+    APP.indexOf('dentro.appendChild(giriBox)') < 0 &&
+    APP.indexOf('dentro.appendChild(crazyBox)') < 0);
+  prova('e si prende una riga sua',
+    /\.e-fila > \.e-crazycard \{[^}]*flex: 1 0 100%/.test(CSS));
 
   /* IL «PAGA TUTTO» RAPIDO: per incassare bisognava aprire il conto,
      andare nello Scontrino e premere il tasto la' dentro -- tre tocchi

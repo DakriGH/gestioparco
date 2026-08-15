@@ -1673,12 +1673,35 @@ main {
    Crazy: e' quella che l'ha aperto. Prima stava fuori dalla fila, cioe'
    in fondo alla scheda, sotto i quattro tasti -- si toccava «Aggiungi
    giro» in alto e la cosa compariva dall'altra parte. */
-.e-fila > .e-giri { flex: 1 0 100%; margin-top: 0; }
+/* LA CARD DEL CRAZY DENTRO LA SCHEDA. E' la stessa di «+ Nuovo» --
+   stessa funzione, stesso disegno -- e come li' vuole una griglia
+   attorno: la card larga si prende due colonne (`con-storico`), meta'
+   per i tasti e meta' per lo storico dei giri. Si prende una riga sua
+   nella fila, subito sotto le celle di bambini e tempo. */
+.e-fila > .e-crazycard { flex: 1 0 100%; margin-top: 2px; }
 .e-cella { flex-direction: column; align-items: center; gap: 1px;
   padding: 4px 9px 6px; }
 .e-nome { font-size: 9.5px; font-weight: 800; letter-spacing: .07em;
   text-transform: uppercase; color: rgba(255, 255, 255, .55); line-height: 1.2; }
 .e-dentro-cella { display: flex; align-items: center; gap: 6px; }
+/* L'interruttore del tempo aperto, attaccato alla sua cella: acceso e'
+   ambra come tutto quello che riguarda il tempo che non ha una fine. */
+.e-cella .e-aperto {
+  margin-top: 3px;
+  width: auto;
+  height: 26px;
+  padding: 0 9px;
+  border-radius: 9px;
+  border: none;
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.85);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.e-cella .e-aperto.on { background: rgba(232, 180, 76, 0.9); color: #2A1D05; }
 /* verde quando quella cosa e' tutta pagata: un COLORE, non un tasto.
    I tasti del pagato stavano qui e sembravano quelli della quantita'. */
 .e-cella.pagata { background: rgba(106, 220, 175, .16);

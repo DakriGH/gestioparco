@@ -717,6 +717,37 @@ gruppo('Lo stesso tempo costa lo stesso, da qualunque tasto passi', () => {
   ok('mille ritocchi a caso e nessun conto storto', storti.slice(0, 3), []);
 });
 
+gruppo('Aprire e richiudere il tempo non cambia il prezzo', () => {
+  /* Nella scheda c'e' un interruttore che passa da tempo comprato a
+     tempo aperto e ritorno. A tempo aperto `costOf` non guarda i blocchi
+     gia' venduti -- li' il conto si fa sul tempo passato -- quindi
+     tenerli non costa niente; buttarli invece si vedeva: un'ora con
+     dentro una mezz'ora venduta a parte vale 28 euro, e chi apriva il
+     tempo per sbaglio e lo richiudeva se la ritrovava a 24. Quattro euro
+     persi da un tocco andato storto, e nessuno che lo dicesse. */
+  const c = conto({ children: 2, durationMinutes: 60, baseMinutes: 30 });
+  c.aggiunte = [30];
+  const prima = ctx.costOf(c).parkTotal;
+  ok('un ora con dentro una mezz ora venduta', prima, ctx.r2(ctx.priceFor(30) * 2 * 2));
+
+  c.payLater = true;
+  vero('a tempo aperto i blocchi restano scritti', ctx.lista(c.aggiunte).length === 1);
+  c.payLater = false;
+  ok('richiudendo, il prezzo e quello di prima', ctx.costOf(c).parkTotal, prima);
+
+  /* e il giro completo non deve perdere niente, in nessuno dei due versi */
+  const storti = [];
+  [[15, []], [30, [15]], [60, [30]], [90, [30, 15]], [120, []]].forEach(([m, agg]) => {
+    const x = conto({ children: 1, durationMinutes: m, baseMinutes: m - agg.reduce((a, b) => a + b, 0) });
+    x.aggiunte = agg.slice();
+    const p0 = ctx.costOf(x).parkTotal;
+    x.payLater = true; ctx.costOf(x);
+    x.payLater = false;
+    if (ctx.costOf(x).parkTotal !== p0) storti.push(m + "': " + p0 + ' -> ' + ctx.costOf(x).parkTotal);
+  });
+  ok('andata e ritorno su ogni durata, prezzo intatto', storti, []);
+});
+
 gruppo('Il blocchetto del Bar: i soldi non si creano e non si perdono', () => {
   /* IL BAR RAPIDO HA TRE USCITE -- solo bar, ingresso nuovo, dentro un
      gruppo che e' gia' al parco -- e la terza sposta soldi e voci da un

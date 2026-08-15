@@ -577,14 +577,6 @@ function metteCrazy(c, n) {
   rimettiSoldiCrazy(c);
 }
 
-/* L'EDITOR DEI GIRI APERTO ADESSO, nella striscia di una scheda.
-   Non e' un dato dell'ingresso ma un fatto dello schermo -- come il
-   giro scelto qui sotto -- e vive finche' quella scheda resta aperta:
-   una sola scheda per volta, un solo editor. */
-let giriModo = null;      /* null | 'nuovo' | 'lista' */
-let giriDiChi = null;     /* l'id dell'ingresso a cui appartiene */
-function chiudiGiri() { giriModo = null; giriDiChi = null; }
-
 /* IL GIRO SCELTO: quello su cui lavorano il piu' e il meno della
    card. Di suo e' l'ultimo -- si segna quasi sempre quello che sta
    succedendo adesso -- e si cambia toccando un giro nello storico.
@@ -1140,37 +1132,12 @@ function costruisciPannello() {
        -- e gli altri si aggiungono col piu' della card. Il giro nuovo
        porta il suo blocco di minuti regalati; le salite si pagano a
        testa, come sempre. */
-    if (d.giro !== undefined) {
-      tocchi.id = 'crazy';
-      giroNuovo(C());
-      pcSalva();
-      aggiornaPannello();
-      return;
-    }
-    /* il piu' e il meno di UNA volta precisa: nello scontrino ogni
-       riga ha i suoi, e non c'e' un giro "scelto" da tenere a mente */
-    if (d.gpiu !== undefined || d.gmeno !== undefined) {
-      tocchi.id = 'crazy';
-      const su = d.gpiu !== undefined;
-      cambiaGiro(C(), parseInt(su ? d.gpiu : d.gmeno, 10), su ? 1 : -1);
-      pcSalva();
-      aggiornaPannello();
-      return;
-    }
-    /* si tocca un giro nello storico: da li' in poi il piu' e il meno
-       della card lavorano su QUELLO. E' il modo di correggere un giro
-       vecchio senza avere due file di tasti a video. */
-    /* cancella un giro intero: chi c'era dentro esce dal conto */
-    if (d.gvia !== undefined) {
-      tocchi.id = 'crazy';
-      viaGiro(C(), parseInt(d.gvia, 10));
-      pcSalva();
-      aggiornaPannello();
-      return;
-    }
-    if (d.sel !== undefined) {
-      giroScelto = parseInt(d.sel, 10);
-      tocchi.id = 'crazy';
+    /* i tocchi del Crazy stanno in `toccoCrazy`: li usa anche la scheda
+       di chi e' dentro, ed essendo la stessa funzione non possono
+       comportarsi in modo diverso nei due posti */
+    const esitoCrazy = toccoCrazy(d);
+    if (esitoCrazy) {
+      if (esitoCrazy !== 'scelta') pcSalva();
       aggiornaPannello();
       return;
     }
@@ -1185,9 +1152,7 @@ function costruisciPannello() {
          diceva il totale di tutti i giri e aprire un giro nuovo non lo
          faceva ripartire da zero. */
       if (voce === 'crazy' && (d.add !== undefined || d.meno !== undefined)) {
-        const c2 = C();
-        if (!giriCrazy(c2).length) giroNuovo(c2);
-        cambiaGiro(c2, giroOra(c2), d.add !== undefined ? 1 : -1);
+        contaSalita(d.add !== undefined ? 1 : -1);
       } else if (d.add !== undefined) {
         if (bcQ(voce) === 0 && voce !== 'bimbi' && voce !== 'crazy') tocchi.nato = voce;
         bcSetQ(voce, bcQ(voce) + 1);
@@ -4192,123 +4157,57 @@ function entryCard(entry) {
   const sKids = mkCella('\ud83e\uddd2', 'children', 1, 'Bambini');
   const sTime = mkCella(null, 'durationMinutes', 5, 'Tempo');
 
-  /* IL CRAZY NON E' UN NUMERO, E' UNA LISTA DI GIRI.
-     Il piu' e il meno contavano le salite sull'«ultima volta aperta»:
-     un giro che esisteva solo nella testa di chi premeva, e per
-     correggerne uno vecchio bisognava aprire il conto e andare nello
-     Scontrino. Qui ci sono due tasti che dicono cosa fanno, e quello
-     che serve compare sotto. */
-  const sCrazy = { box: el('div', 'e-cella e-cgiri'), val: el('span', 'v num'),
-    minus: el('button'), plus: el('button') };
-  sCrazy.box.appendChild(el('span', 'e-nome', 'Crazy Jumping'));
-  const gDentro = el('span', 'e-dentro-cella');
-  const gNuovo = el('button', 'e-gt');
-  gNuovo.innerHTML = '<span class="em">\u2795</span>Aggiungi giro';
-  const gLista = el('button', 'e-gt');
-  gLista.innerHTML = '<span class="em">\u270f\ufe0f</span>Modifica giro';
-  gDentro.appendChild(gNuovo);
-  gDentro.appendChild(gLista);
-  sCrazy.box.appendChild(gDentro);
-  fila.appendChild(sCrazy.box);
-
-  /* qui sotto compare quello che il tasto ha chiesto: il conteggio del
-     giro nuovo, o la lista di quelli fatti.
-     E COMPARE SOTTO LA SUA CELLA, non in fondo alla scheda: stava dopo
-     la riga dei tasti -- Modifica, Bar, Scontrino, Uscita -- quindi si
-     toccava «Aggiungi giro» qui in alto e la cosa si apriva in fondo,
-     oltre quattro pulsanti che non c'entravano. La fila va a capo, e
-     questo riquadro si prende una riga sua subito dopo il Crazy. */
-  const giriBox = el('div', 'e-giri hidden');
-  fila.appendChild(giriBox);
-
-  const disegnaGiri = () => {
-    const mio = giriDiChi === entry.id ? giriModo : null;
-    gNuovo.classList.toggle('on', mio === 'nuovo');
-    gLista.classList.toggle('on', mio === 'lista');
-    giriBox.classList.toggle('hidden', !mio);
-    if (!mio) { giriBox.innerHTML = ''; return; }
-    const g = giriCrazy(entry);
-    const prezzo = num(settings.crazyJumpingPrice, 0);
-    const conta = (i, n) =>
-      '<button class="gr-m" data-gmeno="' + i + '"' + (n <= 0 ? ' disabled' : '') +
-        ' aria-label="uno in meno">\u2212</button>' +
-      '<b class="num">' + n + '</b>' +
-      '<button class="gr-p" data-gpiu="' + i + '" aria-label="uno in piu\u2019">+</button>';
-
-    if (mio === 'nuovo') {
-      const i = Math.max(0, g.length - 1);
-      const n = g[i] || 0;
-      giriBox.innerHTML = '<div class="gr-riga">' +
-        '<span class="gr-k">\ud83e\udd38 Chi sale?</span>' +
-        '<span class="gr-q">' + conta(i, n) + '</span>' +
-        '<span class="gr-eur">' + eur(n * prezzo) + '</span>' +
-        '<button class="gr-ok" data-gsalva="' + i + '">\u2713 Salva il giro</button>' +
-      '</div>';
-      return;
-    }
-
-    /* la lista: una riga per giro, quello scelto ha sotto i comandi */
-    if (!g.length) {
-      giriBox.innerHTML = '<div class="gr-vuoto">Nessun giro segnato. ' +
-        'Usa <b>Aggiungi giro</b> quando salgono.</div>';
-      return;
-    }
-    const sel = giroOra(entry);
-    giriBox.innerHTML = '<div class="gr-lista">' + g.map((n, i) => {
-      const pagate = conConto(entry, () => pagateDelGiro(entry, i));
-      const saldo = n > 0 && pagate >= n;
-      return '<button class="gr-uno' + (i === sel ? ' on' : '') + (saldo ? ' saldato' : '') +
-        '" data-gsel="' + i + '">' +
-        '<span class="gr-n">' + (i + 1) + '\u00ba</span>' +
-        '<b>' + n + '</b><span class="gr-q2">' + (n === 1 ? 'salito' : 'saliti') + '</span>' +
-        '<span class="gr-p2">' + (saldo ? '\u2713 pagato' : eur(n * prezzo)) + '</span>' +
-      '</button>';
-    }).join('') + '</div>' +
-    '<div class="gr-riga">' +
-      '<span class="gr-k">' + (sel + 1) + '\u00ba giro</span>' +
-      '<span class="gr-q">' + conta(sel, g[sel] || 0) + '</span>' +
-      '<button class="gr-via" data-gvia="' + sel + '">\ud83d\uddd1\ufe0f Elimina</button>' +
-      '<button class="gr-ok" data-gfine>\u2713 Fatto</button>' +
-    '</div>';
-  };
-
-  gNuovo.onclick = (ev) => {
+  /* DA TEMPO COMPRATO A TEMPO APERTO, DA QUI.
+     Nel pannello c'e' la pastiglia «Tempo aperto» fra i tagli, ma in
+     una scheda gia' registrata quella e' proprio la cosa che capita di
+     dover cambiare al volo -- «no aspetta, non sappiamo quando escono»
+     -- e per farlo bisognava aprire Modifica e cercarla fra i tagli.
+     Qui e' un interruttore attaccato al meno e al piu' del tempo, cioe'
+     accanto alla cosa che spegne. */
+  const apri = el('button', 'e-aperto');
+  apri.onclick = (ev) => {
     ev.stopPropagation();
-    if (giriDiChi === entry.id && giriModo === 'nuovo') { chiudiGiri(); disegnaGiri(); return; }
-    /* aprire un giro e' gia' una modifica: si apre subito, e il tasto
-       «salva» serve a chiuderlo -- se resta vuoto se ne va da solo */
-    conConto(entry, () => giroNuovo(entry));
-    giriModo = 'nuovo'; giriDiChi = entry.id;
-    saveEntries(); syncCard(entry); disegnaGiri(); tick();
+    entry.payLater = !entry.payLater;
+    /* I BLOCCHI DI TEMPO GIA' VENDUTI RESTANO DOVE SONO.
+       A tempo aperto `costOf` non li guarda nemmeno -- li' il conto si
+       fa sul tempo passato -- quindi tenerli non costa niente. Buttarli
+       invece si vedeva: un'ora con dentro una mezz'ora venduta a parte
+       vale 28 euro, e chi apriva il tempo per sbaglio e lo richiudeva
+       se la ritrovava a 24. Quattro euro persi da un tocco andato
+       storto, e nessuno che lo dicesse. */
+    saveEntries();
+    syncCard(entry);
+    tick();
+    if (PAN.ingresso === entry) aggiornaPannello();
   };
-  gLista.onclick = (ev) => {
-    ev.stopPropagation();
-    if (giriDiChi === entry.id && giriModo === 'lista') { chiudiGiri(); disegnaGiri(); return; }
-    giriModo = 'lista'; giriDiChi = entry.id;
-    disegnaGiri();
+  sTime.box.appendChild(apri);
+  sTime.apri = apri;
+
+  /* IL CRAZY E' LA CARD VERA, LA STESSA DI «+ NUOVO».
+     Qui c'era una gestione sua -- due tasti «Aggiungi giro» e «Modifica
+     giro» e un riquadro che si apriva sotto -- che faceva le stesse cose
+     con un'altra faccia e un'altra logica. Due strade per la stessa
+     cosa: divergono alla prima modifica, ed erano gia' divergenti.
+     Adesso e' `bcCard('crazy')` col suo storico accanto, disegnata dalla
+     STESSA funzione del pannello e coi tocchi della STESSA funzione
+     (`toccoCrazy`): non possono comportarsi in modo diverso. */
+  const crazyBox = el('div', 'bc-griglia e-crazycard');
+  fila.appendChild(crazyBox);
+
+  const disegnaCrazy = () => {
+    crazyBox.innerHTML = conConto(entry, () => bcCard(bcVoce('crazy'), true));
   };
 
-  giriBox.onclick = (ev) => {
+  crazyBox.onclick = (ev) => {
     const b = ev.target.closest('button');
     if (!b) return;
     ev.stopPropagation();
-    const d = b.dataset;
-    const rifai = () => { saveEntries(); syncCard(entry); disegnaGiri(); tick(); };
-    if (d.gmeno !== undefined) { conConto(entry, () => cambiaGiro(entry, +d.gmeno, -1)); rifai(); return; }
-    if (d.gpiu !== undefined) { conConto(entry, () => cambiaGiro(entry, +d.gpiu, 1)); rifai(); return; }
-    if (d.gsel !== undefined) { giroScelto = +d.gsel; disegnaGiri(); return; }
-    if (d.gvia !== undefined) {
-      conConto(entry, () => viaGiro(entry, +d.gvia));
-      if (!giriCrazy(entry).length) chiudiGiri();
-      rifai(); return;
-    }
-    if (d.gsalva !== undefined) {
-      /* un giro salvato vuoto non e' un giro */
-      if (!(giriCrazy(entry)[+d.gsalva] > 0)) conConto(entry, () => viaGiro(entry, +d.gsalva));
-      chiudiGiri(); rifai(); return;
-    }
-    if (d.gfine !== undefined) { chiudiGiri(); disegnaGiri(); return; }
+    const esito = conConto(entry, () => toccoCrazy(b.dataset));
+    if (!esito) return;
+    if (esito !== 'scelta') { saveEntries(); syncCard(entry); tick(); }
+    disegnaCrazy();
   };
+
   if (entry.payLater) {
     sTime.box.classList.add('hidden');
     fila.appendChild(el('div', 'e-later-tag', '\u23f3 Tempo aperto'));
@@ -4324,7 +4223,7 @@ function entryCard(entry) {
   };
   fila.appendChild(azioni);
   dentro.appendChild(fila);
-  disegnaGiri();
+  disegnaCrazy();
 
   /* Il guscio del conto: qui dentro ci entra IL pannello -- lo stesso
      di "+ Nuovo" -- spostato di peso. Prima c'erano due strade per la
@@ -4452,17 +4351,13 @@ function entryCard(entry) {
   riga.onclick = () => {
     if (voloOccupato) return;
     const gia = card.classList.contains('aperto');
-    /* chiudendo la scheda si chiude anche l'editor dei giri: riaprirla
-       e ritrovarcelo aperto su un giro di mezz'ora fa non vuol dire
-       niente */
-    if (giriDiChi === entry.id) { chiudiGiri(); disegnaGiri(); }
     chiudiSchede(null);
     if (!gia) card.classList.add('aperto');
   };
   aperta.onclick = (ev) => ev.stopPropagation();
 
   cardRefs.set(entry.id, {
-    card, count, range, sKids, sCrazy, sTime, solo, barBtn, scBtn, apriConto, disegnaGiri,
+    card, count, range, sKids, sTime, solo, barBtn, scBtn, apriConto, disegnaCrazy,
     dueVal: soldiV, soldiK, soldiS, soldi, wrist, bimbiV, crzV, crz, countK,
     payPanel, payBtn, pagaBtn,
     /* servono a rivestire la riga quando cambia un vestito */
@@ -4508,6 +4403,50 @@ function aggiornaPaga(btn, entry) {
   const resta = dueOf(entry).total;
   btn.classList.toggle('hidden', !(resta > 0.005));
   if (resta > 0.005) btn.textContent = '\u2705 Paga ' + eur(resta);
+}
+
+/* CHI SALE ADESSO. Il piu' e il meno della card del Crazy muovono il
+   giro APERTO, non un totale: se non ce n'e' ancora uno lo aprono. Senza
+   il giro, i minuti regalati non arrivano -- quelli li porta il giro. */
+function contaSalita(d) {
+  const c = C();
+  if (!giriCrazy(c).length) giroNuovo(c);
+  cambiaGiro(c, giroOra(c), d);
+}
+
+/* I TOCCHI DELLA CARD DEL CRAZY, IN UN POSTO SOLO.
+   Li usano il pannello e la scheda di chi e' gia' dentro: essendo la
+   stessa funzione non possono comportarsi in modo diverso nei due
+   posti -- ed e' successo, quando la striscia della scheda aveva una
+   gestione sua. Lavora su C(): chi chiama lo punta dove serve con
+   conConto(). Torna 'scelta' quando ha solo cambiato giro selezionato
+   (non c'e' niente da salvare), true se ha toccato i dati, false se il
+   tocco non era suo. */
+function toccoCrazy(d) {
+  if (d.giro !== undefined) { tocchi.id = 'crazy'; giroNuovo(C()); return true; }
+  /* il piu' e il meno di UNA volta precisa: nello storico e nello
+     scontrino ogni riga ha i suoi, e non c'e' un giro "scelto" da
+     tenere a mente */
+  if (d.gpiu !== undefined || d.gmeno !== undefined) {
+    tocchi.id = 'crazy';
+    const su = d.gpiu !== undefined;
+    cambiaGiro(C(), parseInt(su ? d.gpiu : d.gmeno, 10), su ? 1 : -1);
+    return true;
+  }
+  /* cancella un giro intero: chi c'era dentro esce dal conto */
+  if (d.gvia !== undefined) { tocchi.id = 'crazy'; viaGiro(C(), parseInt(d.gvia, 10)); return true; }
+  /* si tocca un giro nello storico: da li' in poi il piu' e il meno
+     della card lavorano su QUELLO. E' il modo di correggere un giro
+     vecchio senza avere due file di tasti a video. */
+  if (d.sel !== undefined) { giroScelto = parseInt(d.sel, 10); tocchi.id = 'crazy'; return 'scelta'; }
+  if (d.add === 'crazy' || d.meno === 'crazy') {
+    tocchi.id = 'crazy';
+    contaSalita(d.add !== undefined ? 1 : -1);
+    return true;
+  }
+  if (d.ppiu === 'crazy') { tocchi.id = 'crazy'; segnaPagate('crazy', bcPag('crazy') + 1); return true; }
+  if (d.pmeno === 'crazy') { tocchi.id = 'crazy'; segnaPagate('crazy', bcPag('crazy') - 1); return true; }
+  return false;
 }
 
 function conConto(obj, fn) {
@@ -6086,19 +6025,22 @@ function syncCard(entry) {
      della quantita', attaccate -- si segnava di aver preso i soldi
      credendo di aggiungere un bambino. Resta il verde sul gruppo
      quando e' tutto pagato, che e' un colore, non un tasto. */
-  r.sCrazy.val.textContent = crazy;
-  r.sCrazy.minus.disabled = crazy <= 0;
-  r.sCrazy.box.classList.toggle('pagata',
-    crazy > 0 && conConto(entry, () => bcPag('crazy')) >= crazy);
-  /* i giri si cambiano anche dal conto (Scontrino) e dalla card del
-     Crazy: se l'editor della striscia e' aperto, deve dire la stessa
-     cosa senza aspettare che lo si riapra */
-  if (typeof r.disegnaGiri === 'function') r.disegnaGiri();
+  /* la card del Crazy si ridisegna intera: i giri si cambiano anche dal
+     pannello (Scontrino) e da li' deve arrivare qui senza aspettare che
+     si riapra qualcosa */
+  if (typeof r.disegnaCrazy === 'function') r.disegnaCrazy();
   r.sKids.box.classList.toggle('pagata',
     kids > 0 && conConto(entry, () => bcPag('bimbi')) >= kids);
   /* gli stessi minuti che stanno nella fascia Tempo, scritti allo
      stesso modo: un'ora e mezza e' "1h30" in tutte e due, non "1h30"
      di la' e "90" di qua */
+  if (r.sTime.apri) {
+    r.sTime.apri.classList.toggle('on', !!entry.payLater);
+    r.sTime.apri.textContent = entry.payLater ? '\u23f3 Aperto' : '\u23f3 Apri';
+    r.sTime.apri.title = entry.payLater
+      ? 'Torna a un tempo comprato, con un orario di uscita'
+      : 'Tempo aperto: resta senza orario di fine, il conto si fa all\u2019uscita';
+  }
   r.sTime.val.textContent = entry.payLater ? '\u2014' : fmtMin(entry.durationMinutes);
   r.sKids.minus.disabled = kids <= 0;
   r.sTime.minus.disabled = num(entry.durationMinutes, 0) <= 5;
