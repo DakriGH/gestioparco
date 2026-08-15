@@ -12,7 +12,7 @@
 <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="./icons/icon-192.png">
 <!-- ?v= : alzare il numero a ogni modifica di css/js, così il ricarico è garantito -->
-<link rel="stylesheet" href="./css/app.css?v=327">
+<link rel="stylesheet" href="./css/app.css?v=328">
 </head>
 <body>
 
@@ -22,11 +22,6 @@
     <div class="brand"><span class="em">🎡</span> <span class="brand-txt">Gestione Parco</span> <span class="ver-pill" id="verPill"></span></div>
 
     <nav class="tabs">
-      <!-- IL BAR STA PRIMA DI «NUOVO»: è il blocchetto rapido, con il
-           bancone già aperto. Da lì si decide dopo dove finisce quello
-           che si è segnato — gruppo nuovo, solo bar, o dentro un gruppo
-           che è già al parco. -->
-      <button data-tab="bar" id="tabBar">Bar</button>
       <button data-tab="new" class="on" id="tabNew">Nuovo</button>
       <button data-tab="active" id="tabActive">In corso <span class="badge" id="tabBadge" data-n="0">0</span></button>
       <button data-tab="settings" id="tabSet"><span class="tab-txt">Impostazioni</span></button>
@@ -38,9 +33,6 @@
   <main>
     <!-- compare solo finché i dati non sono al riparo dalle pulizie del browser -->
     <div id="avvisoDati" class="hidden"></div>
-    <!-- il blocchetto del Bar: ospita lo STESSO pannello di «+ Nuovo»,
-         che cambia padrone, ma con un foglio suo -->
-    <div class="view hidden" id="view-bar"></div>
     <div class="view" id="view-new"></div>
     <div class="view hidden" id="view-active"></div>
 
@@ -54,12 +46,12 @@
 <div id="modalRoot" class="hidden"></div>
 <div id="toast" class="toast"></div>
 
-<script src="./js/dati.js?v=327"></script>
-<script src="./js/firebase-config.js?v=327"></script>
-<script src="./js/cloud.js?v=327"></script>
-<script src="./js/icone.js?v=327"></script>
-<script src="./js/avatar.js?v=327"></script>
-<script src="./js/capi.js?v=327"></script>
-<script src="./js/app.js?v=327"></script>
+<script src="./js/dati.js?v=328"></script>
+<script src="./js/firebase-config.js?v=328"></script>
+<script src="./js/cloud.js?v=328"></script>
+<script src="./js/icone.js?v=328"></script>
+<script src="./js/avatar.js?v=328"></script>
+<script src="./js/capi.js?v=328"></script>
+<script src="./js/app.js?v=328"></script>
 </body>
 </html>

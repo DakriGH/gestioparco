@@ -688,8 +688,9 @@ gruppo('Ogni linguetta apre dove dice il suo nome');
      seconda. */
   prova('+ Nuovo apre sul Parco, sempre',
     /montaPannello\(\$\('#view-new'\), draft, \{ cat: 'Parco' \}\)/.test(APP));
-  prova('e il Bar sul bancone, sempre',
-    /montaPannello\(\$\('#view-bar'\), draftBar, \{ cat: primaCategoriaBar\(\) \}\)/.test(APP));
+  prova('e la linguetta Bar non c e piu',
+    HTML.indexOf('data-tab="bar"') < 0 && APP.indexOf('draftBar') < 0,
+    'era una schermata intera per una cosa che dal modulo si fa in due tocchi');
 }
 
 gruppo('Il banner della scheda dice anche quanto dura');
@@ -823,29 +824,54 @@ gruppo('L’app si apre anche quando la rete c’è a metà');
     /setTimeout\(\(\) => vai\(null\), \d+\)/.test(APP));
 }
 
-gruppo('Il Bar ha lo stesso scheletro di «+ Nuovo»');
+gruppo('Il Bar non e piu una linguetta: e un tasto in fondo');
 {
-  /* Le due viste ospitano lo STESSO pannello, che cambia padrone. Le
-     regole di impaginazione pero' nominavano solo #view-new: il Bar
-     restava un blocco, il pannello dentro non veniva stirato, e la zona
-     che scala perdeva una sessantina di pixel -- quanto basta a far
-     scendere la griglia del bancone da tre colonne a due. Bancone e
-     scontrino si vedevano schiacciati. */
-  prova('la vista del Bar esiste', HTML.indexOf('id="view-bar"') >= 0);
-  prova('la linguetta del Bar sta PRIMA di quella di + Nuovo',
-    HTML.indexOf('data-tab="bar"') >= 0 &&
-    HTML.indexOf('data-tab="bar"') < HTML.indexOf('data-tab="new"'));
-  /* ogni regola che stira #view-new deve nominare anche #view-bar */
-  const orfane = [];
-  CSS.split('}').forEach(blocco => {
-    const sel = blocco.split('{')[0];
-    if (!sel || sel.indexOf('#view-new') < 0) return;
-    if (sel.indexOf('#view-bar') < 0) orfane.push(sel.trim().replace(/\s+/g, ' ').slice(0, 80));
-  });
-  prova('nessuna regola stira solo + Nuovo lasciando indietro il Bar',
-    orfane.length === 0, orfane.join(' | '));
-  prova('e switchTab accende e spegne anche la vista del Bar',
-    /#view-bar'\)\.classList\.toggle\('hidden'/.test(APP));
+  /* Era una schermata intera con un foglio suo da non far divergere,
+     per una cosa che dal modulo si fa in due tocchi. Quello che serviva
+     davvero -- appendere due birre al conto di chi e' gia' al parco --
+     e' un tasto accanto a «Registra». */
+  prova('la vista del Bar non c e piu', HTML.indexOf('id="view-bar"') < 0);
+  prova('ne il suo foglio', APP.indexOf('draftBar') < 0);
+  prova('ne il foglio «Dove va»', APP.indexOf('foglioDoveVa') < 0);
+  prova('e nessuna regola CSS lo cerca ancora', CSS.indexOf('#view-bar') < 0);
+  prova('c e il tasto «Aggiungi a» in fondo al modulo',
+    /data-aggiungi>\\ud83c\\udf9f\\ufe0f Aggiungi a/.test(APP));
+  prova('e apre la scelta del gruppo',
+    /d\.aggiungi !== undefined \) *\{ *foglioAQualeGruppo\(\)/.test(APP) ||
+    /d\.aggiungi !== undefined\) \{ foglioAQualeGruppo\(\); return; \}/.test(APP));
+  prova('compare solo se c e qualcosa da spostare e qualcuno a cui darlo',
+    /!PAN\.ingresso && tot > 0 && activeEntries\(\)\.length/.test(APP));
+  prova('e quello che si sposta viene dal modulo, non da un foglio a parte',
+    /const voci = lista\(draft\.barItems\)/.test(APP));
+}
+
+gruppo('La vendita al banco resta a vista un momento, poi si archivia');
+{
+  /* Prima nasceva gia' chiusa: uno sbaglio non si faceva in tempo a
+     vederlo. Adesso resta fra chi e' dentro due minuti -- con una scheda
+     sua, senza conto alla rovescia, perche' al parco non c'e' nessuno --
+     e poi se ne va da sola con la sua animazione. */
+  prova('la riconosce da se: niente bambini, niente Crazy, roba sul banco',
+    /opz\.soloBar !== undefined \? !!opz\.soloBar[\s\S]{0,320}barItems\)\.some/.test(APP));
+  prova('nasce attiva e segnata', /if \(soloBar\) nuovo\.soloBar = true;/.test(APP));
+  prova('e non piu gia chiusa', !/nuovo\.status = 'closed'/.test(APP));
+  prova('ha un tempo scritto prima di archiviarsi',
+    /ATTESA_SOLO_BAR = 2 \* 60000/.test(APP));
+  prova('il battito la archivia quando scade',
+    /function archiviaSoloBarScaduti/.test(APP) && /archiviaSoloBarScaduti\(\);/.test(APP));
+  prova('col prezzo fermato li, come per chi esce',
+    /e\.costoFinale = \{ parco: d\.park, bar: d\.bar \};[\s\S]{0,120}e\.status = 'closed'/.test(APP));
+  prova('e se ne va accartocciandosi', /r\.card\.classList\.add\('esce'\)/.test(APP));
+  prova('non e ne verde ne rossa: ha un colore suo',
+    /if \(e\.soloBar\) return 'bar';/.test(APP) && /\.entry\.s-bar \{/.test(CSS));
+  prova('e lo stato «bar» si spegne come gli altri',
+    /'later', 'bar'\]\.forEach/.test(APP));
+  prova('niente avviso di sforato: non ha un tempo da sforare',
+    /e\.payLater \|\| e\.soloBar\) return;/.test(APP));
+  prova('sta in cima alla lista: e di passaggio',
+    /const bar = a\.filter\(e => e\.soloBar\)/.test(APP));
+  prova('e resta tale anche dopo un ricaricamento',
+    /if \(o\.soloBar\) o\.soloBar = true; else delete o\.soloBar;/.test(APP));
 }
 
 gruppo('La giornata finisce alle quattro anche per le copie del giorno');

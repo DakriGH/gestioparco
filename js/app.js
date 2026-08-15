@@ -349,13 +349,6 @@ let entries = [];
 let presets = [];
 let tab = 'new';
 let draft = freshDraft();
-/* IL BLOCCHETTO DEL BAR HA UN FOGLIO SUO.
-   Se dividesse quello di «+ Nuovo», due birre segnate di corsa
-   finirebbero addosso al gruppo che si stava registrando -- e viceversa,
-   aprendo il Bar ci si troverebbe dentro le sue consumazioni. Sono due
-   mestieri diversi che capitano insieme: uno lento (registrare un
-   gruppo), uno veloce (segnare quello che prendono al banco). */
-let draftBar = freshDraft();
 let showArchive = false;
 const cardRefs = new Map();   // id ingresso -> riferimenti DOM della scheda
 let clockT = null, tickT = null;
@@ -800,6 +793,10 @@ function endTimeOf(e) {
    andare a chiamare qualcuno, e resta scritta sul countdown. Ma il
    colore no: scaduto e' scaduto. */
 function stateOf(e, now) {
+  /* una vendita al banco non scade: non c'e' nessuno dentro a cui
+     andare dietro. Ha un colore suo, e non entra nel giro dei verdi,
+     gialli e rossi. */
+  if (e.soloBar) return 'bar';
   if (e.payLater) return 'later';
   const r = endTimeOf(e) - now;
   if (r <= 0) return 'danger';
@@ -901,8 +898,15 @@ function dueOf(entry) {
 
 function activeEntries() {
   const a = entries.filter(e => e.status === 'active');
-  return a.filter(e => !e.payLater).sort((x, y) => endTimeOf(x) - endTimeOf(y))
-    .concat(a.filter(e => e.payLater).sort((x, y) => x.startTime - y.startTime));
+  /* LE VENDITE AL BANCO IN CIMA: restano due minuti e poi se ne vanno da
+     sole, quindi se c'e' da correggerne una il momento e' adesso.
+     Ordinarle fra i gruppi per ora di uscita non aveva senso -- un'ora
+     di uscita non ce l'hanno. */
+  const bar = a.filter(e => e.soloBar).sort((x, y) => num(y.createdAt, 0) - num(x.createdAt, 0));
+  const resto = a.filter(e => !e.soloBar);
+  return bar
+    .concat(resto.filter(e => !e.payLater).sort((x, y) => endTimeOf(x) - endTimeOf(y)))
+    .concat(resto.filter(e => e.payLater).sort((x, y) => x.startTime - y.startTime));
 }
 /* quanti ingressi archiviati si disegnano prima di chiedere. Duecento
    sono un paio di settimane piene: oltre, si sta cercando altro. */
@@ -1419,7 +1423,7 @@ function costruisciPannello() {
       if (PAN.ingresso) { posa(cardRefs.get(PAN.ingresso.id) && cardRefs.get(PAN.ingresso.id).card); return; }
       commitEntry(); return;
     }
-    if (d.dove !== undefined) { foglioDoveVa(); return; }
+    if (d.aggiungi !== undefined) { foglioAQualeGruppo(); return; }
     if (d.svuota !== undefined) { foglioSvuota(); return; }
     if (d.resto !== undefined) {
       const dovuto = contoResta();
@@ -3372,12 +3376,16 @@ function pcFondo() {
          gia' al parco -- non si possono indovinare da qui, e sceglierle
          prima di segnare vorrebbe dire saperlo prima di chiederglielo.
          Quindi si segna, e poi si dice dove. */
-      (PAN.conto === draftBar
-        ? '<button class="btn btn-ok" data-dove' + (tot > 0 ? '' : ' disabled') + '>' +
-            '\ud83e\udd64 Dove va\u2026</button>'
-        : '<button class="btn btn-ok" data-reg>' +
-            (PAN.ingresso ? '\u2713 Fatto' : tot > 0 && resta <= 0 ? '\u2705 Registra e incassa' : 'Registra') +
-          '</button>') +
+      /* AGGIUNGI A UN GRUPPO CHE E' GIA' DENTRO. Compare solo mentre si
+         registra (non su un ingresso gia' aperto: li' si e' gia' dentro
+         a un gruppo), solo se c'e' qualcosa da spostare e solo se al
+         parco c'e' qualcuno a cui darlo. */
+      (!PAN.ingresso && tot > 0 && activeEntries().length
+        ? '<button class="btn" data-aggiungi>\ud83c\udf9f\ufe0f Aggiungi a\u2026</button>'
+        : '') +
+      '<button class="btn btn-ok" data-reg>' +
+        (PAN.ingresso ? '\u2713 Fatto' : tot > 0 && resta <= 0 ? '\u2705 Registra e incassa' : 'Registra') +
+      '</button>' +
     '</div></div></div>';
 }
 
@@ -3801,10 +3809,14 @@ function commitDa(draft, opz) {
     const slot = braceletFor(draft.startTime);
     draft.braceletColor = slot ? slot.color : null;
   }
-  /* SOLO BAR: zero bambini, zero tempo, nessuno da riconoscere. Quello
-     che resta e' la vendita al banco, appesa a un ingresso perche' la
-     sera torni nei conti del giorno. */
-  const soloBar = !!opz.soloBar;
+  /* SOLO BAR LO CAPISCE DA SE': se al parco non entra nessuno e non
+     salta nessuno, quello che resta e' una vendita al banco. Niente
+     interruttore da ricordarsi -- un gesto in meno per la cosa che al
+     banco capita di continuo. */
+  const soloBar = opz.soloBar !== undefined ? !!opz.soloBar
+    : (clamp(num(draft.children, 0), 0, 1e6) === 0 &&
+       clamp(num(draft.crazyJumping, 0), 0, 1e6) === 0 &&
+       lista(draft.barItems).some(b => b && num(b.qty, 0) > 0));
   const nuovo = {
     id: uid(), createdAt: Date.now(),
     startTime: draft.startTime,
@@ -3843,21 +3855,14 @@ function commitDa(draft, opz) {
     crazyGiri: soloBar ? [] : lista(draft.crazyGiri).slice(),
     aggiunte: soloBar ? [] : lista(draft.aggiunte).slice()
   };
-  /* UNA VENDITA AL BANCO NASCE GIA' CHIUSA.
-     Non c'e' nessuno dentro al parco: lasciarla «in corso» voleva dire
-     una scheda in mezzo ai gruppi, con un conto alla rovescia partito da
-     zero minuti -- cioe' ROSSA, scaduta, come un gruppo da andare a
-     chiamare. E i minuti nemmeno reggevano un ricaricamento: la
-     riparazione rimette a sessanta chi ne ha zero, perche' zero e' un
-     ingresso senza tempo comprato, non una vendita al bar.
-     Chiusa subito entra nel registro della giornata -- che e' l'unica
-     cosa che serve -- e sta fuori dai piedi. Il prezzo si ferma qui,
-     come per chi esce. */
-  if (soloBar) {
-    nuovo.status = 'closed';
-    nuovo.closedAt = Date.now();
-    nuovo.costoFinale = { parco: 0, bar: r2(barTotal(nuovo)) };
-  }
+  /* UNA VENDITA AL BANCO RESTA IN VISTA UN MOMENTO, POI SI ARCHIVIA.
+     Nasce ATTIVA, con una scheda sua -- niente conto alla rovescia, non
+     c'e' nessuno dentro al parco -- cosi' se ci si accorge subito di uno
+     sbaglio si fa in tempo a correggerla. Passati i due minuti se ne va
+     da sola in archivio, con la sua animazione: la lista non deve
+     riempirsi di scontrini, e nel registro della giornata ci finisce
+     comunque. Se ne occupa `archiviaSoloBarScaduti`, dal battito. */
+  if (soloBar) nuovo.soloBar = true;
   entries.push(nuovo);
   toast(opz.messaggio || 'Ingresso registrato \u2705');
   saveEntries();
@@ -6230,14 +6235,50 @@ function ingressoLive() {
   if (PAN.root && PAN.conto === draft) { disegnaFascia(PAN.root, draft); pcFondoDis(); }
 }
 
+/* QUANTO RESTA A VISTA UNA VENDITA AL BANCO prima di archiviarsi da
+   sola: il tempo di accorgersi di uno sbaglio e correggerlo, senza che
+   la lista di chi e' dentro si riempia di scontrini. */
+const ATTESA_SOLO_BAR = 2 * 60000;
+
+function restaSoloBar(e) {
+  return Math.max(0, ATTESA_SOLO_BAR - (Date.now() - num(e.createdAt, e.startTime)));
+}
+
+/* Le vendite al banco passate di tempo se ne vanno in archivio da sole.
+   Il prezzo si ferma li', come per chi esce: dal registro della giornata
+   non spariscono, e' la lista di chi e' DENTRO che si libera. */
+function archiviaSoloBarScaduti() {
+  const scaduti = lista(entries).filter(e =>
+    e && e.soloBar && e.status === 'active' && restaSoloBar(e) <= 0);
+  if (!scaduti.length) return;
+  scaduti.forEach(e => {
+    const d = dueOf(e);
+    e.costoFinale = { parco: d.park, bar: d.bar };
+    e.status = 'closed';
+    e.closedAt = Date.now();
+  });
+  saveEntries();
+  /* prima si accartoccia, poi sparisce: si vede QUALE se n'e' andata
+     invece di trovarne una in meno. Se la scheda non e' a video -- si
+     sta guardando un'altra linguetta -- si salta l'animazione. */
+  const vive = scaduti.map(e => cardRefs.get(e.id)).filter(r => r && r.card.isConnected);
+  if (!vive.length || !anima() || volante) { buildActiveView(); updateBadge(); return; }
+  vive.forEach(r => {
+    r.card.style.height = r.card.getBoundingClientRect().height + 'px';
+    requestAnimationFrame(() => r.card.classList.add('esce'));
+  });
+  setTimeout(() => { buildActiveView(); updateBadge(); }, 320);
+}
+
 function tick() {
   const now = Date.now();
   ingressoLive();
+  archiviaSoloBarScaduti();
   /* L'AVVISO GUARDA SEMPRE, anche mentre sei in "+ Nuovo" o nel bar.
      E' proprio quello il momento in cui il colore rosso della lista
      non lo vedi -- se guardassi la lista, non servirebbe un avviso. */
   lista(entries).forEach(e => {
-    if (e.status !== 'active' || e.payLater) return;
+    if (e.status !== 'active' || e.payLater || e.soloBar) return;
     if (endTimeOf(e) - now <= 0) avvisaSforato(e);
   });
   if (tab !== 'active' || showArchive) return;
@@ -6248,11 +6289,18 @@ function tick() {
     /* solo la classe di stato: azzerare className cancellava anche
        «aperto» e la scheda si richiudeva da sola ogni secondo */
     if (!r.card.classList.contains('s-' + st)) {
-      ['ok', 'warn', 'danger', 'later'].forEach(x => r.card.classList.remove('s-' + x));
+      ['ok', 'warn', 'danger', 'later', 'bar'].forEach(x => r.card.classList.remove('s-' + x));
       r.card.classList.add('s-' + st);
     }
 
-    if (entry.payLater) {
+    if (entry.soloBar) {
+      /* una vendita al banco non ha un conto alla rovescia da guardare:
+         al parco non c'e' nessuno. Al suo posto quanto le resta prima
+         di archiviarsi da sola, cosi' si sa quanto tempo c'e' per
+         correggerla. */
+      r.count.textContent = fmtClock(restaSoloBar(entry));
+      if (r.countK) r.countK.textContent = 'si archivia fra';
+    } else if (entry.payLater) {
       // l'orario d'inizio è arrotondato ai 5 minuti e può cadere
       // qualche minuto avanti: non mostro un tempo trascorso negativo
       r.count.textContent = fmtClock(Math.max(0, now - entry.startTime));
@@ -7027,56 +7075,14 @@ function fogliUscita(entry, d, esci) {
    Tre strade, e nessuna si puo' indovinare da qui -- dipende da chi
    c'e' davanti al banco. Quindi prima si segna, poi si dice dove.
    ══════════════════════════════════════════════════════════ */
-function foglioDoveVa() {
-  const c = draftBar;
-  const tot = r2(barTotal(c) + costOf(c).parkTotal + costOf(c).crazyCost);
-  const gia = r2(num(c.paidPark, 0) + num(c.paidBar, 0));
-  const dentro = activeEntries();
-
-  const s = sheet('Dove va questo conto?');
-  s.body.appendChild(el('div', 'hint',
-    'Segnati ' + eur(tot) + (gia > 0.005 ? ', di cui ' + eur(gia) + ' già incassati' : '') + '.'));
-
-  const scelta = (cls, em, titolo, sotto, fn, spento) => {
-    const b = el('button', 'scelta-riga ' + cls);
-    b.appendChild(el('span', 'sc-em', em));
-    const t = el('span', 'sc-txt');
-    t.appendChild(el('b', null, titolo));
-    t.appendChild(el('span', null, sotto));
-    b.appendChild(t);
-    if (spento) b.disabled = true;
-    else b.onclick = () => { s.close(); fn(); };
-    s.body.appendChild(b);
-    return b;
-  };
-
-  scelta('', '🧾', 'Incassa solo come bar',
-    'Una vendita al banco: niente ingresso, niente tempo di parco. Entra lo stesso nel registro della giornata.',
-    () => {
-      commitDa(draftBar, { soloBar: true, messaggio: 'Vendita al bar registrata 🧾' });
-      draftBar = freshDraft();
-      PAN.conto = draftBar;
-      switchTab('active');
-    });
-
-  scelta('', '➕', 'Aprilo come ingresso nuovo',
-    'Diventa un gruppo che entra al parco, con queste consumazioni già sul conto. Nel Parco metti bambini e tempo.',
-    () => {
-      commitDa(draftBar, {});
-      draftBar = freshDraft();
-      PAN.conto = draftBar;
-      switchTab('active');
-    });
-
-  scelta('', '🎟️', 'Aggiungi a un gruppo che è già dentro',
-    dentro.length
-      ? 'Le consumazioni finiscono sul conto di chi è già al parco, insieme a quello che hanno già pagato.'
-      : 'Adesso non c’è nessuno dentro al parco.',
-    () => foglioAQualeGruppo(), !dentro.length);
-
-  footBtn(s.foot, 'Lascia stare', 'btn-ghost', s.close);
-}
-
+/* ══════════════════════════════════════════════════════════
+   AGGIUNGERE QUELLO CHE SI E' SEGNATO A UN GRUPPO GIA' DENTRO.
+   La linguetta «Bar» non c'e' piu': era una schermata intera per una
+   cosa che dal modulo si fa in due tocchi, e teneva un foglio suo da
+   non far divergere. Quello che serviva davvero -- appendere due birre
+   al conto di chi e' gia' al parco -- e' un tasto qui in fondo, accanto
+   a «Registra».
+   ══════════════════════════════════════════════════════════ */
 /* A CHI si appende quello che si e' segnato al banco. */
 function foglioAQualeGruppo() {
   const dentro = activeEntries();
@@ -7111,11 +7117,11 @@ function foglioAQualeGruppo() {
    listino di adesso: e' quello che il cliente ha visto e pagato. */
 function versaBarSu(entry) {
   const foto = fotografia(entry);
-  const voci = lista(draftBar.barItems).filter(b => b && b.id && num(b.qty, 0) > 0);
+  const voci = lista(draft.barItems).filter(b => b && b.id && num(b.qty, 0) > 0);
   if (!voci.length) { toast('Non c’è niente da spostare'); return; }
 
-  const amtDa = draftBar.paidAmt || {};
-  const pagDa = draftBar.paidLines || {};
+  const amtDa = draft.paidAmt || {};
+  const pagDa = draft.paidLines || {};
   entry.barItems = lista(entry.barItems);
   entry.paidAmt = entry.paidAmt || {};
   entry.paidLines = entry.paidLines || {};
@@ -7142,7 +7148,7 @@ function versaBarSu(entry) {
   entry.paidBar = r2(Math.max(0, num(entry.paidBar, 0)) + soldiSpostati);
 
   /* e la nota del blocchetto, se c'e', si appende a quella del gruppo */
-  const notaDa = String(draftBar.note || '').trim();
+  const notaDa = String(draft.note || '').trim();
   if (notaDa) {
     const sua = String(entry.note || '').trim();
     entry.note = sua ? sua + ' · ' + notaDa : notaDa;
@@ -7154,8 +7160,8 @@ function versaBarSu(entry) {
   const i = entries.indexOf(entry);
   if (i > -1) entries[i] = normalizeEntries([entry])[0];
 
-  draftBar = freshDraft();
-  PAN.conto = draftBar;
+  draft = freshDraft();
+  PAN.conto = draft;
   saveEntries();
   buildActiveView();
   updateBadge();
@@ -7723,14 +7729,13 @@ function switchTab(t) {
   $$('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
   const primaEra = tabPrec;
   tabPrec = t;
-  $('#view-bar').classList.toggle('hidden', t !== 'bar');
   $('#view-new').classList.toggle('hidden', t !== 'new');
   $('#view-active').classList.toggle('hidden', t !== 'active');
   $('#view-settings').classList.toggle('hidden', t !== 'settings');
   /* La vista che arriva entra dal lato da cui si veniva: dice da dove
      sei arrivato invece di comparire e basta. */
   if (anima() && primaEra && primaEra !== t) {
-    const ordine = ['bar', 'new', 'active', 'settings'];
+    const ordine = ['new', 'active', 'settings'];
     const vista = $('#view-' + t);
     if (vista) {
       vista.classList.remove('entra-dx', 'entra-sx');
@@ -7739,9 +7744,7 @@ function switchTab(t) {
       setTimeout(() => vista.classList.remove('entra-dx', 'entra-sx'), 320);
     }
   }
-  /* il conto sta in fondo anche nel Bar: li' e' proprio quello che si
-     guarda mentre si segna */
-  document.querySelector('main').classList.toggle('conto-in-fondo', t === 'new' || t === 'bar');
+  document.querySelector('main').classList.toggle('conto-in-fondo', t === 'new');
   $('main').scrollTop = 0;
 
   if (t === 'new') {
@@ -7755,16 +7758,6 @@ function switchTab(t) {
        frequente dell'app si apriva sulla seconda. Ognuna delle due
        linguette in alto adesso porta dove dice il suo nome. */
     montaPannello($('#view-new'), draft, { cat: 'Parco' });
-  }
-  if (t === 'bar') {
-    /* IL BANCONE E' GIA' APERTO: e' tutto il senso di questa linguetta.
-       Se pero' ci si era spostati sul Parco o sullo Scontrino restando
-       dentro il Bar, tornandoci si ritrova dov'era: cambiare vista non
-       deve rimettere le cose a modo mio. */
-    if (!draftBar.touched) draftBar.startTime = roundTo5(new Date()).getTime();
-    /* e il Bar apre sempre sul bancone: e' tutto il senso della
-       linguetta, e ricordarsi dov'eri vuol dire aprirla dove non dice */
-    montaPannello($('#view-bar'), draftBar, { cat: primaCategoriaBar() });
   }
   if (t === 'active') buildActiveView();   // ridisegna: cosi' la scheda in modifica si segna o si libera
   if (t === 'settings') buildSettingsView();
@@ -7853,6 +7846,8 @@ function riparaConto(o) {
   o.crazyGiri = lista(o.crazyGiri).map(n => int(n, 9999)).filter(n => n > 0);
   if (o.crazyJumping > 0) o.crazyGiri = giriCrazy(o);
   else delete o.crazyGiri;
+  /* una vendita al banco resta tale anche dopo un ricaricamento */
+  if (o.soloBar) o.soloBar = true; else delete o.soloBar;
   /* LA NOTA E' UNA RIGA DI TESTO, e nient'altro. Dal cloud o da un
      salvataggio vecchio puo' arrivarci dentro qualunque cosa. */
   o.note = typeof o.note === 'string' ? o.note.slice(0, 500) : '';
@@ -8027,7 +8022,7 @@ function init() {
   applyTheme();
 
   // icone nei tab, davanti all'etichetta
-  const emTab = { bar: '\ud83e\udd64', new: '\u2795', active: '\ud83c\udf9f\ufe0f', settings: '\u2699\ufe0f' };
+  const emTab = { new: '\u2795', active: '\ud83c\udf9f\ufe0f', settings: '\u2699\ufe0f' };
   $$('.tabs button').forEach(b => {
     b.insertAdjacentHTML('afterbegin', '<span class="em">' + (emTab[b.dataset.tab] || '') + '</span>');
     b.onclick = () => switchTab(b.dataset.tab);

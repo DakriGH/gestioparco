@@ -1358,6 +1358,14 @@ main {
 .entry.s-warn   { --grad: var(--blk-giallo); }
 .entry.s-danger { --grad: var(--blk-rosso); }
 .entry.s-later  { --grad: var(--blk-ciano); }
+/* LA VENDITA AL BANCO HA UN COLORE SUO. Non e' verde, gialla o rossa
+   perche' non c'e' nessuno dentro a cui andare dietro: e' uno scontrino
+   che resta a vista due minuti, il tempo di correggerlo, e poi se ne va
+   in archivio da solo. Grigia, come tutto quello che non chiede
+   attenzione. */
+.entry.s-bar { --grad: var(--blk-grigio); }
+/* niente pastiglia dei bambini e niente bracciale: non c'e' nessuno */
+.entry.s-bar .e-bimbi, .entry.s-bar .wrist-dot { display: none; }
 
 .entry.s-danger::after {
   content: "";
@@ -2993,12 +3001,7 @@ html:not(.anima) .view.entra-dx { animation: none; }
 /* Chrome ferma lo sticky al bordo INTERNO di main, cioe' sopra il suo
    padding: col respiro di main sotto, il conto restava 24px a mezz'aria.
    In questa linguetta il respiro lo mette la barra stessa. */
-/* Il Bar e' la stessa cosa di "+ Nuovo": ospita lo STESSO pannello, e
-   deve avere lo stesso scheletro. Nominando qui solo #view-new, il
-   Bar restava un blocco e il pannello dentro non veniva stirato: la
-   zona che scala perdeva una sessantina di pixel e bancone e
-   scontrino si vedevano schiacciati. */
-#view-new, #view-bar { display: flex; flex-direction: column; }
+#view-new { display: flex; flex-direction: column; }
 /* Il pannello e la colonna: e lui ad avere il gap e il flex, non la
    vista, perche il pannello si sposta e se lo lasciassi alla vista
    dentro la scheda che vola non avrebbe piu niente sotto. */
@@ -3539,10 +3542,8 @@ main.conto-in-fondo { padding-bottom: max(10px, var(--safe-b)); display: flex; f
    in un contenitore flex un margine automatico SPEGNE lo stiramento, e
    la vista si stringeva al contenuto perdendo una novantina di pixel --
    quanto basta a far scendere la griglia del bar da tre colonne a due. */
-main.conto-in-fondo > #view-new,
-main.conto-in-fondo > #view-bar { flex: 1; min-height: 0; width: 100%; }
-main.conto-in-fondo > #view-new > .pan-conto,
-main.conto-in-fondo > #view-bar > .pan-conto { flex: 1; }
+main.conto-in-fondo > #view-new { flex: 1; min-height: 0; width: 100%; }
+main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
 /* un dito di respiro sotto, lo stesso che tiene lo sticky quando invece
    la schermata scorre: cosi' il pannello sta allo stesso posto nei due
    casi, e non sembra incollato al vetro */

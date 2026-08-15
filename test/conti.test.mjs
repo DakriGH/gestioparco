@@ -816,14 +816,17 @@ gruppo('Aprire e richiudere il tempo non cambia il prezzo', () => {
   ok('andata e ritorno su ogni durata, prezzo intatto', storti, []);
 });
 
-gruppo('Il blocchetto del Bar: i soldi non si creano e non si perdono', () => {
-  /* IL BAR RAPIDO HA TRE USCITE -- solo bar, ingresso nuovo, dentro un
-     gruppo che e' gia' al parco -- e la terza sposta soldi e voci da un
-     conto a un altro. E' esattamente il tipo di passaggio in cui un euro
-     compare o sparisce senza che nessuno se ne accorga fino a sera.
-     La garanzia e' la cassa: la somma di tutto quello che risulta
-     incassato -- ingressi piu' i due fogli -- non deve cambiare di un
-     centesimo per il solo fatto di aver spostato le consumazioni. */
+gruppo('«Aggiungi a»: i soldi non si creano e non si perdono', () => {
+  /* LA LINGUETTA «BAR» NON C'E' PIU': era una schermata intera per una
+     cosa che dal modulo si fa in due tocchi, e teneva un foglio suo da
+     non far divergere. Quello che serviva davvero -- appendere due birre
+     al conto di chi e' gia' al parco -- e' un tasto in fondo a
+     «+ Nuovo», e sposta soldi e voci da un conto a un altro.
+     E' esattamente il tipo di passaggio in cui un euro compare o
+     sparisce senza che nessuno se ne accorga fino a sera. La garanzia e'
+     la cassa: la somma di tutto quello che risulta incassato non deve
+     cambiare di un centesimo per il solo fatto di aver spostato le
+     consumazioni. */
   const veroSwitch = ctx.mondo.switchTab;
   const veroBuild = ctx.mondo.buildActiveView;
   const veroFatto = ctx.mondo.fatto;
@@ -838,15 +841,13 @@ gruppo('Il blocchetto del Bar: i soldi non si creano e non si perdono', () => {
   try {
     const R2 = v => Math.round(v * 100) / 100;
     const cassa = () => R2(ctx.entries.reduce((a, e) => a + (+e.paidPark || 0) + (+e.paidBar || 0), 0) +
-      (+ctx.draft.paidPark || 0) + (+ctx.draft.paidBar || 0) +
-      (+ctx.draftBar.paidPark || 0) + (+ctx.draftBar.paidBar || 0));
+      (+ctx.draft.paidPark || 0) + (+ctx.draft.paidBar || 0));
     const barIds = ctx.settings.barMenu.slice(0, 4).map(v => v.id);
     let seme = 24680;
     const caso = n => { seme = (seme * 1103515245 + 12345) % 2147483648; return seme % n; };
 
     ctx.entries = [];
     ctx.draft = ctx.freshDraft();
-    ctx.draftBar = ctx.freshDraft();
     const guai = [];
 
     for (let g = 0; g < 120 && !guai.length; g++) {
@@ -861,15 +862,15 @@ gruppo('Il blocchetto del Bar: i soldi non si creano e non si perdono', () => {
       const gruppo = ctx.commitDa(ctx.draft, {});
       ctx.draft = ctx.freshDraft(); ctx.PAN.conto = ctx.draft;
 
-      /* e un blocchetto al banco, anche lui a caso */
-      ctx.PAN.conto = ctx.draftBar; ctx.PAN.ingresso = null;
+      /* e poi si segna dell'altro nel modulo, per appenderlo a lui */
+      ctx.PAN.conto = ctx.draft; ctx.PAN.ingresso = null;
       for (let i = 0, q = 1 + caso(3); i < q; i++) ctx.bcSetQ(barIds[caso(barIds.length)], 1 + caso(3));
       if (caso(2)) ctx.bcSegna('bar', true);
-      else if (caso(2)) { const p = ctx.lista(ctx.draftBar.barItems)[0]; if (p) ctx.segnaPagate(p.id, 1); }
+      else if (caso(2)) { const pz = ctx.lista(ctx.draft.barItems)[0]; if (pz) ctx.segnaPagate(pz.id, 1); }
 
       const cassaPrima = cassa();
-      const barPrima = R2(ctx.barTotal(gruppo) + ctx.barTotal(ctx.draftBar));
-      const pagatoPrima = R2((+gruppo.paidBar || 0) + (+ctx.draftBar.paidBar || 0));
+      const barPrima = R2(ctx.barTotal(gruppo) + ctx.barTotal(ctx.draft));
+      const pagatoPrima = R2((+gruppo.paidBar || 0) + (+ctx.draft.paidBar || 0));
 
       ctx.versaBarSu(gruppo);
 
@@ -881,54 +882,58 @@ gruppo('Il blocchetto del Bar: i soldi non si creano e non si perdono', () => {
       if (!Number.isFinite(d.total) || d.total < 0) guai.push('dovuto storto ' + d.total);
       const sb = R2(ctx.lista(g2.barItems).reduce((a, b) => a + (+amt[b.id] || 0), 0));
       if (Math.abs(sb - (+g2.paidBar || 0)) > 0.005) guai.push('righe bar ' + sb + ' vs ' + g2.paidBar);
-      const sp = R2((+amt.bimbi || 0) + (+amt.crazy || 0));
-      if (Math.abs(sp - (+g2.paidPark || 0)) > 0.005) guai.push('righe parco ' + sp + ' vs ' + g2.paidPark);
       ctx.lista(g2.barItems).forEach(b => {
         if ((+g2.paidLines[b.id] || 0) > (+b.qty || 0)) guai.push('spunte oltre la quantita su ' + b.id);
         if ((+amt[b.id] || 0) > R2((+b.qty || 0) * (+b.price || 0)) + 0.005) guai.push('incassato piu del dovuto su ' + b.id);
       });
-      if (ctx.lista(ctx.draftBar.barItems).length) guai.push('il blocchetto non si e svuotato');
-      /* e il Crazy resta fuori dal prezzo del tempo anche dopo */
+      if (ctx.lista(ctx.draft.barItems).length) guai.push('il modulo non si e svuotato');
       const gem = ctx.fotografia(g2); gem.crazyJumping = 0; delete gem.crazyGiri;
       if (ctx.costOf(gem).parkTotal !== ctx.costOf(g2).parkTotal) guai.push('il Crazy sposta il tempo dopo il versamento');
-      ctx.draftBar = ctx.freshDraft(); ctx.PAN.conto = ctx.draftBar;
+      ctx.draft = ctx.freshDraft(); ctx.PAN.conto = ctx.draft;
     }
     ok('centoventi versamenti e la cassa non si muove di un centesimo', guai.slice(0, 3), []);
 
-    /* SOLO BAR: nasce gia' chiusa. Lasciarla «in corso» voleva dire una
-       scheda in mezzo ai gruppi con un conto alla rovescia partito da
-       zero minuti -- cioe' rossa, scaduta, come un gruppo da andare a
-       chiamare. */
+    /* LA VENDITA AL BANCO LA RICONOSCE DA SE': niente bambini, niente
+       Crazy, roba sul bancone. Nasce ATTIVA con una scheda sua -- il
+       tempo di correggerla -- e dopo due minuti se ne va in archivio da
+       sola. Prima nasceva gia' chiusa, e uno sbaglio non si faceva in
+       tempo a vederlo. */
     ctx.entries = [];
-    ctx.draftBar = ctx.freshDraft();
-    ctx.PAN.conto = ctx.draftBar; ctx.PAN.ingresso = null;
+    ctx.draft = ctx.freshDraft();
+    ctx.PAN.conto = ctx.draft; ctx.PAN.ingresso = null;
     ctx.bcSetQ(barIds[0], 2);
     ctx.bcSegna('bar', true);
-    const vendita = ctx.commitDa(ctx.draftBar, { soloBar: true });
-    ctx.draftBar = ctx.freshDraft(); ctx.PAN.conto = ctx.draftBar;
-    ok('la vendita al banco nasce chiusa', vendita.status, 'closed');
-    vero('non compare fra chi e dentro al parco', !ctx.activeEntries().some(e => e.id === vendita.id));
+    const vendita = ctx.commitDa(ctx.draft, {});
+    ctx.draft = ctx.freshDraft(); ctx.PAN.conto = ctx.draft;
+    vero('la riconosce da se, senza interruttori', !!vendita.soloBar);
+    ok('e nasce attiva, non gia chiusa', vendita.status, 'active');
+    vero('si vede fra chi e dentro, per poterla correggere',
+         ctx.activeEntries().some(e => e.id === vendita.id));
+    vero('e sta in cima: e di passaggio', ctx.activeEntries()[0].id === vendita.id);
     ok('non costa tempo di parco', ctx.costOf(vendita).parkTotal, 0);
     ok('niente bambini', vendita.children, 0);
     ok('ed e saldata', ctx.dueOf(vendita).total, 0);
-    /* il prezzo si ferma li': il listino ritoccato dopo non la muove */
-    const voce = ctx.settings.barMenu.find(v => v.id === barIds[0]);
-    const eraPrezzo = voce.price;
-    voce.price = 99;
-    ok('e il listino ritoccato dopo non la tocca', ctx.dueOf(vendita).total, 0);
-    voce.price = eraPrezzo;
+    ok('non e ne verde ne rossa: ha un colore suo',
+       ctx.stateOf(vendita, Date.now()), 'bar');
+    vero('e le resta del tempo prima di archiviarsi', ctx.restaSoloBar(vendita) > 0);
 
-    /* I DUE FOGLI NON SI CONTAMINANO: e' tutto il motivo per cui il Bar
-       ne ha uno suo. */
-    ctx.draft = ctx.freshDraft(); ctx.draftBar = ctx.freshDraft();
-    ctx.PAN.conto = ctx.draftBar; ctx.PAN.ingresso = null;
-    ctx.bcSetQ(barIds[0], 3);
-    vero('quello che si segna al Bar non finisce in + Nuovo',
-         !ctx.lista(ctx.draft.barItems).length);
-    ctx.PAN.conto = ctx.draft;
+    /* passati i due minuti se ne va da sola */
+    vendita.createdAt = Date.now() - 3 * 60000;
+    ok('scaduta, non le resta piu tempo', ctx.restaSoloBar(vendita), 0);
+    ctx.archiviaSoloBarScaduti();
+    ok('e si archivia da sola', ctx.entries.find(e => e.id === vendita.id).status, 'closed');
+    vero('col prezzo fermato li', !!ctx.entries.find(e => e.id === vendita.id).costoFinale);
+    vero('e sparisce da chi e dentro', !ctx.activeEntries().some(e => e.id === vendita.id));
+
+    /* un ingresso con dei bambini NON e' una vendita al banco */
+    ctx.PAN.conto = ctx.draft; ctx.PAN.ingresso = null;
     ctx.bcSetQ('bimbi', 2);
-    ok('e i bambini di + Nuovo non finiscono nel Bar', ctx.draftBar.children, 0);
-    vero('e restano due oggetti diversi', ctx.draft !== ctx.draftBar);
+    ctx.bcSetQ(barIds[0], 1);
+    const normale = ctx.commitDa(ctx.draft, {});
+    ctx.draft = ctx.freshDraft(); ctx.PAN.conto = ctx.draft;
+    vero('con dei bambini resta un ingresso normale', !normale.soloBar);
+    vero('e non si archivia da solo', (ctx.archiviaSoloBarScaduti(),
+         ctx.entries.find(e => e.id === normale.id).status === 'active'));
   } finally {
     ctx.settings.tariffaSuTotale = eraSuTotale;
     ctx.mondo.switchTab = veroSwitch;
