@@ -4058,6 +4058,12 @@ function archiveCard(entry) {
   const rest = el('button', 'btn btn-sm', '\u21a9\ufe0e Rimetti dentro');
   rest.title = 'Torna fra chi \u00e8 al parco';
   rest.onclick = () => {
+    /* ANCHE QUESTO SI ANNULLA. Rimettere dentro un gruppo uscito e'
+       reversibile come tutto il resto, e senza l'annulla per rimediare a
+       un tocco sbagliato bisognava rifargli l'uscita a mano -- che vuol
+       dire ricalcolargli il prezzo col listino di adesso invece che con
+       quello di quando e' uscito. */
+    const foto = fotografia(entry);
     entry.status = 'active';
     delete entry.closedAt;
     delete entry.costoFinale;   // torna dentro: si riconta col listino di adesso
@@ -4068,7 +4074,17 @@ function archiveCard(entry) {
     showArchive = false;
     buildActiveView();
     updateBadge();
-    toast('Rimesso dentro \u21a9\ufe0e');
+    /* niente freccia nel messaggio: ce l'ha gia' il tasto accanto, e
+       due di fila si leggevano come un errore di stampa */
+    fatto('Rimesso fra chi \u00e8 dentro', () => {
+      const i = entries.findIndex(e => e.id === foto.id);
+      if (i > -1) rimetti(entries[i], foto);
+      saveEntries();
+      showArchive = true;
+      buildActiveView();
+      updateBadge();
+      toast('Tornato in archivio \u21a9\ufe0e');
+    });
   };
   tasti.appendChild(rest);
 
@@ -4077,12 +4093,13 @@ function archiveCard(entry) {
   del.onclick = () => confirmSheet('Eliminare ' +
     (people.length ? nomiDi(entry) : entry.soloBar ? 'questa vendita al bancone' : 'questo ingresso') + '?',
     'Sparisce anche dai conti della giornata: ' + eur(preso) +
-    ' non risulteranno pi\u00f9 incassati. Non si pu\u00f2 annullare.', () => {
-    entries = entries.filter(e => e.id !== entry.id);
-    saveEntries();
-    buildActiveView();
-    updateBadge();
-    toast('Eliminato');
+    ' non risulteranno pi\u00f9 incassati.', () => {
+    /* PASSA DA `eliminaIngresso`, che l'annulla ce l'ha gia'. Qui c'era
+       una cancellazione scritta a parte -- `entries.filter` e un toast
+       secco -- e da questa schermata l'ingresso spariva senza rete: un
+       tocco storto e i suoi soldi uscivano dai conti della giornata per
+       sempre. E' l'unico posto dell'app dove succedeva. */
+    eliminaIngresso(entry);
   });
   tasti.appendChild(del);
   d.appendChild(tasti);

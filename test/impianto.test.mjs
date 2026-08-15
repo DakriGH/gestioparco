@@ -904,6 +904,27 @@ gruppo('La scheda in archivio dice chi era e quanto ha pagato');
     /non risulteranno pi/.test(APP));
   prova('rimettere dentro una vendita al banco le ridà i suoi minuti',
     /if \(entry\.soloBar\) entry\.barFinoA = Date\.now\(\) \+ ATTESA_SOLO_BAR;/.test(APP));
+
+  /* NIENTE SI PERDE SENZA UN ANNULLA. In archivio l'eliminazione era
+     l'unico posto dell'app che cancellava senza rete: `entries.filter` e
+     un toast secco, e i soldi di quell'ingresso uscivano dai conti della
+     giornata per sempre. Adesso passa da `eliminaIngresso`, che
+     l'annulla ce l'ha, e anche «Rimetti dentro» si puo' disfare. */
+  prova('in archivio si elimina passando da eliminaIngresso',
+    /eliminaIngresso\(entry\);/.test(APP) && !/toast\('Eliminato'\)/.test(APP),
+    'una cancellazione senza annulla e i soldi escono dai conti per sempre');
+  prova('e anche «rimetti dentro» si puo disfare',
+    /fatto\('Rimesso fra chi/.test(APP) && /toast\('Tornato in archivio/.test(APP));
+  /* la regola generale: chi toglie roba deve offrire l'annulla */
+  {
+    const secchi = [];
+    [['toast(\'Eliminato\')', 'eliminazione in archivio'],
+     ['toast(\'Rimosso\')', 'rimozione']].forEach(([t, nome]) => {
+      if (APP.indexOf(t) >= 0) secchi.push(nome);
+    });
+    prova('nessuna cancellazione con un toast secco, senza annulla', secchi.length === 0,
+      secchi.join(', '));
+  }
 }
 
 gruppo('La giornata finisce alle quattro anche per le copie del giorno');
