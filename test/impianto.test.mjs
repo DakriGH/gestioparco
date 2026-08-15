@@ -683,6 +683,64 @@ gruppo('I file di prova ci sono tutti e si chiamano fra loro');
   });
 }
 
+gruppo('La giornata finisce alle quattro anche per le copie del giorno');
+{
+  const DATI = leggi('js/dati.js');
+  /* La copia del giorno si archiviava col giorno del calendario mentre
+     tutto il resto dell'app ragiona per giornate che finiscono alle
+     quattro: una serata che scavallava finiva in due chiavi diverse, e
+     le due settimane promesse dal README diventavano una settimana di
+     nottate. `dati.js` si carica prima di `app.js` e non puo' chiamare
+     `giornataDi`: gliela si affaccia come GIORNATA_DI. */
+  prova('app.js affaccia giornataDi come GIORNATA_DI',
+    /window\.GIORNATA_DI\s*=\s*giornataDi/.test(APP));
+  prova('dati.js ci passa per archiviare la copia',
+    /GIORNATA_DI/.test(DATI));
+  prova('e non torna a inventarsi il giorno da solo',
+    !/function oggi\(\)\s*\{\s*const d = new Date\(\);/.test(DATI));
+  prova('una richiesta a vuoto restituisce null, non se stessa',
+    /esito\.result === undefined \? null : esito\.result/.test(DATI));
+}
+
+gruppo('Il primo caricamento in cloud non muore sul lotto da cinquecento');
+{
+  const CLOUD = leggi('js/cloud.js');
+  /* Un batch di Firestore tiene 500 operazioni: con tutto in un lotto
+     solo, un tablet che aveva lavorato da solo per una stagione non
+     caricava NIENTE, e l'unica traccia era un console.warn. */
+  const m = CLOUD.match(/PER_LOTTO\s*=\s*(\d+)/);
+  prova('gli ingressi salgono a scaglioni', !!m, 'manca PER_LOTTO in cloud.js');
+  prova('e lo scaglione sta sotto il limite di Firestore',
+    !!m && Number(m[1]) > 0 && Number(m[1]) <= 500,
+    m ? 'PER_LOTTO = ' + m[1] : '');
+  prova('chi chiede il caricamento sa quanti ne sono saliti davvero',
+    /Saliti '? ?\+? ?n/.test(APP) || /n >= quanti/.test(APP));
+
+  /* L'ora la mette il server: con Date.now() del tablet, una cassa con
+     l'orologio avanti vinceva sempre il "conta l'ultimo". */
+  prova('si scrive anche il timbro del server', /serverTimestamp/.test(CLOUD));
+  prova('e chi confronta lo preferisce all’ora del tablet',
+    /function quandoAgg/.test(APP) && /quandoAgg\(c\.dato\) > quandoAgg\(entries\[i\]\)/.test(APP));
+  prova('il timbro non entra nella firma del contenuto',
+    /k !== 'aggS'/.test(APP));
+}
+
+gruppo('Il service worker tiene in cache una versione sola, e solo se buona');
+{
+  /* Restando in cache sia `?v=306` sia `?v=307`, la ricerca con
+     ignoreSearch pescava la vecchia, la vedeva diversa e andava in rete:
+     dopo il primo aggiornamento l'app non partiva piu' dalla cache. */
+  prova('le versioni vecchie dello stesso file se ne vanno',
+    /function potaVersioni/.test(SW) && /potaVersioni\(c, req\)/.test(SW));
+  /* e un 404 di passaggio non deve diventare la pagina offline */
+  const doc = SW.slice(SW.indexOf('if (isDoc)'), SW.indexOf('// CSS/JS'));
+  prova('anche il documento entra in cache solo se e’ una risposta buona',
+    /res\.status === 200/.test(doc));
+  /* il nome della cache e' il secondo contatore: se non sale, le copie
+     vecchie restano anche cambiando ?v= */
+  prova('il nome della cache e’ numerato', /const CACHE = 'gestioparco-v(\d+)'/.test(SW));
+}
+
 /* ══════════════════════════════════════════════════════════ */
 console.log('\n' + '━'.repeat(52));
 if (rotti) {

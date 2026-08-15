@@ -55,7 +55,19 @@ Niente framework e niente compilazione: si apre `index.html` e funziona.
 | `sw.js` | funzionamento senza rete |
 
 Dopo aver toccato CSS o JS va alzato il numero `?v=` in `index.html`: è quello che
-garantisce che il tablet veda la versione nuova.
+garantisce che il tablet veda la versione nuova. È anche il numero che l'app mostra
+nella barra in alto (`Ver 308`) e nelle Impostazioni: se due tablet dicono numeri
+diversi, uno è rimasto indietro.
+
+I contatori da alzare sono **due**, e vanno insieme:
+
+| Dove | Cosa fa |
+|---|---|
+| `?v=` in `index.html` | dice al tablet di riscaricare CSS e JS |
+| `CACHE` in `sw.js` | butta via la cache vecchia quando il service worker si attiva |
+
+Il primo da solo basta per vedere le modifiche; il secondo serve perché in cache non
+restino copie di versioni passate.
 
 Con `index.html?nosw` il funzionamento offline si disattiva e si ripulisce: serve quando si
 sta lavorando al codice.

@@ -1,7 +1,7 @@
 /* Service worker: l'app deve partire anche senza rete.
    Strategia: rete-prima per l'HTML (così un aggiornamento si vede subito),
    cache-prima per CSS/JS/icone. Nessuna risorsa esterna da scaricare. */
-const CACHE = 'gestioparco-v160';
+const CACHE = 'gestioparco-v161';
 const ASSETS = [
   './',
   './index.html',
@@ -53,6 +53,27 @@ self.addEventListener('activate', (e) => {
   );
 });
 
+/* VIA LE VERSIONI VECCHIE DELLO STESSO FILE.
+   `caches.match(..., {ignoreSearch:true})` guarda il primo che trova, e
+   il primo era sempre quello entrato per primo: dopo un aggiornamento in
+   cache restavano sia `app.css?v=306` sia `?v=307`, la ricerca pescava la
+   306, la vedeva diversa da quella chiesta e andava in rete. Ogni volta.
+   Cioe' dopo il primo aggiornamento l'app non partiva piu' dalla cache --
+   proprio la cosa per cui il service worker esiste -- e su una linea
+   ballerina si vedeva tutto.
+   Messa dentro quella nuova, le altre copie dello stesso file se ne
+   vanno: in cache ne resta una sola, ed e' quella giusta. */
+function potaVersioni(cache, req) {
+  const suo = new URL(req.url);
+  return cache.keys().then(chiavi => Promise.all(chiavi.map(k => {
+    const u = new URL(k.url);
+    if (u.origin === suo.origin && u.pathname === suo.pathname && u.search !== suo.search) {
+      return cache.delete(k);
+    }
+    return null;
+  })));
+}
+
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET' || !req.url.startsWith(self.location.origin)) return;
@@ -68,8 +89,16 @@ self.addEventListener('fetch', (e) => {
     e.respondWith(
       fetch(req, { cache: 'no-store' })
         .then(res => {
-          const copy = res.clone();
-          caches.open(CACHE).then(c => c.put(req, copy));
+          /* SOLO UNA RISPOSTA BUONA ENTRA IN CACHE.
+             Questo controllo c'era per CSS e JS ma non qui: un 404 o un
+             502 di passaggio -- GitHub Pages ne fa, durante una
+             pubblicazione -- finiva in cache al posto della pagina, e da
+             li' in poi l'app offline apriva quello. Per sempre, perche'
+             niente lo sostituiva. */
+          if (res && res.status === 200 && res.type === 'basic') {
+            const copy = res.clone();
+            caches.open(CACHE).then(c => c.put(req, copy));
+          }
           return res;
         })
         .catch(() => caches.match(req).then(r => r || caches.match('./index.html')))
@@ -88,7 +117,7 @@ self.addEventListener('fetch', (e) => {
       const net = fetch(req, vecchia ? { cache: 'no-store' } : undefined).then(res => {
         if (res && res.status === 200 && res.type === 'basic') {
           const copy = res.clone();
-          caches.open(CACHE).then(c => c.put(req, copy));
+          caches.open(CACHE).then(c => c.put(req, copy).then(() => potaVersioni(c, req)));
         }
         return res;
       }).catch(() => hit);
