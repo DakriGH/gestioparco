@@ -142,6 +142,23 @@ function giornataDi(ts) {
    solo, nei test) lui ripiega sul giorno solare come prima. */
 window.GIORNATA_DI = giornataDi;
 
+/* DOVE FINISCE UNA GIORNATA. E' l'inizio di quella dopo, e NON si trova
+   sommando ventiquattro ore: due notti l'anno una giornata non ne dura
+   ventiquattro. A fine marzo ne dura ventitre' (alle 2:00 si va avanti),
+   a fine ottobre venticinque (alle 3:00 si torna indietro), e il salto
+   cade proprio nelle ore in cui il parco sta ancora chiudendo.
+   Con le 24 ore fisse, la notte di marzo il registro si prendeva un'ora
+   della giornata dopo -- contandola due volte -- e «elimina giornata»
+   cancellava ingressi di un altro giorno; la notte di ottobre invece
+   un'ora spariva dal registro e restava li' orfana.
+   Chiedendolo al calendario -- il giorno dopo, alla stessa ora -- il
+   cambio dell'ora se lo sbriga lui. */
+function fineGiornata(inizio) {
+  const d = new Date(num(inizio, 0));
+  d.setDate(d.getDate() + 1);
+  return d.getTime();
+}
+
 function nomeGiornata(inizio) {
   const oggi = giornataDi(Date.now());
   if (inizio === oggi) return 'oggi';
@@ -6235,7 +6252,7 @@ function svuotaScelto(scelte) {
    la differenza fra "ho chiuso" e "ho chiuso bene".
    Un ingresso appartiene alla giornata in cui e' ENTRATO. */
 function contiGiornata(inizio) {
-  const fine = inizio + 24 * 3600 * 1000;
+  const fine = fineGiornata(inizio);
   const dentro = lista(entries).filter(e => {
     const t = num(e.startTime, num(e.createdAt, 0));
     return t >= inizio && t < fine;
@@ -6604,7 +6621,7 @@ function vaiAllIngresso(entry) {
    restare nelle medie per sempre. */
 function eliminaGiornata(inizio) {
   if (typeof volante !== 'undefined' && volante) posaSubito(volante.card);
-  const fine = inizio + 24 * 3600 * 1000;
+  const fine = fineGiornata(inizio);
   const prima = lista(entries).slice();
   const dentro = e => {
     const t = num(e.startTime, num(e.createdAt, 0));

@@ -526,7 +526,100 @@ gruppo('La giornata finisce alle quattro del mattino', () => {
      [inizio.getHours(), inizio.getMinutes(), inizio.getSeconds()], [4, 0, 0]);
   /* due giornate di fila non si sovrappongono e non lasciano buchi */
   const uno = g(2026, 7, 11, 12, 0), due = g(2026, 7, 12, 12, 0);
-  ok('due giornate di fila distano esattamente un giorno', due - uno, 24 * 3600 * 1000);
+  ok('due giornate di fila distano un giorno (in agosto, dove l’ora non cambia)',
+     due - uno, 24 * 3600 * 1000);
+});
+
+gruppo('Il cambio dell’ora non sposta gli incassi di giornata', () => {
+  /* DUE NOTTI L'ANNO UNA GIORNATA NON DURA VENTIQUATTRO ORE: a fine
+     marzo ne dura ventitre', a fine ottobre venticinque. E il salto cade
+     alle 2:00 o alle 3:00, cioe' dentro la giornata del parco -- che va
+     dalle 4:00 alle 4:00 -- proprio nelle ore in cui si sta chiudendo.
+     Il registro chiudeva la finestra sommando 24 ore fisse: la notte di
+     marzo si prendeva un'ora della giornata dopo e la contava due volte,
+     quella di ottobre lasciava un'ora fuori da tutte e due. E «elimina
+     giornata», che usa la stessa finestra, a marzo cancellava ingressi di
+     un altro giorno.
+     La garanzia qui sotto non nomina nessun fuso e vale ovunque: un
+     istante deve sempre cadere dentro la finestra della PROPRIA giornata.
+     Dove l'ora non cambia mai passa da sola; dove cambia, e' proprio il
+     confine che va a toccare. */
+  const buchi = [];
+  const doppioni = [];
+  const nonAllineate = [];
+  /* tutto il 2026, ora per ora nelle notti, piu' un giro a mezzogiorno */
+  for (let giorno = 0; giorno < 365; giorno++) {
+    const base = new Date(2026, 0, 1, 12, 0);
+    base.setDate(base.getDate() + giorno);
+    for (const [h, m] of [[12, 0], [23, 40], [0, 30], [2, 30], [3, 30], [3, 59], [4, 0], [4, 30], [5, 30]]) {
+      const t = new Date(base.getFullYear(), base.getMonth(), base.getDate(), h, m).getTime();
+      const inizio = ctx.giornataDi(t);
+      const fine = ctx.fineGiornata(inizio);
+      /* 1. l'istante sta dentro la finestra della sua giornata */
+      if (!(t >= inizio && t < fine)) {
+        buchi.push(new Date(t).toString().slice(0, 24) + ' cade fuori dalla sua giornata');
+      }
+      /* 2. la fine di una giornata e' l'inizio esatto di quella dopo:
+            niente sovrapposizioni, niente buchi */
+      if (ctx.giornataDi(fine) !== fine) {
+        nonAllineate.push(new Date(fine).toString().slice(0, 24) + ' non e l inizio di una giornata');
+      }
+      /* 3. e non appartiene gia' alla giornata precedente */
+      if (ctx.giornataDi(fine - 1) !== inizio) {
+        doppioni.push(new Date(fine).toString().slice(0, 24) + ' si sovrappone');
+      }
+    }
+  }
+  ok('nessun istante dell’anno cade fuori dalla propria giornata', buchi.slice(0, 3), []);
+  ok('ogni giornata finisce dove comincia la successiva', nonAllineate.slice(0, 3), []);
+  ok('e non si sovrappongono', doppioni.slice(0, 3), []);
+
+  /* dove l'ora cambia davvero, la giornata NON dura 24 ore: e' il caso
+     che il vecchio calcolo sbagliava, e va detto forte */
+  const strane = [];
+  for (let giorno = 0; giorno < 365; giorno++) {
+    const b = new Date(2026, 0, 1, 12, 0);
+    b.setDate(b.getDate() + giorno);
+    const inizio = ctx.giornataDi(b.getTime());
+    const ore = (ctx.fineGiornata(inizio) - inizio) / 3600000;
+    if (ore !== 24) strane.push({ giorno: new Date(inizio).toDateString(), ore });
+  }
+  if (strane.length) {
+    console.log('        (in questo fuso ci sono giornate diverse da 24 ore: ' +
+      strane.map(s => s.giorno + ': ' + s.ore + ' ore').join(' | ') + ')');
+    /* Non tutti i fusi spostano di un'ora: Lord Howe fa mezz'ora, e le
+       sue giornate storte durano 23,5 e 24,5. Quello che conta e' che
+       restino nell'intorno di un giorno -- se ne uscisse una da 12 o da
+       36 ore, li' ci sarebbe un guaio vero. */
+    vero('le giornate storte restano fra le 23 e le 25 ore',
+         strane.every(s => s.ore >= 23 && s.ore <= 25));
+  } else {
+    console.log('        (fuso senza cambio d’ora: le tre garanzie sopra valgono lo stesso)');
+    vero('nessuna giornata storta da queste parti', true);
+  }
+
+  /* e il registro deve contare esattamente chi giornataDi gli assegna */
+  const eraEntries = ctx.entries;
+  try {
+    const g0 = ctx.giornataDi(new Date(2026, 2, 28, 22, 0).getTime());  // notte del cambio, a marzo
+    const fatti = [
+      { q: new Date(2026, 2, 28, 22, 0), id: 'sera' },
+      { q: new Date(2026, 2, 29, 3, 30), id: 'notte' },   // ancora ieri
+      { q: new Date(2026, 2, 29, 4, 30), id: 'domani' }   // gia' oggi
+    ].map(x => ({
+      id: x.id, startTime: x.q.getTime(), createdAt: x.q.getTime(), status: 'active',
+      children: 1, durationMinutes: 30, baseMinutes: 30, crazyJumping: 0,
+      payLater: false, barItems: [], people: [], paidPark: 7, paidBar: 0,
+      paidAmt: { bimbi: 7 }, paidLines: { bimbi: 1 }
+    }));
+    ctx.entries = ctx.normalizeEntries(fatti);
+    const attesi = ctx.entries.filter(e => ctx.giornataDi(e.startTime) === g0).map(e => e.id).sort();
+    const visti = ctx.contiGiornata(g0).righe.map(r => r.id).sort();
+    ok('il registro della notte del cambio conta chi deve', visti, attesi);
+    ok('e non si inventa incassi', ctx.contiGiornata(g0).incassato, 7 * attesi.length);
+  } finally {
+    ctx.entries = eraEntries;
+  }
 });
 
 gruppo('Il registro della giornata conta quello che deve', () => {
