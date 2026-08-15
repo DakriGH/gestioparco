@@ -1925,6 +1925,53 @@ main {
 
 .e-note { font-size: 12.5px; color: rgba(255,255,255,0.85); font-style: italic; line-height: 1.35; margin-top: 9px; }
 
+/* LA NOTA, SEMPRE A VISTA SOTTO LA RIGA.
+   Stava dentro la parte che si apre: per leggere «hanno la torta in
+   frigo» bisognava aprire la scheda, cioe' proprio quello che non si fa
+   quando si guarda la lista di colpo d'occhio. Qui e' una striscia
+   attaccata sotto -- si legge senza aprire niente -- e si tocca per
+   scriverci. Quando non c'e' niente resta, spenta, perche' se no non ci
+   sarebbe un posto dove cominciare a scrivere. */
+.e-nota {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  width: 100%;
+  border: none;
+  text-align: left;
+  padding: 7px 14px 8px;
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(255, 255, 255, 0.9);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.35;
+  cursor: pointer;
+}
+.e-nota .em { flex: 0 0 auto; font-size: 13px; }
+.e-nota .tx { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.e-nota:active { background: rgba(0, 0, 0, 0.34); }
+/* senza niente scritto e' un invito, non un'informazione */
+.e-nota.vuota { color: rgba(255, 255, 255, 0.42); font-style: italic; }
+.e-nota.vuota .em { opacity: .5; }
+
+/* il campo del foglio della nota: grande, e quello che si scrive si vede */
+.nota-campo {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(232, 180, 76, .5);
+  background: rgba(232, 180, 76, .09);
+  color: var(--txt);
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.45;
+  resize: vertical;
+}
+.nota-campo:focus { outline: none; border-color: var(--accent); }
+.nota-campo::placeholder { color: var(--txt-3); }
+
 /* --- pannelli in fondo alla scheda: si aprono sotto, non in mezzo --- */
 .e-panel {
   background: var(--surface);

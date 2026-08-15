@@ -2260,6 +2260,17 @@ function aggiornaPannello(opz) {
       if (!nota.dataset.legato) {
         nota.dataset.legato = '1';
         nota.oninput = () => { C().note = nota.value; pcSalva(); };
+        /* LA TASTIERA DEL TABLET SI MANGIA META' SCHERMO, e la nota sta
+           in fondo al Parco: aprendola si scriveva sotto la tastiera,
+           senza vedere quello che si stava scrivendo. Al fuoco il campo
+           si porta a vista da se'. Il ritardo serve: la tastiera ci mette
+           un momento a salire, e misurare prima vuol dire misurare lo
+           schermo di prima. */
+        nota.addEventListener('focus', () => {
+          setTimeout(() => {
+            try { nota.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {}
+          }, 300);
+        });
       }
     }
   } else if (!inScontrino) {
@@ -4472,6 +4483,23 @@ function entryCard(entry) {
 
   card.appendChild(riga);
 
+  /* LA NOTA SEMPRE A VISTA, sotto la riga. Stava dentro la parte che si
+     apre: per leggere «hanno la torta in frigo» bisognava aprire la
+     scheda, cioe' proprio quello che non si fa quando si guarda la lista
+     di colpo d'occhio. E se non c'era niente scritto non c'era nemmeno
+     un posto dove scriverlo: adesso c'e', spento, e un tocco lo apre. */
+  const notaBox = el('button', 'e-nota');
+  const disegnaNota = () => {
+    const t = String(entry.note || '').trim();
+    notaBox.classList.toggle('vuota', !t);
+    notaBox.innerHTML = t
+      ? '<span class="em">\ud83d\udcdd</span><span class="tx">' + esc(t) + '</span>'
+      : '<span class="em">\ud83d\udcdd</span><span class="tx">aggiungi una nota</span>';
+  };
+  disegnaNota();
+  notaBox.onclick = (ev) => { ev.stopPropagation(); foglioNota(entry, disegnaNota); };
+  card.appendChild(notaBox);
+
   /* ================= QUELLO CHE SI APRE =================
      una fila sola: tre celle compatte e i tasti a destra */
   const aperta = el('div', 'e-aperta');
@@ -4759,11 +4787,6 @@ function entryCard(entry) {
 
   mkAct('\ud83d\udeaa Uscita', 'forte', (ev) => { ev.stopPropagation(); chiudiIngresso(entry); });
 
-  /* la nota del GRUPPO. Le note delle persone, quando ce n'erano,
-     finivano qui una in fila all'altra: adesso e' una sola e le vecchie
-     ci sono state riversate dentro alla lettura (normalizeEntries). */
-  const nota = String(entry.note || '').trim();
-  if (nota) dentro.appendChild(el('div', 'e-note', '\ud83d\udcdd ' + nota));
 
   card.appendChild(aperta);
 
@@ -4779,7 +4802,7 @@ function entryCard(entry) {
   cardRefs.set(entry.id, {
     card, count, range, sKids, sTime, solo, barBtn, scBtn, apriConto, disegnaCrazy,
     dueVal: soldiV, soldiK, soldiS, soldi, wrist, bimbiV, crzV, crz, countK,
-    payPanel, payBtn, pagaBtn,
+    payPanel, payBtn, pagaBtn, disegnaNota,
     /* servono a rivestire la riga quando cambia un vestito */
     avBox, nome, tratti, apriParco, sigGente: firmaGente(entry)
   });
@@ -6451,6 +6474,8 @@ function syncCard(entry) {
   /* il tasto «Paga» dice la cifra che resta, e a conto saldato sparisce:
      va rinfrescato qui, perche' quella cifra cambia a ogni tocco */
   aggiornaPaga(r.pagaBtn, entry);
+  /* la nota puo' essere cambiata anche dal pannello: qui si rilegge */
+  if (typeof r.disegnaNota === 'function') r.disegnaNota();
 
   r.sKids.val.textContent = kids;
   if (r.bimbiV) r.bimbiV.textContent = kids;
@@ -7625,6 +7650,48 @@ function versaBarSu(entry) {
     buildActiveView();
     updateBadge();
     toast('Annullato ↩︎');
+  });
+}
+
+/* SCRIVERE LA NOTA DALLA SCHEDA.
+   Un foglio e non un campo che si apre sul posto: la scheda in lista e'
+   stretta, e sotto compare la tastiera. Qui il campo sta in alto, grande,
+   e quello che si scrive si vede tutto. */
+function foglioNota(entry, dopo) {
+  const s = sheet('Nota del gruppo');
+  s.body.appendChild(el('div', 'hint',
+    'Quello che serve ricordarsi su tutto il gruppo: «hanno la torta in frigo», «zaino giallo».'));
+  const campo = el('textarea', 'nota-campo');
+  campo.value = String(entry.note || '');
+  campo.placeholder = 'Scrivi qui…';
+  campo.rows = 3;
+  campo.maxLength = 500;
+  s.body.appendChild(campo);
+  /* la tastiera del tablet si mangia meta' schermo: il campo si porta a
+     vista da se', se no si scrive al buio */
+  setTimeout(() => { campo.focus(); campo.setSelectionRange(campo.value.length, campo.value.length); }, 60);
+  campo.addEventListener('focus', () => {
+    setTimeout(() => campo.scrollIntoView({ block: 'center', behavior: 'smooth' }), 250);
+  });
+
+  footBtn(s.foot, 'Lascia stare', 'btn-ghost', s.close);
+  footBtn(s.foot, '\u2713 Salva', 'btn-ok', () => {
+    const prima = String(entry.note || '');
+    entry.note = campo.value.slice(0, 500);
+    s.close();
+    if (entry.note === prima) return;
+    saveEntries();
+    if (typeof dopo === 'function') dopo();
+    syncCard(entry);
+    if (PAN.ingresso === entry) aggiornaPannello();
+    fatto(entry.note.trim() ? 'Nota salvata \ud83d\udcdd' : 'Nota tolta', () => {
+      entry.note = prima;
+      saveEntries();
+      if (typeof dopo === 'function') dopo();
+      syncCard(entry);
+      if (PAN.ingresso === entry) aggiornaPannello();
+      toast('Nota rimessa \u21a9\ufe0e');
+    });
   });
 }
 

@@ -115,6 +115,34 @@ gruppo('La versione e la stessa dappertutto');
   prova('il manifest c’e’', manifest);
 }
 
+gruppo('La nota si legge senza aprire niente, e si scrive toccandola');
+{
+  /* Stava dentro la parte che si apre: per leggere «hanno la torta in
+     frigo» bisognava aprire la scheda, cioe' proprio quello che non si
+     fa quando si guarda la lista di colpo d'occhio. E se non c'era
+     niente scritto non c'era nemmeno un posto dove cominciare. */
+  prova('la nota sta fuori dalla parte che si apre',
+    /card\.appendChild\(notaBox\)/.test(APP) &&
+    APP.indexOf("dentro.appendChild(el('div', 'e-note'") < 0);
+  prova('e a vuoto resta, come invito', /aggiungi una nota/.test(APP) && /\.e-nota\.vuota/.test(CSS));
+  prova('toccandola si apre il foglio per scriverla',
+    /notaBox\.onclick[\s\S]{0,120}foglioNota\(entry/.test(APP) && /function foglioNota/.test(APP));
+  prova('che salva, ridisegna e si puo annullare',
+    /entry\.note = campo\.value/.test(APP) && /'Nota salvata/.test(APP) &&
+    /entry\.note = prima;/.test(APP));
+  prova('e la striscia si rilegge quando la scheda si rinfresca',
+    /r\.disegnaNota === 'function'\) r\.disegnaNota\(\)/.test(APP));
+
+  /* LA TASTIERA DEL TABLET SI MANGIA META' SCHERMO, e la nota sta in
+     fondo al Parco: si scriveva sotto la tastiera, senza vedere quello
+     che si stava scrivendo. */
+  prova('al fuoco la nota si porta a vista da se',
+    /nota\.addEventListener\('focus'[\s\S]{0,220}scrollIntoView/.test(APP),
+    'senza, con la tastiera aperta si scrive al buio');
+  prova('e anche il campo del foglio',
+    /campo\.addEventListener\('focus'[\s\S]{0,160}scrollIntoView/.test(APP));
+}
+
 gruppo('Chi risponde in differita non si fa salvare prima della risposta');
 {
   /* LA FAMIGLIA DI GUASTI CHE MI E' COSTATA DUE TURNI.
