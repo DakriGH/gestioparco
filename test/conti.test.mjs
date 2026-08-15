@@ -717,6 +717,117 @@ gruppo('Lo stesso tempo costa lo stesso, da qualunque tasto passi', () => {
   ok('mille ritocchi a caso e nessun conto storto', storti.slice(0, 3), []);
 });
 
+gruppo('Il Crazy non entra MAI nel prezzo del tempo di parco', () => {
+  /* LA REGOLA, per intero: il Crazy si paga a parte, col suo prezzo, e in
+     cambio si sta dentro di piu'. Quei minuti in piu' NON sono tempo da
+     pagare. Quindi aggiungere giri a un ingresso puo' cambiare due cose --
+     il costo del Crazy e l'ora di uscita -- e non deve toccarne una terza:
+     il prezzo del tempo.
+     Vale su tutte le strade, ed e' il punto: tempo chiuso, tempo aperto,
+     dopo una modifica, con tutte e due le tariffe. Ognuna e' un ramo
+     diverso di costOf, e basta che una se ne dimentichi perche' la fascia
+     dica «pagato fino alle 18:20» a conto saldato, cioe' chieda soldi non
+     dovuti. */
+  const eraSuTotale = ctx.settings.tariffaSuTotale;
+  try {
+    for (const suTot of [true, false]) {
+      ctx.settings.tariffaSuTotale = suTot;
+      const eti = suTot ? 'sul totale' : 'a scaglioni';
+      const storti = [];
+
+      /* — tempo chiuso — */
+      for (const dur of [10, 15, 30, 45, 60, 90, 120, 180]) {
+        const senza = conto({ children: 2, durationMinutes: dur, baseMinutes: dur });
+        const rif = ctx.costOf(senza).parkTotal;
+        for (const giri of [1, 2, 3, 5]) {
+          const con = conto({ children: 2, durationMinutes: dur, baseMinutes: dur });
+          ctx.metteCrazy(con, giri);
+          const k = ctx.costOf(con);
+          if (k.parkTotal !== rif) storti.push(dur + "' con " + giri + ' giri: tempo ' + k.parkTotal + ' invece di ' + rif);
+          const atteso = ctx.r2(giri * ctx.settings.crazyJumpingPrice);
+          if (k.crazyCost !== atteso) storti.push(dur + "'/" + giri + ' giri: Crazy ' + k.crazyCost + ' invece di ' + atteso);
+        }
+      }
+      ok(eti + ': a tempo chiuso il Crazy non sposta il prezzo del tempo', storti.slice(0, 2), []);
+
+      /* — dopo una modifica: stessa sequenza di ritocchi, con e senza — */
+      const dopo = [];
+      let seme = 777;
+      const caso = (n) => { seme = (seme * 1103515245 + 12345) % 2147483648; return seme % n; };
+      for (let giro = 0; giro < 400 && !dopo.length; giro++) {
+        const dur = [15, 30, 45, 60, 90][caso(5)];
+        const giri = caso(4);
+        const a = conto({ children: 2, durationMinutes: dur, baseMinutes: dur });
+        const b = conto({ children: 2, durationMinutes: dur, baseMinutes: dur });
+        if (giri) ctx.metteCrazy(b, giri);
+        for (let k = 0; k < 6; k++) { const m = caso(2) ? 5 : -5; ctx.ritoccaTempo(a, m); ctx.ritoccaTempo(b, m); }
+        if (a.durationMinutes !== b.durationMinutes) dopo.push('i minuti divergono');
+        else if (ctx.costOf(a).parkTotal !== ctx.costOf(b).parkTotal) {
+          dopo.push(dur + "' + " + giri + ' giri: ' + ctx.costOf(b).parkTotal + ' invece di ' + ctx.costOf(a).parkTotal);
+        }
+      }
+      ok(eti + ': quattrocento sequenze di ritocchi, e il Crazy resta fuori', dopo.slice(0, 2), []);
+    }
+
+    /* — tempo aperto: si paga il passato MENO il regalato — */
+    ctx.settings.tariffaSuTotale = true;
+    const aperti = [];
+    for (const dentroDa of [12, 25, 40, 70, 100]) {
+      const t0 = Date.now() - dentroDa * 60000;
+      const senza = conto({ children: 2, payLater: true, startTime: t0 });
+      const rif = ctx.costOf(senza).parkTotal;
+      for (const giri of [1, 2, 3]) {
+        const con = conto({ children: 2, payLater: true, startTime: t0 });
+        ctx.metteCrazy(con, giri);
+        const p = ctx.costOf(con).parkTotal;
+        if (p > rif) aperti.push('dentro da ' + dentroDa + "' con " + giri + ' giri: ' + p + ' > ' + rif);
+        const atteso = ctx.r2(ctx.priceFor(ctx.up5(Math.max(0, dentroDa - ctx.regalatiDi(con)))) * 2);
+        if (p !== atteso) aperti.push('dentro da ' + dentroDa + "'/" + giri + ' giri: ' + p + ' invece di ' + atteso);
+      }
+    }
+    ok('a tempo aperto si paga il passato meno il regalato', aperti.slice(0, 2), []);
+
+    /* — l'ora di USCITA invece i minuti regalati li comprende — */
+    const uscite = [];
+    for (const giri of [1, 2, 4]) {
+      const senza = conto({ children: 2, durationMinutes: 60, baseMinutes: 60 });
+      const con = conto({ children: 2, durationMinutes: 60, baseMinutes: 60 });
+      ctx.metteCrazy(con, giri);
+      const piu = Math.round((ctx.endTimeOf(con) - ctx.endTimeOf(senza)) / 60000);
+      if (piu !== ctx.regalatiDi(con)) uscite.push(giri + ' giri: escono ' + piu + "' dopo invece di " + ctx.regalatiDi(con));
+      if (piu <= 0) uscite.push(giri + ' giri: non restano dentro di piu');
+    }
+    ok('ma con i giri escono piu tardi: fin quando pagano e fino a quando restano sono due numeri', uscite.slice(0, 2), []);
+
+    /* — «fin quando hanno pagato» non comprende il regalo — */
+    const c = conto({ children: 2, durationMinutes: 60, baseMinutes: 60 });
+    ctx.metteCrazy(c, 2);
+    ctx.PAN.conto = c; ctx.PAN.ingresso = null;
+    ok('senza pagare niente, zero minuti pagati', ctx.minutiPagati(c), 0);
+    ctx.bcSegna('crazy', true);
+    ok('pagato SOLO il Crazy, il tempo resta tutto da pagare', ctx.minutiPagati(c), 0);
+    ok('e il residuo e esattamente il tempo, niente di piu', ctx.dueOf(c).total, ctx.r2(ctx.costOf(c).parkTotal));
+    ctx.pagaTutto();
+    ok('pagato tutto, il tempo e pagato per intero', ctx.minutiPagati(c), 60);
+    ok('e non resta niente', ctx.dueOf(c).total, 0);
+
+    /* — pagare il Crazy e poi togliere i giri: i soldi tornano — */
+    const g = conto({ children: 0, durationMinutes: 0, baseMinutes: 0 });
+    ctx.PAN.conto = g; ctx.PAN.ingresso = null;
+    ctx.metteCrazy(g, 3);
+    ctx.bcSegna('crazy', true);
+    const presi = ctx.importoRiga('crazy');
+    ctx.bcSetQ('crazy', 1);
+    vero('tolti due giri, l incassato non supera il dovuto', ctx.importoRiga('crazy') <= ctx.costOf(g).crazyCost);
+    vero('e qualcosa e tornato indietro', ctx.importoRiga('crazy') < presi);
+    ok('niente debito inventato', ctx.dueOf(g).total, 0);
+    ctx.bcSetQ('crazy', 0);
+    ok('tolti tutti, la riga si azzera', ctx.importoRiga('crazy'), 0);
+  } finally {
+    ctx.settings.tariffaSuTotale = eraSuTotale;
+  }
+});
+
 gruppo('Anche a scaglioni lo stesso tempo costa lo stesso', () => {
   /* L'INTERRUTTORE «ogni aggiunta si paga a parte» (settings.tariffaSuTotale
      = false) apre una seconda strada dentro costOf, e quella strada non era
