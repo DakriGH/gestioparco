@@ -717,6 +717,66 @@ gruppo('Lo stesso tempo costa lo stesso, da qualunque tasto passi', () => {
   ok('mille ritocchi a caso e nessun conto storto', storti.slice(0, 3), []);
 });
 
+gruppo('Gli orari cadono sempre sui cinque minuti', () => {
+  /* L'app lavora a passi di cinque minuti da sempre: l'ora d'ingresso si
+     arrotonda, i tagli sono 15/30/60/90, il piu' e il meno vanno di
+     cinque. Gli orari nuovi -- da quando conta il parco, il condono
+     dello sforo, il regalo di un giro -- partivano invece da `Date.now()`
+     secco, e uscivano cose come «la mezz'ora finisce alle 23:53:45».
+     Un orario che al banco non si dice. */
+  const a5 = t => { const d = new Date(t); return d.getMinutes() % 5 === 0 && d.getSeconds() === 0 && d.getMilliseconds() === 0; };
+  const mk = (sforo) => {
+    const t0 = Date.now() - (30 + sforo) * 60000;
+    const c = conto({ children: 2, durationMinutes: 30, baseMinutes: 30, startTime: t0 });
+    ctx.PAN.conto = c; ctx.PAN.ingresso = null;
+    return c;
+  };
+  const soloCrazy = () => {
+    const c = conto({ children: 0, durationMinutes: 0, baseMinutes: 0, startTime: Date.now() - 30 * 60000 });
+    ctx.PAN.conto = c; ctx.PAN.ingresso = null;
+    ctx.metteCrazy(c, 1);
+    return c;
+  };
+  const storti = [];
+  const guarda = (che, t) => { if (!a5(t)) storti.push(che + ': ' + new Date(t).toTimeString().slice(0, 8)); };
+
+  /* condono dello sforo, poi estensione: ogni misura per ogni taglio */
+  [1, 3, 7, 12, 25, 60, 180].forEach(sforo => {
+    [5, 15, 30, 60, 90].forEach(agg => {
+      const c = mk(sforo);
+      ctx.condonaSforo(c);
+      ctx.ritoccaTempo(c, agg);
+      guarda('sforo ' + sforo + " +" + agg, ctx.endTimeOf(c));
+      guarda('sforo ' + sforo + " +" + agg + ' (inizio parco)', ctx.inizioParco(c));
+    });
+  });
+  /* il solo-Crazy che compra il parco */
+  [5, 10, 15, 30, 60, 90].forEach(m => {
+    const c = soloCrazy(); c.children = 2;
+    ctx.ritoccaTempo(c, m);
+    guarda('solo Crazy +' + m, ctx.endTimeOf(c));
+    guarda('solo Crazy +' + m + ' (inizio parco)', ctx.inizioParco(c));
+  });
+  /* il regalo di un giro a tempo scaduto */
+  [0, 1, 3, 7, 12, 25, 60].forEach(sforo => {
+    const c = mk(sforo);
+    ctx.contaSalita(1);
+    guarda('regalo con sforo ' + sforo, ctx.endTimeOf(c));
+  });
+  ok('ogni orario nuovo cade su un taglio da cinque', storti.slice(0, 3), []);
+
+  /* e arrotondare non deve ACCORCIARE un regalo: otto minuti promessi
+     restano almeno otto, non diventano cinque */
+  const corti = [];
+  [0, 1, 3, 7, 12, 25].forEach(sforo => {
+    const c = mk(sforo);
+    ctx.contaSalita(1);
+    const resta = (ctx.endTimeOf(c) - Date.now()) / 60000;
+    if (resta < ctx.settings.crazyExtraMinutes) corti.push('sforo ' + sforo + ': ' + Math.round(resta) + "'");
+  });
+  ok('e il regalo non si accorcia arrotondando', corti, []);
+});
+
 gruppo('Un giro fatto a tempo scaduto regala i minuti INTERI', () => {
   /* I minuti del Crazy partono da dove finisce il tempo di parco: se
      quel tempo e' gia' finito, il regalo cadeva nel passato e non valeva
@@ -757,8 +817,12 @@ gruppo('Un giro fatto a tempo scaduto regala i minuti INTERI', () => {
      regalo e' quello del giro, non una scorta che si accumula */
   const due = mk(30);
   ctx.contaSalita(1);
-  const unGiro = Math.round((ctx.endTimeOf(due) - Date.now()) / 60000);
-  ok('un giro a tempo scaduto vale i suoi minuti', unGiro, extra);
+  const unGiro = (ctx.endTimeOf(due) - Date.now()) / 60000;
+  /* almeno i suoi minuti, e non molti di piu': l'uscita si arrotonda al
+     taglio da cinque piu' vicino IN SU, quindi fra gli otto promessi e
+     il taglio successivo ci puo' stare qualche minuto di grazia */
+  vero('un giro a tempo scaduto vale almeno i suoi minuti', unGiro >= extra);
+  vero('e non piu di un taglio da cinque in piu', unGiro < extra + 5);
 });
 
 gruppo('Un giro svuotato se ne va, quello appena aperto resta', () => {

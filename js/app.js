@@ -49,6 +49,9 @@ function hhmmToMin(s) {
   return clamp(h, 0, 23) * 60 + clamp(m, 0, 59);
 }
 function roundTo5(d) { const ms = 5 * 60000; return new Date(Math.round(d.getTime() / ms) * ms); }
+/* IN SU al prossimo taglio da cinque. Serve dove arrotondare per difetto
+   toglierebbe qualcosa di promesso -- i minuti regalati da un giro. */
+function su5(t) { const ms = 5 * 60000; return Math.ceil(num(t, 0) / ms) * ms; }
 /* 45 → "45m", 120 → "2h", 90 → "1h30" */
 function fmtMin(m) {
   m = Math.max(0, Math.round(num(m, 0)));
@@ -1942,7 +1945,12 @@ function minimoTempo(c) {
    dopo, il tempo continua da dove stava, non riparte. */
 function segnaInizioParco(c, prima, dopo) {
   if (prima > 0 || dopo <= 0) return;
-  c.parcoDa = Date.now();
+  /* SUI CINQUE MINUTI, come tutti gli altri orari dell'app. L'ora
+     d'ingresso si arrotonda ai cinque da sempre; questo e' l'ora
+     d'ingresso del PARCO, e non c'era motivo perche' facesse eccezione.
+     Senza, uscivano orari come «23:23:45» e la mezz'ora comprata
+     finiva alle 23:53:45 -- un orario che al banco non si dice. */
+  c.parcoDa = roundTo5(new Date()).getTime();
 }
 
 /* QUANTO SFORO SI CONDONA SENZA CHIEDERE quando si allunga il tempo.
@@ -2010,10 +2018,16 @@ function condonaSforo(c) {
   c = c || C();
   const sforo = sforoDi(c);
   if (sforo <= 0) return 0;
-  c.parcoDa = inizioParco(c) + sforo;
+  /* Si sposta l'inizio del parco tanto quanto basta perche' il tempo
+     finisca ADESSO -- e adesso vuol dire il taglio da cinque minuti piu'
+     vicino, come ogni altro orario dell'app. Cosi' quello che si vende
+     subito dopo cade su un orario che si dice: mezz'ora dalle 23:15
+     fanno le 23:45, non le 23:43:45. */
+  const spostamento = roundTo5(new Date()).getTime() - endTimeOf(c);
+  c.parcoDa = inizioParco(c) + spostamento;
   /* anche il regalo del Crazy si sposta con lui, se no resterebbe
      indietro e non farebbe piu' niente */
-  if (num(c.regaloFinoA, 0) > 0) c.regaloFinoA = num(c.regaloFinoA, 0) + sforo;
+  if (num(c.regaloFinoA, 0) > 0) c.regaloFinoA = num(c.regaloFinoA, 0) + spostamento;
   return sforo;
 }
 
@@ -4875,7 +4889,10 @@ function regalaDaAdesso(c, finePrima) {
   if (extra <= 0) return;
   const ora = Date.now();
   if (num(finePrima, ora + 1) > ora) return;
-  c.regaloFinoA = Math.max(num(c.regaloFinoA, 0), ora + extra * 60000);
+  /* IN SU al taglio da cinque: arrotondando per difetto un regalo di
+     otto minuti ne sarebbe diventato uno di cinque, e i minuti promessi
+     non si accorciano. */
+  c.regaloFinoA = Math.max(num(c.regaloFinoA, 0), su5(ora + extra * 60000));
 }
 
 /* I TOCCHI DELLA CARD DEL CRAZY, IN UN POSTO SOLO.
