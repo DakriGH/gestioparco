@@ -717,6 +717,50 @@ gruppo('Lo stesso tempo costa lo stesso, da qualunque tasto passi', () => {
   ok('mille ritocchi a caso e nessun conto storto', storti.slice(0, 3), []);
 });
 
+gruppo('Un giro fatto a tempo scaduto regala i minuti INTERI', () => {
+  /* I minuti del Crazy partono da dove finisce il tempo di parco: se
+     quel tempo e' gia' finito, il regalo cadeva nel passato e non valeva
+     niente. Ma il giro l'hanno fatto ADESSO, e mentre si preparavano il
+     tempo correva lo stesso.
+     IL CASO CHE MI ERA SFUGGITO: uno sforo PIU' PICCOLO dei minuti del
+     giro. Guardando l'ora di uscita DOPO aver contato la salita, gli
+     otto minuti avevano gia' ricoperto lo sforo, la fine risultava nel
+     futuro e il regalo non partiva -- cosi' chi sforava da tre minuti ne
+     riceveva cinque invece di otto. Lo sforo si mangiava il regalo, che
+     e' esattamente quello che il regalo doveva impedire.
+     Adesso si guarda l'ora di uscita di PRIMA. */
+  const extra = ctx.settings.crazyExtraMinutes;
+  const mk = (sforo) => {
+    const t0 = Date.now() - (30 + sforo) * 60000;
+    const c = conto({ children: 2, durationMinutes: 30, baseMinutes: 30, startTime: t0 });
+    ctx.PAN.conto = c; ctx.PAN.ingresso = null;
+    return c;
+  };
+  const storti = [];
+  [0, 1, 2, 3, 5, 7, 8, 9, 12, 25, 60, 180].forEach(sforo => {
+    const c = mk(sforo);
+    ctx.contaSalita(1);
+    const resta = Math.round((ctx.endTimeOf(c) - Date.now()) / 60000);
+    if (resta < extra) storti.push('sforato da ' + sforo + "': gli restano " + resta + "' invece di " + extra);
+  });
+  ok('sforati di qualunque misura, i minuti del giro sono interi', storti.slice(0, 3), []);
+
+  /* e a chi e' ANCORA DENTRO i minuti si sommano come hanno sempre
+     fatto: durante una salita non stanno usando il tempo del parco */
+  const dentro = mk(-20);
+  const prima = Math.round((ctx.endTimeOf(dentro) - Date.now()) / 60000);
+  ctx.contaSalita(1);
+  const dopo = Math.round((ctx.endTimeOf(dentro) - Date.now()) / 60000);
+  ok('e a chi e ancora dentro si sommano in fondo', dopo, prima + extra);
+
+  /* due giri a tempo scaduto non fanno sedici minuti da adesso: il
+     regalo e' quello del giro, non una scorta che si accumula */
+  const due = mk(30);
+  ctx.contaSalita(1);
+  const unGiro = Math.round((ctx.endTimeOf(due) - Date.now()) / 60000);
+  ok('un giro a tempo scaduto vale i suoi minuti', unGiro, extra);
+});
+
 gruppo('Un giro svuotato se ne va, quello appena aperto resta', () => {
   /* Togliendo tutti i saliti con il meno, la riga «0 · da contare»
      restava in lista e per farla sparire bisognava anche premere la sua

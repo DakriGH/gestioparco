@@ -4854,23 +4854,27 @@ function aggiornaPaga(btn, entry) {
 function contaSalita(d) {
   const c = C();
   const prima = minutiCrazy(c);
+  const finePrima = endTimeOf(c);
   if (!giriCrazy(c).length) giroNuovo(c);
   cambiaGiro(c, giroOra(c), d);
-  if (minutiCrazy(c) > prima) regalaDaAdesso(c);
+  if (minutiCrazy(c) > prima) regalaDaAdesso(c, finePrima);
 }
 
-/* IL REGALO DI UN GIRO PARTE DA QUANDO IL GIRO SI FA, se il tempo di
-   parco e' gia' finito. Se invece sono ancora dentro non serve: li' i
-   minuti si sommano in fondo come hanno sempre fatto. */
-function regalaDaAdesso(c) {
+/* IL REGALO DI UN GIRO PARTE DA QUANDO IL GIRO SI FA, se il tempo era
+   gia' finito. Se invece sono ancora dentro non serve: li' i minuti si
+   sommano in fondo come hanno sempre fatto.
+   `finePrima` E' L'ORA DI USCITA DI PRIMA, e va passata: guardando
+   quella di ADESSO -- col giro gia' contato -- uno sforo piccolo era
+   gia' stato ricoperto dagli otto minuti appena aggiunti, la fine
+   risultava nel futuro e il regalo non partiva. Risultato: sforati da
+   tre minuti ne ricevevano cinque invece di otto. Lo sforo si mangiava
+   il regalo, che e' esattamente quello che il regalo doveva impedire. */
+function regalaDaAdesso(c, finePrima) {
   c = c || C();
   const extra = clamp(num(settings.crazyExtraMinutes, 0), 0, 1e6);
   if (extra <= 0) return;
   const ora = Date.now();
-  /* si guarda la fine SENZA il regalo appena segnato, cioe' quella del
-     tempo di parco: e' quella che dice se erano gia' fuori tempo */
-  const finePar = inizioParco(c) + (num(c.durationMinutes, 0) + minutiCrazy(c)) * 60000;
-  if (finePar > ora) return;
+  if (num(finePrima, ora + 1) > ora) return;
   c.regaloFinoA = Math.max(num(c.regaloFinoA, 0), ora + extra * 60000);
 }
 
@@ -4883,7 +4887,16 @@ function regalaDaAdesso(c) {
    (non c'e' niente da salvare), true se ha toccato i dati, false se il
    tocco non era suo. */
 function toccoCrazy(d) {
-  if (d.giro !== undefined) { tocchi.id = 'crazy'; giroNuovo(C()); return true; }
+  /* TUTTE le strade che aggiungono minuti di Crazy devono regalarli da
+     adesso se il tempo era finito: il piu' della card, il piu' di un
+     giro preciso nello storico, l'apertura di un giro nuovo. Basta che
+     una se ne dimentichi e a quel gruppo il regalo se lo mangia lo
+     sforo -- ed e' successo. */
+  const c0 = C();
+  const finePrima = endTimeOf(c0);
+  const crazyPrima = minutiCrazy(c0);
+  const regala = () => { if (minutiCrazy(C()) > crazyPrima) regalaDaAdesso(C(), finePrima); };
+  if (d.giro !== undefined) { tocchi.id = 'crazy'; giroNuovo(C()); regala(); return true; }
   /* il piu' e il meno di UNA volta precisa: nello storico e nello
      scontrino ogni riga ha i suoi, e non c'e' un giro "scelto" da
      tenere a mente */
@@ -4891,6 +4904,7 @@ function toccoCrazy(d) {
     tocchi.id = 'crazy';
     const su = d.gpiu !== undefined;
     cambiaGiro(C(), parseInt(su ? d.gpiu : d.gmeno, 10), su ? 1 : -1);
+    regala();
     return true;
   }
   /* cancella un giro intero: chi c'era dentro esce dal conto */
