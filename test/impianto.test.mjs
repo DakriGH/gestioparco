@@ -737,6 +737,12 @@ gruppo('Il tempo si muove da un posto solo');
     /sforoCondonato: SFORO_CONDONATO_DI_SERIE/.test(APP));
   /* la sigla si dice a voce per indicare un gruppo: dev'esserci anche
      dove si va a cercare «chi era quello che deve ancora pagare» */
+  /* il banco di prova a video non gira da solo -- va incollato in
+     console -- ma deve restare al passo col codice: se sparisce, i
+     flussi che aspettano una scelta non li prova piu' nessuno */
+  prova('il banco di prova a video c e ancora',
+    existsSync(join(RADICE, 'test/schermo-vero.js')));
+  prova('e il README dice come si usa', /schermo-vero\.js/.test(leggi('README.md')));
   prova('la sigla c e anche nel registro e sullo scontrino',
     /reg-sigla/.test(APP) && /sc-sigla/.test(APP) &&
     /\.reg-sigla \{/.test(CSS) && /\.sc-sigla \{/.test(CSS));

@@ -71,3 +71,21 @@ restino copie di versioni passate.
 
 Con `index.html?nosw` il funzionamento offline si disattiva e si ripulisce: serve quando si
 sta lavorando al codice.
+
+## Le prove
+
+```bash
+node test/tutte.mjs
+```
+
+Provano i conti sul codice vero — `test/ambiente.mjs` carica `js/app.js` dentro node con un
+finto browser — più i controlli sul sorgente e sul CSS. Girano da soli e non serve niente di
+installato.
+
+Quello che **non** possono fare è premere i tasti: il DOM è finto. Per i flussi che aprono un
+foglio e aspettano una scelta — dove si sono nascosti i guasti peggiori — c'è
+`test/schermo-vero.js`: si apre l'app con `index.html?nosw`, si incolla quel file nella console
+del browser e si preme invio. Preme i tasti davvero e controlla la cosa che il DOM finto non
+vede: che quello che appare a video sia anche quello che finisce sul disco.
+
+Cancella gli ingressi di prova che crea, quindi non va lanciato su un tablet che sta lavorando.
