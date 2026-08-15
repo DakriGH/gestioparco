@@ -91,6 +91,10 @@ export function caricaApp() {
     get settings() { return settings; }, set settings(v) { settings = v; },
     get entries() { return entries; }, set entries(v) { entries = v; },
     get draft() { return draft; }, set draft(v) { draft = v; },
+    /* il blocchetto del Bar ha un foglio suo, e come quello di + Nuovo
+       viene RIASSEGNATO dall'app: serve il get/set, una copia sarebbe
+       subito vecchia (niente apici inversi qui: siamo in un template) */
+    get draftBar() { return draftBar; }, set draftBar(v) { draftBar = v; },
     /* il giro di Crazy che si sta segnando: e' una let dell'app, e le
        let non si affacciano da sole sul contesto (niente apici
        inversi qui dentro: siamo dentro un template) */

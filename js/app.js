@@ -349,6 +349,13 @@ let entries = [];
 let presets = [];
 let tab = 'new';
 let draft = freshDraft();
+/* IL BLOCCHETTO DEL BAR HA UN FOGLIO SUO.
+   Se dividesse quello di «+ Nuovo», due birre segnate di corsa
+   finirebbero addosso al gruppo che si stava registrando -- e viceversa,
+   aprendo il Bar ci si troverebbe dentro le sue consumazioni. Sono due
+   mestieri diversi che capitano insieme: uno lento (registrare un
+   gruppo), uno veloce (segnare quello che prendono al banco). */
+let draftBar = freshDraft();
 let showArchive = false;
 const cardRefs = new Map();   // id ingresso -> riferimenti DOM della scheda
 let clockT = null, tickT = null;
@@ -1430,6 +1437,7 @@ function costruisciPannello() {
       if (PAN.ingresso) { posa(cardRefs.get(PAN.ingresso.id) && cardRefs.get(PAN.ingresso.id).card); return; }
       commitEntry(); return;
     }
+    if (d.dove !== undefined) { foglioDoveVa(); return; }
     if (d.svuota !== undefined) { foglioSvuota(); return; }
     if (d.resto !== undefined) {
       const dovuto = contoResta();
@@ -3377,9 +3385,17 @@ function pcFondo() {
          c'e' il suo tasto -- dopo aver chiuso il conto: prima si
          guarda, poi si chiude, poi si esce. Da qui si torna indietro
          con «Fatto». */
-      '<button class="btn btn-ok" data-reg>' +
-        (PAN.ingresso ? '\u2713 Fatto' : tot > 0 && resta <= 0 ? '\u2705 Registra e incassa' : 'Registra') +
-      '</button>' +
+      /* NEL BLOCCHETTO DEL BAR NON SI «REGISTRA»: si decide DOVE va.
+         Le tre strade -- gruppo nuovo, solo bar, dentro un gruppo che e'
+         gia' al parco -- non si possono indovinare da qui, e sceglierle
+         prima di segnare vorrebbe dire saperlo prima di chiederglielo.
+         Quindi si segna, e poi si dice dove. */
+      (PAN.conto === draftBar
+        ? '<button class="btn btn-ok" data-dove' + (tot > 0 ? '' : ' disabled') + '>' +
+            '\ud83e\udd64 Dove va\u2026</button>'
+        : '<button class="btn btn-ok" data-reg>' +
+            (PAN.ingresso ? '\u2713 Fatto' : tot > 0 && resta <= 0 ? '\u2705 Registra e incassa' : 'Registra') +
+          '</button>') +
     '</div></div></div>';
 }
 
@@ -3772,7 +3788,29 @@ function openCustomizer(person, onDone) {
 
 /* ---------- salvataggio ingresso ---------- */
 /* ---------- salvataggio ingresso ---------- */
+/* Registra il foglio che gli si passa. Di norma e' quello di «+ Nuovo»,
+   ma il blocchetto del Bar ha il suo e finisce nello stesso posto: un
+   ingresso e' un ingresso, da qualunque parte lo si sia scritto.
+   `opz.soloBar` lo registra come vendita al banco -- zero bambini, zero
+   tempo di parco -- che e' la stessa cosa che faceva il vecchio tasto
+   «Solo bar»: senza un ingresso a cui appenderla, la sera quella vendita
+   non tornerebbe nei conti del giorno. */
 function commitEntry() {
+  const nato = commitDa(draft, {});
+  draft = freshDraft();
+  PAN.conto = draft;
+  switchTab('active');
+  // se una versione nuova stava aspettando che finissi, adesso puo' entrare
+  if (typeof applicaSePuoi === 'function') setTimeout(applicaSePuoi, 1200);
+  return nato;
+}
+
+/* Costruisce e mette in lista l'ingresso a partire dal foglio che gli si
+   passa. NON rimette a nuovo il foglio e NON cambia vista: quelle due
+   cose le fa chi chiama, perche' sa quale dei due fogli ha in mano --
+   «+ Nuovo» e il blocchetto del Bar ne hanno uno per uno. */
+function commitDa(draft, opz) {
+  opz = opz || {};
   /* gruppo nuovo, avvisi nuovi: i sosia gia’ detti valgono per il
      gruppo che si stava vestendo, non per sempre -- se no il terzo
      gemello della giornata passava senza che nessuno dicesse niente */
@@ -3781,11 +3819,24 @@ function commitEntry() {
     const slot = braceletFor(draft.startTime);
     draft.braceletColor = slot ? slot.color : null;
   }
-  entries.push({
+  /* SOLO BAR: zero bambini, zero tempo, nessuno da riconoscere. Quello
+     che resta e' la vendita al banco, appesa a un ingresso perche' la
+     sera torni nei conti del giorno. */
+  const soloBar = !!opz.soloBar;
+  const nuovo = {
     id: uid(), createdAt: Date.now(),
-    startTime: draft.startTime, durationMinutes: draft.durationMinutes, payLater: draft.payLater,
-    children: draft.children, crazyJumping: draft.crazyJumping,
-    people: draft.people, barItems: lista(draft.barItems),
+    startTime: draft.startTime,
+    durationMinutes: soloBar ? 0 : draft.durationMinutes,
+    payLater: soloBar ? false : draft.payLater,
+    children: soloBar ? 0 : draft.children,
+    crazyJumping: soloBar ? 0 : draft.crazyJumping,
+    people: soloBar ? [] : draft.people,
+    barItems: lista(draft.barItems),
+    /* LA NOTA VIENE DIETRO. Questo elenco e' scritto a mano campo per
+       campo, ed e' esattamente il punto in cui si perdono le cose
+       nuove: senza questa riga la nota appena scritta nel Parco
+       spariva premendo Registra. */
+    note: String(draft.note || ''),
     braceletColor: draft.braceletColor, braceletCustom: draft.braceletCustom,
     status: 'active',
     /* quello che e' gia' stato incassato al banco entra subito nei conti
@@ -3796,7 +3847,7 @@ function commitEntry() {
     barPaid: 0, parkPaid: false,
     /* registrato, l'orario e' quello: non insegue piu' l'orologio */
     oraManuale: true,
-    baseMinutes: draft.durationMinutes,
+    baseMinutes: soloBar ? 0 : draft.durationMinutes,
     /* QUELLO CHE NASCE NEL MODULO DEVE ARRIVARE INTERO.
        Questo elenco e' scritto a mano, campo per campo, e chi ne
        aggiunge uno nuovo se lo scorda: e' successo con tutti e tre
@@ -3806,17 +3857,29 @@ function commitEntry() {
        cioe' due giri fatti al banco diventavano otto minuti invece di
        sedici. Roba di tempo e di soldi, persa fra il modulo e la
        lista. */
-    omaggio: clamp(num(draft.omaggio, 0), 0, 1e6) || undefined,
-    crazyGiri: lista(draft.crazyGiri).slice(),
-    aggiunte: lista(draft.aggiunte).slice()
-  });
-  toast('Ingresso registrato \u2705');
+    omaggio: soloBar ? undefined : (clamp(num(draft.omaggio, 0), 0, 1e6) || undefined),
+    crazyGiri: soloBar ? [] : lista(draft.crazyGiri).slice(),
+    aggiunte: soloBar ? [] : lista(draft.aggiunte).slice()
+  };
+  /* UNA VENDITA AL BANCO NASCE GIA' CHIUSA.
+     Non c'e' nessuno dentro al parco: lasciarla «in corso» voleva dire
+     una scheda in mezzo ai gruppi, con un conto alla rovescia partito da
+     zero minuti -- cioe' ROSSA, scaduta, come un gruppo da andare a
+     chiamare. E i minuti nemmeno reggevano un ricaricamento: la
+     riparazione rimette a sessanta chi ne ha zero, perche' zero e' un
+     ingresso senza tempo comprato, non una vendita al bar.
+     Chiusa subito entra nel registro della giornata -- che e' l'unica
+     cosa che serve -- e sta fuori dai piedi. Il prezzo si ferma qui,
+     come per chi esce. */
+  if (soloBar) {
+    nuovo.status = 'closed';
+    nuovo.closedAt = Date.now();
+    nuovo.costoFinale = { parco: 0, bar: r2(barTotal(nuovo)) };
+  }
+  entries.push(nuovo);
+  toast(opz.messaggio || 'Ingresso registrato \u2705');
   saveEntries();
-  draft = freshDraft();
-  PAN.conto = draft;
-  switchTab('active');
-  // se una versione nuova stava aspettando che finissi, adesso puo' entrare
-  if (typeof applicaSePuoi === 'function') setTimeout(applicaSePuoi, 1200);
+  return nuovo;
 }
 
 function posizioniSchede() {
@@ -6919,6 +6982,156 @@ function fogliUscita(entry, d, esci) {
   footBtn(s.foot, 'Lascia stare', 'btn-ghost', s.close);
 }
 
+/* ══════════════════════════════════════════════════════════
+   IL BLOCCHETTO DEL BAR: dove va quello che si e' segnato.
+   Tre strade, e nessuna si puo' indovinare da qui -- dipende da chi
+   c'e' davanti al banco. Quindi prima si segna, poi si dice dove.
+   ══════════════════════════════════════════════════════════ */
+function foglioDoveVa() {
+  const c = draftBar;
+  const tot = r2(barTotal(c) + costOf(c).parkTotal + costOf(c).crazyCost);
+  const gia = r2(num(c.paidPark, 0) + num(c.paidBar, 0));
+  const dentro = activeEntries();
+
+  const s = sheet('Dove va questo conto?');
+  s.body.appendChild(el('div', 'hint',
+    'Segnati ' + eur(tot) + (gia > 0.005 ? ', di cui ' + eur(gia) + ' già incassati' : '') + '.'));
+
+  const scelta = (cls, em, titolo, sotto, fn, spento) => {
+    const b = el('button', 'scelta-riga ' + cls);
+    b.appendChild(el('span', 'sc-em', em));
+    const t = el('span', 'sc-txt');
+    t.appendChild(el('b', null, titolo));
+    t.appendChild(el('span', null, sotto));
+    b.appendChild(t);
+    if (spento) b.disabled = true;
+    else b.onclick = () => { s.close(); fn(); };
+    s.body.appendChild(b);
+    return b;
+  };
+
+  scelta('', '🧾', 'Incassa solo come bar',
+    'Una vendita al banco: niente ingresso, niente tempo di parco. Entra lo stesso nel registro della giornata.',
+    () => {
+      commitDa(draftBar, { soloBar: true, messaggio: 'Vendita al bar registrata 🧾' });
+      draftBar = freshDraft();
+      PAN.conto = draftBar;
+      switchTab('active');
+    });
+
+  scelta('', '➕', 'Aprilo come ingresso nuovo',
+    'Diventa un gruppo che entra al parco, con queste consumazioni già sul conto. Nel Parco metti bambini e tempo.',
+    () => {
+      commitDa(draftBar, {});
+      draftBar = freshDraft();
+      PAN.conto = draftBar;
+      switchTab('active');
+    });
+
+  scelta('', '🎟️', 'Aggiungi a un gruppo che è già dentro',
+    dentro.length
+      ? 'Le consumazioni finiscono sul conto di chi è già al parco, insieme a quello che hanno già pagato.'
+      : 'Adesso non c’è nessuno dentro al parco.',
+    () => foglioAQualeGruppo(), !dentro.length);
+
+  footBtn(s.foot, 'Lascia stare', 'btn-ghost', s.close);
+}
+
+/* A CHI si appende quello che si e' segnato al banco. */
+function foglioAQualeGruppo() {
+  const dentro = activeEntries();
+  const s = sheet('A quale gruppo?');
+  s.body.appendChild(el('div', 'hint',
+    'Le consumazioni passano sul suo conto. Quello che hanno già pagato al banco viene con loro: il gruppo se le ritrova già saldate.'));
+
+  dentro.forEach(e => {
+    const d = dueOf(e);
+    const b = el('button', 'scelta-riga');
+    b.appendChild(el('span', 'sc-em', '🎟️'));
+    const t = el('span', 'sc-txt');
+    t.appendChild(el('b', null, nomiDi(e)));
+    t.appendChild(el('span', null,
+      'entrato alle ' + fmtTime(e.startTime) +
+      ' · ' + clamp(e.children, 0, 1e6) + (clamp(e.children, 0, 1e6) === 1 ? ' bambino' : ' bambini') +
+      (d.total > 0.005 ? ' · restano ' + eur(d.total) : ' · saldato')));
+    b.appendChild(t);
+    b.onclick = () => { s.close(); versaBarSu(e); };
+    s.body.appendChild(b);
+  });
+
+  footBtn(s.foot, 'Lascia stare', 'btn-ghost', s.close);
+}
+
+/* VERSA IL BLOCCHETTO SUL CONTO DI UN GRUPPO.
+   Le voci si SOMMANO a quelle che il gruppo ha gia' (due birre qui piu'
+   una la' fanno tre righe da una voce sola, non due elenchi separati), e
+   i soldi gia' incassati al banco vengono con loro: se hanno pagato le
+   birre alla cassa, il gruppo se le ritrova saldate.
+   Il prezzo che viaggia e' quello SCRITTO SUL BLOCCHETTO, non quello del
+   listino di adesso: e' quello che il cliente ha visto e pagato. */
+function versaBarSu(entry) {
+  const foto = fotografia(entry);
+  const voci = lista(draftBar.barItems).filter(b => b && b.id && num(b.qty, 0) > 0);
+  if (!voci.length) { toast('Non c’è niente da spostare'); return; }
+
+  const amtDa = draftBar.paidAmt || {};
+  const pagDa = draftBar.paidLines || {};
+  entry.barItems = lista(entry.barItems);
+  entry.paidAmt = entry.paidAmt || {};
+  entry.paidLines = entry.paidLines || {};
+
+  let soldiSpostati = 0;
+  voci.forEach(v => {
+    const gia = entry.barItems.find(x => x.id === v.id);
+    /* Se il gruppo ha gia' quella voce a un prezzo diverso, vince quello
+       del blocchetto solo per i pezzi nuovi: il conto gia' aperto non si
+       ritocca sotto al cliente. Si sommano le quantita' e si tiene il
+       prezzo che c'era, perche' e' quello su cui e' stato fatto il
+       conto finora. */
+    if (gia) gia.qty = num(gia.qty, 0) + num(v.qty, 0);
+    else entry.barItems.push({ id: v.id, name: v.name, price: num(v.price, 0), qty: num(v.qty, 0) });
+
+    const pagate = clamp(Math.round(num(pagDa[v.id], 0)), 0, num(v.qty, 0));
+    if (pagate > 0) entry.paidLines[v.id] = clamp(Math.round(num(entry.paidLines[v.id], 0)), 0, 1e6) + pagate;
+    const soldi = Math.max(0, r2(num(amtDa[v.id], 0)));
+    if (soldi > 0) {
+      entry.paidAmt[v.id] = r2(num(entry.paidAmt[v.id], 0) + soldi);
+      soldiSpostati = r2(soldiSpostati + soldi);
+    }
+  });
+  entry.paidBar = r2(Math.max(0, num(entry.paidBar, 0)) + soldiSpostati);
+
+  /* e la nota del blocchetto, se c'e', si appende a quella del gruppo */
+  const notaDa = String(draftBar.note || '').trim();
+  if (notaDa) {
+    const sua = String(entry.note || '').trim();
+    entry.note = sua ? sua + ' · ' + notaDa : notaDa;
+  }
+
+  /* l'ingresso rientra dalla porta di sempre: cosi' se qualcosa non
+     torna -- spunte oltre la quantita', importi che non rispecchiano i
+     totali -- lo raddrizza la riparazione, non lo si scopre alla cassa */
+  const i = entries.indexOf(entry);
+  if (i > -1) entries[i] = normalizeEntries([entry])[0];
+
+  draftBar = freshDraft();
+  PAN.conto = draftBar;
+  saveEntries();
+  buildActiveView();
+  updateBadge();
+  switchTab('active');
+
+  fatto('Aggiunte a ' + nomiDi(entry) +
+    (soldiSpostati > 0.005 ? ' · ' + eur(soldiSpostati) + ' già pagati' : ''), () => {
+    const j = entries.findIndex(x => x.id === foto.id);
+    if (j > -1) entries[j] = normalizeEntries([foto])[0];
+    saveEntries();
+    buildActiveView();
+    updateBadge();
+    toast('Annullato ↩︎');
+  });
+}
+
 /* Toglie di mezzo un ingresso sbagliato: via dall'elenco, via dai
    conti della giornata. I soldi che risultavano incassati se ne vanno
    con lui -- ed e' il punto: se erano stati battuti per sbaglio, non
@@ -7470,13 +7683,14 @@ function switchTab(t) {
   $$('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
   const primaEra = tabPrec;
   tabPrec = t;
+  $('#view-bar').classList.toggle('hidden', t !== 'bar');
   $('#view-new').classList.toggle('hidden', t !== 'new');
   $('#view-active').classList.toggle('hidden', t !== 'active');
   $('#view-settings').classList.toggle('hidden', t !== 'settings');
   /* La vista che arriva entra dal lato da cui si veniva: dice da dove
      sei arrivato invece di comparire e basta. */
   if (anima() && primaEra && primaEra !== t) {
-    const ordine = ['new', 'active', 'settings'];
+    const ordine = ['bar', 'new', 'active', 'settings'];
     const vista = $('#view-' + t);
     if (vista) {
       vista.classList.remove('entra-dx', 'entra-sx');
@@ -7485,7 +7699,9 @@ function switchTab(t) {
       setTimeout(() => vista.classList.remove('entra-dx', 'entra-sx'), 320);
     }
   }
-  document.querySelector('main').classList.toggle('conto-in-fondo', t === 'new');
+  /* il conto sta in fondo anche nel Bar: li' e' proprio quello che si
+     guarda mentre si segna */
+  document.querySelector('main').classList.toggle('conto-in-fondo', t === 'new' || t === 'bar');
   $('main').scrollTop = 0;
 
   if (t === 'new') {
@@ -7494,6 +7710,15 @@ function switchTab(t) {
     /* il pannello torna a casa: se stava dentro una scheda che volava,
        posaSubito l'ha gia' rimesso qui sopra */
     montaPannello($('#view-new'), draft, { cat: PAN.ingresso ? 'Parco' : PAN.cat });
+  }
+  if (t === 'bar') {
+    /* IL BANCONE E' GIA' APERTO: e' tutto il senso di questa linguetta.
+       Se pero' ci si era spostati sul Parco o sullo Scontrino restando
+       dentro il Bar, tornandoci si ritrova dov'era: cambiare vista non
+       deve rimettere le cose a modo mio. */
+    if (!draftBar.touched) draftBar.startTime = roundTo5(new Date()).getTime();
+    const dove = (PAN.conto === draftBar && PAN.cat !== 'Parco') ? PAN.cat : primaCategoriaBar();
+    montaPannello($('#view-bar'), draftBar, { cat: dove });
   }
   if (t === 'active') buildActiveView();   // ridisegna: cosi' la scheda in modifica si segna o si libera
   if (t === 'settings') buildSettingsView();
@@ -7756,7 +7981,7 @@ function init() {
   applyTheme();
 
   // icone nei tab, davanti all'etichetta
-  const emTab = { new: '\u2795', active: '\ud83c\udf9f\ufe0f', settings: '\u2699\ufe0f' };
+  const emTab = { bar: '\ud83e\udd64', new: '\u2795', active: '\ud83c\udf9f\ufe0f', settings: '\u2699\ufe0f' };
   $$('.tabs button').forEach(b => {
     b.insertAdjacentHTML('afterbegin', '<span class="em">' + (emTab[b.dataset.tab] || '') + '</span>');
     b.onclick = () => switchTab(b.dataset.tab);
