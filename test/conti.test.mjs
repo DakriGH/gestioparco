@@ -955,6 +955,64 @@ gruppo('«Aggiungi a»: i soldi non si creano e non si perdono', () => {
   }
 });
 
+gruppo('La sigla: due lettere per dire QUALE gruppo', () => {
+  /* Il colore del bracciale dice la fascia oraria, non chi: in una
+     serata ci sono dieci gruppi col verde, e per indicarne uno bisognava
+     descriverlo. Due lettere si dicono a voce, si scrivono sul
+     bracciale e si leggono da lontano.
+     Niente I e O: accanto a un 1 e a uno 0 scritti a pennarello si
+     confondono. Restano 576 sigle, e si ricomincia ogni giornata --
+     l'unicita' serve solo fra chi c'e' adesso. */
+  const veroSwitch = ctx.mondo.switchTab;
+  ctx.mondo.switchTab = () => {};
+  try {
+    ctx.entries = [];
+    ctx.draft = ctx.freshDraft();
+    const sigle = [];
+    for (let i = 0; i < 6; i++) {
+      ctx.PAN.conto = ctx.draft; ctx.PAN.ingresso = null;
+      ctx.bcSetQ('bimbi', 2);
+      sigle.push(ctx.commitDa(ctx.draft, {}).sigla);
+      ctx.draft = ctx.freshDraft();
+    }
+    ok('si assegnano in ordine, che si leggono a voce', sigle, ['AA', 'AB', 'AC', 'AD', 'AE', 'AF']);
+    vero('e sono tutte diverse', new Set(sigle).size === sigle.length);
+    vero('niente I e niente O, che si confondono con 1 e 0',
+         ctx.SIGLA_LETTERE.indexOf('I') < 0 && ctx.SIGLA_LETTERE.indexOf('O') < 0);
+    ok('quante sigle esistono in tutto', ctx.SIGLA_LETTERE.length * ctx.SIGLA_LETTERE.length, 576);
+
+    /* IL GIORNO DOPO SI RIPARTE DA CAPO: l'unicita' serve fra chi c'e'
+       adesso, non per sempre. */
+    const ieri = ctx.giornataDi(Date.now()) - 1;
+    ctx.entries.forEach(e => { e.startTime = ieri - 3600000; e.createdAt = e.startTime; });
+    ok('il giorno dopo si riparte da AA', ctx.nuovaSigla(), 'AA');
+
+    /* DUE GRUPPI DELLA STESSA GIORNATA NON POSSONO AVERE LA STESSA
+       SIGLA. Da un tablet solo non capita; dal cloud si', se due casse
+       registrano nello stesso momento. Vince chi e' entrato prima --
+       che e' anche chi il bracciale ce l'ha gia' scritto addosso. */
+    const ora = Date.now();
+    const doppi = ctx.normalizeEntries([
+      { id: 'x1', startTime: ora, createdAt: ora - 2000, children: 1, sigla: 'QQ' },
+      { id: 'x2', startTime: ora, createdAt: ora - 1000, children: 1, sigla: 'QQ' },
+      { id: 'x3', startTime: ora, createdAt: ora, children: 1, sigla: 'QQ' }
+    ]);
+    vero('tre doppioni diventano tre sigle diverse',
+         new Set(doppi.map(e => e.sigla)).size === 3);
+    ok('e la tiene chi e entrato prima', doppi.find(e => e.id === 'x1').sigla, 'QQ');
+
+    /* e da fuori puo' arrivare qualunque cosa al posto di due lettere */
+    const storte = ctx.normalizeEntries([
+      { id: 's1', startTime: ora, sigla: 'ab' }, { id: 's2', startTime: ora, sigla: 'A' },
+      { id: 's3', startTime: ora, sigla: 'A1' }, { id: 's4', startTime: ora, sigla: 123 },
+      { id: 's5', startTime: ora, sigla: null }, { id: 's6', startTime: ora, sigla: {} }
+    ]).map(e => e.sigla);
+    ok('una sigla storta diventa nessuna sigla', storte, ['', '', '', '', '', '']);
+  } finally {
+    ctx.mondo.switchTab = veroSwitch;
+  }
+});
+
 gruppo('La nota e del gruppo, e quelle vecchie non si perdono', () => {
   /* Era un campo di ogni PERSONA, dentro il guardaroba: per scrivere
      «hanno la torta in macchina» bisognava aprire una persona e vestirla,

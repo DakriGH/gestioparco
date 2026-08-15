@@ -861,8 +861,11 @@ gruppo('La vendita al banco resta a vista un momento, poi si archivia');
     /restaSoloBar\(e\) <= 0 && !inModifica\(e\)/.test(APP));
   prova('e lo stato si salva solo quando CAMBIA, non a ogni battito',
     /if \(cambiato\) saveEntries\(\);/.test(APP));
-  prova('si legge che e una vendita al bancone',
-    /e-bar-tag/.test(APP) && /Solo bar/.test(APP) && /\.e-bar-tag \{/.test(CSS));
+  prova('si legge che e un Solo BAR',
+    /e-bar-tag/.test(APP) && /Solo BAR/.test(APP) && /\.e-bar-tag \{/.test(CSS));
+  prova('e «bancone» non compare piu in nessuna scritta',
+    !/'[^']*bancone[^']*'/.test(APP.replace(/\/\*[\s\S]*?\*\//g, '')),
+    'era tremendo: si dice Solo BAR');
   prova('e non piu gia chiusa', !/nuovo\.status = 'closed'/.test(APP));
   prova('ha un tempo scritto prima di archiviarsi',
     /ATTESA_SOLO_BAR = 2 \* 60000/.test(APP));
@@ -881,6 +884,30 @@ gruppo('La vendita al banco resta a vista un momento, poi si archivia');
     /const bar = a\.filter\(e => e\.soloBar\)/.test(APP));
   prova('e resta tale anche dopo un ricaricamento, scadenza compresa',
     /if \(o\.soloBar\) \{[\s\S]{0,200}o\.barFinoA = num\(o\.createdAt, o\.startTime\) \+ ATTESA_SOLO_BAR;/.test(APP));
+}
+
+gruppo('La sigla sta col bracciale, dove finisce scritta');
+{
+  /* Il colore del bracciale dice la fascia oraria, non QUALE gruppo: in
+     una serata ce ne sono dieci col verde. Le due lettere si dicono a
+     voce e si scrivono sopra il bracciale mentre lo si consegna, quindi
+     stanno li' accanto -- nel modulo E nella scheda di chi e' dentro. */
+  prova('le lettere ci sono, e sono ventiquattro',
+    /const SIGLA_LETTERE = 'ABCDEFGHJKLMNPQRSTUVWXYZ'/.test(APP));
+  prova('si assegna al foglio nuovo, non alla registrazione',
+    /sigla: nuovaSigla\(\)/.test(APP),
+    'serve PRIMA: e quella che si scrive sul bracciale');
+  prova('e viene con lui quando si registra', /sigla: String\(draft\.sigla \|\| ''\)/.test(APP));
+  prova('nel pannello sta accanto al bracciale',
+    /brc-sigla pc-sigla/.test(HTML + APP) && /\.brc-sigla \{/.test(CSS));
+  prova('e nella scheda pure',
+    /el\('span', 'e-sigla'/.test(APP) && /\.e-sigla \{/.test(CSS));
+  prova('l unicita e per GIORNATA, cosi il giorno dopo si riparte',
+    /function sigleDellaGiornata/.test(APP) && /giornataDi\(num\(e\.startTime/.test(APP));
+  prova('e due doppioni dal cloud si separano da soli',
+    /const perGiornata = new Map\(\)/.test(APP));
+  prova('una sigla storta diventa nessuna sigla',
+    /o\.sigla = \/\^\[A-Z\]\{2\}\$\/\.test/.test(APP));
 }
 
 gruppo('La scheda in archivio dice chi era e quanto ha pagato');

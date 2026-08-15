@@ -159,6 +159,46 @@ function fineGiornata(inizio) {
   return d.getTime();
 }
 
+/* ══════════════════════════════════════════════════════════
+   LA SIGLA: DUE LETTERE PER DIRE QUALE GRUPPO.
+   Il colore del bracciale dice la fascia oraria, non CHI: in una serata
+   ci sono dieci gruppi col bracciale verde e per indicarne uno bisogna
+   descriverlo («quelli della mamma col cappello»). Due lettere
+   maiuscole invece si dicono a voce, si scrivono sul bracciale e si
+   leggono da lontano.
+   Niente I e O: accanto a un 1 e a uno 0 scritti a pennarello si
+   confondono. Restano 24 lettere, cioe' 576 sigle -- e si ricomincia
+   ogni giornata, perche' l'unicita' serve solo fra chi c'e' adesso.
+   Si assegnano in ordine (AA, AB, AC…): una sigla che si legge a voce
+   deve essere prevedibile, non un sorteggio.
+   ══════════════════════════════════════════════════════════ */
+const SIGLA_LETTERE = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+
+function sigleDellaGiornata(quando) {
+  const g = giornataDi(num(quando, Date.now()));
+  const usate = new Set();
+  lista(entries).forEach(e => {
+    if (!e || !e.sigla) return;
+    if (giornataDi(num(e.startTime, num(e.createdAt, 0))) === g) usate.add(e.sigla);
+  });
+  return usate;
+}
+
+/* La prima libera della giornata. Se sono finite tutte -- cinquecento
+   settantasei gruppi in un giorno solo -- si torna senza sigla invece di
+   darne una doppia: meglio niente riferimento che uno che ne indica due. */
+function nuovaSigla(quando, ancheQueste) {
+  const usate = sigleDellaGiornata(quando);
+  lista(ancheQueste).forEach(x => { if (x) usate.add(x); });
+  for (const a of SIGLA_LETTERE) {
+    for (const b of SIGLA_LETTERE) {
+      const s = a + b;
+      if (!usate.has(s)) return s;
+    }
+  }
+  return '';
+}
+
 function nomeGiornata(inizio) {
   const oggi = giornataDi(Date.now());
   if (inizio === oggi) return 'oggi';
@@ -372,6 +412,9 @@ function freshDraft() {
     barItems: [],
     /* la nota del gruppo: sta nel Parco, non dentro una persona */
     note: '',
+    /* la sigla si sceglie subito, non alla registrazione: serve PRIMA --
+       e' quella che si scrive sul bracciale mentre si consegna */
+    sigla: nuovaSigla(),
     braceletColor: null,
     /* SI PARTE SU AUTO. Prima si partiva "senza", con l'idea che il
        colore andasse messo apposta per non scordarselo -- ma al banco
@@ -1075,6 +1118,9 @@ function costruisciPannello() {
                striscia della lista, nello stesso posto: a destra. -->
           <span class="tp-min"><span class="em">\u23f1\ufe0f</span><b class="num pc-min">30m</b></span>
           <span class="brc tp-dx">
+            <!-- LE DUE LETTERE STANNO COL BRACCIALE perche' e' li' che
+                 finiscono: si scrivono sopra mentre lo si consegna. -->
+            <span class="brc-sigla pc-sigla"></span>
             <button class="brc-b" data-a="bracapri">
               <span class="pallo pc-pallo"></span><span class="pc-bracnome">Auto</span>
             </button>
@@ -1751,6 +1797,13 @@ function disegnaFascia(p, c) {
   const pallo = p.querySelector('.pc-pallo');
   pallo.style.background = col || 'transparent';
   pallo.style.borderStyle = col ? 'solid' : 'dashed';
+  const sig = p.querySelector('.pc-sigla');
+  if (sig) {
+    const due = String(C().sigla || '');
+    sig.textContent = due;
+    sig.classList.toggle('hidden', !due);
+    sig.title = due ? 'Codice del gruppo: scrivilo sul bracciale' : '';
+  }
   p.querySelector('.pc-bracnome').textContent =
     senza ? 'Senza' : c.braceletCustom ? (AV.colorName(col, 0) || 'Bracciale') : 'Auto';
   sincronizzaBracciali(p.querySelector('.pc-brac'), c.startTime, c.braceletColor, c.braceletCustom);
@@ -3831,6 +3884,9 @@ function commitDa(draft, opz) {
        nuove: senza questa riga la nota appena scritta nel Parco
        spariva premendo Registra. */
     note: String(draft.note || ''),
+    /* la sigla del modulo viene con lui; se per qualsiasi motivo non ce
+       l'ha (foglio vecchio, dato da fuori) se ne prende una adesso */
+    sigla: String(draft.sigla || '') || nuovaSigla(draft.startTime),
     braceletColor: draft.braceletColor, braceletCustom: draft.braceletCustom,
     status: 'active',
     /* quello che e' gia' stato incassato al banco entra subito nei conti
@@ -4006,17 +4062,17 @@ function archiveCard(entry) {
 
   const info = el('div', 'ainfo');
 
-  /* che cos'era: annullato, vendita al bancone, o un gruppo uscito */
+  /* che cos'era: annullato, Solo BAR, o un gruppo uscito */
   const tipo = el('div', 'arch-tipo');
   tipo.className = 'arch-tipo' + (annullato ? ' ann' : entry.soloBar ? ' bar' : '');
   tipo.textContent = annullato ? '\ud83d\uddd1\ufe0f Annullato'
-    : entry.soloBar ? '\ud83e\uddfe Solo bar' : '\ud83d\udeaa Uscito';
+    : entry.soloBar ? '\ud83e\uddfe Solo BAR' : '\ud83d\udeaa Uscito';
   info.appendChild(tipo);
 
   const chi = el('div', 'arch-chi');
   chi.textContent = people.length
     ? people.map(p => roleOf(p.role).em + ' ' + nameOf(p)).join(' \u00b7 ')
-    : entry.soloBar ? 'Vendita al bancone' : 'Senza riferimento';
+    : entry.soloBar ? 'Solo BAR' : 'Senza riferimento';
   info.appendChild(chi);
 
   /* i tratti scritti: sono quelli che facevano riconoscere la persona,
@@ -4067,7 +4123,7 @@ function archiveCard(entry) {
     entry.status = 'active';
     delete entry.closedAt;
     delete entry.costoFinale;   // torna dentro: si riconta col listino di adesso
-    /* se era una vendita al bancone le si ridanno i suoi due minuti, se
+    /* se era un Solo BAR le si ridanno i suoi due minuti, se
        no si riarchivia all'istante e sembra che il tasto non funzioni */
     if (entry.soloBar) entry.barFinoA = Date.now() + ATTESA_SOLO_BAR;
     saveEntries();
@@ -4091,7 +4147,7 @@ function archiveCard(entry) {
   const del = el('button', 'btn btn-sm btn-danger', '\ud83d\uddd1\ufe0f Elimina');
   del.title = 'Sparisce anche dai conti della giornata';
   del.onclick = () => confirmSheet('Eliminare ' +
-    (people.length ? nomiDi(entry) : entry.soloBar ? 'questa vendita al bancone' : 'questo ingresso') + '?',
+    (people.length ? nomiDi(entry) : entry.soloBar ? 'questo Solo BAR' : 'questo ingresso') + '?',
     'Sparisce anche dai conti della giornata: ' + eur(preso) +
     ' non risulteranno pi\u00f9 incassati.', () => {
     /* PASSA DA `eliminaIngresso`, che l'annulla ce l'ha gia'. Qui c'era
@@ -4191,6 +4247,15 @@ function entryCard(entry) {
   if (wristColor) wrist.style.background = wristColor; else wrist.classList.add('vuoto');
   wrist.onclick = (ev) => { ev.stopPropagation(); apriMenuBracciale(wrist, entry); };
   riga.appendChild(wrist);
+
+  /* LE DUE LETTERE, accanto al bracciale. Il colore dice la fascia
+     oraria, non QUALE gruppo: in una serata ce ne sono dieci col verde,
+     e per indicarne uno bisognava descriverlo. La sigla si dice a voce e
+     si legge da lontano. */
+  const sigla = el('span', 'e-sigla', String(entry.sigla || ''));
+  if (!entry.sigla) sigla.classList.add('hidden');
+  sigla.title = 'Codice del gruppo';
+  riga.appendChild(sigla);
 
   /* IL NUMERO GRANDE DA SOLO NON DICE COSA CONTA: lo stesso "45:12"
      puo' essere il tempo che manca, quello sforato o quello passato
@@ -4358,11 +4423,11 @@ function entryCard(entry) {
   }
   /* CHE COS'E' VA SCRITTO. Grigia e senza conto alla rovescia si capiva
      che era un'altra cosa, ma non QUALE: chi la trova in cima alla lista
-     deve leggere in due parole che e' una vendita al bancone e che se ne
+     deve leggere in due parole che e' un Solo BAR e che se ne
      va da sola. */
   if (entry.soloBar) {
     const t = el('div', 'e-bar-tag');
-    t.innerHTML = '<b>\ud83e\uddfe Solo bar</b><span>vendita al bancone \u00b7 va in archivio da s\u00e9</span>';
+    t.innerHTML = '<b>\ud83e\uddfe Solo BAR</b><span>nessuno al parco \u00b7 va in archivio da s\u00e9</span>';
     fila.appendChild(t);
   }
 
@@ -6091,9 +6156,9 @@ function vestiRiga(r, entry) {
   if (!people.length && entry.soloBar) {
     /* una vendita al bancone non ha nessuno da riconoscere: chiedere
        «metti chi e'» sarebbe chiedere una cosa che non esiste */
-    avBox.title = 'Vendita al bancone';
+    avBox.title = 'Solo BAR';
     avBox.appendChild(el('div', 'segno', '\ud83e\uddfe'));
-    avBox.appendChild(el('div', 'dillo', 'al bancone'));
+    avBox.appendChild(el('div', 'dillo', 'solo BAR'));
   } else if (!people.length) {
     avBox.title = 'Nessun riferimento \u2014 tocca per metterlo';
     avBox.appendChild(el('div', 'segno', '\u2795'));
@@ -6111,7 +6176,7 @@ function vestiRiga(r, entry) {
   if (r.nome) {
     r.nome.textContent = people.length
       ? people.map(p => roleOf(p.role).em + ' ' + nameOf(p)).join(' \u00b7 ')
-      : entry.soloBar ? 'Vendita al bancone' : 'Nessun riferimento';
+      : entry.soloBar ? 'Solo BAR' : 'Nessun riferimento';
   }
   if (r.tratti) {
     r.tratti.textContent = people.length === 1
@@ -8005,6 +8070,8 @@ function riparaConto(o) {
   o.crazyGiri = lista(o.crazyGiri).map(n => int(n, 9999)).filter(n => n > 0);
   if (o.crazyJumping > 0) o.crazyGiri = giriCrazy(o);
   else delete o.crazyGiri;
+  /* la sigla e' due lettere maiuscole, o niente */
+  o.sigla = /^[A-Z]{2}$/.test(String(o.sigla || '')) ? o.sigla : '';
   /* una vendita al banco resta tale anche dopo un ricaricamento */
   if (o.soloBar) {
     o.soloBar = true;
@@ -8080,7 +8147,7 @@ function normalizeEntries(list) {
      sotto: si perde QUELL'ingresso, con un grido nella console, invece
      di perdere il banco intero. Un ingresso in meno lo si rimette a
      mano; una lista che non si apre ferma la cassa. */
-  return lista(list).filter(e => e && typeof e === 'object').map(e => {
+  const fatti = lista(list).filter(e => e && typeof e === 'object').map(e => {
    try {
     const o = Object.assign({
       status: 'active', barItems: [], barPaid: 0, parkPaid: false,
@@ -8119,11 +8186,37 @@ function normalizeEntries(list) {
     }
     if (o.paidBar == null) o.paidBar = Math.max(0, num(o.barPaid, 0));
     return o;
+
    } catch (err) {
      console.error('ingresso illeggibile, lo salto', e && e.id, err);
      return null;
    }
   }).filter(Boolean);
+  /* DUE GRUPPI DELLA STESSA GIORNATA NON POSSONO AVERE LA STESSA SIGLA.
+     Da un tablet solo non capita -- si assegna la prima libera -- ma dal
+     cloud si': due casse che registrano nello stesso momento pescano
+     tutte e due la stessa. Una sigla che indica due gruppi e' peggio di
+     nessuna sigla, quindi al secondo che arriva se ne da' un'altra.
+     Vince chi e' entrato prima, che e' anche chi il bracciale ce l'ha
+     gia' scritto addosso. */
+  const perGiornata = new Map();
+  fatti.slice().sort((a, b) => num(a.createdAt, 0) - num(b.createdAt, 0)).forEach(o => {
+    if (!o.sigla) return;
+    const g = giornataDi(num(o.startTime, num(o.createdAt, 0)));
+    if (!perGiornata.has(g)) perGiornata.set(g, new Set());
+    const usate = perGiornata.get(g);
+    if (!usate.has(o.sigla)) { usate.add(o.sigla); return; }
+    let libera = '';
+    for (const x of SIGLA_LETTERE) {
+      for (const y of SIGLA_LETTERE) {
+        if (!usate.has(x + y)) { libera = x + y; break; }
+      }
+      if (libera) break;
+    }
+    o.sigla = libera;
+    if (libera) usate.add(libera);
+  });
+  return fatti;
 }
 
 function init() {
