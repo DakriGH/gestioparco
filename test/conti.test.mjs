@@ -955,6 +955,161 @@ gruppo('«Aggiungi a»: i soldi non si creano e non si perdono', () => {
   }
 });
 
+gruppo('IL PESTAGGIO GROSSO: tempo, Crazy, aperto e chiuso, mille volte', () => {
+  /* Le cose che al banco capitano davvero, tutte insieme: gente che paga
+     solo alcune cose, tempo che si allunga e si accorcia, ingressi che
+     passano da determinato a indeterminato e ritorno piu' volte, solo
+     Crazy che poi decidono di fermarsi al parco.
+     Ogni combinazione tocca un ramo diverso di costOf, e i rami sono
+     tanti: bastava che uno se ne dimenticasse -- ed e' successo -- per
+     avere due prezzi diversi per gli stessi minuti. */
+  const eraSuTotale = ctx.settings.tariffaSuTotale;
+  try {
+    const nuovo = (extra) => {
+      const c = conto(Object.assign({ children: 2, durationMinutes: 30, baseMinutes: 30 }, extra || {}));
+      ctx.PAN.conto = c; ctx.PAN.ingresso = null;
+      return c;
+    };
+
+    /* ── IL CASO CHE SI E' ROTTO: solo Crazy, poi vogliono il parco ── */
+    const c = nuovo({ children: 0, durationMinutes: 0, baseMinutes: 0 });
+    ctx.metteCrazy(c, 1);
+    ok('solo Crazy: nessun tempo comprato', c.durationMinutes, 0);
+    ok('ma restano dentro coi minuti in omaggio', ctx.regalatiDi(c), ctx.settings.crazySoloMinuti);
+    c.children = 2;
+    ctx.ritoccaTempo(c, 5);
+    ok('col piu si comprano cinque minuti', c.durationMinutes, 5);
+    ctx.ritoccaTempo(c, -5);
+    ok('e col meno si torna a ZERO, non si resta incastrati a cinque', c.durationMinutes, 0);
+    ok('e il conto torna a zero con lui', ctx.costOf(c).parkTotal, 0);
+    ctx.ritoccaTempo(c, -5);
+    ok('sotto zero non si va', c.durationMinutes, 0);
+    /* su un ingresso normale il pavimento resta cinque */
+    const n = nuovo();
+    for (let i = 0; i < 10; i++) ctx.ritoccaTempo(n, -5);
+    ok('senza omaggio il pavimento resta cinque minuti', n.durationMinutes, 5);
+
+    /* ── APERTO E CHIUSO PIU' VOLTE: il prezzo non deve derivare ── */
+    for (const suTot of [true, false]) {
+      ctx.settings.tariffaSuTotale = suTot;
+      const storti = [];
+      [[15, []], [30, [15]], [60, [30]], [90, [30, 15]], [120, []]].forEach(([m, agg]) => {
+        const x = nuovo({ children: 2, durationMinutes: m, baseMinutes: m - agg.reduce((a, b) => a + b, 0) });
+        x.aggiunte = agg.slice();
+        const p0 = ctx.costOf(x).parkTotal;
+        for (let k = 0; k < 5; k++) { x.payLater = true; ctx.costOf(x); x.payLater = false; }
+        if (ctx.costOf(x).parkTotal !== p0) storti.push(m + "': " + p0 + ' -> ' + ctx.costOf(x).parkTotal);
+      });
+      ok((suTot ? 'sul totale' : 'a scaglioni') + ': cinque andate e ritorni, prezzo intatto',
+         storti, []);
+    }
+
+    /* ── E ADESSO IL PESTAGGIO ──
+       Mille sequenze a caso, con dentro tutto quello che capita. A ogni
+       singolo passo si controllano le garanzie: se una salta, si sa
+       ESATTAMENTE dopo quale mossa. */
+    ctx.settings.tariffaSuTotale = true;
+    const R2 = v => Math.round(v * 100) / 100;
+    let seme = 20260815;
+    const caso = k => { seme = (seme * 1103515245 + 12345) % 2147483648; return seme % k; };
+    const barIds = ctx.settings.barMenu.slice(0, 3).map(v => v.id);
+    const guai = [];
+    const MOSSE = [
+      'bimbi', 'crazy', 'piu5', 'meno5', 'taglio', 'blocco', 'aperto',
+      'azzeraBimbi', 'bar', 'pagaRiga', 'pagaSez', 'pagaTutto', 'togliCrazy'
+    ];
+
+    for (let giro = 0; giro < 1000 && !guai.length; giro++) {
+      ctx.settings.tariffaSuTotale = caso(2) === 0;
+      /* Due punti di partenza veri: un solo-Crazy (zero minuti, ma col
+         Crazy che gli da' l'omaggio) e un ingresso normale. Zero minuti
+         SENZA Crazy non e' uno stato che l'app sappia produrre -- la
+         riparazione rimette sessanta a chi ne ha zero e non ha
+         l'omaggio -- e partire da li' faceva lamentare il banco di
+         prova di un guasto che non esiste. */
+      const soloSalti = caso(4) === 0;
+      const x = nuovo(soloSalti
+        ? { children: 0, durationMinutes: 0, baseMinutes: 0 }
+        : { children: 1 + caso(3), durationMinutes: [15, 30, 60][caso(3)], baseMinutes: 30 });
+      if (soloSalti) ctx.metteCrazy(x, 1);
+      const fatte = [];
+
+      for (let k = 0; k < 14; k++) {
+        const mossa = MOSSE[caso(MOSSE.length)];
+        fatte.push(mossa);
+        try {
+          if (mossa === 'bimbi') ctx.bcSetQ('bimbi', caso(5));
+          else if (mossa === 'crazy') ctx.metteCrazy(x, caso(4));
+          else if (mossa === 'piu5') ctx.ritoccaTempo(x, 5);
+          else if (mossa === 'meno5') ctx.ritoccaTempo(x, -5);
+          else if (mossa === 'taglio') { if (!x.payLater) { x.durationMinutes = [15, 30, 60, 90][caso(4)]; ctx.sistemaAggiunte(x); } }
+          else if (mossa === 'blocco') {
+            if (!x.payLater) {
+              const mm = [15, 30][caso(2)];
+              x.durationMinutes = ctx.num(x.durationMinutes, 0) + mm;
+              x.aggiunte = ctx.lista(x.aggiunte).concat([mm]);
+              ctx.sistemaAggiunte(x);
+            }
+          }
+          else if (mossa === 'aperto') x.payLater = !x.payLater;
+          /* L'OMAGGIO SI TOCCA DALLE SUE FUNZIONI, non scrivendo il
+             campo. Scrivendolo a mano si fabbricava uno stato che
+             l'app non puo' raggiungere -- zero minuti senza omaggio --
+             e il test si lamentava di un guasto che non esiste: dalla
+             strada vera `soloCrazy` rimette la mezz'ora. Un banco di
+             prova che inventa stati impossibili fa perdere tempo
+             invece di trovare guasti. */
+          else if (mossa === 'azzeraBimbi') ctx.bcSetQ('bimbi', 0);
+          else if (mossa === 'bar') ctx.bcSetQ(barIds[caso(barIds.length)], caso(4));
+          else if (mossa === 'pagaRiga') ctx.segnaPagate(caso(2) ? 'bimbi' : 'crazy', caso(4));
+          else if (mossa === 'pagaSez') ctx.bcSegna(['bimbi', 'crazy', 'bar'][caso(3)], caso(2) === 0);
+          else if (mossa === 'pagaTutto') ctx.pagaTutto();
+          else ctx.metteCrazy(x, 0);
+        } catch (err) { guai.push('esplode su ' + mossa + ' dopo ' + fatte.join('>') + ': ' + err.message); break; }
+
+        /* ── LE GARANZIE, a ogni singolo passo ── */
+        const kk = ctx.costOf(x), d = ctx.dueOf(x);
+        const dove = ' [' + fatte.join('>') + ']';
+        if (!Number.isFinite(kk.parkTotal) || kk.parkTotal < 0) guai.push('tempo ' + kk.parkTotal + dove);
+        if (!Number.isFinite(kk.crazyCost) || kk.crazyCost < 0) guai.push('crazy ' + kk.crazyCost + dove);
+        if (!Number.isFinite(d.total) || d.total < 0) guai.push('dovuto ' + d.total + dove);
+        if (!Number.isFinite(ctx.endTimeOf(x))) guai.push('uscita storta' + dove);
+        if (ctx.endTimeOf(x) < x.startTime) guai.push('esce prima di entrare' + dove);
+        /* `minutiPagati` PUO' superare il tempo comprato, ed e' giusto:
+           se hanno pagato un'ora e poi il tempo lo si accorcia a cinque
+           minuti, i soldi coprono piu' di quello che resta. I due posti
+           che lo disegnano lo tagliano al pieno (`Math.min(tot, ...)`),
+           quindi a schermo non esce mai dalla fascia. Qui si controlla
+           che sia un numero sensato, e che il TAGLIATO -- quello che si
+           vede davvero -- stia dentro. */
+        const mp = ctx.minutiPagati(x);
+        if (!Number.isFinite(mp) || mp < 0) guai.push('minuti pagati storti: ' + mp + dove);
+        if (Math.min(ctx.tempoTotale(x), mp) > ctx.tempoTotale(x) + 0.001) guai.push('la fascia esce dal pieno' + dove);
+        if (x.durationMinutes < ctx.minimoTempo(x)) guai.push('sotto il pavimento: ' + x.durationMinutes + dove);
+        const amt = x.paidAmt || {};
+        const sp = R2((+amt.bimbi || 0) + (+amt.crazy || 0));
+        if (Math.abs(sp - (+x.paidPark || 0)) > 0.005) guai.push('righe parco ' + sp + ' vs ' + x.paidPark + dove);
+        const sb = R2(ctx.lista(x.barItems).reduce((a, b) => a + (+amt[b.id] || 0), 0));
+        if (Math.abs(sb - (+x.paidBar || 0)) > 0.005) guai.push('righe bar ' + sb + ' vs ' + x.paidBar + dove);
+        ctx.lista(x.barItems).forEach(b => {
+          if ((+x.paidLines[b.id] || 0) > (+b.qty || 0)) guai.push('spunte oltre la quantita su ' + b.id + dove);
+        });
+        /* il Crazy non tocca MAI il prezzo del tempo */
+        const gem = ctx.fotografia(x); gem.crazyJumping = 0; delete gem.crazyGiri;
+        if (ctx.costOf(gem).parkTotal !== kk.parkTotal) guai.push('il Crazy sposta il tempo' + dove);
+        /* e i giri vuoti sono al massimo uno, in fondo */
+        const g = ctx.giriCrazy(x);
+        const vuoti = g.filter(v => v === 0).length;
+        if (vuoti > 1 || (vuoti === 1 && g[g.length - 1] !== 0)) guai.push('giri vuoti ' + JSON.stringify(g) + dove);
+        if (guai.length) break;
+      }
+    }
+    ok('mille sequenze di quattordici mosse, e nessuna garanzia salta', guai.slice(0, 2), []);
+  } finally {
+    ctx.settings.tariffaSuTotale = eraSuTotale;
+  }
+});
+
 gruppo('La sigla: due lettere per dire QUALE gruppo', () => {
   /* Il colore del bracciale dice la fascia oraria, non chi: in una
      serata ci sono dieci gruppi col verde, e per indicarne uno bisognava

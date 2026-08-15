@@ -1872,11 +1872,27 @@ const ESTENDI_TAGLI = [15, 30, 60];
    Sta in una funzione con un nome suo, e non dentro il gestore dei
    tocchi, perche' e' una regola dei soldi e le regole dei soldi si
    provano. */
+/* Sotto quanti minuti non si scende col meno. Zero per chi ha l'omaggio
+   -- il solo-Crazy, che di tempo comprato non ne ha -- cinque per tutti
+   gli altri. Sta fuori perche' lo devono sapere anche i tasti, se no si
+   spengono a un valore e la funzione ne accetta un altro. */
+function minimoTempo(c) {
+  return omaggioDi(c || C()) > 0 ? 0 : 5;
+}
+
 function ritoccaTempo(c, delta) {
   c = c || C();
   if (c.payLater) return;
   const m = clamp(num(c.durationMinutes, 60), 0, 1e6);
-  const dopo = clamp(m + num(delta, 0), 5, 100000);
+  /* IL PAVIMENTO NON E' SEMPRE CINQUE. Di norma si': sotto i cinque
+     minuti non si vende tempo. Ma per chi ha l'omaggio del solo-Crazy lo
+     ZERO e' un valore buono -- e' chi non ha comprato tempo di parco, e
+     la sua permanenza sta nei minuti regalati.
+     Senza questa distinzione un solo-Crazy a cui si toccava per sbaglio
+     il piu' restava incastrato: cinque minuti e sei euro sul conto, e il
+     meno che non tornava piu' indietro. */
+  const minimo = minimoTempo(c);
+  const dopo = clamp(m + num(delta, 0), minimo, 100000);
   const vero = dopo - m;                 /* quello che si e' mosso davvero */
   if (!vero) return;
   c.durationMinutes = dopo;
@@ -1934,7 +1950,7 @@ function disegnaEstendi(p, c) {
   box.innerHTML =
     '<span class="est-k"><span class="em">\u23e9</span> Estendi</span>' +
     '<span class="est-cinque">' +
-      '<button data-a="corr" data-v="-5"' + (aperto || corti <= 5 ? ' disabled' : '') +
+      '<button data-a="corr" data-v="-5"' + (aperto || corti <= minimoTempo(c) ? ' disabled' : '') +
         ' aria-label="cinque minuti in meno">\u2212 5m</button>' +
       '<button data-a="corr" data-v="5"' + (aperto ? ' disabled' : '') +
         ' aria-label="cinque minuti in piu\u2019">+ 5m</button>' +
@@ -4999,7 +5015,7 @@ function scontrinoComandi(c, id, q, pg) {
           : manca > 0 ? '\u23f1\ufe0f restano ' + fmtDur(manca)
           : '\u23f1\ufe0f scaduto da ' + fmtDur(-manca)) + '</span>' +
       '<span class="sc-t-cinque">' +
-        '<button data-a="corr" data-v="-5"' + (aperto || corti <= 5 ? ' disabled' : '') +
+        '<button data-a="corr" data-v="-5"' + (aperto || corti <= minimoTempo(c) ? ' disabled' : '') +
           '>\u2212 5m</button>' +
         '<button data-a="corr" data-v="5"' + (aperto ? ' disabled' : '') + '>+ 5m</button>' +
       '</span>' +
@@ -6270,7 +6286,7 @@ function syncCard(entry) {
   }
   r.sTime.val.textContent = entry.payLater ? '\u2014' : fmtMin(entry.durationMinutes);
   r.sKids.minus.disabled = kids <= 0;
-  r.sTime.minus.disabled = num(entry.durationMinutes, 0) <= 5;
+  r.sTime.minus.disabled = num(entry.durationMinutes, 0) <= minimoTempo(entry);
 
   /* IL VESTITO CAMBIATO SI VEDE SUBITO. syncCard() gira a ogni tocco
      del conto -- anche mentre si veste qualcuno -- e prima guardava
