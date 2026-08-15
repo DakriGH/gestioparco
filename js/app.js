@@ -2943,7 +2943,7 @@ function armadioDi(p, tavolozzaAperta) {
     AV.COLORS.map(c => '<button data-col="' + campo + '|color|' + c.c + '" style="background:' + c.c +
       '" title="' + esc(c.n[0]) + '"' +
       (av[campo].color.toLowerCase() === c.c.toLowerCase() ? ' class="on"' : '') + '></button>').join('') +
-    '<button class="ruota" data-ruota="' + campo + '" title="scegli tu"></button></div>';
+    tastoRuota('data-ruota', campo, av[campo].color) + '</div>';
 
   const capiSopra = '<div class="capi" style="' + colonne(AV.TOP.length) + '">' +
     AV.TOP.map(t => '<button class="capo' + (av.top.style === t.key ? ' on' : '') +
@@ -3057,7 +3057,7 @@ function tavolozzaCapelli(av) {
   return '<div class="volante capelli">' +
     '<span class="tv-k">Colore</span>' +
     '<div class="cap-tinte">' + tinte +
-      '<button class="ruota" data-accruota="capelli" title="scegli tu"></button>' +
+      tastoRuota('data-accruota', 'capelli', av.hair.color, AV.HAIR_COLORS.slice(0, 3)) +
       '<span class="cap-arc">Arcobaleno</span></div>' +
     '<span class="tv-k">Taglio</span>' +
     '<div class="cap-tagli">' + tagli + '</div>' +
@@ -3121,7 +3121,7 @@ function tavolozzaAccessori(av) {
         AV.COLORS.map(c => '<button data-acccol="' + accScelto + '|' + c.c +
           '" style="background:' + c.c + '" title="' + esc(c.n[0]) + '"' +
           (ora === c.c.toLowerCase() ? ' class="on"' : '') + '></button>').join('') +
-        '<button class="ruota" data-accruota="' + accScelto + '" title="scegli tu"></button>' +
+        tastoRuota('data-accruota', accScelto, ACC_DOVE[accScelto](av)) +
       '</div>';
   }
 
@@ -3130,6 +3130,26 @@ function tavolozzaAccessori(av) {
     '<div class="acc-cose">' + cose + '</div>' +
     tinte +
     '<button class="via" data-accvia="accessori">togli tutti</button></div>';
+}
+
+/* IL TASTO DELLA RUOTA, UNO SOLO PER TUTTE E QUATTRO LE TAVOLOZZE.
+   Prima era scritto a mano in quattro posti, tutti uguali e tutti muti:
+   scelto un colore fuori dai quindici in fila, NESSUNA pastiglia
+   risultava accesa e il tasto restava l'arcobaleno di sempre. La
+   tavolozza diceva "non hai scelto niente" mentre addosso il colore
+   c'era: da fuori sembrava che i colori scelti a mano non restassero.
+   Adesso, quando la tinta di adesso non e' una delle quindici, il tasto
+   se la mette addosso e si accende come farebbe una pastiglia: e' il
+   posto dove quel colore vive. */
+/* `fila` sono le pastiglie che stanno DAVVERO li' accanto: i capelli
+   ne hanno tre loro, non le quindici degli altri, e confrontarsi con
+   la fila sbagliata accenderebbe il tasto su un castano di serie. */
+function tastoRuota(attributo, valore, coloreOra, fila) {
+  const c = String(coloreOra || '').trim();
+  const fuoriFila = !!c && !(fila || AV.COLORS).some(x => x.c.toLowerCase() === c.toLowerCase());
+  return '<button class="ruota' + (fuoriFila ? ' on' : '') + '" ' + attributo + '="' + esc(valore) +
+    '"' + (fuoriFila ? ' style="background:' + esc(c) + '"' : '') +
+    ' title="' + (fuoriFila ? 'colore scelto a mano' : 'scegli tu') + '"></button>';
 }
 
 /* la tavolozza di un accessorio: le stesse tinte, la ruota, e il tasto
@@ -3141,7 +3161,7 @@ function tavolozza(av, acc) {
   return '<div class="volante">' +
     AV.COLORS.map(c => '<button data-acccol="' + acc + '|' + c.c + '" style="background:' + c.c + '"' +
       (ora && ora.toLowerCase() === c.c.toLowerCase() ? ' class="on"' : '') + '></button>').join('') +
-    '<button class="ruota" data-accruota="' + acc + '" title="scegli tu"></button>' +
+    tastoRuota('data-accruota', acc, ora) +
     '<button class="via" data-accvia="' + acc + '">togli</button></div>';
 }
 
@@ -6064,6 +6084,12 @@ function chiudiSchede(tranne) {
    colore si RICAVA dal punto toccato con la stessa formula: quello che
    si vede e quello che si prende sono la stessa cosa per costruzione,
    non due conti che potrebbero divergere. */
+/* IL COLORE SOTTO IL DITO.
+   Lo zero sta in cima e si gira in senso orario, e la saturazione va da
+   zero al centro a piena sul bordo: e' esattamente come il cerchio e'
+   DIPINTO in css/app.css (`from 0deg` e il grigio che sfuma fino al
+   100%). I due posti vanno cambiati insieme, se no si tocca un colore e
+   se ne prende un altro. */
 function coloreDelPunto(dx, dy, raggio) {
   const dist = Math.min(1, Math.sqrt(dx * dx + dy * dy) / raggio);
   let ang = Math.atan2(dy, dx) * 180 / Math.PI + 90;   // 0 in cima, come il disegno
@@ -6071,6 +6097,44 @@ function coloreDelPunto(dx, dy, raggio) {
   const h = Math.round(ang) % 360;
   const s = Math.round(dist * 100);
   return hslInEsa(h, s, 50);
+}
+
+/* LA STRADA AL CONTRARIO: dato un colore, dove sta sul cerchio.
+   Serve a far ritrovare il segno dove lo si era messo riaprendo la
+   ruota: senza, il pallino ripartiva dall'angolo in alto a sinistra e
+   il colore scelto sembrava non essere mai stato preso. */
+function puntoDelColore(esa) {
+  const c = esaInHsl(esa);
+  if (!c) return null;
+  const rad = (c.h - 90) * Math.PI / 180;
+  const d = Math.max(0, Math.min(1, c.s / 100));
+  return { dx: Math.cos(rad) * d, dy: Math.sin(rad) * d };
+}
+
+/* esadecimale -> tinta, saturazione, luce. Sta qui e non dentro AV
+   perche' e' roba della ruota: AV descrive i vestiti, non li misura. */
+function esaInHsl(esa) {
+  const t = String(esa || '').trim();
+  let m = /^#([0-9a-f]{6})$/i.exec(t);
+  if (!m) {
+    const b = /^#([0-9a-f]{3})$/i.exec(t);
+    if (!b) return null;
+    m = [0, b[1].split('').map(x => x + x).join('')];
+  }
+  const n = parseInt(m[1], 16);
+  const r = ((n >> 16) & 255) / 255, g = ((n >> 8) & 255) / 255, b2 = (n & 255) / 255;
+  const max = Math.max(r, g, b2), min = Math.min(r, g, b2), d = max - min;
+  const l = (max + min) / 2;
+  let h = 0;
+  if (d) {
+    if (max === r) h = ((g - b2) / d) % 6;
+    else if (max === g) h = (b2 - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h *= 60;
+    if (h < 0) h += 360;
+  }
+  const s = d ? d / (1 - Math.abs(2 * l - 1)) : 0;
+  return { h: Math.round(h), s: Math.round(s * 100), l: Math.round(l * 100) };
 }
 function hslInEsa(h, s, l) {
   s /= 100; l /= 100;
@@ -6126,6 +6190,29 @@ function apriRuota(tasto, coloreOra, scegli) {
   };
   metti(scelto, true);
 
+  /* IL SEGNO DOVE IL COLORE E' GIA'. Il pallino nasceva senza posto,
+     cioe' nell'angolo in alto a sinistra del cerchio: riaprendo la
+     ruota su una maglietta gia' colorata sembrava che non ci fosse
+     niente di scelto. Adesso si mette dove sta la tinta di adesso,
+     cosi' si vede da dove si riparte e la si corregge di poco. */
+  const segnaPunta = (colore) => {
+    const q = puntoDelColore(colore);
+    /* un colore che non e' un colore non sta da nessuna parte: meglio
+       nascondere il segno che metterlo a caso */
+    punta.style.display = q ? '' : 'none';
+    if (!q) return;
+    /* i grigi cadono nel centro, ed e' giusto: il centro e' grigio */
+    /* LA MISURA D'IMPAGINAZIONE, NON QUELLA A SCHERMO. La scatola entra
+       con un'animazione che la ingrandisce, e in quei 140ms il righello
+       a schermo la vede piu' piccola del vero: il segno finiva un paio
+       di pixel dentro. `left` e `top` si contano nel riquadro suo, che
+       l'animazione non tocca. (Chi legge il dito invece usa il righello
+       a schermo, ed e' giusto: li' si parte da coordinate di schermo.) */
+    const r = cerchio.offsetWidth / 2;
+    punta.style.left = (r + q.dx * r) + 'px';
+    punta.style.top = (r + q.dy * r) + 'px';
+  };
+
   const prendi = (ev) => {
     const r = cerchio.getBoundingClientRect();
     const x = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left - r.width / 2;
@@ -6148,6 +6235,9 @@ function apriRuota(tasto, coloreOra, scegli) {
   cerchio.addEventListener('pointerup', () => { giu = false; });
 
   document.body.appendChild(box);
+  /* il segno si mette DOPO: prima il cerchio non e' ancora nella
+     pagina e misurarlo darebbe zero */
+  segnaPunta(scelto);
   alzaMenuDove(box, ancora);
   chiudiFuoriDel(box, tasto);
 }

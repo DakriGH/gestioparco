@@ -162,6 +162,88 @@
       !fuori.length, [...new Set(fuori)].slice(0, 4).join(', '));
   }
 
+  /* ── 7. LA RUOTA DEI COLORI ──
+     Qui ci vuole per forza un browser vero: il DOM finto non dipinge
+     niente e non fa animazioni, e proprio l'animazione d'ingresso della
+     scatola nascondeva un guasto -- il segno veniva misurato mentre la
+     scatola era ancora rimpicciolita e finiva un paio di pixel dentro.
+     Le prove in node controllano che la FORMULA e il DISEGNO combacino;
+     queste controllano che combacino anche le DITA. */
+  {
+    showArchive = false;
+    entries.length = 0; localStorage.removeItem('gp_entries'); saveEntries();
+    draft = freshDraft();
+    draft.people = [{ id: 'ruota1', role: 'mamma', name: '', avatar: AV.baseFor('mamma'), note: '', tocco: false }];
+    switchTab('new'); await att(200);
+    const lista = document.querySelector('.person-list.pc-people');
+    lista.dataset.apri = 'ruota1'; lista.dataset.sig = '';
+    syncPeople(lista, draft.people, lista.__cambia); await att(200);
+
+    /* il browser restituisce i colori come "rgb(r, g, b)": per
+       confrontarli con un esadecimale bisogna parlare la sua lingua */
+    const inRgb = (esa) => {
+      const n = parseInt(esa.slice(1), 16);
+      return 'rgb(' + ((n >> 16) & 255) + ', ' + ((n >> 8) & 255) + ', ' + (n & 255) + ')';
+    };
+    const tasto = () => document.querySelector('.person-list.pc-people button.ruota[data-ruota]');
+    const tocca = async (fx, fy, aspetta) => {
+      tasto().click(); await att(aspetta === undefined ? 220 : aspetta);
+      const ce = document.querySelector('.ruota-cerchio'), r = ce.getBoundingClientRect();
+      ce.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 9, bubbles: true,
+        clientX: r.left + r.width / 2 + fx * r.width / 2,
+        clientY: r.top + r.height / 2 + fy * r.height / 2 }));
+      ce.dispatchEvent(new PointerEvent('pointerup', { pointerId: 9, bubbles: true }));
+      const c = draft.people[0].avatar.top.color;
+      document.querySelectorAll('.ruota-box').forEach(x => x.remove());
+      await att(120);
+      return c;
+    };
+
+    /* la tinta in cima e' il rosso, e in fondo il suo opposto: erano
+       scambiate, ed e' il guasto per cui "il colore non restava" */
+    const su = esaInHsl(await tocca(0, -0.9));
+    const giu = esaInHsl(await tocca(0, 0.9));
+    p('in cima alla ruota si prende il rosso', su.h <= 6 || su.h >= 354, 'tinta ' + su.h);
+    p('  e in fondo il suo opposto', Math.abs(giu.h - 180) <= 6, 'tinta ' + giu.h);
+    p('  e verso il bordo il colore e pieno', su.s >= 85, 'saturazione ' + su.s);
+
+    /* il centro e' grigio nel disegno: deve esserlo anche nel dato */
+    const mezzo = esaInHsl(await tocca(0.02, 0.02));
+    p('al centro si prende un grigio', mezzo.s <= 12, 'saturazione ' + mezzo.s);
+
+    /* riaprendo SUBITO, cioe' in piena animazione: e' il caso che
+       sbagliava la misura */
+    const scelto = await tocca(-0.6, -0.6);
+    tasto().click(); await att(15);
+    const segno = document.querySelector('.ruota-punta');
+    const cer = document.querySelector('.ruota-cerchio');
+    const mezza = cer.offsetWidth / 2;
+    const qx = (parseFloat(segno.style.left) - mezza) / mezza;
+    const qy = (parseFloat(segno.style.top) - mezza) / mezza;
+    const indicato = coloreDelPunto(qx * mezza, qy * mezza, mezza);
+    p('riaprendo, il segno torna sul colore che c e gia', indicato === scelto,
+      indicato === scelto ? '' : 'indica ' + indicato + ' invece di ' + scelto);
+    document.querySelectorAll('.ruota-box').forEach(x => x.remove());
+    await att(150);
+
+    /* e la tavolozza deve DIRE che un colore scelto a mano c'e' */
+    const t = tasto();
+    p('un colore scelto a mano accende il tasto della ruota', t.classList.contains('on'));
+    const addosso = getComputedStyle(t).backgroundColor;
+    p('  e il tasto se lo mette addosso', addosso === inRgb(scelto),
+      addosso === inRgb(scelto) ? '' : addosso + ' invece di ' + scelto);
+    p('  con il bordo bianco delle pastiglie scelte',
+      getComputedStyle(t).borderTopColor === 'rgb(255, 255, 255)', getComputedStyle(t).borderTopColor);
+
+    /* e prendendo un colore DALLA FILA il tasto torna l'arcobaleno */
+    const pastiglia = document.querySelector('.person-list.pc-people [data-col^="top|color|"]');
+    pastiglia.click(); await att(200);
+    p('e scegliendo dalla fila il tasto torna l arcobaleno',
+      !tasto().classList.contains('on'));
+
+    draft = freshDraft();
+  }
+
   /* ── il verdetto ── */
   localStorage.removeItem('gp_entries');
   entries.length = 0;

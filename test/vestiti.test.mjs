@@ -1065,6 +1065,165 @@ gruppo('Il vuoto sopra la scheda che vola');
   prova('la rimpicciolitura è sparita', typeof app.scalaChe === 'undefined');
 }
 
+/* ============================================================
+   LA RUOTA DEI COLORI: QUELLO CHE TOCCHI E QUELLO CHE PRENDI
+
+   Il cerchio e' DIPINTO dal CSS con due sfumature, e il colore e'
+   CALCOLATO dal JS con una formula. Sono due descrizioni della stessa
+   cosa tenute in due file diversi, e per mesi hanno raccontato cose
+   diverse: la conica partiva da 180deg mentre la formula metteva lo
+   zero in cima, cosi' si toccava il rosso e usciva il ciano — il
+   colore esattamente opposto. Chi provava a correggere toccando di
+   nuovo prendeva un altro colore sbagliato, e la conclusione ovvia era
+   «i colori scelti a mano non restano».
+
+   Un controllo che cerchi la scritta «0deg» nel CSS non serve a
+   niente: passerebbe anche cambiando l'elenco delle tinte. Qui invece
+   il disegno viene RIFATTO dai numeri veri letti dal CSS — la conica
+   interpolata fra i suoi stop, il grigio sfumato sopra — e confrontato
+   pixel per pixel col colore che la formula tira fuori.
+   ============================================================ */
+gruppo('La ruota dei colori: il disegno e la formula dicono la stessa cosa');
+{
+  const css = readFileSync(join(RADICE, 'css/app.css'), 'utf8');
+  const blocco = /\.ruota-cerchio\s*\{([\s\S]*?)\}/.exec(css);
+  prova('il cerchio della ruota sta nel CSS', !!blocco);
+
+  const testo = blocco ? blocco[1] : '';
+  const conica = /conic-gradient\(\s*from\s*(-?[\d.]+)deg\s*,([^)]*)\)/.exec(testo);
+  const radiale = /radial-gradient\([^)]*?rgba\(128,\s*128,\s*128,\s*0\)\s*([\d.]+)%\s*\)/.exec(testo);
+  prova('e si legge da dove parte la sfumatura delle tinte', !!conica);
+  prova('e fin dove arriva il grigio del centro', !!radiale);
+
+  if (conica && radiale) {
+    const daDeg = parseFloat(conica[1]);
+    const fineGrigio = parseFloat(radiale[1]) / 100;
+    const stop = conica[2].split(',').map(s => s.trim()).filter(Boolean);
+
+    const rgb = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+    /* la conica, come la fa il browser: si interpola in linea retta fra
+       uno stop e il successivo, che sono spartiti in parti uguali */
+    const dipintaConica = (ang) => {
+      const t = (((ang - daDeg) % 360) + 360) % 360 / 360 * (stop.length - 1);
+      const i = Math.min(stop.length - 2, Math.floor(t)), f = t - i;
+      const a = rgb(stop[i]), b = rgb(stop[i + 1]);
+      return [0, 1, 2].map(k => a[k] + (b[k] - a[k]) * f);
+    };
+    /* e sopra il grigio, che sfuma via allontanandosi dal centro */
+    const dipinto = (ang, d) => {
+      const alfa = Math.max(0, 1 - d / fineGrigio);
+      return dipintaConica(ang).map(v => 128 * alfa + v * (1 - alfa));
+    };
+
+    let peggio = 0, dove = '', somma = 0, n = 0;
+    for (let g = 0; g < 360; g += 3) {
+      for (let d = 0.05; d <= 1; d += 0.05) {
+        const rad = (g - 90) * Math.PI / 180;
+        const preso = rgb(app.coloreDelPunto(Math.cos(rad) * d * 104, Math.sin(rad) * d * 104, 104));
+        const visto = dipinto(g, d);
+        const scarto = Math.sqrt([0, 1, 2].reduce((a, k) => a + (preso[k] - visto[k]) ** 2, 0));
+        somma += scarto; n++;
+        if (scarto > peggio) { peggio = scarto; dove = 'a ' + g + '° e al ' + Math.round(d * 100) + '% del raggio'; }
+      }
+    }
+    /* lo scarto e' una distanza fra due colori: il massimo possibile e'
+       441 (nero contro bianco). Rotta com'era, la media stava a 279 —
+       cioe' un colore a caso. A posto sta sotto 5. */
+    prova('quello che si tocca e quello che si prende sono lo stesso colore',
+      peggio < 14, 'scarto peggiore ' + Math.round(peggio) + ' su 441, ' + dove);
+    prova('e non e’ un caso che capiti solo da qualche parte',
+      somma / n < 5, 'scarto medio ' + Math.round(somma / n * 10) / 10);
+  }
+}
+
+gruppo('La ruota ritrova il colore che c’e’ gia’');
+{
+  /* riaprendo la ruota il segno deve tornare dove lo si era messo: se
+     riparte dall'angolo, il colore scelto sembra non essere mai stato
+     preso, ed e' l'altra meta' del «non restano» */
+  let peggio = 0, dove = '';
+  for (let g = 0; g < 360; g += 7) {
+    for (let d = 0.1; d <= 1; d += 0.1) {
+      const rad = (g - 90) * Math.PI / 180;
+      const colore = app.coloreDelPunto(Math.cos(rad) * d * 104, Math.sin(rad) * d * 104, 104);
+      const q = app.puntoDelColore(colore);
+      if (!q) { peggio = 99; dove = 'non trova il posto di ' + colore; break; }
+      const rifatto = app.coloreDelPunto(q.dx * 104, q.dy * 104, 104);
+      if (rifatto !== colore) {
+        const a = parseInt(colore.slice(1), 16), b = parseInt(rifatto.slice(1), 16);
+        const s = Math.abs((a >> 16) - (b >> 16)) + Math.abs(((a >> 8) & 255) - ((b >> 8) & 255)) +
+          Math.abs((a & 255) - (b & 255));
+        if (s > peggio) { peggio = s; dove = colore + ' -> ' + rifatto; }
+      }
+    }
+  }
+  prova('il posto sul cerchio riporta al colore di partenza', peggio <= 3,
+    'scarto ' + peggio + '  ' + dove);
+  prova('i grigi cadono nel centro, che e’ grigio',
+    Math.abs(app.puntoDelColore('#808080').dx) < 0.02 &&
+    Math.abs(app.puntoDelColore('#808080').dy) < 0.02);
+  prova('un colore che non e’ un colore non ha posto', app.puntoDelColore('boh') === null);
+  prova('e nemmeno il vuoto', app.puntoDelColore('') === null);
+}
+
+gruppo('La tavolozza dice che un colore scelto a mano c’e’');
+{
+  /* il colore si salvava sempre — l'ho verificato fino al disco — ma a
+     video NIENTE risultava scelto: le quindici pastiglie spente e il
+     tasto della ruota con l'arcobaleno di sempre. La tavolozza diceva
+     «non hai scelto niente» mentre il capo era colorato. */
+  const dellaFila = app.AV.COLORS[0].c;
+  const inFila = app.tastoRuota('data-ruota', 'top', dellaFila);
+  const fuoriFila = app.tastoRuota('data-ruota', 'top', '#123456');
+
+  prova('un colore preso dalla fila non accende anche la ruota', !/\bon\b/.test(inFila), inFila);
+  prova('un colore scelto a mano accende la ruota', /class="ruota on"/.test(fuoriFila), fuoriFila);
+  prova('e la ruota se lo mette addosso, cosi’ si vede qual e’',
+    /background:#123456/.test(fuoriFila), fuoriFila);
+  prova('e lo dice anche a parole', /scelto a mano/.test(fuoriFila));
+
+  /* i capelli hanno una fila loro di tre tinte: confrontarli con le
+     quindici degli altri accenderebbe la ruota su un castano di serie */
+  const castano = app.AV.HAIR_COLORS[0].c;
+  prova('i capelli si confrontano con la fila che hanno accanto',
+    !/\bon\b/.test(app.tastoRuota('data-accruota', 'capelli', castano, app.AV.HAIR_COLORS.slice(0, 3))),
+    castano);
+  prova('e con quella sbagliata si accenderebbero per niente',
+    /\bon\b/.test(app.tastoRuota('data-accruota', 'capelli', castano)),
+    'e’ la prova che il confronto guarda davvero la fila passata');
+
+  prova('senza colore la ruota resta l’arcobaleno', !/\bon\b/.test(app.tastoRuota('data-ruota', 'top', '')));
+  /* maiuscole e minuscole sono lo stesso colore: #E23D4B scritto in
+     minuscolo non e' "scelto a mano" */
+  prova('non si fa ingannare dalle maiuscole',
+    !/\bon\b/.test(app.tastoRuota('data-ruota', 'top', dellaFila.toLowerCase())));
+}
+
+gruppo('Un colore scelto a mano resta addosso');
+{
+  /* la strada intera: si sceglie, si salva, si rilegge. Ogni passaggio
+     e' un posto dove un colore fuori tavolozza poteva essere
+     "corretto" verso quello di serie. */
+  const strani = ['#123456', '#0af5f5', '#f70808', '#7b2ff7', '#010101', '#fefefe', '#abc'];
+  strani.forEach(c => {
+    const av = app.AV.baseFor('mamma');
+    av.top.color = c; av.pants.color = c; av.hair.color = c;
+    av.shoes.color = c; av.bag = { style: 'zaino', color: c };
+    const uno = app.AV.normalize(JSON.parse(JSON.stringify(av)), 'mamma');
+    const due = app.AV.normalize(JSON.parse(JSON.stringify(uno)), 'mamma');
+    const tutti = x => [x.top.color, x.pants.color, x.hair.color, x.shoes.color, x.bag.color];
+    prova('il colore ' + c + ' regge due letture di fila',
+      tutti(uno).every(v => v.toLowerCase() === c.toLowerCase()) &&
+      JSON.stringify(tutti(uno)) === JSON.stringify(tutti(due)),
+      JSON.stringify(tutti(uno)) + ' poi ' + JSON.stringify(tutti(due)));
+  });
+  /* e la figura lo deve DIPINGERE, non solo tenerlo da parte */
+  const av = app.AV.baseFor('mamma');
+  av.top.color = '#123456';
+  prova('e la figura lo porta addosso davvero',
+    /#123456/i.test(app.AV.build(app.AV.normalize(av, 'mamma'), {})));
+}
+
 /* ---------- il verdetto ---------- */
 console.log('\n' + '━'.repeat(52));
 if (ko) {

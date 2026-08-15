@@ -4153,6 +4153,19 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
    per la tinta, una radiale per il grigio verso il centro -- ed e' la
    STESSA formula con cui il codice ricava il colore dal punto toccato:
    quello che si vede e quello che si prende non possono divergere.
+
+   E INVECE DIVERGEVANO, di mezzo giro. La conica partiva `from 180deg`
+   mentre `coloreDelPunto` mette lo zero in cima: si toccava il rosso e
+   veniva fuori il ciano, cioe' il colore dalla parte opposta del
+   cerchio. Poi si toccava di nuovo per correggere e usciva un altro
+   colore sbagliato, e sembrava che la scelta non restasse.
+   Il grigio, per conto suo, finiva al 72% del raggio mentre la
+   saturazione veniva contata su tutto: da li' in fuori si vedeva pieno
+   e si prendeva slavato.
+   Messi in riga, lo scarto fra il pixel dipinto e il colore preso e'
+   sceso da 279 a 2 su 441. I DUE NUMERI QUI SOTTO -- 0deg e 100% --
+   sono legati a `coloreDelPunto` in js/app.js: cambiarne uno solo
+   rompe di nuovo la corrispondenza, e le prove lo fermano.
    ══════════════════════════════════════════════════════════ */
 .ruota-box { position: fixed; z-index: 70; display: flex; flex-direction: column; gap: 10px;
   padding: 12px; border-radius: 18px; background: #1B1B24;
@@ -4161,8 +4174,8 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
 .ruota-cerchio { position: relative; width: 208px; height: 208px; border-radius: 50%;
   cursor: crosshair; touch-action: none;
   background:
-    radial-gradient(circle closest-side, #808080 0%, rgba(128,128,128,0) 72%),
-    conic-gradient(from 180deg,
+    radial-gradient(circle closest-side, #808080 0%, rgba(128,128,128,0) 100%),
+    conic-gradient(from 0deg,
       #ff0000, #ff8000, #ffff00, #80ff00, #00ff00, #00ff80, #00ffff,
       #0080ff, #0000ff, #8000ff, #ff00ff, #ff0080, #ff0000);
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
