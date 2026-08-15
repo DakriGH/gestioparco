@@ -124,7 +124,16 @@ gruppo('La nota si legge senza aprire niente, e si scrive toccandola');
   prova('la nota sta fuori dalla parte che si apre',
     /card\.appendChild\(notaBox\)/.test(APP) &&
     APP.indexOf("dentro.appendChild(el('div', 'e-note'") < 0);
-  prova('e a vuoto resta, come invito', /aggiungi una nota/.test(APP) && /\.e-nota\.vuota/.test(CSS));
+  /* SENZA NIENTE SCRITTO NON SI VEDE. Una riga «aggiungi una nota» su
+     ogni scheda della lista e' rumore: dice una cosa che si PUO' fare,
+     non una che c'e'. L'invito compare col primo tocco, insieme al resto
+     dei comandi -- e' li' che si sta lavorando su quella scheda. */
+  prova('a vuoto la nota non si vede nella lista',
+    /\.e-nota\.vuota \{ display: none; \}/.test(CSS));
+  prova('e compare col primo tocco, con la scheda aperta',
+    /\.entry\.aperto \.e-nota\.vuota \{[^}]*display: flex/.test(CSS));
+  prova('mentre la nota SCRITTA resta sempre a vista',
+    !/\.e-nota \{[^}]*display: none/.test(CSS));
   prova('toccandola si apre il foglio per scriverla',
     /notaBox\.onclick[\s\S]{0,120}foglioNota\(entry/.test(APP) && /function foglioNota/.test(APP));
   prova('che salva, ridisegna e si puo annullare',

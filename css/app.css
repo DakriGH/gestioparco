@@ -1950,8 +1950,19 @@ main {
 .e-nota .em { flex: 0 0 auto; font-size: 13px; }
 .e-nota .tx { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .e-nota:active { background: rgba(0, 0, 0, 0.34); }
-/* senza niente scritto e' un invito, non un'informazione */
-.e-nota.vuota { color: rgba(255, 255, 255, 0.42); font-style: italic; }
+/* SENZA NIENTE SCRITTO NON SI VEDE. Una riga «aggiungi una nota» su
+   ogni scheda della lista e' rumore: dice una cosa che si puo' fare, non
+   una che c'e'. La nota SCRITTA invece resta sempre -- quella e'
+   un'informazione, ed e' il motivo per cui sta fuori dalla parte che si
+   apre.
+   L'invito compare col primo tocco, insieme al resto dei comandi: e' li'
+   che si sta lavorando su quella scheda. */
+.e-nota.vuota { display: none; }
+.entry.aperto .e-nota.vuota {
+  display: flex;
+  color: rgba(255, 255, 255, 0.42);
+  font-style: italic;
+}
 .e-nota.vuota .em { opacity: .5; }
 
 /* il campo del foglio della nota: grande, e quello che si scrive si vede */
