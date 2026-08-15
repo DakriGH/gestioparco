@@ -1702,12 +1702,26 @@ main {
   gap: 8px;
 }
 .e-colonna > .e-cella { flex: 1 1 0; justify-content: center; gap: 4px; padding: 8px 10px; }
-/* c'e' spazio: il numero e i tasti diventano grandi da premere */
+/* c'e' spazio: il numero e i tasti diventano grandi da premere.
+   `:not(.e-aperto)` NON e' un dettaglio: quella regola prendeva anche
+   l'interruttore del tempo, che e' largo quanto la sua scritta e non
+   quadrato. Forzato a 40 pixel, lo sfondo restava una pastiglia corta
+   con «⏳ Tempo aperto» che le usciva da tutte e due le parti. */
 .e-colonna .e-cella .v { font-size: 26px; }
-.e-colonna .e-cella button { width: 40px; height: 40px; font-size: 21px; }
+.e-colonna .e-cella button:not(.e-aperto) { width: 40px; height: 40px; font-size: 21px; }
 .e-colonna .e-dentro-cella { gap: 10px; }
 .e-colonna .e-nome { font-size: 10.5px; }
-.e-colonna .e-cella .e-aperto { height: 30px; font-size: 12px; padding: 0 12px; }
+.e-colonna .e-cella .e-aperto {
+  width: auto;
+  height: 32px;
+  padding: 0 14px;
+  font-size: 12.5px;
+  /* la scritta sta in mezzo per davvero: senza, il testo si appoggia in
+     alto a sinistra dentro un riquadro piu' alto di lui */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
 .e-cella { flex-direction: column; align-items: center; gap: 1px;
   padding: 4px 9px 6px; }
 .e-nome { font-size: 9.5px; font-weight: 800; letter-spacing: .07em;

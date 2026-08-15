@@ -751,7 +751,16 @@ gruppo('Nella scheda lunga, il Crazy si apre sotto la sua cella');
     /\.e-colonna > \.e-cella \{ flex: 1 1 0/.test(CSS));
   prova('col posto in piu, numero e tasti diventano grandi',
     /\.e-colonna \.e-cella \.v \{ font-size/.test(CSS) &&
-    /\.e-colonna \.e-cella button \{ width/.test(CSS));
+    /\.e-colonna \.e-cella button:not\(\.e-aperto\) \{ width/.test(CSS));
+  /* L'INTERRUTTORE NON E' UN TASTO QUADRATO. La regola che ingrandisce
+     il piu' e il meno prendeva anche lui: forzato a 40 pixel, lo sfondo
+     restava una pastiglia corta con «⏳ Tempo aperto» che le usciva da
+     tutte e due le parti. */
+  prova('l interruttore del tempo resta largo quanto la sua scritta',
+    /\.e-colonna \.e-cella button:not\(\.e-aperto\)/.test(CSS) &&
+    /\.e-colonna \.e-cella \.e-aperto \{[^}]*width: auto/.test(CSS));
+  prova('e la scritta ci sta in mezzo',
+    /\.e-colonna \.e-cella \.e-aperto \{[^}]*justify-content: center/.test(CSS));
   /* i comandi sono cinque da quando c'e' «Paga»: su uno schermo stretto
      la riga usciva dallo schermo trascinandosi dietro la pagina */
   prova('e i comandi vanno a capo quando non ci stanno',
