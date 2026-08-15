@@ -1,7 +1,7 @@
 /* Service worker: l'app deve partire anche senza rete.
    Strategia: rete-prima per l'HTML (così un aggiornamento si vede subito),
    cache-prima per CSS/JS/icone. Nessuna risorsa esterna da scaricare. */
-const CACHE = 'gestioparco-v172';
+const CACHE = 'gestioparco-v173';
 const ASSETS = [
   './',
   './index.html',
@@ -150,11 +150,23 @@ self.addEventListener('fetch', (e) => {
       // stessa versione in cache? la uso subito. Diversa (o assente)? rete,
       // con la copia vecchia come rete di sicurezza se si è offline.
       if (hit && !vecchia) return hit;
-      /* Anche qui la rete corre contro il cronometro, ma solo se una
-         copia da servire c'è: senza, tocca aspettarla. Servire la
-         versione vecchia di un file è meglio che non aprire l'app --
-         e al ricaricamento dopo si allinea. */
-      return hit ? conTempo(net, ATTESA_RETE, () => hit) : net;
+      /* QUI IL CRONOMETRO NON CI VA, ED È UN ERRORE CHE HO GIÀ FATTO.
+         Mettendocelo, una rete lenta faceva servire la copia VECCHIA di
+         `app.js` mentre la pagina appena scaricata era quella nuova:
+         l'app girava col codice di prima e il numero di versione in alto
+         diceva quello nuovo, perché lo legge dal `?v=` scritto nella
+         pagina. Cioè il numero mentiva — e quel numero esiste
+         esattamente per non dover indovinare se una tavoletta è
+         indietro.
+         Un file con la versione sbagliata non si serve MAI: se la
+         pagina è nuova, i suoi pezzi devono essere nuovi. Qui si
+         aspetta. Non e' un rischio di attesa infinita: quando la
+         versione in cache combacia -- cioe' sempre, tranne il primo
+         caricamento dopo una pubblicazione -- da qui non si passa
+         nemmeno, si esce dalla riga sopra senza toccare la rete.
+         La `catch` sotto tiene comunque in piedi il caso vero di rete
+         assente, dove non c'e' altro da servire. */
+      return net;
     })
   );
 });

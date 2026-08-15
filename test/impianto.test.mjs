@@ -774,8 +774,20 @@ gruppo('L’app si apre anche quando la rete c’è a metà');
     !!m && Number(m[1]) > 0 && Number(m[1]) <= 5000, m ? m[1] + ' ms' : '');
   prova('la pagina ci passa attraverso',
     /conTempo\(dallaRete, ATTESA_RETE/.test(SW));
-  prova('e anche CSS e JS quando la versione in cache è diversa',
-    /conTempo\(net, ATTESA_RETE/.test(SW));
+  /* MA NON CSS E JS QUANDO LA VERSIONE E' DIVERSA. Ce l'avevo messo, ed
+     era un errore: una rete lenta faceva servire la copia VECCHIA di
+     app.js mentre la pagina appena scaricata era quella nuova. L'app
+     girava col codice di prima e il numero in alto diceva quello nuovo,
+     perche' lo legge dal `?v=` scritto nella pagina -- cioe' il numero
+     mentiva, e quel numero esiste esattamente per non dover indovinare
+     se una tavoletta e' indietro.
+     Un file con la versione sbagliata non si serve mai: se la pagina e'
+     nuova, i suoi pezzi devono essere nuovi. */
+  prova('un file con la versione sbagliata non si serve mai',
+    !/conTempo\(net, ATTESA_RETE/.test(SW),
+    'il cronometro sui pezzi versionati fa mentire il numero di versione');
+  prova('quando la versione in cache combacia non si tocca la rete',
+    /if \(hit && !vecchia\) return hit;/.test(SW));
   prova('ma alla primissima apertura, senza copia offline, si aspetta la rete',
     /\.then\(r => r \|\| dallaRete\)/.test(SW));
 
