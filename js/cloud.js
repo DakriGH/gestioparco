@@ -56,6 +56,22 @@
     try { return JSON.parse(JSON.stringify(x)); } catch (e) { return null; }
   }
 
+  /* L'ORA LA METTE IL SERVER, NON IL TABLET.
+     Quando due casse toccano lo stesso gruppo vince l'ultima, e finche'
+     l'ultima la decideva `Date.now()` di chi scriveva bastava una
+     tavoletta con l'orologio avanti di due minuti perche' vincesse
+     SEMPRE lei, anche quando aveva torto -- e nessuno se ne sarebbe
+     accorto, perche' l'orario sbagliato se lo porta dietro il dato.
+     `agg` resta scritto com'era (serve agli ingressi gia' in giro e a
+     chi legge offline, dove il timbro del server non c'e' ancora):
+     `aggS` e' quello buono, e chi confronta prende quello se c'e'. */
+  function bollo() {
+    try {
+      const fb = global.firebase;
+      return fb.firestore.FieldValue.serverTimestamp();
+    } catch (e) { return null; }
+  }
+
   function caricaSDK() {
     if (caricato) return Promise.resolve();
     return SDK.reduce((p, src) => p.then(() => new Promise((ok, ko) => {
@@ -161,6 +177,7 @@
     if (!attivo() || !e || !e.id) return;
     const d = pulito(e);
     d.agg = Date.now();
+    d.aggS = bollo();
     d.aggDa = utente.email || '';
     radice().collection('ingressi').doc(String(e.id)).set(d).catch(err => console.warn('cloud', err));
   }
@@ -170,29 +187,58 @@
   }
   function salvaMeta(nome, dato) {
     if (!attivo()) return;
-    const d = { dati: pulito(dato), agg: Date.now(), aggDa: utente.email || '' };
+    const d = { dati: pulito(dato), agg: Date.now(), aggS: bollo(), aggDa: utente.email || '' };
     radice().collection('meta').doc(nome).set(d).catch(err => console.warn('cloud', err));
   }
 
   /* Primo accesso da un tablet che ha già lavorato da solo: quello che c'è
      qui va portato su, senza cancellare quello che c'è già in cloud. */
+  /* UN BATCH DI FIRESTORE TIENE 500 OPERAZIONI, NON UNA IN PIU'.
+     Con tutto in un lotto solo, un tablet che aveva lavorato da solo per
+     una stagione non caricava NIENTE: il commit falliva per intero, e
+     l'unica traccia era un avviso nella console mentre l'app diceva
+     "mandati 0 ingressi" come se non ci fosse stato niente da mandare.
+     Adesso si va a scaglioni, uno alla volta, e ogni scaglione risponde
+     per se': se uno non passa gli altri salgono lo stesso, e il numero
+     che torna e' quello DAVVERO salito, cosi' chi guarda se ne accorge. */
+  const PER_LOTTO = 400;
+
   function primaSalita(entries, impostazioni, presets) {
     if (!attivo()) return Promise.resolve(0);
-    const lotto = db.batch();
-    let n = 0;
-    (entries || []).forEach(e => {
-      if (!e || !e.id) return;
-      const d = pulito(e);
-      d.agg = e.agg || Date.now();
-      d.aggDa = utente.email || '';
-      lotto.set(radice().collection('ingressi').doc(String(e.id)), d, { merge: true });
-      n++;
+    const buoni = (entries || []).filter(e => e && e.id);
+    const scaglioni = [];
+    for (let i = 0; i < buoni.length; i += PER_LOTTO) scaglioni.push(buoni.slice(i, i + PER_LOTTO));
+
+    let saliti = 0;
+    let catena = Promise.resolve();
+    scaglioni.forEach(pezzo => {
+      catena = catena.then(() => {
+        const lotto = db.batch();
+        pezzo.forEach(e => {
+          const d = pulito(e);
+          d.agg = e.agg || Date.now();
+          d.aggS = bollo();
+          d.aggDa = utente.email || '';
+          lotto.set(radice().collection('ingressi').doc(String(e.id)), d, { merge: true });
+        });
+        return lotto.commit()
+          .then(() => { saliti += pezzo.length; })
+          .catch(err => { console.warn('cloud: uno scaglione non e’ salito', err); });
+      });
     });
-    if (impostazioni) lotto.set(radice().collection('meta').doc('impostazioni'),
-      { dati: pulito(impostazioni), agg: Date.now(), aggDa: utente.email || '' }, { merge: true });
-    if (presets) lotto.set(radice().collection('meta').doc('presets'),
-      { dati: pulito(presets), agg: Date.now(), aggDa: utente.email || '' }, { merge: true });
-    return lotto.commit().then(() => n).catch(err => { console.warn('cloud', err); return 0; });
+
+    /* le due meta in un lotto loro: se falliscono, gli ingressi restano su */
+    catena = catena.then(() => {
+      if (!impostazioni && !presets) return;
+      const lotto = db.batch();
+      if (impostazioni) lotto.set(radice().collection('meta').doc('impostazioni'),
+        { dati: pulito(impostazioni), agg: Date.now(), aggS: bollo(), aggDa: utente.email || '' }, { merge: true });
+      if (presets) lotto.set(radice().collection('meta').doc('presets'),
+        { dati: pulito(presets), agg: Date.now(), aggS: bollo(), aggDa: utente.email || '' }, { merge: true });
+      return lotto.commit().catch(err => { console.warn('cloud', err); });
+    });
+
+    return catena.then(() => saliti);
   }
 
   global.CLOUD = {
