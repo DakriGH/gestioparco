@@ -1541,6 +1541,36 @@ main {
 }
 .e-sigla.hidden { display: none; }
 
+/* la sigla nel registro della giornata: stessa cosa, piu' piccola --
+   li' si scorre una lista, non si guarda una scheda */
+.reg-sigla {
+  flex: 0 0 auto;
+  min-width: 34px;
+  text-align: center;
+  padding: 2px 6px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  font-family: 'Fredoka', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  color: var(--txt-2);
+}
+/* e in cima allo scontrino, dove serve a dire di CHI e' questo conto */
+.sc-sigla {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 5px 12px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.08);
+}
+.sc-sigla span { font-size: 10.5px; font-weight: 800; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--txt-3); }
+.sc-sigla b { font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 700;
+  letter-spacing: .06em; color: var(--txt); }
+
 /* la stessa, nel pannello accanto alla pastiglia del bracciale */
 .brc-sigla {
   flex-shrink: 0;
@@ -3522,6 +3552,14 @@ html:not(.anima) .view.entra-dx { animation: none; }
      dallo schermo trascinandosi dietro tutta la pagina. Sulla tavoletta
      (800) restano in fila come prima. */
   .e-azioni { flex-wrap: wrap; }
+  /* LA STRISCIA DEI SOLDI USCIVA DALLO SCHERMO. Ha misure fisse pensate
+     per la tavoletta -- l'app e' fatta per quella -- e su un telefono la
+     riga della scheda le sommava tutte finendo fuori: la pagina intera
+     scorreva di lato. Qui la riga va a capo e la striscia si prende
+     quello che avanza. */
+  .e-riga { flex-wrap: wrap; }
+  .e-soldi { flex: 1 1 auto; min-width: 0; }
+  .e-soldi .k, .e-soldi .v { min-width: 0; }
   .e-azioni button.conto { flex: 1 1 40%; }
   .e-azioni button.forte { flex: 1 1 100%; }
 }

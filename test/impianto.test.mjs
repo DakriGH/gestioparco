@@ -727,9 +727,19 @@ gruppo('Il tempo si muove da un posto solo');
      nuovo. Sotto i dieci minuti si condona da se', sopra si chiede. */
   prova('e allungando a chi ha sforato si passa dal guardiano',
     /function conSforo/.test(APP) && /if \(d > 0\) conSforo\(entry, fatto\); else fatto\(\);/.test(APP));
-  prova('sotto i dieci minuti si condona senza chiedere',
-    /const SFORO_CONDONATO = 10 \* 60000/.test(APP) &&
-    /sforo < SFORO_CONDONATO\) \{ condonaSforo\(c\); applica\(\); return; \}/.test(APP));
+  prova('sotto la soglia si condona senza chiedere',
+    /sforo < sforoCondonato\(\)\) \{ condonaSforo\(c\); applica\(\); return; \}/.test(APP));
+  /* e quanto valga la pena perdonare lo sa il banco, non il codice */
+  prova('e la soglia si cambia dalle Impostazioni',
+    /function sforoCondonato/.test(APP) &&
+    /bind\('sSforo', 'sforoCondonato'/.test(APP) &&
+    /id="sSforo"/.test(APP) &&
+    /sforoCondonato: SFORO_CONDONATO_DI_SERIE/.test(APP));
+  /* la sigla si dice a voce per indicare un gruppo: dev'esserci anche
+     dove si va a cercare «chi era quello che deve ancora pagare» */
+  prova('la sigla c e anche nel registro e sullo scontrino',
+    /reg-sigla/.test(APP) && /sc-sigla/.test(APP) &&
+    /\.reg-sigla \{/.test(CSS) && /\.sc-sigla \{/.test(CSS));
   prova('sopra si chiede, con le due strade scritte',
     /function foglioSforo/.test(APP) && /Riparti da adesso/.test(APP) && /Scala lo sforo/.test(APP));
   /* IL FOGLIO DELLO SFORO RISPONDE DOPO: salvare prima della scelta

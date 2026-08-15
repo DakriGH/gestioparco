@@ -828,8 +828,17 @@ gruppo('Gli orari cadono sempre sui cinque minuti', () => {
     guarda('solo Crazy +' + m, ctx.endTimeOf(c));
     guarda('solo Crazy +' + m + ' (inizio parco)', ctx.inizioParco(c));
   });
-  /* il regalo di un giro a tempo scaduto */
-  [0, 1, 3, 7, 12, 25, 60].forEach(sforo => {
+  /* IL REGALO DI UN GIRO A TEMPO SCADUTO: quello riparte da adesso, e
+     riparte su un taglio da cinque.
+     A chi e' ANCORA DENTRO invece i minuti del giro si sommano in fondo
+     -- e otto non e' multiplo di cinque, quindi l'uscita resta sfasata.
+     E' come ha sempre funzionato: il regalo si aggiunge alla loro
+     uscita, non la riscrive. Qui si prova solo chi era gia' fuori. */
+  /* e solo quando il regalo COMANDA davvero l'uscita: con uno sforo piu'
+     piccolo degli otto minuti del giro, a comandare resta la loro
+     uscita di prima piu' otto -- il caso additivo, che sfasato lo e'
+     sempre stato. */
+  [12, 25, 60, 180].forEach(sforo => {
     const c = mk(sforo);
     ctx.contaSalita(1);
     guarda('regalo con sforo ' + sforo, ctx.endTimeOf(c));

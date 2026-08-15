@@ -48,6 +48,12 @@ function hhmmToMin(s) {
   const [h, m] = s.split(':').map(x => parseInt(x, 10) || 0);
   return clamp(h, 0, 23) * 60 + clamp(m, 0, 59);
 }
+/* Quanti minuti di sforo si condonano senza chiedere, allungando il
+   tempo a chi e' gia' fuori. Sta QUI e non piu' in basso perche'
+   `defaultSettings()` gira all'avvio e una const non si puo' leggere
+   prima della riga in cui e' scritta. */
+const SFORO_CONDONATO_DI_SERIE = 10;
+
 function roundTo5(d) { const ms = 5 * 60000; return new Date(Math.round(d.getTime() / ms) * ms); }
 /* IN SU al prossimo taglio da cinque. Serve dove arrotondare per difetto
    toglierebbe qualcosa di promesso -- i minuti regalati da un giro. */
@@ -355,6 +361,9 @@ function defaultSettings() {
     crazyJumpingPrice: 4,
     theme: 'dark',
     tariffaSuTotale: true,
+    /* quanti minuti di sforo si condonano senza chiedere, allungando il
+       tempo a chi e' gia' fuori: sotto questa soglia si perdona da se' */
+    sforoCondonato: SFORO_CONDONATO_DI_SERIE,
     /* Il listino del cartello, a scaglioni di 10 minuti. 50' e 60'
        costano uguale, e cosi' 1h50' e 2h: e' scritto cosi' sul cartello. */
     tariffs: [
@@ -1963,7 +1972,9 @@ function segnaInizioParco(c, prima, dopo) {
    e mettersi a discutere per cinque minuti al banco non conviene a
    nessuno. Sopra, la cassiera deve poter scegliere -- mezz'ora di sforo
    regalata in silenzio e' un'altra cosa. */
-const SFORO_CONDONATO = 10 * 60000;
+function sforoCondonato() {
+  return clamp(num(settings.sforoCondonato, SFORO_CONDONATO_DI_SERIE), 0, 240) * 60000;
+}
 
 /* ALLUNGARE IL TEMPO A UN GRUPPO GIA' SFORATO.
    Lo sforo si mangiava il tempo nuovo: quindici minuti comprati a chi ne
@@ -1976,7 +1987,7 @@ const SFORO_CONDONATO = 10 * 60000;
 function conSforo(c, applica) {
   const sforo = sforoDi(c);
   if (sforo <= 0) { applica(); return; }
-  if (sforo < SFORO_CONDONATO) { condonaSforo(c); applica(); return; }
+  if (sforo < sforoCondonato()) { condonaSforo(c); applica(); return; }
   foglioSforo(c, sforo, applica);
 }
 
@@ -5327,6 +5338,10 @@ function disegnaScontrino(p, c) {
       'qui torna tutto in fila.</div>';
     return;
   }
+  /* la sigla in cima: lo scontrino si legge accanto al gruppo, ed e' il
+     codice che dice a quale */
+  const sg = String((c && c.sigla) || '');
+  const testa = sg ? '<div class="sc-sigla"><span>gruppo</span><b>' + esc(sg) + '</b></div>' : '';
   const reparto = (dove, nome) => {
     const righe = voci.filter(v => v.dove === dove);
     if (!righe.length) return '';
@@ -5346,7 +5361,7 @@ function disegnaScontrino(p, c) {
       '<span class="' + (d.total > 0.005 ? 'resta' : 'ok') + '"><i>' +
         (d.total > 0.005 ? 'restano' : 'saldato') + '</i><b>' + eur(d.total) + '</b></span>' +
     '</div>' +
-    reparto('parco', 'Parco') + reparto('bar', 'Bar');
+    testa + reparto('parco', 'Parco') + reparto('bar', 'Bar');
 }
 
 /* La card di una voce. Bambini e Crazy Jumping tengono le due fasce
@@ -6976,7 +6991,7 @@ function contiGiornata(inizio) {
     c.venduto = r2(c.venduto + d.park + d.bar);
     c.resta = r2(c.resta + d.total);
     c.righe.push({
-      id: e.id, ora: fmtTime(e.startTime), chi: nomiDi(e),
+      id: e.id, ora: fmtTime(e.startTime), chi: nomiDi(e), sigla: String(e.sigla || ''),
       bambini: clamp(e.children, 0, 1e6),
       preso: r2(num(e.paidPark, 0) + num(e.paidBar, 0)),
       resta: d.total, uscito: e.status !== 'active'
@@ -7202,6 +7217,11 @@ function vistaGiornata(dentro, ridisegna) {
       if (e) fogliRigaRegistro(e);
     };
     riga.appendChild(el('span', 'ora', r.ora));
+    /* LA SIGLA ANCHE QUI. E' il codice che si dice a voce per indicare un
+       gruppo: averlo sulla scheda e non nel registro voleva dire che
+       proprio dove si va a cercare «chi era quello che deve ancora
+       pagare» il riferimento non c'era. */
+    if (r.sigla) riga.appendChild(el('span', 'reg-sigla', r.sigla));
     const chi = el('span', 'chi');
     chi.appendChild(el('b', null, r.chi));
     chi.appendChild(el('span', null, r.bambini + (r.bambini === 1 ? ' bambino' : ' bambini') +
@@ -7811,6 +7831,7 @@ function buildSettingsView() {
       <div class="grid2">
         <div class="field"><label>Minuti extra per Crazy</label><input type="number" inputmode="numeric" min="0" id="sCrazyMin"></div>
         <div class="field"><label>Prezzo Crazy (€)</label><input type="number" inputmode="decimal" step="0.5" min="0" id="sCrazyPrice"></div>
+        <div class="field"><label>Sforo condonato (min)</label><input type="number" inputmode="numeric" min="0" max="240" id="sSforo"></div>
         <div class="field"><label>Tolleranza dopo scadenza</label><input type="number" inputmode="numeric" min="0" id="sTol"></div>
         <div class="field"><label>Avvisa quando mancano</label><input type="number" inputmode="numeric" min="0" id="sWarn"></div>
       </div>
@@ -8007,6 +8028,11 @@ function buildSettingsView() {
 
   bind('sCrazyMin', 'crazyExtraMinutes', 0, 999);
   bind('sCrazyPrice', 'crazyJumpingPrice', 0, 9999, true);
+  /* SOTTO QUANTI MINUTI DI SFORO SI PERDONA SENZA CHIEDERE. Allungando
+     il tempo a chi e' gia' fuori, lo sforo si mangerebbe il tempo nuovo:
+     sotto la soglia si condona da se', sopra si chiede. Quanto valga la
+     pena perdonare lo sa il banco, non il codice. */
+  bind('sSforo', 'sforoCondonato', 0, 240);
   bind('sTol', 'toleranceMinutes', 0, 999);
   bind('sWarn', 'warnBeforeMinutes', 0, 999);
 
