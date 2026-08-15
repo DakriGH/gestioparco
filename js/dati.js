@@ -51,7 +51,17 @@
       const s = t.objectStore(nome);
       let esito;
       try { esito = fn(s); } catch (e) { return ko(e); }
-      t.oncomplete = () => ok(esito && esito.result !== undefined ? esito.result : esito);
+      /* Una richiesta che non ha trovato niente ha `result` undefined: va
+         restituito NULL, non la richiesta stessa. Prima usciva di qui un
+         IDBRequest travestito da dato, e a salvarci era solo il
+         `JSON.parse` che gli esplodeva addosso poco piu' in la'. */
+      t.oncomplete = () => {
+        if (esito && typeof esito === 'object' && 'result' in esito) {
+          ok(esito.result === undefined ? null : esito.result);
+          return;
+        }
+        ok(esito);
+      };
       t.onerror = () => ko(t.error);
       t.onabort = () => ko(t.error);
     }));
@@ -84,8 +94,20 @@
   }
 
   /* ---------- copie del giorno ---------- */
+  /* LA GIORNATA FINISCE ALLE QUATTRO, NON A MEZZANOTTE.
+     La copia si archivia sotto la giornata a cui appartiene il lavoro,
+     la stessa che usa il registro (`giornataDi` in app.js, affacciata
+     come GIORNATA_DI). Con la mezzanotte del calendario una serata che
+     scavallava finiva spezzata in due chiavi: le due settimane promesse
+     diventavano una settimana di nottate, e "rimetti il giorno 11"
+     poteva restituire lo stato delle due del mattino invece che quello
+     di fine serata.
+     Se app.js non c'e' -- dati.js da solo -- si ripiega sul giorno
+     solare, che e' come faceva prima. */
   function oggi() {
-    const d = new Date();
+    const ora = Date.now();
+    const t = typeof global.GIORNATA_DI === 'function' ? global.GIORNATA_DI(ora) : ora;
+    const d = new Date(t);
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   }
   function copiaDelGiorno(tutto) {
