@@ -683,6 +683,31 @@ gruppo('I file di prova ci sono tutti e si chiamano fra loro');
   });
 }
 
+gruppo('Il Bar ha lo stesso scheletro di «+ Nuovo»');
+{
+  /* Le due viste ospitano lo STESSO pannello, che cambia padrone. Le
+     regole di impaginazione pero' nominavano solo #view-new: il Bar
+     restava un blocco, il pannello dentro non veniva stirato, e la zona
+     che scala perdeva una sessantina di pixel -- quanto basta a far
+     scendere la griglia del bancone da tre colonne a due. Bancone e
+     scontrino si vedevano schiacciati. */
+  prova('la vista del Bar esiste', HTML.indexOf('id="view-bar"') >= 0);
+  prova('la linguetta del Bar sta PRIMA di quella di + Nuovo',
+    HTML.indexOf('data-tab="bar"') >= 0 &&
+    HTML.indexOf('data-tab="bar"') < HTML.indexOf('data-tab="new"'));
+  /* ogni regola che stira #view-new deve nominare anche #view-bar */
+  const orfane = [];
+  CSS.split('}').forEach(blocco => {
+    const sel = blocco.split('{')[0];
+    if (!sel || sel.indexOf('#view-new') < 0) return;
+    if (sel.indexOf('#view-bar') < 0) orfane.push(sel.trim().replace(/\s+/g, ' ').slice(0, 80));
+  });
+  prova('nessuna regola stira solo + Nuovo lasciando indietro il Bar',
+    orfane.length === 0, orfane.join(' | '));
+  prova('e switchTab accende e spegne anche la vista del Bar',
+    /#view-bar'\)\.classList\.toggle\('hidden'/.test(APP));
+}
+
 gruppo('La giornata finisce alle quattro anche per le copie del giorno');
 {
   const DATI = leggi('js/dati.js');
