@@ -1686,10 +1686,28 @@ main {
    schermo stretto, o una cella che cresce -- va a capo da sola invece
    di schiacciare la griglia dentro. */
 .e-fila > .e-crazycard { flex: 1 0 442px; margin-top: 0; }
-/* le celle non si stirano all'altezza della card: starebbero in piedi
-   vuote per centosettanta pixel. Restano alte quanto il loro contenuto,
-   appoggiate in cima come la card. */
-.e-fila > .e-cella { align-self: flex-start; }
+/* LA COLONNA DI BAMBINI E TEMPO. Affiancate si prendevano 275 pixel di
+   larghezza per stare alte cinquanta, e accanto alla card del Crazy --
+   alta centosettanta -- restavano due pastiglie schiacciate in cima con
+   un buco sotto. In colonna occupano lo spazio di una card: stessa
+   altezza, meta' della larghezza, e dentro ci sta il doppio.
+   `align-self: stretch` e' quello che le fa arrivare in fondo; le due
+   celle si dividono l'altezza in parti uguali. */
+.e-fila > .e-colonna {
+  flex: 0 1 250px;
+  min-width: 190px;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.e-colonna > .e-cella { flex: 1 1 0; justify-content: center; gap: 4px; padding: 8px 10px; }
+/* c'e' spazio: il numero e i tasti diventano grandi da premere */
+.e-colonna .e-cella .v { font-size: 26px; }
+.e-colonna .e-cella button { width: 40px; height: 40px; font-size: 21px; }
+.e-colonna .e-dentro-cella { gap: 10px; }
+.e-colonna .e-nome { font-size: 10.5px; }
+.e-colonna .e-cella .e-aperto { height: 30px; font-size: 12px; padding: 0 12px; }
 .e-cella { flex-direction: column; align-items: center; gap: 1px;
   padding: 4px 9px 6px; }
 .e-nome { font-size: 9.5px; font-weight: 800; letter-spacing: .07em;

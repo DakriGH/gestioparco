@@ -736,8 +736,22 @@ gruppo('Nella scheda lunga, il Crazy si apre sotto la sua cella');
     /\.e-fila > \.e-crazycard \{ flex: 1 0 442px/.test(CSS));
   prova('e sugli schermi stretti torna a riga sua e si stringe',
     /@media \(max-width: 759px\)[\s\S]{0,900}?\.e-fila > \.e-crazycard \{ flex: 1 1 100%/.test(CSS));
-  prova('le celle non si stirano all altezza della card',
-    /\.e-fila > \.e-cella \{ align-self: flex-start/.test(CSS));
+  /* BAMBINI SOPRA, TEMPO SOTTO. Affiancate si prendevano 275 pixel di
+     larghezza per stare alte cinquanta, e accanto alla card del Crazy --
+     alta centosettanta -- restavano due pastiglie schiacciate in cima
+     con un buco sotto. In colonna occupano lo spazio di una card, e
+     dentro ci sta il doppio: numero grande e tasti larghi. */
+  prova('bambini e tempo stanno in una colonna sola',
+    /const colonna = el\('div', 'e-colonna'\)[\s\S]{0,220}colonna\.appendChild\(sKids\.box\)[\s\S]{0,80}colonna\.appendChild\(sTime\.box\)/.test(APP));
+  prova('e la colonna e nella fila, non le due celle',
+    /fila\.appendChild\(colonna\)/.test(APP));
+  prova('la colonna arriva in fondo come la card accanto',
+    /\.e-fila > \.e-colonna \{[^}]*align-self: stretch/.test(CSS));
+  prova('e le due celle si dividono l altezza',
+    /\.e-colonna > \.e-cella \{ flex: 1 1 0/.test(CSS));
+  prova('col posto in piu, numero e tasti diventano grandi',
+    /\.e-colonna \.e-cella \.v \{ font-size/.test(CSS) &&
+    /\.e-colonna \.e-cella button \{ width/.test(CSS));
   /* i comandi sono cinque da quando c'e' «Paga»: su uno schermo stretto
      la riga usciva dallo schermo trascinandosi dietro la pagina */
   prova('e i comandi vanno a capo quando non ci stanno',

@@ -4174,6 +4174,21 @@ function entryCard(entry) {
   const sKids = mkCella('\ud83e\uddd2', 'children', 1, 'Bambini');
   const sTime = mkCella(null, 'durationMinutes', 5, 'Tempo');
 
+  /* BAMBINI SOPRA, TEMPO SOTTO, IN UNA COLONNA SOLA.
+     Affiancate si prendevano 275 pixel di larghezza per stare alte
+     cinquanta, e accanto alla card del Crazy -- che ne e' alta
+     centosettanta -- restavano due pastiglie schiacciate in cima con un
+     buco sotto. In colonna occupano lo spazio di una card: la stessa
+     altezza, la meta' della larghezza, e dentro ci sta il doppio -- il
+     numero piu' grande e i tasti piu' larghi, che al banco si premono
+     con una mano sola mentre si guarda altro.
+     `appendChild` li SPOSTA: `mkCella` li aveva gia' messi nella fila,
+     e da qui in poi la fila ne vede uno solo al loro posto. */
+  const colonna = el('div', 'e-colonna');
+  colonna.appendChild(sKids.box);
+  colonna.appendChild(sTime.box);
+  fila.appendChild(colonna);
+
   /* DA TEMPO COMPRATO A TEMPO APERTO, DA QUI.
      Nel pannello c'e' la pastiglia «Tempo aperto» fra i tagli, ma in
      una scheda gia' registrata quella e' proprio la cosa che capita di
