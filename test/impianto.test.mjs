@@ -683,6 +683,36 @@ gruppo('I file di prova ci sono tutti e si chiamano fra loro');
   });
 }
 
+gruppo('L’app si apre anche quando la rete c’è a metà');
+{
+  /* Senza linea `fetch` fallisce subito e si passa alla copia offline: un
+     attimo. Ma con la linea DEBOLE -- il wifi visto da lontano, o il
+     portale di un hotspot che si mangia le richieste -- `fetch` non
+     fallisce: ASPETTA, e il browser aspetta parecchio prima di
+     arrendersi. Con la pagina servita rete-prima, l'app restava bianca
+     per tutto quel tempo: minuti.
+     Un'app fatta per lavorare senza rete non puo' restare ostaggio di
+     una rete che c'e' a meta'. */
+  prova('c’è un limite di attesa per la rete', /ATTESA_RETE\s*=\s*(\d+)/.test(SW));
+  const m = SW.match(/ATTESA_RETE\s*=\s*(\d+)/);
+  prova('e sta sotto i cinque secondi',
+    !!m && Number(m[1]) > 0 && Number(m[1]) <= 5000, m ? m[1] + ' ms' : '');
+  prova('la pagina ci passa attraverso',
+    /conTempo\(dallaRete, ATTESA_RETE/.test(SW));
+  prova('e anche CSS e JS quando la versione in cache è diversa',
+    /conTempo\(net, ATTESA_RETE/.test(SW));
+  prova('ma alla primissima apertura, senza copia offline, si aspetta la rete',
+    /\.then\(r => r \|\| dallaRete\)/.test(SW));
+
+  /* stessa famiglia: l'avvio non deve restare appeso all'archivio */
+  const DATI = leggi('js/dati.js');
+  prova('l’apertura dell’archivio gestisce anche il caso "bloccata"',
+    /onblocked/.test(DATI),
+    'senza onblocked la promessa non si chiude mai e l’app non parte');
+  prova('e l’avvio parte comunque se l’archivio non risponde',
+    /setTimeout\(\(\) => vai\(null\), \d+\)/.test(APP));
+}
+
 gruppo('Il Bar ha lo stesso scheletro di «+ Nuovo»');
 {
   /* Le due viste ospitano lo STESSO pannello, che cambia padrone. Le

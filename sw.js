@@ -1,7 +1,7 @@
 /* Service worker: l'app deve partire anche senza rete.
    Strategia: rete-prima per l'HTML (così un aggiornamento si vede subito),
    cache-prima per CSS/JS/icone. Nessuna risorsa esterna da scaricare. */
-const CACHE = 'gestioparco-v165';
+const CACHE = 'gestioparco-v166';
 const ASSETS = [
   './',
   './index.html',
@@ -74,6 +74,28 @@ function potaVersioni(cache, req) {
   })));
 }
 
+/* LA RETE CHE NON RISPONDE È PEGGIO DELLA RETE ASSENTE.
+   Senza linea `fetch` fallisce subito e si passa alla copia offline: un
+   attimo. Ma con la linea DEBOLE -- il wifi del parco visto da lontano,
+   o il portale di un hotspot che si mangia le richieste -- `fetch` non
+   fallisce: ASPETTA. E il browser aspetta parecchio prima di arrendersi.
+   Siccome la pagina è servita rete-prima, l'app restava bianca per tutto
+   quel tempo. Un'app fatta apposta per lavorare senza rete non può
+   restare ostaggio di una rete che c'è a metà.
+   Adesso la rete corre contro un cronometro: se non risponde entro due
+   secondi e mezzo si apre dalla copia offline, e l'aggiornamento lo si
+   prende al giro dopo. Su una linea buona non cambia niente. */
+const ATTESA_RETE = 2500;
+
+function conTempo(promessa, ms, seScade) {
+  return new Promise(ok => {
+    let chiusa = false;
+    const chiudi = (v) => { if (!chiusa) { chiusa = true; clearTimeout(t); ok(v); } };
+    const t = setTimeout(() => { if (!chiusa) { chiusa = true; ok(seScade()); } }, ms);
+    promessa.then(chiudi, () => chiudi(seScade()));
+  });
+}
+
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET' || !req.url.startsWith(self.location.origin)) return;
@@ -86,22 +108,26 @@ self.addEventListener('fetch', (e) => {
        `Cache-Control: max-age=600`, quindi senza questo il browser
        restituiva al service worker la pagina di dieci minuti prima e
        l'app installata continuava a mostrare la versione vecchia. */
+    const dallaRete = fetch(req, { cache: 'no-store' })
+      .then(res => {
+        /* SOLO UNA RISPOSTA BUONA ENTRA IN CACHE.
+           Questo controllo c'era per CSS e JS ma non qui: un 404 o un
+           502 di passaggio -- GitHub Pages ne fa, durante una
+           pubblicazione -- finiva in cache al posto della pagina, e da
+           li' in poi l'app offline apriva quello. Per sempre, perche'
+           niente lo sostituiva. */
+        if (res && res.status === 200 && res.type === 'basic') {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put(req, copy));
+        }
+        return res;
+      });
+    const dallaCopia = () => caches.match(req).then(r => r || caches.match('./index.html'));
     e.respondWith(
-      fetch(req, { cache: 'no-store' })
-        .then(res => {
-          /* SOLO UNA RISPOSTA BUONA ENTRA IN CACHE.
-             Questo controllo c'era per CSS e JS ma non qui: un 404 o un
-             502 di passaggio -- GitHub Pages ne fa, durante una
-             pubblicazione -- finiva in cache al posto della pagina, e da
-             li' in poi l'app offline apriva quello. Per sempre, perche'
-             niente lo sostituiva. */
-          if (res && res.status === 200 && res.type === 'basic') {
-            const copy = res.clone();
-            caches.open(CACHE).then(c => c.put(req, copy));
-          }
-          return res;
-        })
-        .catch(() => caches.match(req).then(r => r || caches.match('./index.html')))
+      conTempo(dallaRete, ATTESA_RETE, dallaCopia)
+        /* se la copia offline non c'e' ancora -- primissima apertura --
+           non si puo' fare altro che aspettare la rete davvero */
+        .then(r => r || dallaRete)
     );
     return;
   }
@@ -123,7 +149,12 @@ self.addEventListener('fetch', (e) => {
       }).catch(() => hit);
       // stessa versione in cache? la uso subito. Diversa (o assente)? rete,
       // con la copia vecchia come rete di sicurezza se si è offline.
-      return (hit && !vecchia) ? hit : net;
+      if (hit && !vecchia) return hit;
+      /* Anche qui la rete corre contro il cronometro, ma solo se una
+         copia da servire c'è: senza, tocca aspettarla. Servire la
+         versione vecchia di un file è meglio che non aprire l'app --
+         e al ricaricamento dopo si allinea. */
+      return hit ? conTempo(net, ATTESA_RETE, () => hit) : net;
     })
   );
 });

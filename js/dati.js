@@ -42,6 +42,12 @@
       };
       req.onsuccess = () => { db = req.result; ok(db); };
       req.onerror = () => ko(req.error);
+      /* APERTURA BLOCCATA: succede quando un'altra scheda tiene l'archivio
+         aperto a una versione diversa. Non arriva né onsuccess né onerror:
+         senza questo, la promessa non si chiude MAI, e chi la stava
+         aspettando resta lì per sempre. Meglio dire subito che non si
+         può: la memoria veloce basta a lavorare. */
+      req.onblocked = () => ko(new Error('archivio bloccato da un’altra scheda'));
     });
   }
 

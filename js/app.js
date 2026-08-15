@@ -8133,13 +8133,26 @@ function partenza() {
   const vuota = !localStorage.getItem(SK.entries) && !localStorage.getItem(SK.settings);
   if (typeof DATI === 'undefined' || !DATI.disponibile()) { init(); return; }
   if (!vuota) { init(); DATI.avvia([]); return; }
-  DATI.avvia([SK.entries, SK.settings, SK.presets]).then(r => {
+  /* L'APP PARTE COMUNQUE, ANCHE SE L'ARCHIVIO NON RISPONDE.
+     Qui si aspetta apposta -- la memoria veloce e' vuota e i dati
+     potrebbero stare solo in archivio, quindi partire prima vorrebbe
+     dire mostrare un banco vuoto a chi i dati ce li ha. Ma aspettare
+     SENZA UN LIMITE vuol dire schermata bianca per sempre il giorno che
+     IndexedDB non risponde (archivio bloccato da un'altra scheda, spazio
+     esaurito, permessi negati). Tre secondi e si parte lo stesso: se
+     l'archivio risponde dopo, il recupero lo si fa al ricaricamento. */
+  let partito = false;
+  const vai = (r) => {
+    if (partito) return;
+    partito = true;
     init();
-    if (r.ripristinate && r.ripristinate.length) {
+    if (r && r.ripristinate && r.ripristinate.length) {
       const n = lista(load(SK.entries)).length;
       toast('Dati recuperati dall’archivio: ' + n + ' ingressi ♻️');
     }
-  }).catch(() => init());
+  };
+  setTimeout(() => vai(null), 3000);
+  DATI.avvia([SK.entries, SK.settings, SK.presets]).then(vai).catch(() => vai(null));
 }
 
 partenza();
