@@ -115,6 +115,44 @@ gruppo('La versione e la stessa dappertutto');
   prova('il manifest c’e’', manifest);
 }
 
+gruppo('Chi risponde in differita non si fa salvare prima della risposta');
+{
+  /* LA FAMIGLIA DI GUASTI CHE MI E' COSTATA DUE TURNI.
+     Alcune funzioni non rispondono subito: aprono un foglio e aspettano
+     che qualcuno scelga. `conSforo`, `confirmSheet`, `fogliUscita`,
+     `foglioSforo`, `foglioAQualeGruppo`, `foglioSvuota`, `apriVelo`.
+     Chiamarle e poi salvare o ridisegnare nella riga sotto vuol dire
+     farlo PRIMA che la scelta sia stata fatta: il dato cambia dopo, il
+     salvataggio ha gia' scritto quello di prima, e al ricaricamento non
+     c'e' piu' niente. A video sembra che il tasto non faccia nulla --
+     ed e' successo davvero, con l'Estendi dalla scheda.
+     La regola: quello che va fatto DOPO una scelta si porta dentro la
+     scelta. Qui si cerca la forma sbagliata, non il caso singolo. */
+  const DIFFERITE = ['conSforo', 'confirmSheet', 'fogliUscita', 'foglioSforo',
+    'foglioAQualeGruppo', 'foglioSvuota', 'apriVelo'];
+  const DOPO = ['saveEntries()', 'pcSalva()', 'aggiornaPannello()', 'syncCard(', 'buildActiveView()'];
+  const prof = r => { let p = 0; for (const c of r) { if (c === '{') p++; if (c === '}') p--; } return p; };
+  const righe = APP.split('\n');
+  const sospetti = [];
+  righe.forEach((r, i) => {
+    const chiama = DIFFERITE.find(f => new RegExp('(^|[^\\w.])' + f + '\\s*\\(').test(r));
+    if (!chiama || new RegExp('^\\s*function ' + chiama).test(r)) return;
+    let p = prof(r);
+    for (let j = i + 1; j < Math.min(i + 16, righe.length); j++) {
+      const s2 = righe[j];
+      /* usciti dalla funzione che conteneva la chiamata: quello che
+         viene dopo e' codice di qualcun altro */
+      if (/^\}/.test(s2) || /^\s*function\s/.test(s2) || p <= -2) break;
+      const sporca = DOPO.find(d => s2.includes(d));
+      if (sporca && p <= 0) { sospetti.push('riga ' + (j + 1) + ': dopo ' + chiama + '() -> ' + sporca); break; }
+      if (p <= 0 && /^\s*return\b/.test(s2)) break;
+      p += prof(s2);
+    }
+  });
+  prova(DIFFERITE.length + ' funzioni che rispondono in differita, nessuna seguita da un salvataggio',
+    sospetti.length === 0, sospetti.slice(0, 3).join(' | '));
+}
+
 gruppo('Niente resti di lavorazione nel codice che gira');
 {
   const righe = APP.split('\n');
