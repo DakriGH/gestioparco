@@ -794,7 +794,26 @@ gruppo('Le liste lunghe non si disegnano tutte in un colpo');
     (() => { const m = APP.match(/const ARCHIVIO_A_VISTA = (\d+)/); return m && +m[1] >= 50 && +m[1] <= 500; })());
   prova('c’e’ il tasto per vedere tutto', APP.includes('Mostra tutti ('));
   prova('e riaprendo l’archivio si riparte dagli ultimi',
-    /showArchive = !showArchive; archivioTutto = false;/.test(APP));
+    /showArchive = !showArchive;[\s\S]{0,80}archivioTutto = false;/.test(APP));
+  /* IN ARCHIVIO SI CERCA QUALCUNO, non si scorre per il gusto di
+     scorrere: ci si va perche' «quelli di prima devono ancora pagare» o
+     «ho sbagliato a battere il gruppo AC». Con duecento righe uguali,
+     trovarlo voleva dire scorrere e leggere. */
+  prova('si puo cercare, e per tutto quello che di un gruppo si ricorda',
+    /function filtraArchivio/.test(APP) && /\.arch-cerca \{/.test(CSS) &&
+    /e\.sigla/.test(APP) && /e\.note/.test(APP));
+  prova('e ogni parola cercata deve esserci, in qualunque ordine',
+    /parole\.every\(w => dove\.indexOf\(w\) >= 0\)/.test(APP));
+  prova('e riaprendo l archivio la ricerca si dimentica',
+    /cercaArchivio = '';/.test(APP));
+  prova('le giornate si separano con un titoletto',
+    /arch-giorno/.test(APP) && /\.arch-giorno \{/.test(CSS));
+
+  /* «A QUALE GRUPPO?»: si sceglie col cliente davanti, e sbagliare vuol
+     dire mettere le birre sul conto di qualcun altro. */
+  prova('la scelta del gruppo mostra sigla, figura, tratti e quanto resta',
+    /gr-sigla/.test(APP) && /gr-fig/.test(APP) && /gr-tratti/.test(APP) &&
+    /gr-soldi/.test(APP) && /\.gr-scelta \{/.test(CSS));
 }
 
 gruppo('I file di prova ci sono tutti e si chiamano fra loro');

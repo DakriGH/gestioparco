@@ -1024,6 +1024,31 @@ function activeEntries() {
    sono un paio di settimane piene: oltre, si sta cercando altro. */
 const ARCHIVIO_A_VISTA = 200;
 let archivioTutto = false;
+/* quello che si sta cercando in archivio: e' un fatto dello schermo, non
+   un dato dell'ingresso, quindi non si salva */
+let cercaArchivio = '';
+
+/* Cerca per sigla, nome, nota e ora. Tutto quello che di un gruppo si
+   ricorda: «era AC», «era la mamma con la borsa», «quelli della torta»,
+   «erano entrati alle nove». Le parole si cercano tutte, in qualunque
+   ordine -- «anna torta» trova la mamma Anna con la nota della torta. */
+function filtraArchivio(lista_) {
+  const q = String(cercaArchivio || '').trim().toLowerCase();
+  if (!q) return lista_;
+  const parole = q.split(/\s+/).filter(Boolean);
+  return lista_.filter(e => {
+    const dove = [
+      String(e.sigla || ''),
+      lista(e.people).map(p => nameOf(p) + ' ' + roleOf(p.role).label).join(' '),
+      lista(e.people).map(p => AV.traits(p.avatar, 6, true).map(t => t.txt).join(' ')).join(' '),
+      String(e.note || ''),
+      fmtTime(e.startTime),
+      e.soloBar ? 'solo bar' : '',
+      e.status === 'cancelled' ? 'annullato' : 'uscito'
+    ].join(' ').toLowerCase();
+    return parole.every(w => dove.indexOf(w) >= 0);
+  });
+}
 
 function archived() {
   return entries.filter(e => e.status !== 'active')
@@ -4200,7 +4225,7 @@ function buildActiveView() {
   cardRefs.clear();
   root.innerHTML = '';
 
-  const list = showArchive ? archived() : activeEntries();
+  let list = showArchive ? archived() : activeEntries();
   const attivi = entries.filter(e => e.status === 'active');
   const bimbi = attivi.reduce((s, e) => s + clamp(e.children, 0, 1e6), 0);
 
@@ -4214,7 +4239,12 @@ function buildActiveView() {
   }
   const arch = el('button', 'pill arch-btn' + (showArchive ? ' on' : ''));
   arch.innerHTML = showArchive ? '\u2190 Torna agli attivi' : ('\ud83d\uddc2\ufe0f Archivio (' + archived().length + ')');
-  arch.onclick = () => { showArchive = !showArchive; archivioTutto = false; buildActiveView(); };
+  arch.onclick = () => {
+    showArchive = !showArchive;
+    archivioTutto = false;
+    cercaArchivio = '';      /* uscendo e rientrando si riparte da tutto */
+    buildActiveView();
+  };
   head.appendChild(arch);
   root.appendChild(head);
 
@@ -4222,6 +4252,15 @@ function buildActiveView() {
     root.appendChild(Object.assign(el('div', 'hint'), {
       textContent: 'Gli ingressi chiusi restano qui: puoi riaprirli se hai sbagliato, o eliminarli per sempre.'
     }));
+    const cerca = el('input', 'arch-cerca');
+    cerca.type = 'search';
+    cerca.placeholder = '\ud83d\udd0d Cerca: sigla, nome, nota, ora\u2026';
+    cerca.value = cercaArchivio;
+    /* si ridisegna mentre si scrive, ma il campo non si rifa': se lo
+       rifacessi il cursore tornerebbe in fondo a ogni lettera */
+    cerca.oninput = () => { cercaArchivio = cerca.value; buildActiveView(); };
+    root.appendChild(cerca);
+    setTimeout(() => { if (cercaArchivio) cerca.focus(); }, 0);
   }
 
   if (!list.length) {
@@ -4243,9 +4282,37 @@ function buildActiveView() {
      uno sbaglio e' sempre di poco fa. Per guardare com'e' andato un
      mese c'e' il registro, che i conti li fa senza disegnare niente.
      Chi cerca proprio quello vecchio tocca "mostra tutti". */
+  /* IN ARCHIVIO SI CERCA QUALCUNO, non si scorre per il gusto di
+     scorrere: ci si va perche' «quelli di prima devono ancora pagare» o
+     «ho sbagliato a battere il gruppo AC». Con duecento righe uguali,
+     trovarlo voleva dire scorrere e leggere.
+     Si cerca per sigla, per nome, per nota e per ora. E le giornate si
+     separano con un titoletto, se no il 12 e il 13 agosto sono un
+     elenco solo. */
+  if (showArchive) list = filtraArchivio(list);
   const quanti = showArchive && !archivioTutto && list.length > ARCHIVIO_A_VISTA
     ? ARCHIVIO_A_VISTA : list.length;
-  list.slice(0, quanti).forEach(entry => box.appendChild(showArchive ? archiveCard(entry) : entryCard(entry)));
+  let giornoScritto = null;
+  list.slice(0, quanti).forEach(entry => {
+    if (showArchive) {
+      const g = giornataDi(num(entry.startTime, num(entry.createdAt, 0)));
+      if (g !== giornoScritto) {
+        giornoScritto = g;
+        const t = el('div', 'arch-giorno');
+        t.appendChild(el('b', null, nomeGiornata(g)));
+        const quanti2 = list.filter(x => giornataDi(num(x.startTime, num(x.createdAt, 0))) === g).length;
+        t.appendChild(el('span', null, quanti2 + (quanti2 === 1 ? ' ingresso' : ' ingressi')));
+        box.appendChild(t);
+      }
+    }
+    box.appendChild(showArchive ? archiveCard(entry) : entryCard(entry));
+  });
+  if (showArchive && !list.length) {
+    box.appendChild(Object.assign(el('div', 'empty'), {
+      innerHTML: '<span class="em">\ud83d\udd0d</span>Nessuno con «' + esc(cercaArchivio) + '».<br>' +
+        'Si cerca per sigla, nome, nota o ora.'
+    }));
+  }
   if (quanti < list.length) {
     const altri = el('button', 'btn btn-block mostra-tutti',
       'Mostra tutti (' + list.length + ')');
@@ -7623,17 +7690,58 @@ function foglioAQualeGruppo() {
   s.body.appendChild(el('div', 'hint',
     'Le consumazioni passano sul suo conto. Quello che hanno già pagato al banco viene con loro: il gruppo se le ritrova già saldate.'));
 
+  /* SI DEVE CAPIRE CHI E' CHI, e a colpo d'occhio: qui si sceglie con il
+     cliente davanti che aspetta. Una riga di testo con «Nessun
+     riferimento · 2 bambini» ripetuta otto volte non permette di
+     scegliere -- e sbagliare gruppo vuol dire mettere le birre sul conto
+     di qualcun altro.
+     Quindi le stesse cose che ha la scheda, nello stesso ordine: la
+     SIGLA (che e' il codice scritto sul bracciale), la figura di chi
+     accompagna, il nome, i tratti scritti, e quanto resta da pagare. */
   dentro.forEach(e => {
     const d = dueOf(e);
-    const b = el('button', 'scelta-riga');
-    b.appendChild(el('span', 'sc-em', '🎟️'));
-    const t = el('span', 'sc-txt');
-    t.appendChild(el('b', null, nomiDi(e)));
-    t.appendChild(el('span', null,
-      'entrato alle ' + fmtTime(e.startTime) +
-      ' · ' + clamp(e.children, 0, 1e6) + (clamp(e.children, 0, 1e6) === 1 ? ' bambino' : ' bambini') +
-      (d.total > 0.005 ? ' · restano ' + eur(d.total) : ' · saldato')));
+    const gente = lista(e.people).map(x => (x.avatar = AV.normalize(x.avatar, x.role), x));
+    const b = el('button', 'gr-scelta');
+
+    if (e.sigla) b.appendChild(el('span', 'gr-sigla', e.sigla));
+
+    const fig = el('span', 'gr-fig');
+    if (gente.length) {
+      gente.slice(0, 2).forEach(x => {
+        const a = el('span', 'av');
+        a.innerHTML = AV.build(x.avatar);
+        fig.appendChild(a);
+      });
+    } else {
+      fig.classList.add('senza');
+      fig.appendChild(el('span', 'segno', e.soloBar ? '🧾' : '🎟️'));
+    }
+    b.appendChild(fig);
+
+    const t = el('span', 'gr-txt');
+    t.appendChild(el('b', null, gente.length
+      ? gente.map(x => roleOf(x.role).em + ' ' + nameOf(x)).join(' · ')
+      : (e.soloBar ? 'Solo BAR' : 'Senza riferimento')));
+    if (gente.length === 1) {
+      const tr = AV.traits(gente[0].avatar, 3, true).map(x => x.txt).join(' · ');
+      if (tr) t.appendChild(el('span', 'gr-tratti', tr));
+    }
+    const bimbi = clamp(e.children, 0, 1e6);
+    const crazy = clamp(e.crazyJumping, 0, 1e6);
+    t.appendChild(el('span', 'gr-dati',
+      'dalle ' + fmtTime(e.startTime) +
+      (e.payLater ? ' · tempo aperto' : ' · alle ' + fmtTime(endTimeOf(e))) +
+      (bimbi ? ' · 🧒 ' + bimbi : '') +
+      (crazy ? ' · 🤸 ' + crazy : '')));
     b.appendChild(t);
+
+    /* quanto resta: e' la cosa che fa scegliere quando due gruppi si
+       somigliano, e sta a destra dove si guarda per ultima */
+    const soldi = el('span', 'gr-soldi' + (d.total > 0.005 ? ' deve' : ''));
+    soldi.textContent = d.total > 0.005 ? eur(d.total) : '✓';
+    soldi.title = d.total > 0.005 ? 'restano da incassare' : 'conto saldato';
+    b.appendChild(soldi);
+
     b.onclick = () => { s.close(); versaBarSu(e); };
     s.body.appendChild(b);
   });

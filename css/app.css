@@ -2091,6 +2091,94 @@ main {
 .arch-nota { font-size: 12.5px; color: var(--txt-3);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* LA CASELLA DI RICERCA. In archivio si cerca qualcuno, non si scorre
+   per il gusto di scorrere: ci si va perche' «quelli di prima devono
+   ancora pagare» o «ho sbagliato a battere il gruppo AC». */
+.arch-cerca {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 10px 0 4px;
+  padding: 11px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--txt);
+  font: inherit;
+  font-size: 16px;
+}
+.arch-cerca:focus { outline: none; border-color: var(--accent); }
+.arch-cerca::placeholder { color: var(--txt-3); }
+
+/* il titoletto della giornata: se no il 12 e il 13 agosto sono un
+   elenco solo e non si capisce dove finisce una serata */
+.arch-giorno {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 14px 2px 2px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--line);
+}
+.arch-giorno b { font-family: 'Fredoka', sans-serif; font-size: 15px; color: var(--txt); }
+.arch-giorno span { font-size: 11.5px; color: var(--txt-3); }
+.arch-giorno:first-child { margin-top: 4px; }
+
+/* ══════════════════════════════════════════════════════════
+   «A QUALE GRUPPO?» — si sceglie col cliente davanti che aspetta, e
+   sbagliare vuol dire mettere le birre sul conto di qualcun altro.
+   Quindi le stesse cose della scheda: sigla, figura, nome, tratti e
+   quanto resta.
+   ══════════════════════════════════════════════════════════ */
+.gr-scelta {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 16px;
+  background: var(--surface-2);
+  color: var(--txt);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.gr-scelta:active { background: var(--surface-3); }
+.gr-sigla {
+  flex: 0 0 auto;
+  min-width: 42px;
+  text-align: center;
+  padding: 5px 8px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.14);
+  font-family: 'Fredoka', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: .06em;
+}
+.gr-fig { flex: 0 0 auto; display: flex; gap: 2px; align-items: flex-end; height: 54px; }
+.gr-fig .av { width: 30px; height: 42px; }
+.gr-fig .av svg { width: 100%; height: 100%; }
+.gr-fig.senza { width: 34px; align-items: center; justify-content: center; }
+.gr-fig .segno { font-size: 20px; opacity: .6; }
+.gr-txt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.gr-txt b { font-family: 'Fredoka', sans-serif; font-size: 15.5px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gr-tratti, .gr-dati { font-size: 12px; color: var(--txt-3);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* quanto resta: e' quello che fa scegliere quando due gruppi si
+   somigliano, e sta a destra dove si guarda per ultimo */
+.gr-soldi {
+  flex: 0 0 auto;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ok);
+}
+.gr-soldi.deve { color: var(--hot); }
+
 /* i tasti dicono cosa fanno: uno dei due cancella per sempre */
 .arch-tasti { flex: 0 0 auto; display: flex; flex-direction: column; gap: 6px;
   align-self: center; }
