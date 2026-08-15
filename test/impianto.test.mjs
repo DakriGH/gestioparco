@@ -853,7 +853,16 @@ gruppo('La vendita al banco resta a vista un momento, poi si archivia');
      e poi se ne va da sola con la sua animazione. */
   prova('la riconosce da se: niente bambini, niente Crazy, roba sul banco',
     /opz\.soloBar !== undefined \? !!opz\.soloBar[\s\S]{0,320}barItems\)\.some/.test(APP));
-  prova('nasce attiva e segnata', /if \(soloBar\) nuovo\.soloBar = true;/.test(APP));
+  prova('nasce attiva e segnata, con la sua scadenza',
+    /if \(soloBar\) \{[\s\S]{0,120}nuovo\.soloBar = true;[\s\S]{0,120}nuovo\.barFinoA = Date\.now\(\) \+ ATTESA_SOLO_BAR;/.test(APP));
+  /* MENTRE LA SI MODIFICA IL TEMPO NON SCORRE */
+  prova('e mentre la modifichi il tempo si ferma',
+    /function inModifica/.test(APP) && /function fermaSoloBarInModifica/.test(APP) &&
+    /restaSoloBar\(e\) <= 0 && !inModifica\(e\)/.test(APP));
+  prova('e lo stato si salva solo quando CAMBIA, non a ogni battito',
+    /if \(cambiato\) saveEntries\(\);/.test(APP));
+  prova('si legge che e una vendita al bancone',
+    /e-bar-tag/.test(APP) && /Solo bar/.test(APP) && /\.e-bar-tag \{/.test(CSS));
   prova('e non piu gia chiusa', !/nuovo\.status = 'closed'/.test(APP));
   prova('ha un tempo scritto prima di archiviarsi',
     /ATTESA_SOLO_BAR = 2 \* 60000/.test(APP));
@@ -870,8 +879,31 @@ gruppo('La vendita al banco resta a vista un momento, poi si archivia');
     /e\.payLater \|\| e\.soloBar\) return;/.test(APP));
   prova('sta in cima alla lista: e di passaggio',
     /const bar = a\.filter\(e => e\.soloBar\)/.test(APP));
-  prova('e resta tale anche dopo un ricaricamento',
-    /if \(o\.soloBar\) o\.soloBar = true; else delete o\.soloBar;/.test(APP));
+  prova('e resta tale anche dopo un ricaricamento, scadenza compresa',
+    /if \(o\.soloBar\) \{[\s\S]{0,200}o\.barFinoA = num\(o\.createdAt, o\.startTime\) \+ ATTESA_SOLO_BAR;/.test(APP));
+}
+
+gruppo('La scheda in archivio dice chi era e quanto ha pagato');
+{
+  /* Era una riga di testo con due iconcine: non si capiva chi fosse chi
+     -- «Nessun riferimento · 2» su venti righe uguali -- non si vedeva
+     quanto avessero pagato, e i due tasti erano una freccia e un cestino
+     senza una parola sopra. */
+  prova('c e la figura di chi accompagnava', /arch-fig/.test(APP) && /\.arch-fig \{/.test(CSS));
+  prova('e i tratti scritti, per riconoscerli',
+    /arch-tratti/.test(APP) && /AV\.traits\(people\[0\]\.avatar/.test(APP));
+  prova('si legge che cos era: uscito, annullato o solo bar',
+    /arch-tipo/.test(APP) && /Solo bar/.test(APP) && /Annullato/.test(APP));
+  prova('quando sono stati dentro e quanto',
+    /arch-quando/.test(APP) && /fmtMin\(durata\)/.test(APP));
+  prova('e i soldi, con quello che manca in rosso',
+    /arch-soldi/.test(APP) && /as-manca/.test(APP) && /\.arch-soldi \.as-manca[^}]*color: var\(--hot\)/.test(CSS));
+  prova('i tasti hanno le parole, non solo le icone',
+    /Rimetti dentro/.test(APP) && /Elimina'\)/.test(APP));
+  prova('e la conferma dice cosa si perde',
+    /non risulteranno pi/.test(APP));
+  prova('rimettere dentro una vendita al banco le ridà i suoi minuti',
+    /if \(entry\.soloBar\) entry\.barFinoA = Date\.now\(\) \+ ATTESA_SOLO_BAR;/.test(APP));
 }
 
 gruppo('La giornata finisce alle quattro anche per le copie del giorno');

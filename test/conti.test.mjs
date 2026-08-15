@@ -917,8 +917,19 @@ gruppo('«Aggiungi a»: i soldi non si creano e non si perdono', () => {
        ctx.stateOf(vendita, Date.now()), 'bar');
     vero('e le resta del tempo prima di archiviarsi', ctx.restaSoloBar(vendita) > 0);
 
+    /* MENTRE LA SI MODIFICA IL TEMPO NON SCORRE: aprire la scheda di una
+       vendita al banco vuol dire «aspetta, questa e' sbagliata», e
+       archiviarla sotto le dita sarebbe il contrario di quello che
+       serve. */
+    vendita.barFinoA = Date.now() - 1000;
+    ctx.PAN.ingresso = vendita;
+    ctx.archiviaSoloBarScaduti();
+    ok('mentre la modifichi non si archivia', ctx.entries.find(e => e.id === vendita.id).status, 'active');
+    vero('e il tempo torna pieno', ctx.restaSoloBar(vendita) > 100000);
+    ctx.PAN.ingresso = null;
+
     /* passati i due minuti se ne va da sola */
-    vendita.createdAt = Date.now() - 3 * 60000;
+    vendita.barFinoA = Date.now() - 1000;
     ok('scaduta, non le resta piu tempo', ctx.restaSoloBar(vendita), 0);
     ctx.archiviaSoloBarScaduti();
     ok('e si archivia da sola', ctx.entries.find(e => e.id === vendita.id).status, 'closed');

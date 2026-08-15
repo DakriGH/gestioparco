@@ -3862,7 +3862,10 @@ function commitDa(draft, opz) {
      da sola in archivio, con la sua animazione: la lista non deve
      riempirsi di scontrini, e nel registro della giornata ci finisce
      comunque. Se ne occupa `archiviaSoloBarScaduti`, dal battito. */
-  if (soloBar) nuovo.soloBar = true;
+  if (soloBar) {
+    nuovo.soloBar = true;
+    nuovo.barFinoA = Date.now() + ATTESA_SOLO_BAR;
+  }
   entries.push(nuovo);
   toast(opz.messaggio || 'Ingresso registrato \u2705');
   saveEntries();
@@ -3969,33 +3972,120 @@ function buildActiveView() {
   if (!showArchive) tick();
 }
 
+/* LA SCHEDA IN ARCHIVIO.
+   Era una riga di testo con due iconcine: non si capiva chi fosse chi
+   -- «Nessun riferimento · 🧒 2» su venti righe uguali -- non si vedeva
+   quanto avessero pagato, e i due tasti erano una freccia e un cestino
+   senza una parola sopra.
+   Adesso dice le stesse cose che dice la scheda viva, e nello stesso
+   ordine: la figura di chi accompagnava, il nome, quando sono stati
+   dentro e quanto, quanti erano, e i soldi -- con quello che e' rimasto
+   da incassare in rosso, che e' l'unica cosa che in archivio si va
+   davvero a cercare. */
 function archiveCard(entry) {
   const d = el('div', 'arch');
+  const people = lista(entry.people).map(p => (p.avatar = AV.normalize(p.avatar, p.role), p));
+  const due = dueOf(entry);
+  const annullato = entry.status === 'cancelled';
+
+  /* la figura: la stessa dell'elenco vivo, cosi' si riconosce a colpo
+     d'occhio chi era senza leggere niente */
+  const fig = el('div', 'arch-fig');
+  if (people.length) {
+    people.slice(0, 2).forEach(p => {
+      const a = el('div', 'av');
+      a.innerHTML = AV.build(p.avatar);
+      fig.appendChild(a);
+    });
+    if (people.length > 1) fig.classList.add('multi');
+  } else {
+    fig.classList.add('senza');
+    fig.appendChild(el('div', 'segno', entry.soloBar ? '\ud83e\uddfe' : '\ud83c\udf9f\ufe0f'));
+  }
+  d.appendChild(fig);
+
   const info = el('div', 'ainfo');
-  const who = lista(entry.people).map(nameOf).join(', ') || 'Nessun riferimento';
-  info.innerHTML = `<b>${entry.status === 'cancelled' ? '🗑️ Annullato' : '✅ Chiuso'}</b> · ${fmtDate(entry.startTime)} ${fmtTime(entry.startTime)}<br>${esc(who)} · 🧒 ${clamp(entry.children, 0, 1e6)}`;
+
+  /* che cos'era: annullato, vendita al bancone, o un gruppo uscito */
+  const tipo = el('div', 'arch-tipo');
+  tipo.className = 'arch-tipo' + (annullato ? ' ann' : entry.soloBar ? ' bar' : '');
+  tipo.textContent = annullato ? '\ud83d\uddd1\ufe0f Annullato'
+    : entry.soloBar ? '\ud83e\uddfe Solo bar' : '\ud83d\udeaa Uscito';
+  info.appendChild(tipo);
+
+  const chi = el('div', 'arch-chi');
+  chi.textContent = people.length
+    ? people.map(p => roleOf(p.role).em + ' ' + nameOf(p)).join(' \u00b7 ')
+    : entry.soloBar ? 'Vendita al bancone' : 'Senza riferimento';
+  info.appendChild(chi);
+
+  /* i tratti scritti: sono quelli che facevano riconoscere la persona,
+     e in archivio servono a dire «ah, erano quelli col cappello giallo» */
+  if (people.length === 1) {
+    const t = AV.traits(people[0].avatar, 3, true).map(x => x.txt).join(' \u00b7 ');
+    if (t) info.appendChild(el('div', 'arch-tratti', t));
+  }
+
+  const quando = el('div', 'arch-quando');
+  const durata = Math.round((endTimeOf(entry) - entry.startTime) / 60000);
+  quando.innerHTML = '<span>' + esc(fmtDate(entry.startTime)) + '</span>' +
+    '<b>' + fmtTime(entry.startTime) + '</b>' +
+    (entry.soloBar ? '' : '<span>\u2192</span><b>' + fmtTime(endTimeOf(entry)) + '</b>' +
+      '<i>' + fmtMin(durata) + '</i>') +
+    (clamp(entry.children, 0, 1e6) ? '<span class="arch-q">\ud83e\uddd2 ' + clamp(entry.children, 0, 1e6) + '</span>' : '') +
+    (clamp(entry.crazyJumping, 0, 1e6) ? '<span class="arch-q">\ud83e\udd38 ' + clamp(entry.crazyJumping, 0, 1e6) + '</span>' : '');
+  info.appendChild(quando);
+
+  /* I SOLDI, che sono il motivo per cui in archivio ci si torna. Quello
+     che manca in rosso: e' la domanda vera («questi hanno pagato?»), e
+     prima non c'era nessuna risposta. */
+  const soldi = el('div', 'arch-soldi');
+  const preso = r2(num(entry.paidPark, 0) + num(entry.paidBar, 0));
+  soldi.innerHTML = '<span class="as-k">incassato</span><b>' + eur(preso) + '</b>' +
+    (due.total > 0.005
+      ? '<span class="as-manca">restano ' + eur(due.total) + '</span>'
+      : '<span class="as-ok">\u2713 saldato</span>');
+  info.appendChild(soldi);
+
+  const nota = String(entry.note || '').trim();
+  if (nota) info.appendChild(el('div', 'arch-nota', '\ud83d\udcdd ' + nota));
+
   d.appendChild(info);
-  const rest = el('button', 'btn btn-sm', '\u21a9\ufe0e');
-  rest.title = 'Ripristina';
+
+  /* I TASTI CON LE PAROLE. Una freccia e un cestino non dicono cosa
+     fanno, e uno dei due cancella per sempre. */
+  const tasti = el('div', 'arch-tasti');
+  const rest = el('button', 'btn btn-sm', '\u21a9\ufe0e Rimetti dentro');
+  rest.title = 'Torna fra chi \u00e8 al parco';
   rest.onclick = () => {
     entry.status = 'active';
+    delete entry.closedAt;
     delete entry.costoFinale;   // torna dentro: si riconta col listino di adesso
+    /* se era una vendita al bancone le si ridanno i suoi due minuti, se
+       no si riarchivia all'istante e sembra che il tasto non funzioni */
+    if (entry.soloBar) entry.barFinoA = Date.now() + ATTESA_SOLO_BAR;
     saveEntries();
+    showArchive = false;
     buildActiveView();
     updateBadge();
-    toast('Ripristinato');
+    toast('Rimesso dentro \u21a9\ufe0e');
   };
-  const del = el('button', 'btn btn-sm btn-danger', '\ud83d\uddd1\ufe0f');
-  del.title = 'Elimina';
-  del.onclick = () => confirmSheet('Eliminare definitivamente?', 'Non si può annullare.', () => {
+  tasti.appendChild(rest);
+
+  const del = el('button', 'btn btn-sm btn-danger', '\ud83d\uddd1\ufe0f Elimina');
+  del.title = 'Sparisce anche dai conti della giornata';
+  del.onclick = () => confirmSheet('Eliminare ' +
+    (people.length ? nomiDi(entry) : entry.soloBar ? 'questa vendita al bancone' : 'questo ingresso') + '?',
+    'Sparisce anche dai conti della giornata: ' + eur(preso) +
+    ' non risulteranno pi\u00f9 incassati. Non si pu\u00f2 annullare.', () => {
     entries = entries.filter(e => e.id !== entry.id);
     saveEntries();
     buildActiveView();
     updateBadge();
     toast('Eliminato');
   });
-  d.appendChild(rest);
-  d.appendChild(del);
+  tasti.appendChild(del);
+  d.appendChild(tasti);
   return d;
 }
 
@@ -4248,6 +4338,15 @@ function entryCard(entry) {
   if (entry.payLater) {
     sTime.box.classList.add('hidden');
     fila.appendChild(el('div', 'e-later-tag', '\u23f3 Tempo aperto'));
+  }
+  /* CHE COS'E' VA SCRITTO. Grigia e senza conto alla rovescia si capiva
+     che era un'altra cosa, ma non QUALE: chi la trova in cima alla lista
+     deve leggere in due parole che e' una vendita al bancone e che se ne
+     va da sola. */
+  if (entry.soloBar) {
+    const t = el('div', 'e-bar-tag');
+    t.innerHTML = '<b>\ud83e\uddfe Solo bar</b><span>vendita al bancone \u00b7 va in archivio da s\u00e9</span>';
+    fila.appendChild(t);
   }
 
   const azioni = el('div', 'e-azioni');
@@ -5972,7 +6071,13 @@ function vestiRiga(r, entry) {
   avBox.classList.toggle('multi', people.length > 1);
   avBox.classList.toggle('manca', !people.length);
   avBox.onclick = r.apriParco;
-  if (!people.length) {
+  if (!people.length && entry.soloBar) {
+    /* una vendita al bancone non ha nessuno da riconoscere: chiedere
+       «metti chi e'» sarebbe chiedere una cosa che non esiste */
+    avBox.title = 'Vendita al bancone';
+    avBox.appendChild(el('div', 'segno', '\ud83e\uddfe'));
+    avBox.appendChild(el('div', 'dillo', 'al bancone'));
+  } else if (!people.length) {
     avBox.title = 'Nessun riferimento \u2014 tocca per metterlo';
     avBox.appendChild(el('div', 'segno', '\u2795'));
     avBox.appendChild(el('div', 'dillo', 'metti chi \u00e8'));
@@ -5989,7 +6094,7 @@ function vestiRiga(r, entry) {
   if (r.nome) {
     r.nome.textContent = people.length
       ? people.map(p => roleOf(p.role).em + ' ' + nameOf(p)).join(' \u00b7 ')
-      : 'Nessun riferimento';
+      : entry.soloBar ? 'Vendita al bancone' : 'Nessun riferimento';
   }
   if (r.tratti) {
     r.tratti.textContent = people.length === 1
@@ -6240,16 +6345,53 @@ function ingressoLive() {
    la lista di chi e' dentro si riempia di scontrini. */
 const ATTESA_SOLO_BAR = 2 * 60000;
 
+/* Si sta mettendo mano a questa scheda? Il conto alla rovescia non deve
+   correre mentre la si corregge: e' proprio il momento per cui esiste. */
+function inModifica(e) {
+  if (PAN.ingresso && PAN.ingresso.id === e.id) return true;
+  const r = cardRefs.get(e.id);
+  return !!(r && r.card && r.card.isConnected && r.card.classList.contains('aperto'));
+}
+
+function scadenzaSoloBar(e) {
+  return num(e.barFinoA, num(e.createdAt, e.startTime) + ATTESA_SOLO_BAR);
+}
 function restaSoloBar(e) {
-  return Math.max(0, ATTESA_SOLO_BAR - (Date.now() - num(e.createdAt, e.startTime)));
+  return Math.max(0, scadenzaSoloBar(e) - Date.now());
+}
+
+/* MENTRE LA MODIFICHI IL TEMPO NON SCORRE. Aprire la scheda di una
+   vendita al banco vuol dire «aspetta, questa e' sbagliata»: archiviarla
+   sotto le dita mentre la si corregge sarebbe il contrario di quello che
+   serve. Finche' resta aperta la scadenza si sposta in avanti, quindi il
+   numero resta fermo sul pieno; chiusa, i due minuti ripartono interi.
+   Si salva solo quando lo stato CAMBIA -- aperta o chiusa -- non a ogni
+   battito: sono sessanta scritture al minuto per niente. */
+const soloBarFermi = new Set();
+function fermaSoloBarInModifica() {
+  let cambiato = false;
+  lista(entries).forEach(e => {
+    if (!e || !e.soloBar || e.status !== 'active') return;
+    const ora = inModifica(e);
+    const era = soloBarFermi.has(e.id);
+    if (ora) {
+      e.barFinoA = Date.now() + ATTESA_SOLO_BAR;
+      if (!era) { soloBarFermi.add(e.id); cambiato = true; }
+    } else if (era) {
+      soloBarFermi.delete(e.id);
+      cambiato = true;
+    }
+  });
+  if (cambiato) saveEntries();
 }
 
 /* Le vendite al banco passate di tempo se ne vanno in archivio da sole.
    Il prezzo si ferma li', come per chi esce: dal registro della giornata
    non spariscono, e' la lista di chi e' DENTRO che si libera. */
 function archiviaSoloBarScaduti() {
+  fermaSoloBarInModifica();
   const scaduti = lista(entries).filter(e =>
-    e && e.soloBar && e.status === 'active' && restaSoloBar(e) <= 0);
+    e && e.soloBar && e.status === 'active' && restaSoloBar(e) <= 0 && !inModifica(e));
   if (!scaduti.length) return;
   scaduti.forEach(e => {
     const d = dueOf(e);
@@ -7847,7 +7989,10 @@ function riparaConto(o) {
   if (o.crazyJumping > 0) o.crazyGiri = giriCrazy(o);
   else delete o.crazyGiri;
   /* una vendita al banco resta tale anche dopo un ricaricamento */
-  if (o.soloBar) o.soloBar = true; else delete o.soloBar;
+  if (o.soloBar) {
+    o.soloBar = true;
+    if (!Number.isFinite(num(o.barFinoA, NaN))) o.barFinoA = num(o.createdAt, o.startTime) + ATTESA_SOLO_BAR;
+  } else { delete o.soloBar; delete o.barFinoA; }
   /* LA NOTA E' UNA RIGA DI TESTO, e nient'altro. Dal cloud o da un
      salvataggio vecchio puo' arrivarci dentro qualunque cosa. */
   o.note = typeof o.note === 'string' ? o.note.slice(0, 500) : '';

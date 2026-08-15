@@ -1900,17 +1900,82 @@ main {
 }.pay-acts .btn { flex: 1; min-width: 200px; }
 
 /* archivio *//* archivio */
+/* ══════════════════════════════════════════════════════════
+   LA SCHEDA IN ARCHIVIO
+   Era una riga di testo con due iconcine. Adesso dice le stesse cose
+   della scheda viva e nello stesso ordine: la figura, il nome, quando e
+   quanto, e i soldi -- con quello che manca in rosso, che e' l'unica
+   cosa che in archivio si va davvero a cercare.
+   ══════════════════════════════════════════════════════════ */
 .arch {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 14px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--r);
-  padding: 14px 16px;
+  padding: 12px 14px;
 }
-.arch .ainfo { flex: 1; min-width: 0; font-size: 15px; color: var(--txt-2); line-height: 1.4; }
-.arch .ainfo b { color: var(--txt); font-size: 16px; }
+.arch .ainfo { flex: 1; min-width: 0; font-size: 15px; color: var(--txt-2); line-height: 1.35;
+  display: flex; flex-direction: column; gap: 3px; }
+
+/* la figura, come nell'elenco vivo: si riconosce senza leggere */
+.arch-fig { flex: 0 0 auto; display: flex; gap: 2px; align-items: flex-end;
+  height: 72px; }
+.arch-fig .av { width: 40px; height: 54px; }
+.arch-fig .av svg { width: 100%; height: 100%; }
+.arch-fig.senza { width: 44px; height: 72px; align-items: center; justify-content: center;
+  border-radius: 12px; background: rgba(255,255,255,.06); }
+.arch-fig .segno { font-size: 22px; opacity: .7; }
+
+.arch-tipo { font-size: 10.5px; font-weight: 800; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--txt-3); }
+.arch-tipo.ann { color: var(--hot); }
+.arch-tipo.bar { color: #E8B44C; }
+.arch-chi { font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 700;
+  color: var(--txt); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.arch-tratti { font-size: 12.5px; color: var(--txt-3);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.arch-quando { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap;
+  font-family: 'Fredoka', sans-serif; font-size: 13.5px; color: var(--txt-2);
+  font-variant-numeric: tabular-nums; }
+.arch-quando span { font-size: 11.5px; color: var(--txt-3); font-family: inherit; }
+.arch-quando b { color: var(--txt); font-weight: 700; }
+.arch-quando i { font-style: normal; font-weight: 700; color: var(--txt-3);
+  padding-left: 6px; margin-left: 2px; border-left: 1px solid var(--line); }
+.arch-quando .arch-q { font-size: 12.5px; color: var(--txt-2); margin-left: 4px; }
+
+.arch-soldi { display: flex; align-items: baseline; gap: 7px; margin-top: 2px;
+  font-family: 'Fredoka', sans-serif; font-size: 15px; }
+.arch-soldi .as-k { font-size: 10.5px; font-weight: 800; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--txt-3); font-family: inherit; }
+.arch-soldi b { color: var(--txt); font-weight: 700; }
+/* quello che manca e' la domanda vera: si vede da lontano */
+.arch-soldi .as-manca { font-size: 13px; font-weight: 700; color: var(--hot);
+  background: rgba(228,87,79,.14); border-radius: 8px; padding: 2px 8px; }
+.arch-soldi .as-ok { font-size: 12.5px; font-weight: 700; color: var(--ok); }
+.arch-nota { font-size: 12.5px; color: var(--txt-3);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* i tasti dicono cosa fanno: uno dei due cancella per sempre */
+.arch-tasti { flex: 0 0 auto; display: flex; flex-direction: column; gap: 6px;
+  align-self: center; }
+.arch-tasti .btn { white-space: nowrap; }
+
+@media (max-width: 759px) {
+  .arch { flex-wrap: wrap; }
+  .arch-tasti { flex-direction: row; width: 100%; }
+  .arch-tasti .btn { flex: 1 1 0; }
+}
+
+/* la fascia della vendita al banco, nella scheda viva: grigia e senza
+   conto alla rovescia si capiva che era un'altra cosa, ma non QUALE */
+.e-bar-tag { flex: 1 0 100%; display: flex; align-items: baseline; gap: 8px;
+  padding: 5px 11px; border-radius: 11px; background: rgba(232,180,76,.14);
+  box-shadow: inset 0 0 0 1px rgba(232,180,76,.3); }
+.e-bar-tag b { font-family: 'Fredoka', sans-serif; font-size: 14px; color: #F6DCA6; }
+.e-bar-tag span { font-size: 12px; color: rgba(255,255,255,.7); }
 
 /* ---------- modale ---------- */
 #modalRoot { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px; }
