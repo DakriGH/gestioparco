@@ -1115,15 +1115,32 @@ gruppo('La ruota dei colori: il disegno e la formula dicono la stessa cosa');
       return dipintaConica(ang).map(v => 128 * alfa + v * (1 - alfa));
     };
 
+    /* IL VELO DEL CHIARO-SCURO fa parte del disegno: il cerchio e'
+       dipinto a mezza luce e sopra ci va un velo nero o bianco. Se il
+       velo non desse ESATTAMENTE la luce scelta, tornerebbe lo stesso
+       guasto di prima -- si vede un rosso scuro e si prende un altro
+       colore -- quindi si prova a tutte e sette le luci, non solo a
+       quella di mezzo. */
+    const conVelo = (colore, L) => {
+      const alfa = L < 50 ? (1 - L / 50) : (L / 50 - 1);
+      const sopra = L < 50 ? 0 : 255;
+      return colore.map(v => v * (1 - alfa) + sopra * alfa);
+    };
+
     let peggio = 0, dove = '', somma = 0, n = 0;
-    for (let g = 0; g < 360; g += 3) {
-      for (let d = 0.05; d <= 1; d += 0.05) {
-        const rad = (g - 90) * Math.PI / 180;
-        const preso = rgb(app.coloreDelPunto(Math.cos(rad) * d * 104, Math.sin(rad) * d * 104, 104));
-        const visto = dipinto(g, d);
-        const scarto = Math.sqrt([0, 1, 2].reduce((a, k) => a + (preso[k] - visto[k]) ** 2, 0));
-        somma += scarto; n++;
-        if (scarto > peggio) { peggio = scarto; dove = 'a ' + g + '° e al ' + Math.round(d * 100) + '% del raggio'; }
+    for (const L of app.LUCI) {
+      for (let g = 0; g < 360; g += 3) {
+        for (let d = 0.05; d <= 1; d += 0.05) {
+          const rad = (g - 90) * Math.PI / 180;
+          const preso = rgb(app.coloreDelPunto(Math.cos(rad) * d * 104, Math.sin(rad) * d * 104, 104, L));
+          const visto = conVelo(dipinto(g, d), L);
+          const scarto = Math.sqrt([0, 1, 2].reduce((a, k) => a + (preso[k] - visto[k]) ** 2, 0));
+          somma += scarto; n++;
+          if (scarto > peggio) {
+            peggio = scarto;
+            dove = 'a ' + g + '°, al ' + Math.round(d * 100) + '% del raggio, luce ' + L;
+          }
+        }
       }
     }
     /* lo scarto e' una distanza fra due colori: il massimo possibile e'
@@ -1134,6 +1151,123 @@ gruppo('La ruota dei colori: il disegno e la formula dicono la stessa cosa');
     prova('e non e’ un caso che capiti solo da qualche parte',
       somma / n < 5, 'scarto medio ' + Math.round(somma / n * 10) / 10);
   }
+}
+
+/* ============================================================
+   IL NOME DEL COLORE
+
+   E' quello che si legge all'uscita: «Camicia rossa · Jeans neri». Se
+   sbaglia, si cerca la persona sbagliata.
+   Il nome si prendeva dalla pastiglia piu' vicina IN RGB, e la distanza
+   in RGB e' dominata dalla luminosita': un ocra spento finiva a un
+   passo dal grigio e usciva «grigio». Uno su nove dei colori presi
+   dalla ruota veniva chiamato grigio.
+   ============================================================ */
+gruppo('Un colore con la sua tinta non si chiama grigio');
+{
+  const senzaTinta = /grigi|nero|nera|bianc/;
+  const storti = [];
+  let quanti = 0;
+  for (let g = 0; g < 360; g += 5) {
+    for (let d = 0.25; d <= 1.001; d += 0.15) {
+      for (const L of app.LUCI) {
+        const rad = (g - 90) * Math.PI / 180;
+        const c = app.coloreDelPunto(Math.cos(rad) * d * 104, Math.sin(rad) * d * 104, 104, L);
+        const q = app.AV.hsl(c);
+        quanti++;
+        /* solo dove la tinta si vede davvero: quasi nero, quasi bianco
+           e quasi spento SONO grigi, ed e' giusto che si chiamino cosi' */
+        if (q.s < 25 || q.l < 15 || q.l > 88) continue;
+        const n = app.AV.colorName(c, 0);
+        if (senzaTinta.test(n)) storti.push(c + ' (tinta ' + q.h + ', sat ' + q.s + ', luce ' + q.l + ') -> ' + n);
+      }
+    }
+  }
+  prova('nessuno dei ' + quanti + ' colori della ruota perde la sua tinta',
+    !storti.length, storti.slice(0, 4).join('\n        '));
+
+  /* il caso vero da cui e' partito tutto */
+  prova('l’ocra spento non e’ «grigio»', app.AV.colorName('#998c66', 0) !== 'grigio',
+    'si chiama «' + app.AV.colorName('#998c66', 0) + '»');
+}
+
+gruppo('Il nome dice anche se e’ chiaro o scuro');
+{
+  /* senza questo il chiaro-scuro della ruota sarebbe mezzo inutile: si
+     sceglie un rosso scuro e la scheda dice «rossa» come per un rosso
+     acceso, cioe' non aiuta a distinguere due persone */
+  const tinta = (h, s, l) => app.AV.colorName(app.hslInEsa(h, s, l), 0);
+  prova('un rosso scuro si chiama «rosso scuro»', tinta(0, 80, 18) === 'rosso scuro', tinta(0, 80, 18));
+  prova('un rosso chiaro si chiama «rosso chiaro»', tinta(0, 80, 84) === 'rosso chiaro', tinta(0, 80, 84));
+  prova('e uno normale resta «rosso»', tinta(0, 80, 50) === 'rosso', tinta(0, 80, 50));
+  prova('un azzurro slavato e’ «azzurro spento»', tinta(195, 20, 50) === 'azzurro spento', tinta(195, 20, 50));
+
+  /* «blu» e «viola» non si accordano, e nemmeno quello che gli sta
+     dietro: si dice «maglietta blu scuro», mai «blu scura» */
+  const f = (h, s, l, g) => app.AV.colorName(app.hslInEsa(h, s, l), g);
+  prova('«blu scuro» resta invariabile al femminile', f(225, 70, 18, 1) === 'blu scuro', f(225, 70, 18, 1));
+  prova('e al plurale', f(225, 70, 18, 2) === 'blu scuro', f(225, 70, 18, 2));
+  prova('mentre «rosso scuro» si accorda', f(0, 80, 18, 1) === 'rossa scura', f(0, 80, 18, 1));
+  prova('e al femminile plurale', f(0, 80, 18, 3) === 'rosse scure', f(0, 80, 18, 3));
+
+  /* LE PAROLE SEGUONO IL COMANDO. Il chiaro-scuro si sceglie sui sette
+     passi della striscia, e ogni passo deve avere la parola che gli
+     tocca: i due bassi «scuro», i due alti «chiaro», i tre in mezzo
+     niente. Se qualcuno cambia i passi senza spostare le soglie in
+     avatar.js, due passi diversi finiscono a chiamarsi uguale e la
+     striscia smette di servire — questa prova lo ferma. */
+  {
+    const attese = ['scuro', 'scuro', '', '', '', 'chiaro', 'chiaro'];
+    app.LUCI.forEach((L, i) => {
+      const n = app.AV.colorName(app.hslInEsa(0, 80, L), 0);
+      const parola = n.split(' ')[1] || '';
+      prova('il passo ' + (i + 1) + ' della striscia (luce ' + L + ') si chiama «rosso ' +
+        (attese[i] || '—') + '»', parola === attese[i], 'si chiama «' + n + '»');
+    });
+    prova('e i sette passi hanno sette nomi diversi a sufficienza',
+      new Set(app.LUCI.map(L => app.AV.colorName(app.hslInEsa(0, 80, L), 0))).size === 3,
+      'i nomi sono ' + [...new Set(app.LUCI.map(L => app.AV.colorName(app.hslInEsa(0, 80, L), 0)))].join(', '));
+  }
+
+  /* le pastiglie tengono il nome scritto a mano: nessuna formula tira
+     fuori «verde militare» */
+  app.AV.COLORS.forEach(c => {
+    prova('la pastiglia ' + c.c + ' resta «' + c.n[0] + '»',
+      app.AV.colorName(c.c, 0) === c.n[0], app.AV.colorName(c.c, 0));
+  });
+
+  /* i grigi veri restano grigi, coi loro passi */
+  prova('il quasi nero e’ «nero»', tinta(0, 0, 8) === 'nero', tinta(0, 0, 8));
+  prova('il quasi bianco e’ «bianco»', tinta(0, 0, 96) === 'bianco', tinta(0, 0, 96));
+  prova('e in mezzo c’e’ il grigio', tinta(0, 0, 50) === 'grigio', tinta(0, 0, 50));
+  prova('un colore che non e’ un colore non ha nome', app.AV.colorName('boh', 0) === '');
+}
+
+gruppo('I capelli tengono i loro quattro nomi, ma non mentono');
+{
+  /* i capelli hanno una fila di quattro nomi che una formula non
+     direbbe mai: «biondo» non e' «giallo chiaro». Un biondo platino
+     salvato ieri deve restare biondo. */
+  const cap = (c) => app.AV.colorName(c, 0, app.AV.HAIR_COLORS);
+  prova('un biondo platino resta «biondo»', cap('#E8D8B0') === 'biondo', cap('#E8D8B0'));
+  prova('e un biondo scuro pure', cap('#C8A165') === 'biondo', cap('#C8A165'));
+  prova('un castano scuro resta «marrone»', cap('#5A3520') === 'marrone', cap('#5A3520'));
+  prova('e un castano chiaro pure', cap('#8B5A2B') === 'marrone', cap('#8B5A2B'));
+  prova('un quasi nero resta «nero»', cap('#2A2018') === 'nero', cap('#2A2018'));
+  prova('e i grigi dei nonni restano «grigio»', cap('#D5D8DC') === 'grigio', cap('#D5D8DC'));
+  /* ma di una chioma verde presa dalla ruota nessuna delle quattro sa
+     dire niente, e chiamarla «marrone» sarebbe una bugia sulla scheda */
+  prova('ma una chioma verde si chiama «verde»', cap('#22C55E') === 'verde', cap('#22C55E'));
+  prova('e una viola «viola»', cap('#8B5CF6') === 'viola', cap('#8B5CF6'));
+  prova('e una rosa acceso «rosa»', cap('#EC4899') === 'rosa', cap('#EC4899'));
+  prova('e una tinta rossa «rosso», non «marrone»', cap('#BB3333') === 'rosso', cap('#BB3333'));
+  prova('e una azzurra «azzurro»', cap('#0EA5E9') === 'azzurro', cap('#0EA5E9'));
+
+  /* la fila dei vestiti non c'entra: li' i nomi sono quindici e non si
+     deve poter finire su uno di quelli passando dai capelli */
+  prova('e le quattro pastiglie dei capelli tengono il loro nome esatto',
+    app.AV.HAIR_COLORS.every(c => cap(c.c) === c.n[0]),
+    app.AV.HAIR_COLORS.map(c => c.c + '->' + cap(c.c)).join(' '));
 }
 
 gruppo('La ruota ritrova il colore che c’e’ gia’');

@@ -4183,11 +4183,30 @@ main.conto-in-fondo > #view-new > .pan-conto { flex: 1; }
   border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.6);
   pointer-events: none; }
 
-/* i grigi, che una ruota di tinte non sa fare: bianco, neri e mezze
-   misure, che sui vestiti servono sempre */
+/* IL VELO DEL CHIARO-SCURO.
+   Il cerchio sa dipingere una luce sola, quella di mezzo. Sopra ci va
+   un velo nero (o bianco) col suo coprente, e non e' un effetto: nero
+   al (1 - L/50) da' ESATTAMENTE hsl(tinta, sat, L), per ogni tinta e
+   ogni saturazione, e bianco al (L/50 - 1) fa lo stesso di sopra. Cosi'
+   il cerchio resta vero anche fuori dalla mezza luce, e non torna il
+   guasto di un disegno che dice una cosa e una formula un'altra.
+   Il segno del colore gli sta SOPRA (viene dopo nel codice), se no a
+   luci estreme sparirebbe sotto il velo. */
+.ruota-luce { position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  opacity: 0; }
+
+/* le due strisce sotto il cerchio: il chiaro-scuro del colore scelto,
+   e i grigi -- che di quel chiaro-scuro sono il caso senza tinta, ma
+   restano una fila loro perche' bianco e nero sui vestiti sono i
+   colori piu' comuni e devono stare a un tocco */
 .ruota-scala { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
 .ruota-scala button { height: 30px; border: 2px solid rgba(255,255,255,.2); border-radius: 8px;
   padding: 0; cursor: pointer; }
+.ruota-scala button.on { border-color: #fff; }
+/* i grigi stanno un filo piu' bassi e piu' staccati: sono un'altra
+   domanda, e attaccati sembravano la seconda riga della stessa fila */
+.ruota-scala.grigi { margin-top: 1px; }
+.ruota-scala.grigi button { height: 24px; }
 
 .ruota-ora { display: flex; align-items: center; gap: 9px; }
 .ruota-ora .p { width: 30px; height: 30px; border-radius: 9px;

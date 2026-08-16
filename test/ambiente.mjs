@@ -101,6 +101,8 @@ export function caricaApp() {
     /* le lettere con cui si fanno le sigle: una const, e le const non si
        affacciano da sole sul contesto */
     SIGLA_LETTERE: SIGLA_LETTERE,
+    /* i sette passi del chiaro-scuro della ruota, un'altra const */
+    LUCI: LUCI,
     /* quale accessorio si sta guardando nella sua tavolozza */
     get accScelto() { return accScelto; }, set accScelto(v) { accScelto = v; },
     /* il contesto stesso: serve ai test per mettere da parte una

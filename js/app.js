@@ -6090,14 +6090,26 @@ function chiudiSchede(tranne) {
    DIPINTO in css/app.css (`from 0deg` e il grigio che sfuma fino al
    100%). I due posti vanno cambiati insieme, se no si tocca un colore e
    se ne prende un altro. */
-function coloreDelPunto(dx, dy, raggio) {
+/* `luce` e' il chiaro-scuro scelto a parte, sulla striscia sotto il
+   cerchio: il cerchio da' TINTA e intensita', e da solo sa fare solo i
+   colori a mezza luce -- un rosso scuro o un azzurro slavato, che sui
+   vestiti sono la meta' dei casi, non stavano da nessuna parte.
+   Il cerchio si ridipinge alla luce scelta (vedi `.ruota-luce`), quindi
+   quello che si vede resta quello che si prende. */
+function coloreDelPunto(dx, dy, raggio, luce) {
   const dist = Math.min(1, Math.sqrt(dx * dx + dy * dy) / raggio);
   let ang = Math.atan2(dy, dx) * 180 / Math.PI + 90;   // 0 in cima, come il disegno
   if (ang < 0) ang += 360;
   const h = Math.round(ang) % 360;
   const s = Math.round(dist * 100);
-  return hslInEsa(h, s, 50);
+  return hslInEsa(h, s, luce === undefined || luce === null ? 50 : luce);
 }
+
+/* I SETTE PASSI DEL CHIARO-SCURO. Sette perche' e' la stessa fila dei
+   grigi, che di questi passi e' il caso senza tinta. Non si arriva a 0
+   ne' a 100: li' ogni colore diventa nero o bianco e la fila
+   sembrerebbe rotta. */
+const LUCI = [12, 25, 37, 50, 63, 78, 90];
 
 /* LA STRADA AL CONTRARIO: dato un colore, dove sta sul cerchio.
    Serve a far ritrovare il segno dove lo si era messo riaprendo la
@@ -6111,30 +6123,13 @@ function puntoDelColore(esa) {
   return { dx: Math.cos(rad) * d, dy: Math.sin(rad) * d };
 }
 
-/* esadecimale -> tinta, saturazione, luce. Sta qui e non dentro AV
-   perche' e' roba della ruota: AV descrive i vestiti, non li misura. */
+/* esadecimale -> tinta, saturazione, luce.
+   LA FORMULA E' UNA SOLA e sta in avatar.js, che e' il posto dove i
+   colori si guardano: da li' esce anche il NOME del colore, e se la
+   ruota ne tenesse una copia sua le due potrebbero divergere — si
+   sceglierebbe una tinta e la scheda ne racconterebbe un'altra. */
 function esaInHsl(esa) {
-  const t = String(esa || '').trim();
-  let m = /^#([0-9a-f]{6})$/i.exec(t);
-  if (!m) {
-    const b = /^#([0-9a-f]{3})$/i.exec(t);
-    if (!b) return null;
-    m = [0, b[1].split('').map(x => x + x).join('')];
-  }
-  const n = parseInt(m[1], 16);
-  const r = ((n >> 16) & 255) / 255, g = ((n >> 8) & 255) / 255, b2 = (n & 255) / 255;
-  const max = Math.max(r, g, b2), min = Math.min(r, g, b2), d = max - min;
-  const l = (max + min) / 2;
-  let h = 0;
-  if (d) {
-    if (max === r) h = ((g - b2) / d) % 6;
-    else if (max === g) h = (b2 - r) / d + 2;
-    else h = (r - g) / d + 4;
-    h *= 60;
-    if (h < 0) h += 360;
-  }
-  const s = d ? d / (1 - Math.abs(2 * l - 1)) : 0;
-  return { h: Math.round(h), s: Math.round(s * 100), l: Math.round(l * 100) };
+  return (typeof AV !== 'undefined' && AV.hsl) ? AV.hsl(esa) : null;
 }
 function hslInEsa(h, s, l) {
   s /= 100; l /= 100;
@@ -6149,14 +6144,38 @@ function apriRuota(tasto, coloreOra, scegli) {
   document.querySelectorAll('.ruota-box').forEach(x => x.remove());
   const box = el('div', 'ruota-box');
   const cerchio = el('div', 'ruota-cerchio');
+  /* IL VELO DEL CHIARO-SCURO. Il cerchio e' dipinto a mezza luce, ed e'
+     l'unica luce che sa fare. Sopra ci va un velo nero o bianco, e non
+     e' un trucco per fare l'effetto: nero coprente (1 - L/50) da' ESATTAMENTE
+     hsl(tinta, sat, L) per ogni tinta e ogni saturazione, e bianco
+     coprente (L/50 - 1) fa lo stesso dall'altra parte. Quindi il
+     cerchio continua a dire il vero: quello che si vede e' quello che
+     si prende, anche fuori dalla mezza luce. */
+  const velo = el('span', 'ruota-luce');
   const punta = el('span', 'ruota-punta');
+  cerchio.appendChild(velo);
   cerchio.appendChild(punta);
   box.appendChild(cerchio);
 
-  /* la striscia del chiaro-scuro: la ruota da sola non sa fare il
-     bianco, il nero e i grigi, che sui vestiti servono sempre */
-  const scala = el('div', 'ruota-scala');
-  [0, 18, 35, 50, 65, 82, 100].forEach(l => {
+  /* IL CHIARO-SCURO DEL COLORE DI ADESSO, dal piu' scuro al piu'
+     chiaro. Mancava del tutto: il cerchio fa la tinta e quanto e'
+     carica, ma un rosso scuro o un azzurro slavato -- che sui vestiti
+     sono meta' dei casi -- non stavano da nessuna parte. */
+  const scalaLuce = el('div', 'ruota-scala');
+  const celleLuce = LUCI.map(l => {
+    const b = el('button');
+    b.onclick = () => { metti(conLuce(scelto, l)); };
+    scalaLuce.appendChild(b);
+    return { b, l };
+  });
+  box.appendChild(scalaLuce);
+
+  /* e i grigi restano una fila loro: bianco e nero sono i colori piu'
+     comuni sui vestiti, e farli passare per il centro del cerchio --
+     che col dito e' un bersaglio da due millimetri -- sarebbe un
+     peggioramento al banco */
+  const scala = el('div', 'ruota-scala grigi');
+  LUCI.forEach(l => {
     const b = el('button');
     b.style.background = hslInEsa(0, 0, l);
     b.onclick = () => { metti(hslInEsa(0, 0, l)); };
@@ -6179,6 +6198,16 @@ function apriRuota(tasto, coloreOra, scegli) {
   const ancora = tasto.getBoundingClientRect();
 
   let scelto = coloreOra || '#8A8AA0';
+  /* la luce non e' uno stato a parte: si legge dal colore che c'e'. Un
+     valore tenuto da parte si sarebbe scollato dal colore vero al primo
+     giro -- e' lo stesso guasto della ruota dipinta in un posto e
+     calcolata in un altro. */
+  const luceDi = (c) => { const q = esaInHsl(c); return q ? q.l : 50; };
+  const conLuce = (c, l) => {
+    const q = esaInHsl(c);
+    return q ? hslInEsa(q.h, q.s, l) : hslInEsa(0, 0, l);
+  };
+
   /* `zitto` = dipingi l'anteprima e basta. Aprire la ruota non e' una
      scelta: chiamare `scegli` subito voleva dire cambiare il colore del
      capo (e ridisegnare mezzo pannello) al solo tocco del tasto. */
@@ -6186,6 +6215,16 @@ function apriRuota(tasto, coloreOra, scegli) {
     scelto = colore;
     pastiglia.style.background = colore;
     nome.textContent = (typeof AV !== 'undefined' && AV.colorName) ? AV.colorName(colore, 0) : colore;
+    const L = luceDi(colore);
+    /* il velo che porta il cerchio alla luce scelta */
+    velo.style.background = L < 50 ? '#000' : '#fff';
+    velo.style.opacity = L < 50 ? (1 - L / 50) : (L / 50 - 1);
+    /* e la striscia mostra QUESTO colore ai sette passi, non sette
+       colori qualunque: e' la sua fila, non una tavolozza in piu' */
+    celleLuce.forEach(x => {
+      x.b.style.background = conLuce(colore, x.l);
+      x.b.classList.toggle('on', Math.abs(x.l - L) <= 5);
+    });
     if (!zitto) scegli(colore);
   };
   metti(scelto, true);
@@ -6219,7 +6258,12 @@ function apriRuota(tasto, coloreOra, scegli) {
     const y = (ev.touches ? ev.touches[0].clientY : ev.clientY) - r.top - r.height / 2;
     punta.style.left = (r.width / 2 + Math.max(-r.width / 2, Math.min(x, r.width / 2))) + 'px';
     punta.style.top = (r.height / 2 + Math.max(-r.height / 2, Math.min(y, r.height / 2))) + 'px';
-    metti(coloreDelPunto(x, y, r.width / 2));
+    /* la tinta cambia, il chiaro-scuro RESTA: chi ha scelto uno scuro
+       sta vestendo qualcuno di scuro, e ricominciare da mezza luce a
+       ogni tocco vorrebbe dire riscegliere la luce ogni volta. E il
+       cerchio in quel momento e' gia' dipinto a quella luce, quindi il
+       colore che esce e' proprio quello che si sta toccando. */
+    metti(coloreDelPunto(x, y, r.width / 2, luceDi(scelto)));
   };
   let giu = false;
   cerchio.addEventListener('pointerdown', (ev) => {

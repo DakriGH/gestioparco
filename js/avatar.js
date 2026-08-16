@@ -185,22 +185,151 @@
     return isNaN(n) ? null : { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
   }
 
-  /* Nome del colore. Se la tinta non è esattamente in palette (succede con
-     gli avatar salvati dalla versione precedente) si prende la più vicina,
-     così il tratto scritto resta sempre utile: "maglietta rossa". */
+  /* ══════════════════════════════════════════════════════════
+     COME SI CHIAMA UN COLORE
+
+     Serve a UNA cosa: la frase sulla scheda che si legge all'uscita
+     («Camicia rossa · Jeans neri»). Se sbaglia il nome, all'uscita si
+     cerca la persona sbagliata.
+
+     Prima il nome si prendeva dalla pastiglia PIU' VICINA IN RGB, e la
+     distanza in RGB e' dominata dalla luminosita': un ocra spento
+     (#998c66) finiva a un passo dal grigio #9AA5B4 e usciva «grigio».
+     Uno su nove dei colori presi dalla ruota veniva chiamato grigio.
+     E comunque diciassette pastiglie non possono dire «rosso scuro»:
+     una volta che dalla ruota si sceglie anche il chiaro-scuro, il
+     nome deve saperlo raccontare.
+
+     Adesso un colore che non e' una pastiglia viene DESCRITTO: tinta,
+     e se serve una parola sul chiaro-scuro. Le pastiglie tengono il
+     loro nome scritto a mano — «verde militare» e «beige» nessuna
+     formula li tirerebbe fuori.
+     ══════════════════════════════════════════════════════════ */
+
+  /* esadecimale -> tinta (0-360), saturazione e luce (0-100). Sta qui
+     perche' e' il posto dove si guarda un colore: app.js la ripesca da
+     AV invece di riscriverla, se no le due copie divergono. */
+  function hsl(hex) {
+    /* qui si guarda per bene, quindi si controlla per bene: `toRgb` e'
+       indulgente (di «boh» legge la b e tira fuori un colore) e va
+       benissimo per disegnare, ma da qui esce il NOME scritto sulla
+       scheda e il posto del segno sulla ruota */
+    if (!/^#?(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(String(hex || '').trim())) return null;
+    const c = toRgb(String(hex).trim());
+    if (!c) return null;
+    const r = c.r / 255, g2 = c.g / 255, b = c.b / 255;
+    const max = Math.max(r, g2, b), min = Math.min(r, g2, b), d = max - min;
+    const l = (max + min) / 2;
+    let h = 0;
+    if (d) {
+      if (max === r) h = ((g2 - b) / d) % 6;
+      else if (max === g2) h = (b - r) / d + 2;
+      else h = (r - g2) / d + 4;
+      h *= 60;
+      if (h < 0) h += 360;
+    }
+    return { h: Math.round(h), s: Math.round((d ? d / (1 - Math.abs(2 * l - 1)) : 0) * 100), l: Math.round(l * 100) };
+  }
+
+  /* Le tinte come si chiamano al banco. Il marrone non c'e': e' un
+     arancione scuro, e si tira fuori da li' — «arancione scuro» non lo
+     dice nessuno. */
+  const TINTE_NOME = [
+    { fino: 14, n: ['rosso', 'rossa', 'rossi', 'rosse'] },
+    { fino: 45, n: ['arancione', 'arancione', 'arancioni', 'arancioni'] },
+    { fino: 68, n: ['giallo', 'gialla', 'gialli', 'gialle'] },
+    { fino: 158, n: ['verde', 'verde', 'verdi', 'verdi'] },
+    { fino: 200, n: ['azzurro', 'azzurra', 'azzurri', 'azzurre'] },
+    { fino: 252, n: ['blu', 'blu', 'blu', 'blu'] },
+    { fino: 292, n: ['viola', 'viola', 'viola', 'viola'] },
+    { fino: 340, n: ['rosa', 'rosa', 'rosa', 'rosa'] },
+    { fino: 361, n: ['rosso', 'rossa', 'rossi', 'rosse'] }
+  ];
+  const MARRONE = ['marrone', 'marrone', 'marroni', 'marroni'];
+  /* senza tinta restano solo i passi del chiaro-scuro */
+  const SENZA_TINTA = [
+    { fino: 13, n: ['nero', 'nera', 'neri', 'nere'] },
+    { fino: 34, n: ['grigio scuro', 'grigia scura', 'grigi scuri', 'grigie scure'] },
+    { fino: 70, n: ['grigio', 'grigia', 'grigi', 'grigie'] },
+    { fino: 88, n: ['grigio chiaro', 'grigia chiara', 'grigi chiari', 'grigie chiare'] },
+    { fino: 101, n: ['bianco', 'bianca', 'bianchi', 'bianche'] }
+  ];
+  const AGGIUNTE = {
+    scuro: ['scuro', 'scura', 'scuri', 'scure'],
+    chiaro: ['chiaro', 'chiara', 'chiari', 'chiare'],
+    spento: ['spento', 'spenta', 'spenti', 'spente']
+  };
+
+  function descriviColore(c, g) {
+    const i = g || 0;
+    /* senza tinta, o quasi tutto nero o quasi tutto bianco: la tinta
+       che ci sarebbe sotto non la vede nessuno */
+    if (c.s < 12 || c.l < 7 || c.l > 95) {
+      return (SENZA_TINTA.find(x => c.l < x.fino) || SENZA_TINTA[SENZA_TINTA.length - 1]).n[i];
+    }
+    const base = (c.h >= 10 && c.h < 50 && c.l < 42) ? MARRONE
+      : TINTE_NOME.find(x => c.h < x.fino).n;
+    /* LE SOGLIE STANNO IN MEZZO AI PASSI DELLA STRISCIA.
+       Il chiaro-scuro si sceglie sui sette passi della ruota
+       (`LUCI` in app.js: 12, 25, 37, 50, 63, 78, 90), e le parole
+       devono seguire QUEL comando: i due passi bassi si chiamano
+       «scuro», i due alti «chiaro», i tre in mezzo niente. Quindi i
+       tagli cadono a meta' fra 25 e 37, e fra 63 e 78. Con la soglia a
+       26 un passo di scuro restava senza parola, e un rosso mattone
+       scelto a mano si chiamava «rosso» come uno acceso. */
+    const q = c.l < 31 ? AGGIUNTE.scuro
+      : c.l > 70 ? AGGIUNTE.chiaro
+      : c.s < 32 ? AGGIUNTE.spento : null;
+    if (!q) return base[i];
+    /* «blu» e «viola» non si accordano, e non si accorda nemmeno quello
+       che gli sta dietro: si dice «maglietta blu scuro», non «blu
+       scura». Lo si capisce dal nome stesso — se le sue quattro forme
+       sono uguali, e' invariabile. */
+    return base[i] + ' ' + (base[0] === base[1] ? q[0] : q[i]);
+  }
+
+  /* Quanto due colori si somigliano DAVVERO, cioe' guardandoli: la
+     tinta pesa solo se tutti e due ce l'hanno (fra due grigi l'angolo
+     e' rumore), e il chiaro-scuro pesa sempre. */
+  function scartoColore(a, b) {
+    let dh = Math.abs(a.h - b.h);
+    if (dh > 180) dh = 360 - dh;
+    /* LA TINTA PESA PIU' DI TUTTO. Con un peso mite una chioma rosa
+       acceso finiva a meno di quaranta dal biondo -- stessa luce,
+       saturazione simile, e settanta gradi di distanza che non
+       bastavano a separarli -- e sulla scheda usciva «bionda». Fra due
+       colori, quello che si vede per primo e' di che colore sono. */
+    return dh * (Math.min(a.s, b.s) / 100) * 1.4 +
+      Math.abs(a.s - b.s) * 0.35 + Math.abs(a.l - b.l) * 0.8;
+  }
+  /* sotto questo scarto due colori sono "lo stesso colore" e vale la
+     pena usare il nome scritto a mano */
+  const SCARTO_STESSO_COLORE = 32;
+
   function colorName(hex, g, pool) {
     const list = pool || COLORS;
-    const exact = list.find(c => c.c.toLowerCase() === String(hex || '').toLowerCase());
+    const t = String(hex || '').trim().toLowerCase();
+    const exact = list.find(c => c.c.toLowerCase() === t);
     if (exact) return exact.n[g || 0];
-    const target = toRgb(hex);
-    if (!target) return '';
-    let best = null, bestD = Infinity;
-    list.forEach(c => {
-      const o = toRgb(c.c);
-      const d = (o.r - target.r) ** 2 + (o.g - target.g) ** 2 + (o.b - target.b) ** 2;
-      if (d < bestD) { bestD = d; best = c; }
-    });
-    return best ? best.n[g || 0] : '';
+    const c = hsl(hex);
+    if (!c) return '';
+    /* CHI HA UNA FILA SUA SI GUARDA PRIMA LI'. I capelli hanno quattro
+       nomi che una formula non direbbe mai — «biondo» non e' «giallo
+       chiaro» — e un biondo platino salvato ieri deve restare biondo.
+       Ma solo se la tinta ci somiglia davvero: di una chioma verde
+       presa dalla ruota nessuna delle quattro sa dire niente, e
+       chiamarla «marrone» sarebbe una bugia scritta sulla scheda. */
+    if (pool) {
+      let best = null, bestD = Infinity;
+      pool.forEach(x => {
+        const o = hsl(x.c);
+        if (!o) return;
+        const d = scartoColore(c, o);
+        if (d < bestD) { bestD = d; best = x; }
+      });
+      if (best && bestD < SCARTO_STESSO_COLORE) return best.n[g || 0];
+    }
+    return descriviColore(c, g);
   }
 
   /* ---------- modello ---------- */
@@ -1120,6 +1249,9 @@
     HAIR, HAT, GLASSES, FACIAL, TOP, PANTS, SHOES, BAG, ROLES,
     build, traits, normalize, defaultFor, baseFor, colorName, findIn, shade, coloreFantasia,
     filoDenim, scritta,
+    /* guardare un colore: la ruota di app.js usa QUESTA, non una copia
+       sua, se no le due divergono e il nome smette di corrispondere */
+    hsl,
     /* la stoffa: serve alle icone dei capi, che devono mostrare la
        fantasia VERA e non una sua imitazione. Un solo posto dove sono
        definite le trame, cosi' l'icona e la figura non divergono mai. */

@@ -44,6 +44,24 @@
   const modale = () => !document.getElementById('modalRoot').classList.contains('hidden');
   const toastAnnulla = () => document.querySelector('#toast button.annulla');
 
+  /* ASPETTARE LA COSA, NON UN TEMPO.
+     I controlli aspettavano tot millisecondi e poi guardavano. Ma
+     l'uscita si accartoccia per 320ms prima di mostrare l'annulla, e
+     con la lista da rifare sotto bastava una macchina un filo piu'
+     lenta perche' i 700ms d'attesa scadessero un pelo prima: il banco
+     diceva «l'annulla non funziona» mentre funzionava benissimo.
+     Un banco di prova che sbaglia da solo e' peggio di nessun banco:
+     fa cercare guasti che non ci sono. */
+  const finche = async (cond, max) => {
+    const fino = Date.now() + (max || 3000);
+    while (Date.now() < fino) {
+      if (cond()) return true;
+      await att(40);
+    }
+    return cond();
+  };
+  const conAnnulla = () => finche(toastAnnulla);
+
   /* un gruppo dentro, sforato di quanto si vuole */
   const prepara = (sforo) => {
     localStorage.removeItem('gp_entries');
@@ -92,15 +110,15 @@
   /* ── 3. USCITA, ELIMINA E I LORO ANNULLA ── */
   prepara(0);
   chiudiIngresso(entries[0]); await att(200);
-  scelte()[0].click(); await att(700);
+  scelte()[0].click(); await conAnnulla();
   p('uscita: salvata', allineati() && entries[0].status === 'closed');
-  if (toastAnnulla()) toastAnnulla().click(); await att(250);
+  if (await conAnnulla()) toastAnnulla().click(); await att(250);
   p('  e l annulla la disfa', allineati() && entries[0].status === 'active');
 
   chiudiIngresso(entries[0]); await att(200);
-  scelte()[1].click(); await att(600);
+  scelte()[1].click(); await conAnnulla();
   p('elimina: salvata', allineati() && entries.length === 0);
-  if (toastAnnulla()) toastAnnulla().click(); await att(250);
+  if (await conAnnulla()) toastAnnulla().click(); await att(250);
   p('  e l annulla la disfa', allineati() && entries.length === 1);
 
   /* ── 4. ARCHIVIO: elimina e rimetti dentro, coi loro annulla ── */
@@ -115,14 +133,14 @@
     [...document.querySelectorAll('#modalRoot button')].find(b => /Conferma/.test(b.textContent)).click();
     await att(300);
     p('archivio, elimina: salvata', allineati() && entries.length === 0);
-    if (toastAnnulla()) toastAnnulla().click(); await att(250);
+    if (await conAnnulla()) toastAnnulla().click(); await att(250);
     p('  e l annulla la disfa', allineati() && entries.length === 1);
 
     showArchive = true; buildActiveView(); await att(150);
     [...document.querySelectorAll('.arch-tasti button')].find(b => /Rimetti/.test(b.textContent)).click();
     await att(250);
     p('archivio, rimetti dentro: salvata', allineati() && entries[0].status === 'active');
-    if (toastAnnulla()) toastAnnulla().click(); await att(250);
+    if (await conAnnulla()) toastAnnulla().click(); await att(250);
     p('  e l annulla lo riarchivia', allineati() && entries[0].status === 'closed');
   }
 
@@ -145,7 +163,7 @@
       [...document.querySelectorAll('#modalRoot button')].find(b => /Salva/.test(b.textContent)).click();
       await att(250);
       p('  e la nota si salva', allineati() && entries[0].note === 'torta in frigo');
-      if (toastAnnulla()) toastAnnulla().click(); await att(250);
+      if (await conAnnulla()) toastAnnulla().click(); await att(250);
       p('  e l annulla la toglie', allineati() && !String(entries[0].note || '').trim());
     }
   }
@@ -220,7 +238,11 @@
     const mezza = cer.offsetWidth / 2;
     const qx = (parseFloat(segno.style.left) - mezza) / mezza;
     const qy = (parseFloat(segno.style.top) - mezza) / mezza;
-    const indicato = coloreDelPunto(qx * mezza, qy * mezza, mezza);
+    /* il segno dice TINTA e intensita', non il chiaro-scuro: quello sta
+       sulla striscia sotto. Quindi si rilegge alla luce del colore, se
+       no si confronta un rosa chiaro con lo stesso rosa a mezza luce e
+       sembra sbagliato mentre il segno e' al suo posto. */
+    const indicato = coloreDelPunto(qx * mezza, qy * mezza, mezza, esaInHsl(scelto).l);
     p('riaprendo, il segno torna sul colore che c e gia', indicato === scelto,
       indicato === scelto ? '' : 'indica ' + indicato + ' invece di ' + scelto);
     document.querySelectorAll('.ruota-box').forEach(x => x.remove());
@@ -234,6 +256,70 @@
       addosso === inRgb(scelto) ? '' : addosso + ' invece di ' + scelto);
     p('  con il bordo bianco delle pastiglie scelte',
       getComputedStyle(t).borderTopColor === 'rgb(255, 255, 255)', getComputedStyle(t).borderTopColor);
+
+    /* ── il chiaro-scuro ──
+       Il cerchio sa dipingere una luce sola, quella di mezzo, e sopra
+       ci va un velo nero o bianco che lo porta alla luce scelta. Se il
+       coprente del velo non fosse esatto, il cerchio tornerebbe a dire
+       una cosa mentre la formula ne prende un'altra -- lo stesso
+       guasto di prima, sull'altro asse. In node non si vede: li' non
+       c'e' nessun velo da leggere. */
+    tasto().click(); await att(220);
+    {
+      const ce = document.querySelector('.ruota-cerchio');
+      const r = ce.getBoundingClientRect();
+      /* prima una tinta dal cerchio, poi il passo piu' scuro */
+      ce.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 11, bubbles: true,
+        clientX: r.left + r.width / 2, clientY: r.top + 8 }));
+      ce.dispatchEvent(new PointerEvent('pointerup', { pointerId: 11, bubbles: true }));
+      const strisce = document.querySelectorAll('.ruota-scala');
+      p('sotto il cerchio ci sono due strisce: il chiaro-scuro e i grigi', strisce.length === 2);
+      const passi = [...strisce[0].querySelectorAll('button')];
+      p('  e il chiaro-scuro ha i suoi sette passi', passi.length === LUCI.length);
+
+      passi[0].click(); await att(150);
+      const scuro = draft.people[0].avatar.top.color;
+      const q = esaInHsl(scuro);
+      p('scegliendo il passo piu scuro si prende un colore scuro',
+        Math.abs(q.l - LUCI[0]) <= 1, 'luce ' + q.l + ' invece di ' + LUCI[0]);
+      p('  e la tinta resta quella toccata sul cerchio', q.h <= 6 || q.h >= 354, 'tinta ' + q.h);
+      p('  e il nome lo dice', /scur/.test(AV.colorName(scuro, 0)), AV.colorName(scuro, 0));
+
+      /* IL VELO DEVE DIRE IL VERO: quello che si vede sul cerchio,
+         composto davvero come lo compone il browser, e' il colore che
+         si prende */
+      const vel = document.querySelector('.ruota-luce');
+      const alfa = parseFloat(getComputedStyle(vel).opacity);
+      const sopra = getComputedStyle(vel).backgroundColor.includes('255, 255, 255') ? 255 : 0;
+      const mezzo = hslInEsa(q.h, q.s, 50);
+      const rgbDi = (h) => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+      const visto = rgbDi(mezzo).map(v => Math.round(v * (1 - alfa) + sopra * alfa));
+      const preso = rgbDi(scuro);
+      const scarto = Math.max(...[0, 1, 2].map(i => Math.abs(visto[i] - preso[i])));
+      p('  e il cerchio si vede proprio di quel colore', scarto <= 2,
+        'si vede ' + visto.join(',') + ' e si prende ' + preso.join(','));
+
+      /* e cambiando tinta il chiaro-scuro RESTA: se ripartisse da mezza
+         luce bisognerebbe riscegliere lo scuro a ogni tocco */
+      const ce2 = document.querySelector('.ruota-cerchio'), r2 = ce2.getBoundingClientRect();
+      ce2.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 12, bubbles: true,
+        clientX: r2.right - 8, clientY: r2.top + r2.height / 2 }));
+      ce2.dispatchEvent(new PointerEvent('pointerup', { pointerId: 12, bubbles: true }));
+      await att(150);
+      const dopo = esaInHsl(draft.people[0].avatar.top.color);
+      p('cambiando tinta il chiaro-scuro resta', Math.abs(dopo.l - LUCI[0]) <= 1,
+        'luce ' + dopo.l + ' invece di ' + LUCI[0]);
+      p('  ma la tinta e cambiata', Math.abs(dopo.h - 90) <= 8, 'tinta ' + dopo.h);
+
+      /* i grigi restano a un tocco: bianco e nero sui vestiti sono i
+         colori piu' comuni */
+      const grigi = [...strisce[1].querySelectorAll('button')];
+      grigi[grigi.length - 1].click(); await att(150);
+      const bianco = esaInHsl(draft.people[0].avatar.top.color);
+      p('i grigi restano a un tocco solo', bianco.s === 0, 'saturazione ' + bianco.s);
+      document.querySelectorAll('.ruota-box').forEach(x => x.remove());
+      await att(150);
+    }
 
     /* e prendendo un colore DALLA FILA il tasto torna l'arcobaleno */
     const pastiglia = document.querySelector('.person-list.pc-people [data-col^="top|color|"]');
