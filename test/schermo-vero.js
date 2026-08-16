@@ -62,6 +62,23 @@
   };
   const conAnnulla = () => finche(toastAnnulla);
 
+  /* A SCHEDA NASCOSTA NON SI PUO' PROVARE.
+     L'uscita si accartoccia dentro un requestAnimationFrame, e il
+     browser i fotogrammi non li disegna affatto se la finestra e' in
+     secondo piano o il pannello e' chiuso: li' `dopo()` non parte mai,
+     l'annulla non compare, e il banco accuserebbe l'app di un guasto
+     che e' solo la finestra nascosta. Si guarda prima se i fotogrammi
+     girano, e se non girano lo si dice invece di dare la colpa. */
+  const fotogrammiVivi = await new Promise(r => {
+    let visto = false;
+    requestAnimationFrame(() => { visto = true; });
+    setTimeout(() => r(visto), 400);
+  });
+  if (!fotogrammiVivi) {
+    console.log('  ATTENZIONE: la finestra non disegna fotogrammi (pannello nascosto o scheda in ' +
+      'secondo piano). I controlli sull annulla dell uscita non si possono fare: portala in primo piano.');
+  }
+
   /* un gruppo dentro, sforato di quanto si vuole */
   const prepara = (sforo) => {
     localStorage.removeItem('gp_entries');
@@ -113,7 +130,10 @@
   scelte()[0].click(); await conAnnulla();
   p('uscita: salvata', allineati() && entries[0].status === 'closed');
   if (await conAnnulla()) toastAnnulla().click(); await att(250);
-  p('  e l annulla la disfa', allineati() && entries[0].status === 'active');
+  /* l'unico che passa dall'animazione d'uscita: a fotogrammi fermi non
+     si puo' provare, e dirlo e' piu' onesto che darlo per rotto */
+  if (fotogrammiVivi) p('  e l annulla la disfa', allineati() && entries[0].status === 'active');
+  else { entries[0].status = 'active'; delete entries[0].closedAt; delete entries[0].costoFinale; saveEntries(); }
 
   chiudiIngresso(entries[0]); await att(200);
   scelte()[1].click(); await conAnnulla();

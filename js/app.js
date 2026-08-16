@@ -510,14 +510,31 @@ function scaglioneDi(mins) {
    resta da pagare, su che fascia cade. E' lo stesso conto che fa
    costOf() -- `up5(dentro - regalati)` e poi il cartello -- scritto in
    modo che si possa mostrare invece di doverlo indovinare. */
+/* IL CONTO DEL TEMPO APERTO, IN UN POSTO SOLO.
+   Da qui esce sia il prezzo (`costOf` chiama questa) sia la riga che
+   lo spiega al banco. Erano due conti scritti a parte, e si erano gia'
+   scollati: la spiegazione contava dall'ingresso mentre il prezzo
+   contava da quando il parco era stato comprato. Un conto che si
+   spiega da solo in modo diverso da come si calcola e' peggio di un
+   conto senza spiegazione. */
 function contiAperto(c, ora) {
   c = c || C();
   ora = num(ora, Date.now());
+  /* da quando sono ARRIVATI: e' il numero che si legge a video */
   const dentro = Math.max(0, (ora - num(c.startTime, ora)) / 60000);
-  const regalati = regalatiDi(c);
-  const contati = Math.max(0, dentro - regalati);
+  /* e da quando conta il PARCO, che e' un'altra data per chi e'
+     entrato a saltare e ha comprato il tempo dopo */
+  const daParco = Math.max(0, (ora - inizioParco(c)) / 60000);
+  /* SI TOGLIE SOLO L'OMAGGIO DEL SOLO CRAZY, non i minuti dei giri.
+     I giri non entrano nel prezzo del parco: ne' sommati ne' sottratti.
+     Toglierli faceva scendere lo scaglione e il giro si pagava da
+     solo -- si segnava un giro da quattro euro e il totale non si
+     muoveva. L'omaggio invece e' di chi e' entrato SOLO per saltare e
+     tempo di parco non ne ha mai comprato. */
+  const regalati = omaggioDi(c);
+  const contati = Math.max(0, daParco - regalati);
   const su = up5(contati);
-  return { dentro, regalati, contati, su,
+  return { dentro, daParco, regalati, contati, su,
     scaglione: scaglioneDi(su), prezzo: priceFor(su) };
 }
 
@@ -930,11 +947,25 @@ function costOf(entry) {
   const regalati = regalatiDi(entry);
   let base;
   if (entry.payLater) {
-    /* paga il tempo passato dentro, meno quello regalato dal Crazy. Si
-       conta da quando e' cominciato il PARCO: a chi si e' fermato dopo
-       due giri non si fa pagare anche l'attesa di prima. */
-    const stato = Math.max(0, (Date.now() - inizioParco(entry)) / 60000 - regalati);
-    base = priceFor(up5(stato));
+    /* A TEMPO APERTO IL PARCO SI PAGA SUL TEMPO PASSATO DENTRO, E I
+       GIRI NON LO ABBASSANO.
+       Qui si toglieva anche `minutiCrazy`, cioe' i minuti regalati dai
+       giri. In tempo COMPRATO quel regalo e' giusto e non costa niente
+       a nessuno: allunga l'ora d'uscita lasciando il prezzo fermo. A
+       tempo aperto pero' non c'e' nessuna ora d'uscita da allungare, e
+       togliere quei minuti diventa uno SCONTO sul parco: il prezzo
+       scendeva di uno scaglione e si mangiava il giro. Al banco si
+       vedeva «Paga 24,00 €», si segnava un giro da quattro euro, e
+       restava «Paga 24,00 €» -- il giro sparito, pagato dalla cassa.
+       La regola e' sempre stata che i Crazy NON ENTRANO nel prezzo del
+       parco: ne' sommati ne' sottratti. Il giro si paga a parte, col
+       suo prezzo, e il parco si paga per il tempo che si e' stati
+       dentro.
+       L'OMAGGIO DEL SOLO CRAZY resta tolto, ed e' un'altra cosa: sono
+       i minuti di chi e' entrato SOLO per saltare, e non li ha mai
+       chiesti al parco. Toglierli non e' uno sconto, e' non far pagare
+       tempo di parco a chi non ne ha comprato. */
+    base = contiAperto(entry).prezzo;
   } else {
     const totMin = clamp(entry.durationMinutes, 0, 1e6);
     /* IL TEMPO VENDUTO DOPO SI PAGA AL SUO PREZZO.

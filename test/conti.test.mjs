@@ -628,32 +628,61 @@ gruppo('A tempo aperto la riga non dice mai «pagato»', () => {
 
 gruppo('Il conto del tempo aperto si vede, non si indovina', () => {
   /* Il prezzo a tempo aperto e' l'unico che si muove da solo, e viene
-     fuori da tre passaggi: tempo passato, meno i minuti regalati dal
-     Crazy, arrotondato ai cinque in su; poi il cartello, che va a
-     fasce. A video si vedeva solo il risultato, e ogni tanto saltava di
-     tre euro senza che si capisse perche'. */
+     fuori da due passaggi: tempo passato dentro, arrotondato ai cinque
+     in su; poi il cartello, che va a fasce. A video si vedeva solo il
+     risultato, e ogni tanto saltava di tre euro senza che si capisse
+     perche'.
+     I GIRI DI CRAZY NON C'ENTRANO. Qui si toglievano anche i minuti
+     regalati dai giri, e a tempo aperto quella sottrazione diventava
+     uno sconto sul parco: lo scaglione scendeva e il giro si pagava da
+     solo. Al banco si vedeva «Paga 24,00 €», si segnava un giro da
+     quattro euro, e restava «Paga 24,00 €». */
   const ora = Date.now();
   const c = conto({ children: 2, payLater: true, startTime: ora - 41 * 60000,
     durationMinutes: 0, crazyJumping: 1, crazyGiri: [1], barItems: [] });
 
   const a = ctx.contiAperto(c, ora);
   ok('dentro da quarantuno minuti', Math.round(a.dentro), 41);
-  ok('otto regalati dal giro di Crazy', a.regalati, ctx.settings.crazyExtraMinutes);
-  ok('quindi trentatre contati', Math.round(a.contati), 33);
-  ok('arrotondati ai cinque in su fanno trentacinque', a.su, 35);
-  ok('che cadono nella fascia dei quaranta', a.scaglione, 40);
-  ok('e il prezzo e quello della fascia', a.prezzo, ctx.priceFor(40));
+  ok('e il giro di Crazy non toglie niente al parco', a.regalati, 0);
+  ok('quindi quarantuno contati', Math.round(a.contati), 41);
+  ok('arrotondati ai cinque in su fanno quarantacinque', a.su, 45);
+  ok('che cadono nella fascia loro', a.scaglione, ctx.scaglioneDi(45));
+  ok('e il prezzo e quello della fascia', a.prezzo, ctx.priceFor(45));
   ok('lo stesso che mette sul conto costOf', ctx.costOf(c).unit, a.prezzo);
 
-  vero('e c e scritto da dove esce', /33′ contati/.test(ctx.spiegaAperto(c, true, ora)) &&
-    /fascia 40′/.test(ctx.spiegaAperto(c, true, ora)));
+  vero('e c e scritto da dove esce', /41′ contati/.test(ctx.spiegaAperto(c, true, ora)) &&
+    /fascia/.test(ctx.spiegaAperto(c, true, ora)));
   vero('nella versione lunga c e anche il tempo dentro',
     /dentro da 41′/.test(ctx.spiegaAperto(c, false, ora)));
 
-  /* i due casi in cui il conto e' zero: si dicono, non si tacciono */
+  /* IL GIRO SI AGGIUNGE, SEMPRE. E' la garanzia che mancava: qualunque
+     sia il tempo passato dentro, segnare un giro deve alzare il totale
+     di esattamente il prezzo del giro, e non deve MAI abbassare il
+     parco. Vale a tempo aperto come a tempo comprato. */
+  /* fuori dai multipli di cinque: vedi la nota piu' sotto, a tempo
+     aperto il prezzo si misura sull'orologio e sul confine salta */
+  [1, 3, 7, 12, 21, 33, 41, 58, 74, 119].forEach(min => {
+    [true, false].forEach(aperto => {
+      const senza = conto({ children: 2, payLater: aperto, startTime: ora - min * 60000,
+        durationMinutes: aperto ? 0 : 60, baseMinutes: aperto ? 0 : 60, barItems: [] });
+      const con = conto({ children: 2, payLater: aperto, startTime: ora - min * 60000,
+        durationMinutes: aperto ? 0 : 60, baseMinutes: aperto ? 0 : 60,
+        crazyJumping: 1, crazyGiri: [1], barItems: [] });
+      const pPrima = ctx.costOf(senza).parkTotal, pDopo = ctx.costOf(con).parkTotal;
+      const tPrima = ctx.dueOf(senza).total, tDopo = ctx.dueOf(con).total;
+      const dove = (aperto ? 'a tempo aperto' : 'a tempo comprato') + ', dentro da ' + min + '′';
+      ok('il giro non abbassa il parco ' + dove, pDopo, pPrima);
+      ok('e alza il totale del suo prezzo ' + dove,
+        Math.round((tDopo - tPrima) * 100) / 100, ctx.settings.crazyJumpingPrice);
+    });
+  });
+
+  /* i due casi in cui il conto e' zero: si dicono, non si tacciono.
+     Coperto lo e' chi e' entrato SOLO per saltare -- i suoi minuti di
+     omaggio -- non chi ha chiesto il parco e ha fatto un giro. */
   const coperto = conto({ children: 2, payLater: true, startTime: ora - 3 * 60000,
-    durationMinutes: 0, crazyJumping: 1, crazyGiri: [1], barItems: [] });
-  ok('col Crazy che copre tutto non si paga parco', ctx.costOf(coperto).parkTotal, 0);
+    durationMinutes: 0, omaggio: 10, crazyJumping: 1, crazyGiri: [1], barItems: [] });
+  ok('col solo Crazy che copre tutto non si paga parco', ctx.costOf(coperto).parkTotal, 0);
   vero('e lo dice: coperti dal Crazy', /Crazy/.test(ctx.spiegaAperto(coperto, true, ora)));
 
   const prima = conto({ children: 2, payLater: true, startTime: ora + 5 * 60000,
@@ -1581,23 +1610,38 @@ gruppo('Il Crazy non entra MAI nel prezzo del tempo di parco', () => {
       ok(eti + ': quattrocento sequenze di ritocchi, e il Crazy resta fuori', dopo.slice(0, 2), []);
     }
 
-    /* — tempo aperto: si paga il passato MENO il regalato — */
+    /* — tempo aperto: si paga il tempo passato, e i giri NON lo toccano —
+       Qui si toglievano i minuti regalati dai giri, e a tempo aperto
+       quella sottrazione non allunga niente: e' uno sconto. Bastava che
+       facesse scendere di uno scaglione e il giro si pagava da solo. */
     ctx.settings.tariffaSuTotale = true;
     const aperti = [];
-    for (const dentroDa of [12, 25, 40, 70, 100]) {
+    /* NIENTE MULTIPLI DI CINQUE. A tempo aperto il prezzo si misura
+       sull'orologio, e fra due misure passa qualche millesimo: chi e'
+       dentro da 70′ TONDI viene arrotondato a 70 in una misura e a 75
+       nella successiva, e la prova accusa il codice di un salto che ha
+       fatto lei. Con 68′ le due misure cadono sempre nello stesso
+       scaglione. */
+    for (const dentroDa of [12, 23, 41, 68, 97]) {
       const t0 = Date.now() - dentroDa * 60000;
       const senza = conto({ children: 2, payLater: true, startTime: t0 });
       const rif = ctx.costOf(senza).parkTotal;
+      const atteso = ctx.r2(ctx.priceFor(ctx.up5(dentroDa)) * 2);
+      if (rif !== atteso) aperti.push('senza giri, dentro da ' + dentroDa + "': " + rif + ' invece di ' + atteso);
       for (const giri of [1, 2, 3]) {
         const con = conto({ children: 2, payLater: true, startTime: t0 });
         ctx.metteCrazy(con, giri);
         const p = ctx.costOf(con).parkTotal;
-        if (p > rif) aperti.push('dentro da ' + dentroDa + "' con " + giri + ' giri: ' + p + ' > ' + rif);
-        const atteso = ctx.r2(ctx.priceFor(ctx.up5(Math.max(0, dentroDa - ctx.regalatiDi(con)))) * 2);
-        if (p !== atteso) aperti.push('dentro da ' + dentroDa + "'/" + giri + ' giri: ' + p + ' invece di ' + atteso);
+        if (p !== rif) aperti.push('dentro da ' + dentroDa + "'/" + giri + ' giri: il parco passa da ' + rif + ' a ' + p);
+        /* e il totale deve salire di ESATTAMENTE i giri segnati */
+        const salita = ctx.r2(ctx.dueOf(con).total - ctx.dueOf(senza).total);
+        const dovuta = ctx.r2(giri * ctx.settings.crazyJumpingPrice);
+        if (salita !== dovuta) {
+          aperti.push('dentro da ' + dentroDa + "'/" + giri + ' giri: il totale sale di ' + salita + ' invece di ' + dovuta);
+        }
       }
     }
-    ok('a tempo aperto si paga il passato meno il regalato', aperti.slice(0, 2), []);
+    ok('a tempo aperto si paga il tempo passato, e i giri non lo toccano', aperti.slice(0, 2), []);
 
     /* — l'ora di USCITA invece i minuti regalati li comprende — */
     const uscite = [];
