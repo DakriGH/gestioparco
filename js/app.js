@@ -3535,6 +3535,36 @@ function nomeBackup(d) {
   const p = n => String(n).padStart(2, '0');
   return 'parco-' + d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + '.json';
 }
+/* RIMETTERE DENTRO UN BACKUP.
+   Stava tutto dentro il gestore del tasto, in mezzo a `FileReader` e
+   ai toast: cioe' nel posto meno raggiungibile di tutta l'app, e
+   nessuna prova poteva arrivarci. Ed e' l'ULTIMA rete che hanno: se il
+   ripristino sbaglia, sbaglia il giorno in cui il tablet e' morto e
+   non c'e' nessun altro posto da cui ripartire.
+   Adesso i dati passano di qui -- il tasto ci mette solo il file e i
+   messaggi -- e le prove possono fare il giro completo: si salva, si
+   rilegge, e ogni euro e ogni minuto devono essere quelli. */
+function applicaBackup(testo) {
+  const d = JSON.parse(testo);
+  /* UNA LISTA NON E' UN BACKUP, e il controllo di prima non se ne
+     accorgeva: `[1,2,3].entries` non e' vuoto -- e' un METODO delle
+     liste, quindi risultava "ci sono gli ingressi" -- e l'app leggeva
+     quel metodo come elenco, lo trovava vuoto, e sostituiva la serata
+     con niente. Un file sbagliato scelto per errore cancellava tutto,
+     dicendo pure che era andato bene.
+     Qui si chiede la forma giusta e basta: un oggetto, con dentro una
+     LISTA vera di ingressi o un blocco di impostazioni. */
+  const oggetto = !!d && typeof d === 'object' && !Array.isArray(d);
+  const haIngressi = oggetto && Array.isArray(d.entries);
+  const haImpostazioni = oggetto && !!d.settings && typeof d.settings === 'object' &&
+    !Array.isArray(d.settings);
+  if (!haIngressi && !haImpostazioni) throw new Error('formato');
+  if (haImpostazioni) { settings = Object.assign(defaultSettings(), d.settings); saveSettings(); }
+  if (haIngressi) { entries = normalizeEntries(d.entries); saveEntries(); }
+  if (Array.isArray(d.presets)) { presets = lista(d.presets); savePresets(); }
+  return d;
+}
+
 function contenutoBackup() {
   return JSON.stringify({
     app: 'gestioparco', versione: 1, quando: new Date().toISOString(),
@@ -8525,11 +8555,7 @@ function buildSettingsView() {
     const rd = new FileReader();
     rd.onload = () => {
       try {
-        const d = JSON.parse(rd.result);
-        if (!d || (!d.entries && !d.settings)) throw new Error('formato');
-        if (d.settings) { settings = Object.assign(defaultSettings(), d.settings); saveSettings(); }
-        if (d.entries) { entries = normalizeEntries(d.entries); saveEntries(); }
-        if (d.presets) { presets = d.presets; savePresets(); }
+        applicaBackup(rd.result);
         applyTheme();
         markNewDirty();
         buildSettingsView();
@@ -8926,6 +8952,16 @@ function riparaConto(o) {
   if (!Number.isFinite(num(o.startTime, NaN))) {
     o.startTime = Number.isFinite(num(o.createdAt, NaN)) ? num(o.createdAt, 0) : Date.now();
   }
+  /* L'OMAGGIO SI SETACCIA PER PRIMO, e l'ordine non e' un dettaglio.
+     La riga qui sotto guarda l'omaggio per decidere se lo zero e' uno
+     zero vero, ma se lo guardava PRIMA di averlo ripulito leggeva
+     ancora il valore grezzo: un `omaggio: -10` risultava "c'e'", il
+     tempo restava a zero, e alla lettura SUCCESSIVA -- con l'omaggio
+     ormai ripulito a niente -- diventava un'ora. Lo stesso dato
+     raccontava due storie a due riletture di fila, e l'ora d'uscita
+     con lui. */
+  o.omaggio = int(o.omaggio, 99999);
+  if (!o.omaggio) delete o.omaggio;
   /* ZERO E' UN VALORE BUONO: e' chi non ha comprato tempo di parco --
      solo Crazy -- e la sua permanenza sta nei minuti in omaggio */
   o.durationMinutes = int(o.durationMinutes, 99999);
@@ -8933,8 +8969,6 @@ function riparaConto(o) {
   o.baseMinutes = Math.max(1, int(o.baseMinutes, 99999) || o.durationMinutes);
   /* le vendite di tempo: una lista di numeri buoni, e mai piu' lunga
      del tempo che c'e' davvero */
-  o.omaggio = int(o.omaggio, 99999);
-  if (!o.omaggio) delete o.omaggio;
   o.aggiunte = lista(o.aggiunte).map(m => int(m, 99999)).filter(m => m > 0);
   sistemaAggiunte(o);
   o.barItems = (Array.isArray(o.barItems) ? o.barItems : [])

@@ -218,8 +218,14 @@ gruppo('Niente resti di lavorazione nel codice che gira');
     'righe: ' + stampe.map(([n]) => n).join(', '));
   const debugger_ = /\bdebugger\b/.test(APP.replace(/\/\*[\s\S]*?\*\//g, ''));
   prova('nessun debugger', !debugger_);
-  const todo = (APP.match(/TODO|FIXME|XXX/g) || []).length;
+  /* I CONFINI DI PAROLA SERVONO: qui i commenti sono in italiano, e
+     «METODO» contiene TODO. Cercandolo senza confini bastava scrivere
+     «e' un metodo delle liste» perche' la prova dicesse che c'e' un
+     lavoro lasciato a meta'. */
+  const todo = (APP.match(/\bTODO\b|\bFIXME\b|\bXXX\b/g) || []).length;
   prova('nessun TODO appeso', todo === 0, todo + ' trovati');
+  prova('e la parola «metodo» non lo fa sbagliare',
+    !/\bTODO\b/.test('e’ un METODO delle liste'));
 }
 
 gruppo('Le funzioni che il pannello chiama esistono davvero');

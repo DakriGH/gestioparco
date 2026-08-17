@@ -10,6 +10,7 @@
      aperto    — il tempo aperto, che e' l'unico prezzo che si muove da solo
      tempesta  — sequenze a caso, lunghe e assurde, con gli invarianti
      vestiti   — l'icona e la figura devono dire la stessa cosa
+     salvezza  — le reti: backup, dati storti, giornata che cambia alle 4
 
    Uno solo che si lamenta e questo esce male: al banco non esiste
    "quasi a posto". */
@@ -18,7 +19,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const QUI = dirname(fileURLToPath(import.meta.url));
-const PROVE = ['impianto', 'conti', 'schermo', 'giornata', 'aperto', 'tempesta', 'vestiti'];
+const PROVE = ['impianto', 'conti', 'schermo', 'giornata', 'aperto', 'tempesta', 'vestiti', 'salvezza'];
 
 let controlli = 0, gruppi = 0, rotte = [];
 console.log('');
