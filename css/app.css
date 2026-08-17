@@ -735,6 +735,14 @@ main {
 }
 .chip.later { font-size: 18px; }
 .chip.later.on { background: var(--late); color: #fff; }
+/* LA PAUSA, accanto al «Tempo aperto» che la fa comparire. Ferma
+   diventa verde, come sulla scheda in lista: quel tasto in quel
+   momento non mette in pausa, riprende. */
+.chip.pausa { font-size: 18px; }
+.chip.pausa.on { background: rgba(106, 220, 175, .9); color: #06251A; }
+/* e il numero dei minuti si spegne quando l'orologio e' fermo, cosi'
+   si vede da lontano che non sta correndo */
+.pc-min.in-pausa { opacity: .6; }
 
 .dur-custom {
   display: flex;
@@ -2006,8 +2014,13 @@ main {
    apre.
    L'invito compare col primo tocco, insieme al resto dei comandi: e' li'
    che si sta lavorando su quella scheda. */
-.e-nota.vuota { display: none; }
-.entry.aperto .e-nota.vuota {
+/* `.sempre` e' la striscia del pannello, che da vuota SI VEDE: e' da li'
+   che si scrive la prima nota, e nasconderla vorrebbe dire non avere
+   nessun posto dove scriverla. In lista invece la stessa striscia da
+   vuota sparisce, se no ogni scheda porterebbe una riga che dice una
+   cosa che si puo' fare invece di una che c'e'. */
+.e-nota.vuota:not(.sempre) { display: none; }
+.entry.aperto .e-nota.vuota, .e-nota.vuota.sempre {
   display: flex;
   color: rgba(255, 255, 255, 0.42);
   font-style: italic;
@@ -4541,22 +4554,26 @@ html:not(.anima) .card.evidenzia::after { animation: none; }
 /* LA NOTA DEL GRUPPO. Stessa riga ambrata di quando stava nel
    guardaroba -- al banco si riconosce da quella -- ma adesso e' una
    card sua nel Parco, e lo stile non puo' piu' venire da `.armadio`. */
-/* la specificita e alzata apposta: `.blk input` vale (0,1,1) e
-   vincerebbe su una classe sola, ridipingendo la nota di grigio */
-.blk input.pc-nota {
+/* E' LA STESSA STRISCIA DELLA SCHEDA IN LISTA (`.e-nota`), vestita
+   della riga ambrata che al banco vuol dire «nota». Prima qui c'era un
+   campo da riempire: due modi per la stessa cosa, e divergevano. */
+.blk .pc-nota {
   width: 100%;
   box-sizing: border-box;
   border: 1px solid rgba(232, 180, 76, .55);
   border-radius: 12px;
   background: rgba(232, 180, 76, .09);
   color: var(--txt);
-  font: inherit;
   font-size: 15.5px;
-  padding: 10px 13px;
+  padding: 11px 13px;
   min-height: 46px;
+  align-items: center;
 }
-.blk input.pc-nota::placeholder { color: var(--txt-3); }
-.blk input.pc-nota:focus { outline: none; border-color: var(--accent); background: rgba(232, 180, 76, .16); }
+.blk .pc-nota .em { font-size: 15px; }
+/* qui la nota puo' essere lunga: si legge tutta invece di finire in
+   puntini come nella striscia stretta della lista */
+.blk .pc-nota .tx { white-space: normal; overflow: visible; text-overflow: clip; }
+.blk .pc-nota:active { background: rgba(232, 180, 76, .18); }
 /* Il riquadro delle persone tiene il posto del guardaroba anche da
    chiuso (vedi altezzaArmadio): l'invito si mette in mezzo a quel
    posto invece di lasciarlo vuoto sopra. */

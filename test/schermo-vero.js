@@ -394,6 +394,58 @@
     p('  e il meno e il piu tornano', vivi().some(t => /^[−+]/.test(t)), vivi().join(' | '));
   }
 
+  /* ── 9. LE DUE SCHERMATE DELLO STESSO GRUPPO SANNO LE STESSE COSE ──
+     Il mini menu della scheda in lista era diventato piu' capace del
+     pannello che si apre con «Modifica» -- cioe' del posto dove si va
+     per cambiare le cose per bene. Due schermate per lo stesso gruppo
+     che sanno fare cose diverse sono un posto dove si cerca un tasto e
+     non c'e'. */
+  {
+    showArchive = false;
+    entries.length = 0; localStorage.removeItem('gp_entries');
+    const t0 = Date.now() - 43 * 60000;
+    entries.push(normalizeEntries([{ id: 'due', startTime: t0, createdAt: t0, oraManuale: true,
+      children: 2, durationMinutes: 0, baseMinutes: 0, payLater: true }])[0]);
+    saveEntries(); switchTab('active'); buildActiveView(); await att(300);
+
+    [...card().querySelectorAll('button.conto')].find(b => /Modifica/.test(b.textContent)).click();
+    await att(500);
+    const chip = t => [...document.querySelectorAll('.pc-dur .chip')]
+      .find(c => new RegExp(t).test(c.textContent));
+
+    p('nel pannello c e la pausa, come nella scheda', !!chip('Pausa'));
+    p('  e i minuti dicono quanto si sta pagando',
+      /\d/.test(document.querySelector('.pc-min').textContent),
+      document.querySelector('.pc-min').textContent);
+    chip('Pausa').click(); await att(350);
+    p('  e la pausa dal pannello ferma davvero l orologio', !!entries[0].pausaDa && allineati());
+    p('  e il tasto diventa Riprendi', !!chip('Riprendi'));
+    chip('Riprendi').click(); await att(350);
+    p('  e riprende', !entries[0].pausaDa && allineati());
+
+    /* LA NOTA SI SCRIVE IN UN MODO SOLO: la stessa striscia e lo stesso
+       foglio, nel pannello come nella scheda. Qui c'era un campo da
+       riempire che salvava a ogni lettera, senza «lascia stare» e senza
+       annulla. */
+    const striscia = () => document.querySelector('.pc-nota');
+    p('e la nota nel pannello e una striscia, non un campo da riempire',
+      !!striscia() && striscia().tagName === 'BUTTON');
+    p('  che da vuota si vede lo stesso', striscia().getBoundingClientRect().height > 0);
+    striscia().click(); await att(350);
+    const campo = document.querySelector('.nota-campo');
+    p('  e toccandola si apre lo STESSO foglio della scheda', !!campo);
+    if (campo) {
+      campo.value = 'torta in frigo';
+      [...document.querySelectorAll('#modalRoot button')].find(b => /Salva/.test(b.textContent)).click();
+      await att(350);
+      p('  la nota si salva', allineati() && entries[0].note === 'torta in frigo');
+      p('  e la striscia la legge', /torta in frigo/.test(striscia().textContent));
+      if (await conAnnulla()) toastAnnulla().click(); await att(300);
+      p('  e l annulla la toglie, che prima nel pannello non c era',
+        allineati() && !String(entries[0].note || '').trim());
+    }
+  }
+
   /* ── il verdetto ── */
   localStorage.removeItem('gp_entries');
   entries.length = 0;

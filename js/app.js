@@ -1362,8 +1362,16 @@ function costruisciPannello() {
       <div class="card blk c-ambra sec-nota">
         <h2><span class="em">📝</span> Note</h2>
         <div class="blk-in">
-          <input class="libero grosso pc-nota"
-            placeholder="Qualcosa che salta all’occhio, o da ricordare: «zaino giallo», «torta in frigo»…">
+          <!-- LA NOTA SI SCRIVE IN UN MODO SOLO.
+               Qui c'era un campo da riempire a mano, che salvava a ogni
+               lettera; sulla scheda in lista invece la nota e' una
+               striscia che si tocca e apre il suo foglio. Stessa cosa,
+               due strade diverse, e due strade divergono: quella qui
+               non aveva ne' il «lascia stare» ne' l'annulla, e per non
+               scrivere sotto la tastiera del tablet aveva bisogno di
+               una sua acrobazia. Adesso e' la STESSA striscia e lo
+               STESSO foglio della scheda. -->
+          <button class="e-nota pc-nota"></button>
         </div>
       </div>
     </div>
@@ -1617,7 +1625,16 @@ function costruisciPannello() {
     /* "hanno deciso di restare": l'avviso lascia il posto ai tagli, e
        da li' in poi e' un ingresso come tutti gli altri */
     if (d.a === 'tagli') { tagliDi = c; aggiornaPannello(); return; }
-    if (d.a === 'dopo') { c.payLater = !c.payLater; pcSalva(); aggiornaPannello(); return; }
+    if (d.a === 'dopo') {
+      c.payLater = !c.payLater;
+      /* uscendo dal tempo aperto l'orologio della pausa non ha piu' un
+         posto dove farsi vedere: si chiude, e il tempo gia' stato fermi
+         resta contato per quando lo si riapre. Stessa regola della
+         scheda in lista: e' la stessa cosa, e va fatta uguale. */
+      if (!c.payLater) chiudiPausa(c);
+      pcSalva(); aggiornaPannello(); return;
+    }
+    if (d.a === 'pausa') { commutaPausa(c); pcSalva(); aggiornaPannello(); return; }
     if (d.a === 'butta') {
       /* il riferimento e' uno solo: il cestino lo toglie e basta */
       const box = pcRif('.pc-people');
@@ -1940,7 +1957,16 @@ function disegnaFascia(p, c) {
   const aperto = !!c.payLater;
   p.querySelector('.pc-ora').textContent = fmtTime(c.startTime);
   const min = p.querySelector('.pc-min');
-  if (min) min.textContent = aperto ? '\u2014' : fmtMin(clamp(num(c.durationMinutes, 0), 0, 1e6));
+  /* A TEMPO APERTO IL NUMERO DICE I MINUTI CHE SI STANNO PAGANDO.
+     C'era un trattino, come sulla scheda in lista: la cosa che al banco
+     si guarda per prima non diceva niente proprio nell'unico caso in
+     cui si muove da sola. */
+  if (min) {
+    min.textContent = aperto
+      ? fmtMin(Math.round(contiAperto(c).contati))
+      : fmtMin(clamp(num(c.durationMinutes, 0), 0, 1e6));
+    min.classList.toggle('in-pausa', aperto && !!num(c.pausaDa, 0));
+  }
   /* il tasto "Ora": spento mentre l'orario segue l'orologio da solo
      (non c'e' niente da fare), acceso e lampeggiante appena lo si e'
      spostato a mano -- e' l'unico modo per tornare al live */
@@ -2378,8 +2404,11 @@ function aggiornaPannello(opz) {
        minuti in omaggio non si pagano, e il tasto per vendere il tempo
        se poi decidono di restare. */
     const avviso = avvisoSoli(c);
+    /* la pausa entra nella firma: se no si preme «Pausa» e la fila dei
+       tagli non si ridisegna, cioe' il tasto resta a dire «Pausa» su un
+       orologio che ormai e' fermo */
     const firmaDur = tagli.join('|') + '>' + (c.payLater ? 'dopo' : c.durationMinutes) +
-      (avviso ? '|solo' + omaggioDi(c) : '');
+      (avviso ? '|solo' + omaggioDi(c) : '') + (num(c.pausaDa, 0) ? '|fermo' : '');
     if (dur.dataset.sig !== firmaDur) {
       dur.dataset.sig = firmaDur;
       dur.innerHTML = avviso
@@ -2397,36 +2426,41 @@ function aggiornaPannello(opz) {
            nome. */
         '<button class="chip later' + (c.payLater ? ' on' : '') + '" data-a="dopo" ' +
         'title="Resta senza un orario di fine: si conta il tempo davvero passato">' +
-        '\u23f3 Tempo aperto</button>';
+        '\u23f3 Tempo aperto</button>' +
+        /* LA PAUSA STA ANCHE QUI. Era solo sulla scheda in lista, e cosi'
+           il mini menu sapeva fare una cosa che aprendo \u00abModifica\u00bb --
+           cioe' il posto dove si va per cambiare le cose per bene --
+           non si poteva piu' fare. Due schermate per lo stesso gruppo
+           che sanno fare cose diverse sono un posto dove si va a
+           cercare un tasto e non c'e'. Compare solo a tempo aperto:
+           altrove non c'e' nessun orologio che corra. */
+        (c.payLater
+          ? '<button class="chip pausa' + (num(c.pausaDa, 0) ? ' on' : '') + '" data-a="pausa" ' +
+            'title="' + (num(c.pausaDa, 0)
+              ? 'L\u2019orologio \u00e8 fermo: riprendi a contare il tempo'
+              : 'Ferma l\u2019orologio: il tempo in pausa non si paga') + '">' +
+            (num(c.pausaDa, 0) ? '\u25b6\ufe0e Riprendi' : '\u23f8 Pausa') + '</button>'
+          : '');
     }
     /* la riga dell'avviso non e' una riga di tagli: si veste da avviso */
     dur.classList.toggle('solo', avviso);
     c.people = lista(c.people);
     syncPeople(p.querySelector('.pc-people'), c.people, () => { pcSalva(); });
 
-    /* LA NOTA NON SI RIDISEGNA MENTRE CI SI SCRIVE DENTRO.
-       Riscrivere `value` a ogni giro riporterebbe il cursore in fondo a
-       ogni lettera -- e questo campo si aggiorna a ogni battuta, perche'
-       ogni battuta salva. Si tocca solo quando il valore e' davvero
-       diverso E il dito non e' li' dentro. */
+    /* LA NOTA: la stessa striscia della scheda in lista, e lo stesso
+       foglio. Qui la striscia si vede anche da vuota -- e' l'unico
+       posto da cui si scrive la prima nota -- mentre in lista da vuota
+       resta nascosta finche' non si apre la scheda. */
     const nota = p.querySelector('.pc-nota');
     if (nota) {
-      const suo = String(c.note || '');
-      if (nota.value !== suo && document.activeElement !== nota) nota.value = suo;
+      vestiNota(nota, c, true);
       if (!nota.dataset.legato) {
         nota.dataset.legato = '1';
-        nota.oninput = () => { C().note = nota.value; pcSalva(); };
-        /* LA TASTIERA DEL TABLET SI MANGIA META' SCHERMO, e la nota sta
-           in fondo al Parco: aprendola si scriveva sotto la tastiera,
-           senza vedere quello che si stava scrivendo. Al fuoco il campo
-           si porta a vista da se'. Il ritardo serve: la tastiera ci mette
-           un momento a salire, e misurare prima vuol dire misurare lo
-           schermo di prima. */
-        nota.addEventListener('focus', () => {
-          setTimeout(() => {
-            try { nota.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {}
-          }, 300);
-        });
+        nota.onclick = (ev) => {
+          ev.preventDefault();
+          const chi = C();
+          foglioNota(chi, () => vestiNota(nota, chi, true));
+        };
       }
     }
   } else if (!inScontrino) {
@@ -4707,13 +4741,7 @@ function entryCard(entry) {
      di colpo d'occhio. E se non c'era niente scritto non c'era nemmeno
      un posto dove scriverlo: adesso c'e', spento, e un tocco lo apre. */
   const notaBox = el('button', 'e-nota');
-  const disegnaNota = () => {
-    const t = String(entry.note || '').trim();
-    notaBox.classList.toggle('vuota', !t);
-    notaBox.innerHTML = t
-      ? '<span class="em">\ud83d\udcdd</span><span class="tx">' + esc(t) + '</span>'
-      : '<span class="em">\ud83d\udcdd</span><span class="tx">aggiungi una nota</span>';
-  };
+  const disegnaNota = () => vestiNota(notaBox, entry, false);
   disegnaNota();
   notaBox.onclick = (ev) => { ev.stopPropagation(); foglioNota(entry, disegnaNota); };
   card.appendChild(notaBox);
@@ -8100,6 +8128,27 @@ function versaBarSu(entry) {
    Un foglio e non un campo che si apre sul posto: la scheda in lista e'
    stretta, e sotto compare la tastiera. Qui il campo sta in alto, grande,
    e quello che si scrive si vede tutto. */
+/* LA STRISCIA DELLA NOTA, UNA SOLA per tutti i posti che la mostrano.
+   Erano due: una striscia sulla scheda in lista e un campo da riempire
+   dentro il pannello. La stessa cosa scritta in due modi diverge --
+   quella del pannello salvava a ogni lettera e non aveva ne' un
+   «lascia stare» ne' l'annulla -- e chi la usa deve imparare due
+   gesti per la stessa cosa.
+   `sempre` distingue i due posti, ed e' l'unica differenza che resta:
+   nel pannello la striscia vuota si vede (e' da li' che si scrive la
+   prima nota), in lista no, se no ogni scheda porterebbe una riga che
+   dice una cosa che si puo' fare invece di una che c'e'. */
+function vestiNota(box, chi, sempre) {
+  const t = String((chi && chi.note) || '').trim();
+  box.classList.toggle('vuota', !t);
+  box.classList.toggle('sempre', !!sempre);
+  box.innerHTML = '<span class="em">📝</span><span class="tx">' +
+    (t ? esc(t) : 'aggiungi una nota') + '</span>';
+}
+
+/* IL FOGLIO DELLA NOTA, sia per un gruppo gia' registrato sia per uno
+   che si sta ancora scrivendo: quello che cambia e' solo DOVE si
+   salva, e lo decide lui invece di farlo decidere a chi lo apre. */
 function foglioNota(entry, dopo) {
   const s = sheet('Nota del gruppo');
   s.body.appendChild(el('div', 'hint',
@@ -8117,22 +8166,33 @@ function foglioNota(entry, dopo) {
     setTimeout(() => campo.scrollIntoView({ block: 'center', behavior: 'smooth' }), 250);
   });
 
+  /* UN GRUPPO NON ANCORA REGISTRATO non sta in `entries`: li' non c'e'
+     niente da salvare su disco ne' nessuna scheda in lista da
+     aggiornare, e chiamare `saveEntries` scriverebbe la lista di prima
+     lasciando la nota solo a video. */
+  const registrato = lista(entries).indexOf(entry) >= 0;
+  const applica = () => {
+    if (registrato) {
+      saveEntries();
+      syncCard(entry);
+      if (PAN.ingresso === entry) aggiornaPannello();
+    } else {
+      pcSalva();
+      aggiornaPannello();
+    }
+    if (typeof dopo === 'function') dopo();
+  };
+
   footBtn(s.foot, 'Lascia stare', 'btn-ghost', s.close);
   footBtn(s.foot, '\u2713 Salva', 'btn-ok', () => {
     const prima = String(entry.note || '');
     entry.note = campo.value.slice(0, 500);
     s.close();
     if (entry.note === prima) return;
-    saveEntries();
-    if (typeof dopo === 'function') dopo();
-    syncCard(entry);
-    if (PAN.ingresso === entry) aggiornaPannello();
+    applica();
     fatto(entry.note.trim() ? 'Nota salvata \ud83d\udcdd' : 'Nota tolta', () => {
       entry.note = prima;
-      saveEntries();
-      if (typeof dopo === 'function') dopo();
-      syncCard(entry);
-      if (PAN.ingresso === entry) aggiornaPannello();
+      applica();
       toast('Nota rimessa \u21a9\ufe0e');
     });
   });

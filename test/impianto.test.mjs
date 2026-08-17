@@ -129,9 +129,14 @@ gruppo('La nota si legge senza aprire niente, e si scrive toccandola');
      non una che c'e'. L'invito compare col primo tocco, insieme al resto
      dei comandi -- e' li' che si sta lavorando su quella scheda. */
   prova('a vuoto la nota non si vede nella lista',
-    /\.e-nota\.vuota \{ display: none; \}/.test(CSS));
+    /\.e-nota\.vuota:not\(\.sempre\) \{ display: none; \}/.test(CSS));
   prova('e compare col primo tocco, con la scheda aperta',
-    /\.entry\.aperto \.e-nota\.vuota \{[^}]*display: flex/.test(CSS));
+    /\.entry\.aperto \.e-nota\.vuota, \.e-nota\.vuota\.sempre \{[^}]*display: flex/.test(CSS));
+  /* NEL PANNELLO INVECE LA STRISCIA VUOTA SI VEDE SEMPRE: e' da li' che
+     si scrive la prima nota, e nasconderla vorrebbe dire non avere
+     nessun posto dove scriverla. */
+  prova('mentre nel pannello la striscia vuota si vede sempre',
+    /vestiNota\(nota, c, true\)/.test(APP));
   prova('mentre la nota SCRITTA resta sempre a vista',
     !/\.e-nota \{[^}]*display: none/.test(CSS));
   prova('toccandola si apre il foglio per scriverla',
@@ -142,14 +147,28 @@ gruppo('La nota si legge senza aprire niente, e si scrive toccandola');
   prova('e la striscia si rilegge quando la scheda si rinfresca',
     /r\.disegnaNota === 'function'\) r\.disegnaNota\(\)/.test(APP));
 
-  /* LA TASTIERA DEL TABLET SI MANGIA META' SCHERMO, e la nota sta in
-     fondo al Parco: si scriveva sotto la tastiera, senza vedere quello
-     che si stava scrivendo. */
-  prova('al fuoco la nota si porta a vista da se',
-    /nota\.addEventListener\('focus'[\s\S]{0,220}scrollIntoView/.test(APP),
-    'senza, con la tastiera aperta si scrive al buio');
-  prova('e anche il campo del foglio',
+  /* LA NOTA SI SCRIVE IN UN MODO SOLO. Nel pannello c'era un campo da
+     riempire che salvava a ogni lettera, sulla scheda una striscia che
+     apre il suo foglio: la stessa cosa con due gesti diversi, e quella
+     del pannello non aveva ne' il «lascia stare» ne' l'annulla. */
+  prova('la striscia della nota la disegna una funzione sola',
+    /function vestiNota/.test(APP) &&
+    /const disegnaNota = \(\) => vestiNota\(notaBox, entry, false\)/.test(APP));
+  prova('e nel pannello si tocca per aprire lo stesso foglio',
+    /nota\.onclick[\s\S]{0,160}foglioNota\(chi/.test(APP) &&
+    !/nota\.oninput/.test(APP));
+  prova('e non e piu un campo da riempire',
+    !/input class="libero grosso pc-nota"/.test(APP));
+  /* LA TASTIERA DEL TABLET SI MANGIA META' SCHERMO: il campo del foglio
+     si porta a vista da se', se no si scrive al buio. */
+  prova('il campo del foglio si porta a vista da se',
     /campo\.addEventListener\('focus'[\s\S]{0,160}scrollIntoView/.test(APP));
+  /* E IL FOGLIO SA DOVE SALVARE. Un gruppo non ancora registrato non sta
+     in `entries`: li' `saveEntries` scriverebbe la lista di prima
+     lasciando la nota solo a video. */
+  prova('e sa salvare anche un gruppo non ancora registrato',
+    /const registrato = lista\(entries\)\.indexOf\(entry\) >= 0;/.test(APP) &&
+    /pcSalva\(\);\s*\n\s*aggiornaPannello\(\);/.test(APP));
 }
 
 gruppo('Chi risponde in differita non si fa salvare prima della risposta');
