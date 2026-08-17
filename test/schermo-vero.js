@@ -446,6 +446,55 @@
     }
   }
 
+  /* ── 10. LO SCONTRINO RACCONTA IL TEMPO APERTO E LA PAUSA ──
+     Lo scontrino e' la schermata dell'INCASSARE: se li' il conto non
+     si spiega, chi sta col gruppo davanti non sa cosa rispondere a
+     «perche' tanto?». Con la pausa la domanda e' garantita: i minuti
+     contati sono meno di quelli passati. */
+  {
+    showArchive = false;
+    entries.length = 0; localStorage.removeItem('gp_entries');
+    const t0 = Date.now() - 73 * 60000;
+    entries.push(normalizeEntries([{ id: 'sc', startTime: t0, createdAt: t0, oraManuale: true,
+      children: 2, durationMinutes: 0, baseMinutes: 0, payLater: true,
+      crazyJumping: 2, crazyGiri: [1, 1], pausato: 30 * 60000,
+      barItems: [{ id: 'b1', name: 'Acqua', price: 1, qty: 2 }] }])[0]);
+    saveEntries(); switchTab('active'); buildActiveView(); await att(300);
+    [...card().querySelectorAll('button.conto')].find(b => /Scontrino/.test(b.textContent)).click();
+    await att(600);
+
+    const sc = () => document.querySelector('.pc-scontrino');
+    const testo = () => sc().textContent.replace(/\s+/g, ' ');
+    p('lo scontrino si apre', !!sc() && !sc().classList.contains('hidden'));
+    p('  e dice che il tempo e aperto', /tempo aperto/.test(testo()));
+    p('  e quanti minuti sta contando', /43′ contati/.test(testo()), testo().slice(0, 140));
+    p('  e che mezz ora e in pausa e non si conta',
+      /30′ in pausa, non contati/.test(testo()));
+    p('  e la fascia su cui cade', /fascia 40′/.test(testo()));
+
+    /* i numeri dello scontrino sono quelli del conto */
+    const k = costOf(entries[0]);
+    p('  il parco e quello del conto', new RegExp(eur(k.parkTotal).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).test(testo()),
+      eur(k.parkTotal));
+    p('  e il totale pure', new RegExp(eur(dueOf(entries[0]).total).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).test(testo()));
+
+    /* col cronometro fermo ADESSO lo dice */
+    commutaPausa(entries[0]); saveEntries(); aggiornaPannello(); await att(300);
+    p('  e col cronometro fermo lo scrive', /fermo/.test(testo()));
+    const fermoOra = dueOf(entries[0]).total;
+    p('  e da fermo il dovuto non cresce',
+      dueOf(entries[0], Date.now()).total === fermoOra);
+    commutaPausa(entries[0]); saveEntries(); aggiornaPannello(); await att(300);
+
+    /* e da qui si incassa */
+    [...sc().querySelectorAll('[data-screparto]')].find(b => b.dataset.screparto === 'parco').click();
+    await att(400);
+    p('dallo scontrino si incassa il parco', entries[0].paidPark > 0 && allineati());
+    [...sc().querySelectorAll('[data-screparto]')].find(b => b.dataset.screparto === 'bar').click();
+    await att(400);
+    p('  e il bar, e il conto resta saldato', dueOf(entries[0]).total === 0 && allineati());
+  }
+
   /* ── il verdetto ── */
   localStorage.removeItem('gp_entries');
   entries.length = 0;

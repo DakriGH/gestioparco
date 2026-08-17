@@ -618,13 +618,21 @@ function minTxt(m) {
    di fianco e ripeterlo sarebbe rumore. */
 function spiegaAperto(c, corto, ora) {
   const a = contiAperto(c, ora);
+  /* IL TEMPO FERMO VA DETTO DOVUNQUE SI LEGGA IL CONTO -- scheda,
+     fascia dei totali, scontrino -- perche' e' la ragione per cui i
+     minuti contati sono meno di quelli passati: senza, chi incassa
+     legge \u00abdentro da 73\u2032\u00bb e \u00ab43\u2032 contati\u00bb e non capisce da dove esce
+     la differenza. Questa riga la scrive una funzione sola, quindi i
+     tre posti non possono raccontarla in tre modi. */
+  const fermoTxt = a.fermo >= 0.5 ? ' \u00b7 ' + minTxt(a.fermo) + ' in pausa, non contati' : '';
+  const stato = a.inPausa ? '\u23f8 fermo \u00b7 ' : '';
   if (a.contati <= 0) {
     if (a.dentro <= 0) return 'non sono ancora entrati';
-    if (a.regalati > 0) return 'coperti dai +' + minTxt(a.regalati) + ' del Crazy';
-    return 'appena entrati';
+    if (a.regalati > 0) return stato + 'coperti dai +' + minTxt(a.regalati) + ' del Crazy' + fermoTxt;
+    return stato + 'appena entrati' + fermoTxt;
   }
   const conto = minTxt(a.contati) + ' contati \u2192 fascia ' + minTxt(a.scaglione);
-  return corto ? conto : 'dentro da ' + minTxt(a.dentro) + ' \u00b7 ' + conto;
+  return stato + (corto ? conto : 'dentro da ' + minTxt(a.dentro) + ' \u00b7 ' + conto) + fermoTxt;
 }
 
 function braceletFor(ts) {

@@ -45,13 +45,50 @@ const uguale = (t, avuto, atteso) => prova(t, JSON.stringify(avuto) === JSON.str
 const r2 = v => Math.round(v * 100) / 100;
 const PREZZO_GIRO = app.settings.crazyJumpingPrice;
 
+/* ══════════════════════════════════════════════════════════
+   L'OROLOGIO IN MANO
+
+   Il prezzo del tempo aperto si misura sull'orologio, e finche'
+   l'orologio e' quello vero ogni misura e' approssimata: fra la
+   lettura del conto e quella del prezzo passano dei millesimi, e sui
+   confini fra due fasce il numero salta. Mi e' gia' costato due prove
+   che accusavano il codice di un salto deciso da loro.
+   Qui l'orologio dell'app diventa nostro: si ferma dove vogliamo e lo
+   si fa scorrere di quanto vogliamo. Cosi' «dopo venti minuti di pausa
+   e altri dieci dentro il conto e' ESATTAMENTE questo» diventa una
+   cosa che si puo' scrivere, invece di una che si spera.
+   Si sostituisce `Date` nel mondo dell'app -- e' li' che `Date.now()`
+   va a cercarlo -- lasciando intatto tutto il resto.
+   ══════════════════════════════════════════════════════════ */
+const VeraData = app.mondo.Date;
+let scarto = 0;
+function FintaData(...a) {
+  return a.length ? new VeraData(...a) : new VeraData(VeraData.now() + scarto);
+}
+FintaData.now = () => VeraData.now() + scarto;
+FintaData.parse = VeraData.parse;
+FintaData.UTC = VeraData.UTC;
+FintaData.prototype = VeraData.prototype;
+app.mondo.Date = FintaData;
+/* l'ora di partenza si ferma su un minuto tondo e lontano dal cambio
+   giornata delle 4, cosi' due prove non cadono in due giornate diverse */
+const PARTENZA = (() => {
+  const d = new VeraData();
+  d.setHours(15, 0, 0, 0);
+  return d.getTime();
+})();
+const adesso = () => VeraData.now() + scarto;
+const fermaOrologio = () => { scarto = PARTENZA - VeraData.now(); };
+const avanza = min => { scarto += min * 60000; };
+fermaOrologio();
+
 /* Un gruppo dentro da tot minuti. NIENTE DURATE TONDE: a tempo aperto
    il prezzo si misura sull'orologio, e chi e' dentro da 30′ esatti
    cade sul confine fra due fasce -- fra una misura e la successiva
    passa qualche millesimo e il numero salta. La prova accuserebbe il
    codice di un salto fatto da lei. */
 function dentro(min, extra) {
-  const t0 = Date.now() - min * 60000;
+  const t0 = adesso() - min * 60000;
   return app.normalizeEntries([Object.assign({
     id: 'a' + Math.random().toString(36).slice(2, 7),
     startTime: t0, createdAt: t0, oraManuale: true,
@@ -128,14 +165,14 @@ gruppo('Il tempo in pausa non si paga');
   app.commutaPausa(c);
   prova('e da fermo risulta in pausa', app.contiAperto(c).inPausa);
   const fermo1 = app.contiAperto(c).contati;
-  const fermo2 = app.contiAperto(c, Date.now() + 30 * 60000).contati;
+  const fermo2 = app.contiAperto(c, adesso() + 30 * 60000).contati;
   prova('e mezz’ora di orologio, da fermi, non aggiunge niente al conto',
     Math.abs(fermo2 - fermo1) < 0.2, fermo1.toFixed(2) + ' poi ' + fermo2.toFixed(2));
-  prova('  e nemmeno tre ore', Math.abs(app.contiAperto(c, Date.now() + 180 * 60000).contati - fermo1) < 0.2);
+  prova('  e nemmeno tre ore', Math.abs(app.contiAperto(c, adesso() + 180 * 60000).contati - fermo1) < 0.2);
 
   /* ora la scena vera: entrati da 73′, fermi da 30′, si riprende */
   const d = dentro(73);
-  d.pausaDa = Date.now() - 30 * 60000;
+  d.pausaDa = adesso() - 30 * 60000;
   prova('da fermi si conta il tempo che avevano quando si sono fermati',
     Math.abs(app.contiAperto(d).contati - 43) < 0.2,
     'contati ' + app.contiAperto(d).contati.toFixed(2) + ' invece di 43');
@@ -145,8 +182,8 @@ gruppo('Il tempo in pausa non si paga');
     Math.abs(app.contiAperto(d).contati - 43) < 0.2,
     'contati ' + app.contiAperto(d).contati.toFixed(2) + ' invece di 43');
   prova('e da li’ l’orologio ricomincia a correre',
-    Math.abs(app.contiAperto(d, Date.now() + 10 * 60000).contati - 53) < 0.2,
-    'dopo dieci minuti: ' + app.contiAperto(d, Date.now() + 10 * 60000).contati.toFixed(2));
+    Math.abs(app.contiAperto(d, adesso() + 10 * 60000).contati - 53) < 0.2,
+    'dopo dieci minuti: ' + app.contiAperto(d, adesso() + 10 * 60000).contati.toFixed(2));
   prova('il tempo fermo resta scritto', app.num(d.pausato, 0) >= 30 * 60000 - 1000,
     'pausato ' + Math.round(app.num(d.pausato, 0) / 60000) + '′');
   prova('e l’orologio della pausa e’ spento', !app.num(d.pausaDa, 0));
@@ -178,7 +215,7 @@ gruppo('La pausa regge le sequenze storte');
   /* un ingresso GIA' USCITO non puo' restare col cronometro fermo */
   const f = dentro(43);
   app.commutaPausa(f);
-  f.status = 'closed'; f.closedAt = Date.now();
+  f.status = 'closed'; f.closedAt = adesso();
   const chiuso = app.normalizeEntries([JSON.parse(JSON.stringify(f))])[0];
   prova('un ingresso uscito non resta col cronometro acceso', !app.num(chiuso.pausaDa, 0));
   const ancora = app.normalizeEntries([JSON.parse(JSON.stringify(chiuso))])[0];
@@ -208,7 +245,7 @@ gruppo('Accendere e spegnere il tempo aperto non crea ne’ distrugge soldi');
   const guai = [];
   MINUTI.forEach(min => {
     const c = app.normalizeEntries([{
-      id: 'x', startTime: Date.now() - min * 60000, createdAt: Date.now() - min * 60000,
+      id: 'x', startTime: adesso() - min * 60000, createdAt: adesso() - min * 60000,
       oraManuale: true, children: 2, durationMinutes: 30, baseMinutes: 30
     }])[0];
     app.PAN.conto = c; app.PAN.ingresso = null;
@@ -406,6 +443,283 @@ gruppo('Mille sequenze a caso attorno al tempo aperto');
     }
   }
   prova('nessuna garanzia salta', !guai.length, guai.slice(0, 3).join('\n        '));
+}
+
+/* ═════════════════════════════════════════════════════════
+   IL CARTELLO, SCRITTO A MANO
+
+   Da qui in giu' i prezzi attesi NON si chiedono all'app: si ricavano
+   dal cartello ricopiato qui sotto e dalla regola detta a parole. Se
+   l'app e questa copia dicono numeri diversi, uno dei due sbaglia, ed
+   e' esattamente quello che si vuole sapere.
+   ═════════════════════════════════════════════════════════ */
+const CARTELLO = [[10, 3], [15, 4.5], [20, 6], [30, 7], [40, 10], [50, 12], [60, 12],
+  [70, 15], [80, 16.5], [90, 19], [100, 22], [110, 24], [120, 24]];
+
+gruppo('Il cartello di prova e lo stesso dell’app');
+{
+  uguale('le fasce e i prezzi combaciano',
+    app.settings.tariffs.map(t => [t.m, t.p]), CARTELLO);
+}
+
+/* la fascia piu' vicina, a parita' la piu' bassa: la regola detta a
+   parole, riscritta senza guardare come l'ha scritta l'app */
+function vicina(min) {
+  if (min <= 0) return null;
+  let b = CARTELLO[0];
+  for (const t of CARTELLO) if (Math.abs(t[0] - min) < Math.abs(b[0] - min)) b = t;
+  return b;
+}
+/* e la fascia SOPRA, che e' quella del tempo comprato: hai comprato
+   quella durata e paghi lo scaglione che la contiene */
+function sopra(min) {
+  if (min <= 0) return null;
+  for (const t of CARTELLO) if (min <= t[0]) return t;
+  return CARTELLO[CARTELLO.length - 1];
+}
+const su5 = m => Math.ceil(m / 5) * 5;
+const parcoAperto = (min, bimbi) => r2((vicina(min) ? vicina(min)[1] : 0) * bimbi);
+const parcoComprato = (min, bimbi) => r2((sopra(su5(min)) ? sopra(su5(min))[1] : 0) * bimbi);
+
+/* ─────────────────────────────────────────────────────────
+   LA GIORNATA INTERA DI UN GRUPPO, minuto per minuto
+   ───────────────────────────────────────────────────────── */
+gruppo('Una serata vera: tempo aperto, pausa, giri, tempo comprato — coi numeri esatti');
+{
+  fermaOrologio();
+  const c = dentro(0);              // due bambini, tempo aperto, appena entrati
+  app.PAN.conto = c; app.PAN.ingresso = null;
+  const guai = [];
+  const passo = (che, minAttesi, parcoAtteso, crazyAtteso) => {
+    const a = app.contiAperto(c), k = app.costOf(c);
+    const dett = [];
+    if (Math.abs(a.contati - minAttesi) > 0.001) dett.push('minuti contati ' + a.contati.toFixed(2) + ' invece di ' + minAttesi);
+    if (k.parkTotal !== parcoAtteso) dett.push('parco ' + k.parkTotal + ' invece di ' + parcoAtteso);
+    if (k.crazyCost !== crazyAtteso) dett.push('crazy ' + k.crazyCost + ' invece di ' + crazyAtteso);
+    const attesoTot = r2(parcoAtteso + crazyAtteso);
+    if (app.dueOf(c).total !== attesoTot) dett.push('totale ' + app.dueOf(c).total + ' invece di ' + attesoTot);
+    if (dett.length) guai.push(che + ': ' + dett.join(', '));
+  };
+
+  avanza(20);
+  passo('dopo venti minuti', 20, parcoAperto(20, 2), 0);
+
+  app.commutaPausa(c); avanza(30);
+  passo('mezz’ora di pausa: il conto non si muove', 20, parcoAperto(20, 2), 0);
+
+  app.commutaPausa(c); avanza(10);
+  passo('ripreso, altri dieci minuti', 30, parcoAperto(30, 2), 0);
+
+  app.contaSalita(1);
+  passo('un giro di Crazy: il parco non si tocca', 30, parcoAperto(30, 2), PREZZO_GIRO);
+
+  app.contaSalita(1); app.contaSalita(1);
+  passo('altri due giri', 30, parcoAperto(30, 2), r2(3 * PREZZO_GIRO));
+
+  app.metteCrazy(c, 1);
+  passo('tolti due giri, ne resta uno', 30, parcoAperto(30, 2), PREZZO_GIRO);
+
+  avanza(13);
+  passo('altri tredici minuti dentro', 43, parcoAperto(43, 2), PREZZO_GIRO);
+
+  app.commutaPausa(c); avanza(45); app.commutaPausa(c);
+  passo('tre quarti d’ora di pausa non si pagano', 43, parcoAperto(43, 2), PREZZO_GIRO);
+
+  app.bcSetQ('bimbi', 3);
+  passo('arriva un terzo bambino', 43, parcoAperto(43, 3), PREZZO_GIRO);
+
+  prova('ogni passo della serata torna', !guai.length, guai.join('\n        '));
+
+  /* e adesso si chiude: da tempo aperto a tempo comprato */
+  c.payLater = false;
+  app.chiudiPausa(c);
+  c.durationMinutes = 60; c.baseMinutes = 60; delete c.aggiunte;
+  uguale('passando a un’ora comprata si paga l’ora', app.costOf(c).parkTotal, parcoComprato(60, 3));
+  uguale('e il giro resta il suo', app.costOf(c).crazyCost, PREZZO_GIRO);
+  /* l'ora d'uscita: l'inizio del parco piu' il tempo comprato piu' i
+     minuti regalati dai giri */
+  const atteso = app.inizioParco(c) + (60 + app.minutiCrazy(c)) * 60000;
+  uguale('e l’ora d’uscita comprende i minuti regalati',
+    Math.max(atteso, app.num(c.regaloFinoA, 0)), app.endTimeOf(c));
+}
+
+/* ─────────────────────────────────────────────────────────
+   AGGIUNGERE E TOGLIERE TEMPO
+   ───────────────────────────────────────────────────────── */
+gruppo('Il piu’ e il meno del tempo tornano sempre al punto di partenza');
+{
+  fermaOrologio();
+  const guai = [];
+  /* I BLOCCHI GIA' VENDUTI SONO IL POSTO DOVE QUESTO SI ROMPE.
+     Un ritocco deve entrare nell'ULTIMA vendita, non aprirne una nuova:
+     un'ora con dentro una mezz'ora venduta a parte, riportata a
+     mezz'ora col meno, costava diciotto euro invece di quattordici.
+     Senza blocchi venduti il piu' e il meno tornano anche sbagliati, e
+     la prova non se ne accorge. */
+  [15, 30, 45, 60, 90, 120].forEach(dur => {
+    [0, 1, 3].forEach(giri => {
+      [true, false].forEach(scaglioni => {
+        [[], [15], [15, 30]].forEach(blocchi => {
+          app.settings.tariffaSuTotale = !scaglioni;
+          const c = dentro(10, { durationMinutes: dur, baseMinutes: dur, payLater: false });
+          app.PAN.conto = c; app.PAN.ingresso = null;
+          if (giri) app.metteCrazy(c, giri);
+          blocchi.forEach(b => app.vendiBlocco(c, b));
+          const prima = { min: c.durationMinutes, parco: app.costOf(c).parkTotal,
+            fine: app.endTimeOf(c), vendite: (app.lista(c.aggiunte) || []).join('+') };
+          app.ritoccaTempo(c, 5);
+          const cresciuto = app.costOf(c).parkTotal;
+          app.ritoccaTempo(c, -5);
+          const dopo = { min: c.durationMinutes, parco: app.costOf(c).parkTotal,
+            fine: app.endTimeOf(c), vendite: (app.lista(c.aggiunte) || []).join('+') };
+          const dove = dur + '′/' + giri + ' giri/' + (scaglioni ? 'scaglioni' : 'totale') +
+            (blocchi.length ? '/venduti ' + blocchi.join('+') : '/senza vendite');
+          if (JSON.stringify(prima) !== JSON.stringify(dopo)) {
+            guai.push(dove + ': +5 e −5 non tornano — ' + JSON.stringify(prima) + ' vs ' + JSON.stringify(dopo));
+          }
+          if (cresciuto < prima.parco) guai.push(dove + ': allungando il prezzo SCENDE (' + prima.parco + ' → ' + cresciuto + ')');
+        });
+      });
+    });
+  });
+  app.settings.tariffaSuTotale = true;
+  prova('sei durate per tre conteggi di giri, con tutte e due le tariffe', !guai.length, guai.slice(0, 3).join('\n        '));
+}
+
+gruppo('Allungare non abbassa mai, accorciare non alza mai');
+{
+  fermaOrologio();
+  const guai = [];
+  [true, false].forEach(scaglioni => {
+    app.settings.tariffaSuTotale = !scaglioni;
+    [0, 2].forEach(giri => {
+      const c = dentro(5, { durationMinutes: 15, baseMinutes: 15, payLater: false });
+      app.PAN.conto = c; app.PAN.ingresso = null;
+      if (giri) app.metteCrazy(c, giri);
+      let prezzo = app.costOf(c).parkTotal, fine = app.endTimeOf(c);
+      /* si sale di cinque in cinque fino a due ore e mezza */
+      for (let i = 0; i < 27; i++) {
+        app.ritoccaTempo(c, 5);
+        const p2 = app.costOf(c).parkTotal, f2 = app.endTimeOf(c);
+        if (p2 < prezzo - 0.005) guai.push('salendo a ' + c.durationMinutes + '′ il prezzo scende: ' + prezzo + ' → ' + p2);
+        if (f2 < fine) guai.push('salendo a ' + c.durationMinutes + '′ l’uscita torna indietro');
+        prezzo = p2; fine = f2;
+      }
+      /* e si riscende */
+      for (let i = 0; i < 27; i++) {
+        app.ritoccaTempo(c, -5);
+        const p2 = app.costOf(c).parkTotal, f2 = app.endTimeOf(c);
+        if (p2 > prezzo + 0.005) guai.push('scendendo a ' + c.durationMinutes + '′ il prezzo sale: ' + prezzo + ' → ' + p2);
+        if (f2 > fine) guai.push('scendendo a ' + c.durationMinutes + '′ l’uscita va avanti');
+        prezzo = p2; fine = f2;
+      }
+    });
+  });
+  app.settings.tariffaSuTotale = true;
+  prova('cinquantaquattro passi in salita e in discesa, per quattro casi', !guai.length, guai.slice(0, 3).join('\n        '));
+}
+
+/* ─────────────────────────────────────────────────────────
+   IL PAGA-DOPO DI UN TEMPO APERTO
+   ───────────────────────────────────────────────────────── */
+gruppo('Si paga a tempo aperto, poi il tempo continua a correre');
+{
+  fermaOrologio();
+  const c = dentro(20);
+  app.PAN.conto = c; app.PAN.ingresso = null;
+  app.contaSalita(1);
+  uguale('il conto di adesso', app.dueOf(c).total, r2(parcoAperto(20, 2) + PREZZO_GIRO));
+  app.pagaTutto();
+  uguale('pagando tutto non resta niente', app.dueOf(c).total, 0);
+  const incassato = r2(app.num(c.paidPark, 0) + app.num(c.paidBar, 0));
+
+  avanza(23);
+  /* NON E' UN GUASTO: a tempo aperto si paga il tempo passato, e il
+     tempo continua a passare. Quello che era stato incassato resta, e
+     torna dovuta solo la differenza. */
+  const dovuto = r2(parcoAperto(43, 2) + PREZZO_GIRO - incassato);
+  uguale('dopo altri ventitre minuti torna dovuta la differenza', app.dueOf(c).total, dovuto);
+  uguale('e l’incassato di prima non si e mosso',
+    r2(app.num(c.paidPark, 0) + app.num(c.paidBar, 0)), incassato);
+
+  app.commutaPausa(c); avanza(60); app.commutaPausa(c);
+  uguale('un’ora di pausa non aggiunge un euro', app.dueOf(c).total, dovuto);
+
+  app.pagaTutto();
+  uguale('e si salda di nuovo', app.dueOf(c).total, 0);
+  app.contaSalita(1);
+  uguale('un giro dopo il saldo torna dovuto il giro', app.dueOf(c).total, PREZZO_GIRO);
+}
+
+/* ─────────────────────────────────────────────────────────
+   TUTTE LE SEQUENZE, NON UN CAMPIONE
+   ───────────────────────────────────────────────────────── */
+gruppo('Tutte le sequenze di quattro mosse, su quattro partenze diverse');
+{
+  fermaOrologio();
+  const MOSSE = [
+    ['apri', c => { c.payLater = true; }],
+    ['chiudi', c => { c.payLater = false; app.chiudiPausa(c); }],
+    ['pausa', c => { if (!app.num(c.pausaDa, 0)) app.commutaPausa(c); }],
+    ['riprendi', c => app.chiudiPausa(c)],
+    ['piuGiro', () => app.contaSalita(1)],
+    ['menoGiro', c => app.metteCrazy(c, Math.max(0, app.num(c.crazyJumping, 0) - 1))],
+    ['piu5', c => app.ritoccaTempo(c, 5)],
+    ['meno5', c => app.ritoccaTempo(c, -5)]
+  ];
+  const PARTENZE = [
+    ['appena entrati, tempo aperto', { durationMinutes: 0, baseMinutes: 0, payLater: true }, 3],
+    ['dentro da un pezzo, tempo aperto', { durationMinutes: 0, baseMinutes: 0, payLater: true }, 43],
+    ['mezz’ora comprata', { durationMinutes: 30, baseMinutes: 30, payLater: false }, 12],
+    ['un’ora comprata e gia scaduta', { durationMinutes: 60, baseMinutes: 60, payLater: false }, 78]
+  ];
+  const guai = [];
+  let quante = 0;
+
+  PARTENZE.forEach(([nome, extra, min]) => {
+    for (let a = 0; a < MOSSE.length; a++)
+      for (let b = 0; b < MOSSE.length; b++)
+        for (let d = 0; d < MOSSE.length; d++)
+          for (let e = 0; e < MOSSE.length; e++) {
+            if (guai.length > 2) return;
+            quante++;
+            const c = dentro(min, Object.assign({}, extra));
+            app.PAN.conto = c; app.PAN.ingresso = null;
+            const fatte = [];
+            [a, b, d, e].forEach(i => {
+              fatte.push(MOSSE[i][0]);
+              const dove = nome + ' [' + fatte.join('>') + ']';
+              try { MOSSE[i][1](c); } catch (err) { guai.push('esplode: ' + dove + ' — ' + err.message); return; }
+
+              const k = app.costOf(c), du = app.dueOf(c), ap = app.contiAperto(c);
+              /* i numeri devono essere numeri */
+              if (!Number.isFinite(k.parkTotal) || k.parkTotal < 0) guai.push('parco ' + k.parkTotal + ' — ' + dove);
+              if (!Number.isFinite(k.crazyCost) || k.crazyCost < 0) guai.push('crazy ' + k.crazyCost + ' — ' + dove);
+              if (!Number.isFinite(du.total) || du.total < 0) guai.push('dovuto ' + du.total + ' — ' + dove);
+              /* i tempi */
+              if (!Number.isFinite(app.endTimeOf(c))) guai.push('uscita storta — ' + dove);
+              if (app.endTimeOf(c) < c.startTime) guai.push('esce prima di entrare — ' + dove);
+              if (app.inizioParco(c) < c.startTime - 1) guai.push('il parco comincia prima dell’ingresso — ' + dove);
+              if (ap.contati < 0) guai.push('minuti contati negativi — ' + dove);
+              if (ap.contati > ap.daParco + 0.001) guai.push('contati piu di quanto siano stati dentro — ' + dove);
+              if (app.num(c.pausato, 0) < 0) guai.push('tempo in pausa negativo — ' + dove);
+              /* IL PREZZO E' QUELLO DEL CARTELLO, ricavato qui e non
+                 chiesto all'app */
+              if (c.payLater) {
+                const atteso = parcoAperto(ap.contati, c.children);
+                if (k.parkTotal !== atteso) guai.push('parco ' + k.parkTotal + ' invece di ' + atteso + ' — ' + dove);
+              }
+              /* e il Crazy si paga sempre a parte, per intero */
+              const attesoCrazy = r2(app.num(c.crazyJumping, 0) * PREZZO_GIRO);
+              if (k.crazyCost !== attesoCrazy) guai.push('crazy ' + k.crazyCost + ' invece di ' + attesoCrazy + ' — ' + dove);
+              /* rileggendolo dal disco non deve cambiare niente */
+              const ri = app.normalizeEntries([JSON.parse(JSON.stringify(c))])[0];
+              if (app.endTimeOf(ri) !== app.endTimeOf(c)) guai.push('rileggendolo cambia l’uscita — ' + dove);
+              if (app.costOf(ri).parkTotal !== k.parkTotal) guai.push('rileggendolo cambia il prezzo — ' + dove);
+            });
+          }
+  });
+  prova(quante + ' sequenze provate, nessuna garanzia salta', !guai.length, guai.slice(0, 3).join('\n        '));
 }
 
 /* ---------- il verdetto ---------- */
