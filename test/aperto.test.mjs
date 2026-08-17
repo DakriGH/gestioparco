@@ -291,9 +291,16 @@ gruppo('La fascia e’ quella piu’ vicina, e i primi dieci minuti costano il p
   uguale('un minuto sta nei dieci', f(1).m, 10);
   uguale('e costa il primo scaglione', f(1).p, app.settings.tariffs[0].p);
 
-  /* e il conto del gruppo lo segue */
+  /* E IL CONTO DEL GRUPPO LO SEGUE.
+     Qui NON si misura un gruppo fermo a trentacinque minuti, che e'
+     esattamente il punto di parita' fra trenta e quaranta: la riga
+     sopra ci controlla la regola con un numero fisso, ma un gruppo VERO
+     e' dentro da 35 minuti e qualche microsecondo, e fra la lettura del
+     conto e quella del prezzo l'orologio si sposta. La prova
+     accuserebbe il codice di un salto deciso da quanto e' veloce la
+     macchina. Le durate qui stanno lontane dai punti di parita'. */
   const guai = [];
-  [31, 35, 36, 43, 58, 72].forEach(min => {
+  [31, 33, 38, 43, 58, 72].forEach(min => {
     const c = dentro(min);
     const atteso = r2(app.fasciaVicina(app.contiAperto(c).contati).p * 2);
     if (app.costOf(c).parkTotal !== atteso) {
