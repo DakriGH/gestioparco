@@ -222,6 +222,27 @@ gruppo('Niente resti di lavorazione nel codice che gira');
      «METODO» contiene TODO. Cercandolo senza confini bastava scrivere
      «e' un metodo delle liste» perche' la prova dicesse che c'e' un
      lavoro lasciato a meta'. */
+  /* ── LA GRAFICA 2.0 ──
+     E' una modalita' di prova: quello che aggiunge deve passare per le
+     strade che ci sono gia', se no fra un mese una delle due impara una
+     regola e l'altra no. */
+  prova('il numero rapido dei bambini passa dalla stessa bcSetQ del piu e del meno',
+    /if \(d\.quanti !== undefined\) \{[\s\S]{0,200}bcSetQ\(d\.quanti,/.test(APP),
+    'scrivendo `children` per conto suo salterebbe le regole dei soldi');
+  /* LE CARD SI RIDISEGNANO SOLO SE I LORO NUMERI CAMBIANO, e accendendo
+     l'interruttore i numeri sono gli stessi: senza la 2.0 nella firma,
+     la fila dei numeri rapidi non compariva finche' non si toccava
+     qualcos'altro. E' la stessa svista della pausa nella fila dei
+     tagli, e in node non si vede: il DOM finto non ridisegna niente. */
+  prova('e la Grafica 2.0 entra nella firma che decide se ridisegnare la card',
+    /function firmaVoce[\s\S]{0,800}settings\.grafica2 \? '\/g2'/.test(APP));
+  prova('e si annuncia con una classe sola sulla pagina',
+    /classList\.toggle\('g2', !!settings\.grafica2\)/.test(APP) &&
+    /\.g2 \./.test(CSS));
+  /* SPENTA DI SERIE: togliere comandi e' un'opinione, non una
+     correzione, e chi sta in cassa da mesi puo' trovarsi peggio. */
+  prova('ed e spenta di serie', /grafica2: false/.test(APP));
+
   const todo = (APP.match(/\bTODO\b|\bFIXME\b|\bXXX\b/g) || []).length;
   prova('nessun TODO appeso', todo === 0, todo + ' trovati');
   prova('e la parola «metodo» non lo fa sbagliare',

@@ -1428,6 +1428,15 @@ function costruisciPannello() {
       return;
     }
 
+    /* GRAFICA 2.0: un numero rapido mette QUELLA quantita', non ne
+       aggiunge una. Passa dalla stessa `bcSetQ` del piu' e del meno,
+       cosi' non puo' comportarsi in modo diverso da loro. */
+    if (d.quanti !== undefined) {
+      tocchi.id = d.quanti;
+      bcSetQ(d.quanti, clamp(num(d.v, 0), 0, 1e6));
+      pcSalva(); aggiornaPannello(); return;
+    }
+
     /* --- le card: quantita' e pagato --- */
     const voce = d.add || d.meno || d.ppiu || d.pmeno;
     if (voce) {
@@ -1797,6 +1806,12 @@ function firmaGriglia() {
 /* i numeri di UNA card: se non cambiano, la card non si tocca */
 function firmaVoce(id) {
   return bcQ(id) + '/' + bcPag(id) +
+    /* LA GRAFICA 2.0 ENTRA NELLA FIRMA. Le card si ridisegnano solo se
+       i loro numeri cambiano, e accendendo l'interruttore i numeri sono
+       gli stessi: la fila dei numeri rapidi non compariva finche' non
+       si toccava qualcosa. Cambia il DISEGNO, quindi deve stare qui
+       dentro -- e' la stessa svista della pausa nella fila dei tagli. */
+    (settings.grafica2 ? '/g2' : '') +
     (id === 'crazy' ? '/' + giriCrazy().join('.') + '>' + giroOra() : '');
 }
 
@@ -5719,10 +5734,35 @@ function bcCard(v, sempre) {
         '<button data-add="' + v.id + '">+</button></div>' +
         '<div class="bc-zone v"><span class="bc-chip">' + pg + '/' + q + '</span>' +
         '<button data-pmeno="' + v.id + '"' + (pg <= 0 ? ' disabled' : '') + '>\u2212</button>' +
-        '<button data-ppiu="' + v.id + '"' + (pg >= q ? ' disabled' : '') + '>+</button></div>'
+        '<button data-ppiu="' + v.id + '"' + (pg >= q ? ' disabled' : '') + '>+</button></div>' +
+        numeriRapidi(v.id, q)
       : '') +
     (v.id === 'crazy' ? '</div>' + storicoGiri() : '') +
   '</div>';
+}
+
+/* ══════════════════════════════════════════════════════════
+   GRAFICA 2.0: I NUMERI RAPIDI DEI BAMBINI
+
+   Il tempo ha sempre avuto i suoi tagli -- 15m, 30m, 1h, 1h30 -- e si
+   sceglie con UN tocco. I bambini no: si sale di uno per volta, quindi
+   una famiglia da quattro costa quattro tocchi su un tasto da
+   quaranta pixel, e sono le due cose che si mettono SEMPRE, tutte le
+   sere, decine di volte. Un'asimmetria senza motivo.
+   Qui c'e' la stessa fila di tagli, coi numeri che al banco capitano
+   davvero. Il piu' e il meno restano: per il quinto bambino, o per
+   toglierne uno che se n'e' andato, sono ancora la strada piu' corta.
+   Toccare il numero che c'e' gia' NON azzera: chi arriva a quattro e
+   ritocca il quattro voleva confermare, non ricominciare.
+   Solo sui bambini: al bar le quantita' sono una o due e il piu'
+   basta, e il Crazy si conta dentro un giro, che e' un'altra cosa. */
+const NUMERI_RAPIDI = [1, 2, 3, 4, 5, 6];
+function numeriRapidi(id, quanti) {
+  if (!settings.grafica2 || id !== 'bimbi') return '';
+  return '<div class="bc-veloci">' + NUMERI_RAPIDI.map(n =>
+    '<button class="chip' + (quanti === n ? ' on' : '') + '" data-quanti="bimbi" data-v="' + n +
+    '" aria-label="' + n + (n === 1 ? ' bambino' : ' bambini') + '">' + n + '</button>').join('') +
+    '</div>';
 }
 
 /* LO STORICO DEI GIRI, a destra della card.
@@ -8526,6 +8566,7 @@ function buildSettingsView() {
     settings.grafica2 = !settings.grafica2;
     paintGrafica2();
     saveSettings();
+    applyTheme();
     buildActiveView();
     markNewDirty();
     toast(settings.grafica2 ? 'Grafica 2.0 accesa 🆕' : 'Tornata la grafica di prima ↩︎');
@@ -8828,6 +8869,12 @@ function applyTheme() {
   /* L'app decide da se' se animare: il risparmio animazioni del sistema
      spegneva tutto e non si capiva piu' dove finivano le schede. */
   document.documentElement.classList.toggle('anima', settings.animazioni !== false);
+  /* LA GRAFICA 2.0 SI ANNUNCIA CON UNA CLASSE SOLA, cosi' tutto quello
+     che cambia nell'aspetto sta in un posto solo del foglio di stile
+     (`.g2 ...`) e spegnendo l'interruttore torna via da se'. Senza,
+     ogni ritocco andrebbe sparso in venti `if` dentro il disegno, e
+     tornare indietro non sarebbe piu' una cosa sicura. */
+  document.documentElement.classList.toggle('g2', !!settings.grafica2);
   preparaSchermoIntero();
   const meta = document.querySelector('meta[name="theme-color"]');
   // la barra di sistema del tablet deve intonarsi all'app, non restare
