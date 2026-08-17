@@ -404,6 +404,15 @@ function defaultSettings() {
     ],
     animazioni: true,
     schermoIntero: false,
+    /* LA GRAFICA 2.0, SPENTA DI SERIE.
+       Tre cose che dalla parte del banco sembrano di troppo -- lo stesso
+       numero di pagato in due posti, un tasto che si chiama diversamente
+       dalla schermata che apre, e i totali di sezione che rifanno il
+       mestiere dello scontrino. Toglierle e' un'opinione, non un
+       guasto: chi sta in cassa da mesi puo' trovarsi peggio.
+       Quindi si accende a mano, non tocca NESSUN dato, e si spegne
+       tornando esattamente a prima. */
+    grafica2: false,
     braceletSlots: [
       { start: '09:00', end: '12:00', color: '#22C55E', label: 'Verde' },
       { start: '12:00', end: '15:00', color: '#FBBF24', label: 'Giallo' },
@@ -2345,12 +2354,24 @@ function pastigliaPagato(c) {
      c'e' un prezzo da coprire. Il meno resta, che un reso deve poter
      tornare indietro sempre. */
   const su = tutto || !bimbi || aperto;
-  return '<span class="pgl' + (tutto ? ' tutto' : pag > 0 && !aperto ? '' : ' vuota') + '">' +
-    '<span class="k">' + testo + '</span>' +
+  /* GRAFICA 2.0: QUI IL PIU' E IL MENO SE NE VANNO.
+     Muovono lo stesso identico numero della pastiglia \u00ab0/3\u00bb sulla card
+     dei Bambini -- quanti hanno gia' pagato il tempo -- ma con un
+     linguaggio che non le somiglia per niente: una frase da una parte,
+     una frazione dall'altra. Due comandi che non si riconoscono come la
+     stessa cosa, e in mezzo ci sono i soldi: \u00abne ho gia' segnato uno?\u00bb
+     e' la domanda che porta a segnarne due.
+     La SCRITTA resta -- \u00abpagato fino alle 15:40\u00bb e' un'informazione, ed
+     e' il motivo per cui questa pastiglia esiste -- e si muove dalla
+     card, dallo scontrino e dalla fascia in fondo. */
+  const comandi = settings.grafica2 ? '' :
     '<button data-a="pagatempo" data-v="-1"' + (bcPag('bimbi') <= 0 ? ' disabled' : '') +
       ' aria-label="togli un pagamento">\u2212</button>' +
     '<button data-a="pagatempo" data-v="1"' + (su ? ' disabled' : '') +
-      ' aria-label="incassa il tempo">+</button></span>';
+      ' aria-label="incassa il tempo">+</button>';
+  return '<span class="pgl' + (tutto ? ' tutto' : pag > 0 && !aperto ? '' : ' vuota') +
+    (settings.grafica2 ? ' sola' : '') + '">' +
+    '<span class="k">' + testo + '</span>' + comandi + '</span>';
 }
 
 function pcFondoDis() {
@@ -3828,12 +3849,21 @@ function pcFondo() {
   const orario = c.payLater
     ? fmtTime(c.startTime) + ' \u2192 aperta'
     : fmtTime(c.startTime) + ' \u2192 ' + fmtTime(endTimeOf(c));
+  /* GRAFICA 2.0: I TRE TOTALI DI SEZIONE SE NE VANNO.
+     Rifanno il mestiere dello Scontrino, che lo fa meglio: riga per
+     riga, con quanto e' gia' entrato e quanto manca. Tenendoli, la
+     stessa cifra compariva tre volte nella stessa schermata e i modi di
+     incassare diventavano quattro.
+     Qui in fondo resta quello che serve col cliente davanti: quanto
+     deve, il Resto, e Paga tutto. Chi vuole incassare una riga alla
+     volta va nello Scontrino, che e' nato per quello. */
   return '<div class="bc-fondo">' +
+    (settings.grafica2 ? '' :
     '<div class="bc-parti">' +
       parte('Totale Parco', 'bimbi', 'bimbi', contoParco(), contoPagatoParco()) +
       parte('Totale Crazy', 'crazy', 'crazy', contoCrazy(), contoPagatoCrazy()) +
       parte('Totale Bar', 'coca', 'bar', contoBar(), contoPagatoBar()) +
-    '</div>' +
+    '</div>') +
     '<div class="bc-conto"><div>' +
       '<span class="k">' + (tot <= 0 ? 'niente sul conto' :
         resta > 0 ? (pag > 0 ? 'restano' : 'da incassare') : 'tutto pagato') +
@@ -5037,7 +5067,13 @@ function entryCard(entry) {
      correggere l'orario si apriva e si cambiava linguetta, ogni volta.
      Sono la stessa strada di prima -- `apriConto(cat)` -- con la
      linguetta gia' scelta. */
-  const payBtn = mkAct('\u270f\ufe0f Modifica', 'conto', (ev) => {
+  /* GRAFICA 2.0: SI CHIAMA COL NOME DEL POSTO DOVE PORTA.
+     Il tasto diceva \u00abModifica\u00bb e apriva una schermata che si chiama
+     \u00abParco\u00bb -- mentre i due tasti accanto, \u00abBar\u00bb e \u00abScontrino\u00bb, il nome
+     della loro linguetta ce l'hanno giusto. Uno stesso posto con due
+     nomi si paga a ogni tocco, e \u00abModifica\u00bb per giunta non dice
+     modificare COSA. */
+  const payBtn = mkAct(settings.grafica2 ? '\ud83c\udfa1 Parco' : '\u270f\ufe0f Modifica', 'conto', (ev) => {
     ev.stopPropagation();
     apriConto('Parco');
   });
@@ -8291,6 +8327,10 @@ function buildSettingsView() {
         <span class="sw-txt"><b>Schermo intero</b><span>Toglie la barra di sistema del tablet, che copriva la parte bassa dell'app. Se l'app &egrave; installata, il tutto schermo parte al primo tocco.</span></span>
         <span class="switch"></span>
       </button>
+      <button class="switch-row" id="setGrafica2" role="switch" style="margin-top:10px;">
+        <span class="sw-txt"><b>&#127381; Grafica 2.0 <i>(in prova)</i></b><span>Toglie tre cose che si ripetono: il <b>pi&ugrave; e meno del pagato</b> dalla fascia Tempo (lo stesso numero della pastiglia &laquo;0/3&raquo; sui Bambini), i tre <b>Totale Parco/Crazy/Bar</b> in fondo (li fa gi&agrave; lo Scontrino, riga per riga), e chiama <b>Parco</b> il tasto che oggi dice &laquo;Modifica&raquo; ma apre proprio quella schermata. <b>Non tocca nessun dato</b>: si spegne e torna tutto come prima.</span></span>
+        <span class="switch"></span>
+      </button>
       </div>
     </div>
 
@@ -8469,6 +8509,26 @@ function buildSettingsView() {
     saveSettings();
     applicaContoSu();
     adattaTutto();
+  };
+
+  /* LA GRAFICA 2.0 SI ACCENDE E SI SPEGNE SUBITO, e non tocca dati:
+     cambia solo cosa viene disegnato. Quindi basta rifare le schermate
+     -- la lista delle schede e il pannello, se e' aperto -- e chi era a
+     meta' di un ingresso lo ritrova dov'era. */
+  const g2 = $('#setGrafica2');
+  const paintGrafica2 = () => {
+    const on = !!settings.grafica2;
+    $('.switch', g2).classList.toggle('on', on);
+    g2.setAttribute('aria-checked', on ? 'true' : 'false');
+  };
+  paintGrafica2();
+  g2.onclick = () => {
+    settings.grafica2 = !settings.grafica2;
+    paintGrafica2();
+    saveSettings();
+    buildActiveView();
+    markNewDirty();
+    toast(settings.grafica2 ? 'Grafica 2.0 accesa 🆕' : 'Tornata la grafica di prima ↩︎');
   };
 
   const sp = $('#setPieno');

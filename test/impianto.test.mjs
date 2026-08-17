@@ -687,13 +687,15 @@ gruppo('Estendi tempo: una sezione sua, e i prezzi veri');
      -- Modifica (il Parco), Bar (il bancone), Uscita -- e dal conto si
      torna indietro con «Fatto». */
   prova('l uscita non sta piu nella barra del conto', !APP.includes('data-uscita'));
+  /* col primo tasto il nome dipende dalla Grafica 2.0: «Parco» col
+     nome del posto dove porta, «Modifica» com'era prima */
   prova('i quattro tasti del menu ci sono tutti',
-    /const payBtn = mkAct\('[^']*Modifica', 'conto'/.test(APP) &&
+    /const payBtn = mkAct\(settings\.grafica2 \? '[^']*Parco' : '[^']*Modifica', 'conto'/.test(APP) &&
     /const barBtn = mkAct\('[^']*Bar', 'conto'/.test(APP) &&
     /const scBtn = mkAct\('[^']*Scontrino', 'conto'/.test(APP) &&
     /mkAct\('[^']*Uscita', 'forte'/.test(APP));
   prova('e portano ognuno alla sua linguetta',
-    /Modifica[\s\S]{0,120}apriConto\('Parco'\)/.test(APP) &&
+    /Modifica', 'conto'[\s\S]{0,120}apriConto\('Parco'\)/.test(APP) &&
     /Bar', 'conto'[\s\S]{0,120}apriConto\(primaCategoriaBar\(\)\)/.test(APP) &&
     /Scontrino', 'conto'[\s\S]{0,120}apriConto\('Scontrino'\)/.test(APP));
   prova('l uscita chiude l ingresso', /Uscita', 'forte'[\s\S]{0,120}chiudiIngresso\(entry\)/.test(APP));

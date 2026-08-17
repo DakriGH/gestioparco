@@ -1915,6 +1915,78 @@ gruppo('Bombardamento: mille tocchi a caso', () => {
   ok('mille tocchi senza un conto storto', guai.slice(0, 3), []);
 });
 
+gruppo('La Grafica 2.0 cambia quello che si vede, non un euro', () => {
+  /* E' una modalita' di prova: toglie tre comandi che si ripetono. Se
+     togliesse anche solo un centesimo, o cambiasse un orario, non
+     sarebbe una scelta di grafica -- sarebbe un guasto travestito da
+     preferenza, e nessuno andrebbe a cercarlo li'. */
+  const ora = Date.now();
+  const casi = [
+    ['comprato, meta pagato', { children: 3, durationMinutes: 60, baseMinutes: 30, aggiunte: [30],
+      crazyJumping: 2, crazyGiri: [1, 1], paidPark: 14, paidAmt: { bimbi: 14 }, paidLines: { bimbi: 2 },
+      barItems: [{ id: 'b1', name: 'Acqua', price: 1, qty: 2 }] }],
+    ['tempo aperto con pausa', { children: 2, durationMinutes: 0, baseMinutes: 0, payLater: true,
+      startTime: ora - 73 * 60000, pausato: 30 * 60000, crazyJumping: 1, crazyGiri: [1] }],
+    ['solo Crazy', { children: 0, durationMinutes: 0, baseMinutes: 0, omaggio: 10,
+      crazyJumping: 3, crazyGiri: [2, 1] }],
+    ['solo BAR', { children: 0, durationMinutes: 0, baseMinutes: 0, soloBar: true,
+      barItems: [{ id: 'b3', name: 'Coca Cola', price: 2.5, qty: 2 }] }],
+    ['niente sul conto', { children: 0, durationMinutes: 0, baseMinutes: 0 }]
+  ];
+  const foto = (c) => {
+    const k = ctx.costOf(c), d = ctx.dueOf(c);
+    return [k.parkTotal, k.crazyCost, k.unit, d.park, d.bar, d.total, d.avanzo,
+      ctx.endTimeOf(c), ctx.tempoTotale(c), ctx.minutiPagati(c),
+      ctx.contoParco(), ctx.contoCrazy(), ctx.contoBar()].join('/');
+  };
+
+  const era = ctx.settings.grafica2;
+  const guai = [];
+  casi.forEach(([nome, extra]) => {
+    const c = conto(Object.assign({ startTime: ora - 40 * 60000 }, extra));
+    ctx.PAN.conto = c; ctx.PAN.ingresso = null;
+    ctx.settings.grafica2 = false;
+    const spenta = foto(c);
+    ctx.settings.grafica2 = true;
+    const accesa = foto(c);
+    if (spenta !== accesa) guai.push(nome + ': ' + spenta + ' → ' + accesa);
+    /* e anche incassando: «Paga tutto» deve fare la stessa cosa */
+    ctx.settings.grafica2 = false;
+    const a = conto(Object.assign({ startTime: ora - 40 * 60000 }, extra));
+    ctx.PAN.conto = a; ctx.pagaTutto();
+    ctx.settings.grafica2 = true;
+    const b = conto(Object.assign({ startTime: ora - 40 * 60000 }, extra));
+    ctx.PAN.conto = b; ctx.pagaTutto();
+    if (foto(a) !== foto(b)) guai.push(nome + ', pagando tutto: ' + foto(a) + ' → ' + foto(b));
+  });
+  ok('cinque situazioni, gli stessi identici numeri', guai.slice(0, 3), []);
+
+  /* e adesso quello che DEVE cambiare: solo il disegno */
+  const c = conto({ children: 2, durationMinutes: 60, baseMinutes: 60, startTime: ora - 40 * 60000,
+    crazyJumping: 1, crazyGiri: [1], barItems: [{ id: 'b1', name: 'Acqua', price: 1, qty: 2 }] });
+  ctx.PAN.conto = c; ctx.PAN.ingresso = null;
+
+  ctx.settings.grafica2 = false;
+  const pgSpenta = ctx.pastigliaPagato(c), fondoSpento = ctx.pcFondo();
+  ctx.settings.grafica2 = true;
+  const pgAccesa = ctx.pastigliaPagato(c), fondoAcceso = ctx.pcFondo();
+
+  vero('col 2.0 il piu e il meno del pagato spariscono dalla fascia Tempo',
+    /data-a="pagatempo"/.test(pgSpenta) && !/data-a="pagatempo"/.test(pgAccesa));
+  vero('ma la scritta di fin quando hanno pagato resta',
+    /class="k"/.test(pgAccesa) && pgAccesa.length > 20);
+  vero('col 2.0 i tre totali di sezione spariscono dalla fascia in fondo',
+    /Totale Parco/.test(fondoSpento) && !/Totale Parco/.test(fondoAcceso));
+  vero('e con loro i tre tasti «paga» di sezione',
+    /data-sez=/.test(fondoSpento) && !/data-sez=/.test(fondoAcceso));
+  vero('ma la cifra da incassare resta dov era',
+    /bc-conto/.test(fondoAcceso) && fondoAcceso.indexOf(ctx.eur(ctx.dueOf(c).total)) >= 0);
+  vero('e restano il Resto e il Paga tutto',
+    /Resto/.test(fondoAcceso) && /data-tutto|Paga tutto/.test(fondoAcceso));
+
+  ctx.settings.grafica2 = era;
+});
+
 /* ══════════════════════════════════════════════════════════════ */
 console.log('\n' + '━'.repeat(52));
 console.log(rotti === 0

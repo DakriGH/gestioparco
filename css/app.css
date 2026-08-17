@@ -949,6 +949,10 @@ main {
 .pgl button:active { background: rgba(106, 220, 175, 0.34); }
 .pgl button:disabled { opacity: .26; cursor: default; }
 .pgl.tutto { background: rgba(106, 220, 175, 0.3); }
+/* GRAFICA 2.0: senza il piu' e il meno resta solo la scritta, e quel
+   riquadro alto quaranta pixel per due tasti che non ci sono piu'
+   diventerebbe una bolla vuota attorno a tre parole. */
+.pgl.sola { padding: 7px 12px; }
 /* IL VERDE VUOL DIRE "PAGATO": finche' non e' entrato niente la
    pastiglia resta neutra. Una fascia verde con scritto "da pagare"
    dice due cose opposte nello stesso pezzo. */
