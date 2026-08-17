@@ -5756,7 +5756,14 @@ function bcCard(v, sempre) {
    ritocca il quattro voleva confermare, non ricominciare.
    Solo sui bambini: al bar le quantita' sono una o due e il piu'
    basta, e il Crazy si conta dentro un giro, che e' un'altra cosa. */
-const NUMERI_RAPIDI = [1, 2, 3, 4, 5, 6];
+/* QUATTRO, NON SEI. Con sei la fila voleva 504 pixel dentro una card
+   che ne ha 246: le colonne non si stringono sotto il loro contenuto, e
+   la card taglia quello che avanza -- dal tre in su i numeri c'erano ma
+   nessuno poteva toccarli. Con quattro ognuno ha una sessantina di
+   pixel, che e' un bersaglio vero, e per il quinto bambino c'e' il piu'
+   che e' li' accanto. Le famiglie da cinque sono poche; quelle da uno a
+   quattro sono tutte le sere. */
+const NUMERI_RAPIDI = [1, 2, 3, 4];
 function numeriRapidi(id, quanti) {
   if (!settings.grafica2 || id !== 'bimbi') return '';
   return '<div class="bc-veloci">' + NUMERI_RAPIDI.map(n =>

@@ -408,7 +408,12 @@
       children: 2, durationMinutes: 0, baseMinutes: 0, payLater: true }])[0]);
     saveEntries(); switchTab('active'); buildActiveView(); await att(300);
 
-    [...card().querySelectorAll('button.conto')].find(b => /Modifica/.test(b.textContent)).click();
+    /* IL TASTO SI CERCA PER DOVE PORTA, NON PER COME SI CHIAMA: col
+       2.0 acceso si chiama «Parco», e cercando «Modifica» questa
+       sezione esplodeva -- non per un guasto dell'app, ma perche' la
+       prova dava per scontata una delle due grafiche. Il nome lo
+       controlla la sezione 11, che e' il suo mestiere. */
+    [...card().querySelectorAll('button.conto')].find(b => /Modifica|Parco/.test(b.textContent)).click();
     await att(500);
     const chip = t => [...document.querySelectorAll('.pc-dur .chip')]
       .find(c => new RegExp(t).test(c.textContent));
@@ -493,6 +498,99 @@
     [...sc().querySelectorAll('[data-screparto]')].find(b => b.dataset.screparto === 'bar').click();
     await att(400);
     p('  e il bar, e il conto resta saldato', dueOf(entries[0]).total === 0 && allineati());
+  }
+
+  /* ── 11. LA GRAFICA 2.0, PREMUTA DAVVERO ──
+     In node la 2.0 gira su tutta la suite, ma li' il DOM e' finto: le
+     card non si ridisegnano, e proprio li' si era nascosto il guasto
+     della firma (la fila dei numeri rapidi non compariva accendendo
+     l'interruttore). Questi controlli si possono fare solo qui. */
+  {
+    const eraG2 = settings.grafica2;
+    showArchive = false;
+    entries.length = 0; localStorage.removeItem('gp_entries'); saveEntries();
+
+    /* si accende come farebbe la cassiera, e le schermate devono
+       cambiare DA SOLE, senza toccare nient'altro */
+    settings.grafica2 = false; saveSettings(); applyTheme();
+    draft = freshDraft(); switchTab('new'); await att(400);
+    const rapidi = () => document.querySelectorAll('#view-new [data-quanti="bimbi"]').length;
+    p('a interruttore spento i numeri rapidi non ci sono', rapidi() === 0);
+
+    settings.grafica2 = true; saveSettings(); applyTheme(); markNewDirty(); await att(400);
+    p('accendendolo compaiono da soli, senza toccare altro',
+      rapidi() === NUMERI_RAPIDI.length, rapidi() + ' trovati');
+    /* UN TASTO CHE ESCE DALLA SUA CARD NON ESISTE: la card taglia
+       quello che avanza, e i numeri in fondo c'erano ma nessuno poteva
+       toccarli. In node non si vede -- li' niente ha una larghezza. */
+    {
+      const cardB = document.querySelector('#view-new .bc-card');
+      const bordo = cardB.getBoundingClientRect();
+      const fuori = [...cardB.querySelectorAll('[data-quanti]')].filter(b => {
+        const r = b.getBoundingClientRect();
+        return r.width < 1 || r.right > bordo.right + 1 || r.left < bordo.left - 1;
+      });
+      p('  e ci stanno tutti dentro la card, toccabili',
+        !fuori.length, fuori.length + ' tagliati fuori');
+      const largo = Math.min(...[...cardB.querySelectorAll('[data-quanti]')]
+        .map(b => b.getBoundingClientRect().width));
+      p('  con un bersaglio che si preme col dito', largo >= 44, 'il piu stretto e ' + Math.round(largo) + 'px');
+    }
+    p('  e la pagina lo dice con la sua classe',
+      document.documentElement.classList.contains('g2'));
+
+    /* il tocco che vale tre tocchi */
+    document.querySelector('#view-new [data-quanti="bimbi"][data-v="4"]').click();
+    await att(400);
+    p('un tocco mette quattro bambini', draft.children === 4, 'bambini ' + draft.children);
+    p('  e il numero giusto risulta acceso',
+      (document.querySelector('#view-new [data-quanti].on') || {}).textContent === '4');
+    const prezzo4 = costOf(draft).parkTotal;
+    /* e il piu' e il meno di sempre continuano a lavorare accanto */
+    document.querySelector('#view-new [data-meno="bimbi"]').click(); await att(400);
+    p('il meno di sempre funziona ancora', draft.children === 3);
+    p('  e il prezzo scende di conseguenza', costOf(draft).parkTotal < prezzo4);
+
+    /* i tre tasti «paga» di sezione non ci sono piu': lo Scontrino
+       deve poterli sostituire davvero */
+    draft.durationMinutes = 60; draft.baseMinutes = 60;
+    commitEntry(); await att(500);
+    switchTab('active'); buildActiveView(); await att(400);
+    const c = card();
+    p('la scheda chiama il tasto col nome del posto dove porta',
+      [...c.querySelectorAll('button.conto')].some(b => /Parco/.test(b.textContent)) &&
+      ![...c.querySelectorAll('button.conto')].some(b => /Modifica/.test(b.textContent)));
+
+    [...c.querySelectorAll('button.conto')].find(b => /Parco/.test(b.textContent)).click();
+    await att(500);
+    const fondo = () => document.querySelector('.pc-fondo').textContent.replace(/\s+/g, ' ');
+    p('in fondo non ci sono piu i tre totali di sezione', !/Totale Parco/.test(fondo()));
+    p('  ma la cifra da incassare c e', /\d/.test(fondo()) && /€/.test(fondo()));
+    p('  e il Resto e il Paga tutto pure', /Resto/.test(fondo()) && /Paga tutto/.test(fondo()));
+    p('e nella fascia Tempo non c e piu il doppione del pagato',
+      document.querySelectorAll('.sec-tempo [data-a="pagatempo"]').length === 0);
+    p('  ma la scritta di quanto c e da pagare resta',
+      /da pagare|pagato|nessun bambino|uscita/.test(document.querySelector('.pgl').textContent));
+
+    /* si incassa dallo Scontrino, che e' quello che resta */
+    [...document.querySelectorAll('.pc-cat button')].find(b => /Scontrino/.test(b.textContent)).click();
+    await att(500);
+    const sc = () => document.querySelector('.pc-scontrino');
+    [...sc().querySelectorAll('[data-screparto]')].find(b => b.dataset.screparto === 'parco').click();
+    await att(400);
+    p('dallo Scontrino si incassa il Parco', entries[0].paidPark > 0 && allineati());
+    p('  e il conto resta saldato', dueOf(entries[0]).total === 0 && allineati());
+
+    /* e spegnendo torna tutto com era */
+    settings.grafica2 = false; saveSettings(); applyTheme(); markNewDirty(); await att(500);
+    p('spegnendolo tornano i tre totali di sezione', /Totale Parco/.test(fondo()));
+    chiudiPannelli(); buildActiveView(); await att(400);
+    p('  e il tasto torna a chiamarsi Modifica',
+      [...card().querySelectorAll('button.conto')].some(b => /Modifica/.test(b.textContent)));
+    p('  e i soldi incassati sono rimasti quelli',
+      entries[0].paidPark > 0 && dueOf(entries[0]).total === 0 && allineati());
+
+    settings.grafica2 = eraG2; saveSettings(); applyTheme();
   }
 
   /* ── il verdetto ── */

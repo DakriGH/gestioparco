@@ -967,11 +967,22 @@ gruppo('La fascia del tempo: una sola, e dice fin quando e pagato');
   }, extra || {});
   const mettiSotto = (c) => { app.PAN.conto = c; app.PAN.ingresso = null; return c; };
 
+  /* IL PIU' E IL MENO DI QUESTA PASTIGLIA LA GRAFICA 2.0 LI TOGLIE: e'
+     lo stesso numero della card dei Bambini, e li' basta. Quindi le
+     prove sui tasti vanno lette nei due modi -- col 2.0 la garanzia
+     diventa «non ci sono», che e' piu' forte di «sono spenti».
+     Senza questa distinzione un controllo come `!/disabled/` passerebbe
+     A VUOTO col 2.0, cioe' direbbe ok senza guardare niente. */
+  const con20 = !!app.settings.grafica2;
+  const spento = (h) => con20 ? !/data-a="pagatempo"/.test(h) : /data-v="1" disabled/.test(h);
+  const premibile = (h) => con20 ? !/data-a="pagatempo"/.test(h) : !/data-v="1" disabled/.test(h);
+  const dove = con20 ? ' (col 2.0: il tasto non c’e’ proprio)' : '';
+
   let c = mettiSotto(conto());
   let h = app.pastigliaPagato(c);
   prova('senza un euro dice quanto c e da pagare', /da pagare/.test(h));
   prova('e non e verde', /pgl vuota/.test(h));
-  prova('il piu si puo premere', !/data-v="1" disabled/.test(h));
+  prova('il piu si puo premere' + dove, premibile(h), h);
 
   app.segnaPagate('bimbi', 1);
   h = app.pastigliaPagato(c);
@@ -981,19 +992,19 @@ gruppo('La fascia del tempo: una sola, e dice fin quando e pagato');
   app.segnaPagate('bimbi', 2);
   h = app.pastigliaPagato(c);
   prova('pagato tutto lo dice', /pagato tutto/.test(h));
-  prova('e il piu si spegne', /data-v="1" disabled/.test(h));
+  prova('e il piu si spegne' + dove, spento(h), h);
 
   /* IL PUNTO CHE HA VISTO LUI: a tempo aperto il piu' non si deve
      poter premere, perche' non c'e' un prezzo da coprire. */
   c = mettiSotto(conto({ payLater: true }));
   h = app.pastigliaPagato(c);
   prova('a tempo aperto si conta all uscita', /uscita/.test(h));
-  prova('a tempo aperto il piu e spento', /data-v="1" disabled/.test(h));
+  prova('a tempo aperto il piu e spento' + dove, spento(h), h);
 
   c = mettiSotto(conto({ children: 0 }));
   h = app.pastigliaPagato(c);
   prova('senza bambini lo dice invece di sembrare rotta', /nessun bambino/.test(h));
-  prova('e i tasti sono spenti', /data-v="1" disabled/.test(h));
+  prova('e i tasti sono spenti' + dove, spento(h), h);
 
   /* IL CRAZY NON C'ENTRA COL TEMPO PAGATO: i suoi minuti sono
      regalati. Pagato il tempo di parco, la fascia dice "pagato tutto"

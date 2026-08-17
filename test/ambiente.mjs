@@ -80,6 +80,23 @@ export function caricaApp() {
   let sorgente = leggi('js/app.js').replace(/\npartenza\(\);\s*$/, '\n');
   vm.runInContext(sorgente, ctx, { filename: 'app.js' });
 
+  /* LA STESSA SUITE, ANCHE CON LA GRAFICA 2.0 ACCESA.
+     E' una modalita' di prova che cambia quello che viene disegnato, e
+     mezza app legge `settings.grafica2` mentre disegna: se qualche
+     prova si appoggiasse alla forma della 1.0 -- o se la 2.0 rompesse
+     un flusso -- non lo saprebbe nessuno, perche' di serie e' spenta e
+     tutte le prove girano col vecchio.
+     Con GRAFICA2=1 nell'ambiente, `defaultSettings()` la restituisce
+     accesa: cosi' anche le prove che si rifanno le impostazioni da capo
+     (quasi tutte) lavorano nella modalita' nuova, e `tutte.mjs` fa i
+     due giri. */
+  if (process.env.GRAFICA2) {
+    vm.runInContext(`(function () {
+      const vero = defaultSettings;
+      defaultSettings = function () { const s = vero(); s.grafica2 = true; return s; };
+    })();`, ctx);
+  }
+
   /* le impostazioni di serie, senza passare da init() */
   vm.runInContext('settings = defaultSettings(); entries = [];', ctx);
 

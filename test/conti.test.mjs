@@ -1987,6 +1987,83 @@ gruppo('La Grafica 2.0 cambia quello che si vede, non un euro', () => {
   ctx.settings.grafica2 = era;
 });
 
+gruppo('Con la Grafica 2.0 non si perde niente: tutto si può ancora fare', () => {
+  /* LA DOMANDA CHE DECIDE SE LA 2.0 E' BUONA. Toglie tre tasti «paga»
+     -- uno per sezione -- dalla fascia in fondo. Se al banco capita
+     «pagano solo il bar» o «il Crazy lo offro io» e non c'e' piu' un
+     modo di farlo, non e' una semplificazione: e' una funzione persa.
+     Lo Scontrino ha una riga per voce, col suo «tutta pagata», e un
+     «paga tutto» per reparto. Qui si prova che bastino DAVVERO. */
+  const era = ctx.settings.grafica2;
+  ctx.settings.grafica2 = true;
+
+  const nuovo = () => {
+    const c = conto({ children: 2, durationMinutes: 60, baseMinutes: 60,
+      startTime: Date.now() - 40 * 60000, crazyJumping: 2, crazyGiri: [1, 1],
+      barItems: [{ id: 'b1', name: 'Acqua', price: 1, qty: 2 }] });
+    ctx.PAN.conto = c; ctx.PAN.ingresso = null;
+    return c;
+  };
+
+  /* 1. pagare SOLO il tempo di parco */
+  let c = nuovo();
+  ctx.segnaPagate('bimbi', ctx.bcQ('bimbi'));
+  vero('si può pagare solo il tempo dei bambini',
+    ctx.r2(ctx.contoPagatoParco()) === ctx.r2(ctx.contoParco()) &&
+    ctx.contoPagatoCrazy() === 0 && ctx.contoPagatoBar() === 0,
+    'parco ' + ctx.contoPagatoParco() + ' crazy ' + ctx.contoPagatoCrazy() + ' bar ' + ctx.contoPagatoBar());
+
+  /* 2. pagare SOLO il Crazy */
+  c = nuovo();
+  ctx.segnaPagate('crazy', ctx.bcQ('crazy'));
+  vero('si può pagare solo il Crazy',
+    ctx.r2(ctx.contoPagatoCrazy()) === ctx.r2(ctx.contoCrazy()) &&
+    ctx.contoPagatoParco() === 0 && ctx.contoPagatoBar() === 0,
+    'parco ' + ctx.contoPagatoParco() + ' crazy ' + ctx.contoPagatoCrazy());
+
+  /* 3. pagare SOLO il bar */
+  c = nuovo();
+  ctx.segnaPagate('b1', 2);
+  vero('si può pagare solo il bar',
+    ctx.r2(ctx.contoPagatoBar()) === ctx.r2(ctx.contoBar()) &&
+    ctx.contoPagatoParco() === 0 && ctx.contoPagatoCrazy() === 0,
+    'bar ' + ctx.contoPagatoBar() + ' di ' + ctx.contoBar());
+
+  /* 4. e TOGLIERE una spunta, che e' il gesto per correggere */
+  c = nuovo();
+  ctx.pagaTutto();
+  ctx.segnaPagate('crazy', 0);
+  vero('e si può togliere quello che si era segnato',
+    ctx.contoPagatoCrazy() === 0 && ctx.dueOf(c).total > 0,
+    'restano ' + ctx.dueOf(c).total);
+  vero('senza che l’incassato diventi negativo', ctx.num(c.paidPark, 0) >= 0);
+
+  /* 5. lo Scontrino disegna davvero i comandi per farlo */
+  c = nuovo();
+  const sc = ctx.scontrinoRiga(c, 'crazy') + ctx.scontrinoRiga(c, 'bimbi') + ctx.scontrinoRiga(c, 'b1');
+  vero('lo Scontrino ha il «tutta pagata» su ogni riga',
+    (sc.match(/data-sctutta=/g) || []).length === 3, sc.slice(0, 80));
+  vero('e il più e il meno delle quantità',
+    /data-scpq=/.test(sc) && /data-scmq=/.test(sc));
+
+  /* 6. e i «paga tutto» per reparto ci sono ancora nello Scontrino.
+     Qui lo scontrino si fa disegnare DAVVERO, dandogli una scatola
+     finta dove scrivere: chiedergli soltanto se esiste una funzione
+     sarebbe una domanda a cui si risponde sempre di si'. */
+  c = nuovo();
+  const scatola = { innerHTML: '' };
+  ctx.disegnaScontrino({ querySelector: () => scatola }, c);
+  const html = String(scatola.innerHTML);
+  vero('lo Scontrino si disegna', html.length > 50, html.slice(0, 60));
+  vero('e ha il «paga tutto» del Parco',
+    /data-screparto="parco"/.test(html), html.slice(0, 120));
+  vero('e quello del Bar', /data-screparto="bar"/.test(html));
+  vero('e in cima c’è il conto, il già preso e quello che resta',
+    /sc-somma/.test(html) && /già presi/.test(html));
+
+  ctx.settings.grafica2 = era;
+});
+
 gruppo('I numeri rapidi dei bambini: meno tocchi, stessi conti', () => {
   /* Il tempo ha sempre avuto i suoi tagli e si sceglie con un tocco; i
      bambini si salivano di uno per volta, quindi una famiglia da
@@ -1999,8 +2076,9 @@ gruppo('I numeri rapidi dei bambini: meno tocchi, stessi conti', () => {
   ctx.settings.grafica2 = true;
   vero('accesa, c e', /data-quanti="bimbi"/.test(ctx.numeriRapidi('bimbi', 0)));
   vero('e solo sui bambini', ctx.numeriRapidi('crazy', 0) === '' && ctx.numeriRapidi('b1', 0) === '');
-  ok('con i numeri che capitano al banco',
-    ctx.NUMERI_RAPIDI.length, 6);
+  /* quattro e non sei: con sei la fila non ci stava nella card e dal
+     terzo in su i numeri erano tagliati fuori, cioe' intoccabili */
+  ok('con i numeri che capitano al banco', ctx.NUMERI_RAPIDI, [1, 2, 3, 4]);
   vero('quello che c e gia risulta acceso', /data-v="3"[^>]*>3<|class="chip on" data-quanti="bimbi" data-v="3"/
     .test(ctx.numeriRapidi('bimbi', 3).replace(/\s+/g, ' ')) ||
     ctx.numeriRapidi('bimbi', 3).indexOf('chip on') >= 0);
