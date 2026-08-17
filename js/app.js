@@ -495,14 +495,27 @@ function priceFor(mins) {
      avrebbe chiesto 36. */
   return list[list.length - 1].p;
 }
-/* SU CHE FASCIA DEL CARTELLO CADE UN TEMPO: il tetto della fascia --
-   trentatre' minuti stanno nella fascia dei quaranta -- che e' il
-   numero scritto sul muro, quello che il cliente puo' controllare. */
-function scaglioneDi(mins) {
+/* LA FASCIA PIU' VICINA, che e' un'altra cosa dalla fascia SOPRA.
+   Chi COMPRA il tempo sceglie una durata dal cartello e paga quella:
+   li' la fascia sopra e' giusta, perche' e' quello che ha comprato.
+   Chi sta a TEMPO APERTO invece non ha comprato niente: si guarda
+   quanto e' stato dentro e gli si fa il prezzo piu' onesto. Con la
+   fascia sopra, trentuno minuti finivano nella fascia dei quaranta --
+   dieci euro invece di sette per un minuto oltre la mezz'ora -- e al
+   banco non c'era modo di spiegarlo a chi lo chiedeva.
+   A PARITA' SI SCENDE: trentacinque minuti stanno esattamente in mezzo
+   fra trenta e quaranta, e in mezzo si sta dalla parte del cliente.
+   (La lista e' in ordine crescente e si cambia solo su una distanza
+   STRETTAMENTE minore: cosi' il pari resta al primo, cioe' al piu'
+   basso.) */
+function fasciaVicina(mins) {
   const list = tariffs();
-  if (!list.length || mins <= 0) return 0;
-  for (const t of list) if (mins <= t.m) return t.m;
-  return list[list.length - 1].m;
+  if (!list.length || mins <= 0) return null;
+  let best = list[0];
+  for (const t of list) {
+    if (Math.abs(t.m - mins) < Math.abs(best.m - mins)) best = t;
+  }
+  return best;
 }
 
 /* IL CONTO DEL TEMPO APERTO, passaggio per passaggio.
@@ -532,10 +545,65 @@ function contiAperto(c, ora) {
      muoveva. L'omaggio invece e' di chi e' entrato SOLO per saltare e
      tempo di parco non ne ha mai comprato. */
   const regalati = omaggioDi(c);
-  const contati = Math.max(0, daParco - regalati);
-  const su = up5(contati);
-  return { dentro, daParco, regalati, contati, su,
-    scaglione: scaglioneDi(su), prezzo: priceFor(su) };
+  /* e il tempo in pausa non si conta: sono usciti a mangiare, l'orologio
+     si ferma e riparte da dove l'avevano lasciato */
+  const fermo = fermoDi(c, ora);
+  const contati = Math.max(0, daParco - regalati - fermo);
+  /* LA FASCIA PIU' VICINA, NON QUELLA SOPRA. Qui si arrotondava ai
+     cinque in su e poi si prendeva la fascia sopra: trentuno minuti
+     diventavano trentacinque e finivano nella fascia dei quaranta, dieci
+     euro invece di sette per un minuto oltre la mezz'ora. Chi sta a
+     tempo aperto non ha comprato una durata: si guarda quanto e' stato
+     dentro davvero e si prende la fascia che gli somiglia di piu'. */
+  const f = fasciaVicina(contati);
+  return { dentro, daParco, regalati, fermo, contati,
+    inPausa: !!num(c.pausaDa, 0),
+    su: up5(contati),
+    scaglione: f ? f.m : 0, prezzo: f ? f.p : 0 };
+}
+
+/* ══════════════════════════════════════════════════════════
+   LA PAUSA DEL TEMPO APERTO
+   A tempo aperto l'orologio corre da solo, e ogni tanto va fermato:
+   escono a mangiare, tornano fra un'ora, e quell'ora non l'hanno
+   passata dentro. Senza un modo di fermarlo si finiva a rifare il
+   conto a mano, o a rimandarli via.
+   Due soli numeri: `pausaDa` e' quando si e' fermato (zero = sta
+   correndo), `pausato` e' quanto si e' gia' stati fermi in tutto. Il
+   tempo in pausa di ADESSO si somma solo se e' fermo in questo
+   momento, cosi' il conto si aggiorna da se' mentre sta fermo senza
+   che nessuno debba scrivere niente. */
+function fermoDi(c, ora) {
+  c = c || C();
+  ora = num(ora, Date.now());
+  const gia = Math.max(0, num(c.pausato, 0));
+  const da = num(c.pausaDa, 0);
+  const adesso = da > 0 ? Math.max(0, ora - da) : 0;
+  return (gia + adesso) / 60000;
+}
+
+/* Ferma o fa ripartire l'orologio. Torna `true` se da qui in poi e'
+   fermo, cosi' chi chiama sa che faccia far fare al tasto. */
+function commutaPausa(e) {
+  e = e || C();
+  const da = num(e.pausaDa, 0);
+  if (da > 0) {
+    /* riparte: quello che e' passato fermi finisce nel totale */
+    e.pausato = Math.max(0, num(e.pausato, 0)) + Math.max(0, Date.now() - da);
+    e.pausaDa = 0;
+    return false;
+  }
+  e.pausaDa = Date.now();
+  return true;
+}
+
+/* Chiudere la pausa senza farla sparire: serve quando si esce dal
+   tempo aperto o si registra l'uscita. Il tempo gia' stato fermi resta
+   contato -- e' tempo che non hanno passato dentro -- ma l'orologio
+   della pausa non puo' restare acceso su un conto che non lo guarda
+   piu', se no ricompare mesi dopo con un buco enorme. */
+function chiudiPausa(e) {
+  if (e && num(e.pausaDa, 0) > 0) commutaPausa(e);
 }
 
 /* minuti scritti come si leggono: a occhio sotto l'ora, in ore e
@@ -4757,6 +4825,10 @@ function entryCard(entry) {
   apri.onclick = (ev) => {
     ev.stopPropagation();
     entry.payLater = !entry.payLater;
+    /* uscendo dal tempo aperto l'orologio della pausa non ha piu' un
+       posto dove farsi vedere: si chiude, e il tempo gia' stato fermi
+       resta contato per quando lo si riapre */
+    if (!entry.payLater) chiudiPausa(entry);
     /* I BLOCCHI DI TEMPO GIA' VENDUTI RESTANO DOVE SONO.
        A tempo aperto `costOf` non li guarda nemmeno -- li' il conto si
        fa sul tempo passato -- quindi tenerli non costa niente. Buttarli
@@ -4797,10 +4869,28 @@ function entryCard(entry) {
     disegnaCrazy();
   };
 
-  if (entry.payLater) {
-    sTime.box.classList.add('hidden');
-    fila.appendChild(el('div', 'e-later-tag', '\u23f3 Tempo aperto'));
-  }
+  /* LA PAUSA, AL POSTO DEL MENO E DEL PIU'.
+     A tempo aperto non c'e' nessuna durata da allungare o accorciare,
+     quindi il meno e il piu' li' non vogliono dire niente. Ma la cella
+     veniva NASCOSTA tutta intera -- e dentro c'era anche
+     l'interruttore \u00abTempo aperto\u00bb, cioe' l'unico modo di tornare
+     indietro: da una scheda a tempo aperto non si poteva piu' ne'
+     toccare il tempo ne' richiuderlo, e restava li' una targhetta che
+     non faceva niente.
+     Adesso la cella resta, l'interruttore resta raggiungibile, e al
+     posto dei due tasti c'e' quello che serve davvero a tempo aperto:
+     fermare l'orologio quando escono a mangiare. */
+  const pausa = el('button', 'e-pausa');
+  pausa.onclick = (ev) => {
+    ev.stopPropagation();
+    commutaPausa(entry);
+    saveEntries();
+    syncCard(entry);
+    tick();
+    if (PAN.ingresso === entry) aggiornaPannello();
+  };
+  sTime.box.appendChild(pausa);
+  sTime.pausa = pausa;
   /* CHE COS'E' VA SCRITTO. Grigia e senza conto alla rovescia si capiva
      che era un'altra cosa, ma non QUALE: chi la trova in cima alla lista
      deve leggere in due parole che e' un Solo BAR e che se ne
@@ -6457,6 +6547,10 @@ function chiudiIngresso(entry) {
   const fine = () => {
     /* il prezzo si ferma qui: da adesso questo conto non cambia piu',
        qualunque cosa succeda al listino */
+    /* il cronometro della pausa si ferma PRIMA di fare il prezzo: se
+       restasse acceso, il conto congelato sarebbe quello di un gruppo
+       ancora in pausa e continuerebbe a crescere dopo l'uscita */
+    chiudiPausa(entry);
     const d = dueOf(entry);
     entry.costoFinale = { parco: d.park, bar: d.bar };
     entry.status = 'closed';
@@ -6797,7 +6891,25 @@ function syncCard(entry) {
       ? 'Torna a un tempo comprato, con un orario di uscita'
       : 'Tempo aperto: resta senza orario di fine, il conto si fa all\u2019uscita';
   }
-  r.sTime.val.textContent = entry.payLater ? '\u2014' : fmtMin(entry.durationMinutes);
+  /* A TEMPO APERTO IL NUMERO GRANDE E' IL TEMPO CHE SI STA PAGANDO.
+     C'era un trattino: la cosa che al banco si guarda per prima non
+     diceva niente proprio quando e' l'unica che si muove da sola. */
+  const ap = entry.payLater ? conConto(entry, () => contiAperto(entry)) : null;
+  r.sTime.val.textContent = ap ? fmtMin(Math.round(ap.contati)) : fmtMin(entry.durationMinutes);
+  r.sTime.box.classList.toggle('aperta', !!entry.payLater);
+  r.sTime.box.classList.toggle('in-pausa', !!(ap && ap.inPausa));
+  /* meno e piu' servono a una durata comprata: a tempo aperto non c'e'
+     nessuna durata da spostare, e al loro posto compare la pausa */
+  r.sTime.minus.classList.toggle('hidden', !!entry.payLater);
+  r.sTime.plus.classList.toggle('hidden', !!entry.payLater);
+  if (r.sTime.pausa) {
+    r.sTime.pausa.classList.toggle('hidden', !entry.payLater);
+    r.sTime.pausa.classList.toggle('on', !!(ap && ap.inPausa));
+    r.sTime.pausa.textContent = (ap && ap.inPausa) ? '\u25b6\ufe0e Riprendi' : '\u23f8 Pausa';
+    r.sTime.pausa.title = (ap && ap.inPausa)
+      ? 'L\u2019orologio \u00e8 fermo: riprendi a contare il tempo'
+      : 'Ferma l\u2019orologio: il tempo in pausa non si paga';
+  }
   r.sKids.minus.disabled = kids <= 0;
   r.sTime.minus.disabled = num(entry.durationMinutes, 0) <= minimoTempo(entry);
 
@@ -8708,6 +8820,27 @@ function riparaConto(o) {
   else delete o.parcoDa;
   /* il regalo dato a tempo scaduto: un orario vero, o niente */
   if (!Number.isFinite(num(o.regaloFinoA, NaN)) || num(o.regaloFinoA, 0) <= 0) delete o.regaloFinoA;
+  /* LA PAUSA DEL TEMPO APERTO. `pausato` e' quanto sono stati fermi in
+     tutto e non puo' essere negativo; `pausaDa` e' l'orologio fermo
+     ADESSO, e o e' un orario vero o non c'e'. Un valore storto qui
+     regalerebbe -- o ruberebbe -- ore di parco senza dire niente. */
+  const gia = num(o.pausato, 0);
+  if (Number.isFinite(gia) && gia > 0) o.pausato = Math.round(gia); else delete o.pausato;
+  const fermo = num(o.pausaDa, NaN);
+  /* fermo prima ancora di entrare non vuol dire niente */
+  if (Number.isFinite(fermo) && fermo > 0) o.pausaDa = Math.max(fermo, num(o.startTime, 0));
+  else delete o.pausaDa;
+  /* E UN CONTO CHIUSO NON PUO' RESTARE COL CRONOMETRO FERMO. Da li' in
+     poi nessuno lo guarda piu' e la pausa crescerebbe da sola. Si
+     chiude ALL'ORA D'USCITA, non ad adesso: con `Date.now()` lo stesso
+     dato riletto domani darebbe un numero diverso, e un ingresso
+     archiviato deve raccontare sempre la stessa storia. */
+  if (o.status === 'closed' && num(o.pausaDa, 0) > 0) {
+    const fine = num(o.closedAt, num(o.pausaDa, 0));
+    o.pausato = Math.max(0, num(o.pausato, 0)) + Math.max(0, fine - num(o.pausaDa, 0));
+    if (!o.pausato) delete o.pausato;
+    delete o.pausaDa;
+  }
   /* la sigla e' due lettere maiuscole, o niente */
   o.sigla = /^[A-Z]{2,3}$/.test(String(o.sigla || '')) ? o.sigla : '';
   /* una vendita al banco resta tale anche dopo un ricaricamento */

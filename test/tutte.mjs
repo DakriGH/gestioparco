@@ -7,6 +7,7 @@
      conti     — le regole del denaro, una per una
      schermo   — che quello che si VEDE dica quello che dicono i conti
      giornata  — la vita intera di un ingresso, e la cassa che torna
+     aperto    — il tempo aperto, che e' l'unico prezzo che si muove da solo
      tempesta  — sequenze a caso, lunghe e assurde, con gli invarianti
      vestiti   — l'icona e la figura devono dire la stessa cosa
 
@@ -17,7 +18,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const QUI = dirname(fileURLToPath(import.meta.url));
-const PROVE = ['impianto', 'conti', 'schermo', 'giornata', 'tempesta', 'vestiti'];
+const PROVE = ['impianto', 'conti', 'schermo', 'giornata', 'aperto', 'tempesta', 'vestiti'];
 
 let controlli = 0, gruppi = 0, rotte = [];
 console.log('');

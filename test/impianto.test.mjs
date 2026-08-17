@@ -762,8 +762,28 @@ gruppo('Il tempo si muove da un posto solo');
     /draft\.sigla = siglaLibera\(draft\.sigla, draft\.startTime\);/.test(APP));
   prova('e un giro fatto a tempo scaduto regala davvero',
     /function regalaDaAdesso/.test(APP) && /Math\.max\(base, num\(e\.regaloFinoA, 0\)\)/.test(APP));
-  prova('e i minuti si leggono come nel pannello',
-    /r\.sTime\.val\.textContent = entry\.payLater \? '\\u2014' : fmtMin\(/.test(APP));
+  /* A TEMPO APERTO C'ERA UN TRATTINO. Il numero grande della cella e'
+     la cosa che al banco si guarda per prima, e proprio a tempo aperto
+     -- l'unico caso in cui si muove da solo -- non diceva niente.
+     Adesso dice i minuti che si stanno pagando, scritti come nel
+     pannello. */
+  prova('e i minuti si leggono come nel pannello, anche a tempo aperto',
+    /r\.sTime\.val\.textContent = ap \? fmtMin\(Math\.round\(ap\.contati\)\) : fmtMin\(entry\.durationMinutes\);/.test(APP));
+  /* LA CELLA DEL TEMPO NON SI NASCONDE PIU'. Dentro c'e' anche
+     l'interruttore «Tempo aperto», cioe' l'unico modo di tornare
+     indietro: nascondendola, da una scheda a tempo aperto non si
+     poteva piu' ne' toccare il tempo ne' richiuderlo. */
+  prova('e la cella del tempo non si nasconde a tempo aperto',
+    !/sTime\.box\.classList\.add\('hidden'\)/.test(APP));
+  prova('al posto del meno e del piu c e la pausa',
+    /r\.sTime\.minus\.classList\.toggle\('hidden', !!entry\.payLater\)/.test(APP) &&
+    /r\.sTime\.pausa\.classList\.toggle\('hidden', !entry\.payLater\)/.test(APP));
+  /* e il cronometro della pausa non puo' restare acceso su un conto
+     che nessuno guarda piu' */
+  prova('la pausa si chiude uscendo dal tempo aperto',
+    /if \(!entry\.payLater\) chiudiPausa\(entry\);/.test(APP));
+  prova('e si chiude prima di congelare il prezzo all uscita',
+    /chiudiPausa\(entry\);\s*\n\s*const d = dueOf\(entry\);/.test(APP));
 }
 
 gruppo('Il bancone scorre, ma le card non si schiacciano');
@@ -899,13 +919,15 @@ gruppo('Nella scheda lunga, il Crazy si apre sotto la sua cella');
     /\.e-colonna > \.e-cella \{ flex: 1 1 0/.test(CSS));
   prova('col posto in piu, numero e tasti diventano grandi',
     /\.e-colonna \.e-cella \.v \{ font-size/.test(CSS) &&
-    /\.e-colonna \.e-cella button:not\(\.e-aperto\) \{ width/.test(CSS));
+    /\.e-colonna \.e-cella button:not\(\.e-aperto\):not\(\.e-pausa\) \{ width/.test(CSS));
   /* L'INTERRUTTORE NON E' UN TASTO QUADRATO. La regola che ingrandisce
      il piu' e il meno prendeva anche lui: forzato a 40 pixel, lo sfondo
      restava una pastiglia corta con «⏳ Tempo aperto» che le usciva da
      tutte e due le parti. */
+  /* e vale anche per la pausa, che e' larga quanto «⏸ Pausa» */
   prova('l interruttore del tempo resta largo quanto la sua scritta',
-    /\.e-colonna \.e-cella button:not\(\.e-aperto\)/.test(CSS) &&
+    /\.e-colonna \.e-cella button:not\(\.e-aperto\):not\(\.e-pausa\)/.test(CSS) &&
+    /\.e-cella \.e-pausa \{[\s\S]*?width: auto/.test(CSS) &&
     /\.e-colonna \.e-cella \.e-aperto \{[^}]*width: auto/.test(CSS));
   prova('e la scritta ci sta in mezzo',
     /\.e-colonna \.e-cella \.e-aperto \{[^}]*justify-content: center/.test(CSS));

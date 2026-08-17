@@ -1791,7 +1791,7 @@ main {
    quadrato. Forzato a 40 pixel, lo sfondo restava una pastiglia corta
    con «⏳ Tempo aperto» che le usciva da tutte e due le parti. */
 .e-colonna .e-cella .v { font-size: 26px; }
-.e-colonna .e-cella button:not(.e-aperto) { width: 40px; height: 40px; font-size: 21px; }
+.e-colonna .e-cella button:not(.e-aperto):not(.e-pausa) { width: 40px; height: 40px; font-size: 21px; }
 .e-colonna .e-dentro-cella { gap: 10px; }
 .e-colonna .e-nome { font-size: 10.5px; }
 .e-colonna .e-cella .e-aperto {
@@ -1828,6 +1828,25 @@ main {
   cursor: pointer;
 }
 .e-cella .e-aperto.on { background: rgba(232, 180, 76, 0.9); color: #2A1D05; }
+/* LA PAUSA, che sta dove stanno il meno e il piu' -- perche' e' quello
+   che al loro posto si fa a tempo aperto. Larga come la sua scritta,
+   non quadrata: qui non c'e' un numero da spostare, c'e' una cosa da
+   fermare. Ferma diventa verde, come tutto quello che nell'app vuol
+   dire «vai»: quel tasto in quel momento non mette in pausa, riprende. */
+.e-cella .e-pausa {
+  width: auto; height: 40px; padding: 0 16px;
+  border-radius: 12px; border: none;
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.9);
+  font: inherit; font-size: 13.5px; font-weight: 800;
+  white-space: nowrap; cursor: pointer;
+}
+.e-cella .e-pausa.on { background: rgba(106, 220, 175, 0.9); color: #06251A; }
+/* fermo il tempo si vede da lontano, senza leggere: la cella si spegne
+   e il numero smette di sembrare in corsa */
+.e-cella.in-pausa { background: rgba(106, 220, 175, .14);
+  box-shadow: inset 0 0 0 1.5px rgba(106, 220, 175, .28); }
+.e-cella.in-pausa .v { opacity: .75; }
 /* verde quando quella cosa e' tutta pagata: un COLORE, non un tasto.
    I tasti del pagato stavano qui e sembravano quelli della quantita'. */
 .e-cella.pagata { background: rgba(106, 220, 175, .16);

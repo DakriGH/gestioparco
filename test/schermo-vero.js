@@ -350,6 +350,50 @@
     draft = freshDraft();
   }
 
+  /* ── 8. LA CARD A TEMPO APERTO ──
+     La cella del Tempo veniva NASCOSTA tutta intera quando il tempo era
+     aperto, e dentro c'era anche l'interruttore: da una scheda a tempo
+     aperto non si poteva piu' ne' toccare il tempo ne' richiuderlo, e
+     restava li' una targhetta che non faceva niente. In node non si
+     vede -- il DOM finto non ha ne' celle ne' tasti. */
+  {
+    showArchive = false;
+    entries.length = 0; localStorage.removeItem('gp_entries');
+    const t0 = Date.now() - 43 * 60000;
+    entries.push(normalizeEntries([{ id: 'ap', startTime: t0, createdAt: t0, oraManuale: true,
+      children: 2, durationMinutes: 0, baseMinutes: 0, payLater: true }])[0]);
+    saveEntries(); switchTab('active'); buildActiveView(); await att(300);
+
+    const cellaTempo = () => [...card().querySelectorAll('.e-colonna > .e-cella')]
+      .find(c => c.querySelector('.e-nome').textContent === 'Tempo');
+    const vivi = () => [...cellaTempo().querySelectorAll('button')]
+      .filter(b => !b.classList.contains('hidden')).map(b => b.textContent.trim());
+
+    p('a tempo aperto la cella del Tempo resta al suo posto', !!cellaTempo());
+    p('  e l interruttore resta raggiungibile', vivi().some(t => /Tempo aperto/.test(t)));
+    p('  al posto del meno e del piu c e la pausa', vivi().some(t => /Pausa/.test(t)) &&
+      !vivi().some(t => /^[−+]/.test(t)), vivi().join(' | '));
+    p('  e il numero grande dice i minuti, non un trattino',
+      /\d/.test(cellaTempo().querySelector('.v').textContent),
+      cellaTempo().querySelector('.v').textContent);
+
+    /* la pausa, premuta davvero */
+    cellaTempo().querySelector('.e-pausa').click(); await att(250);
+    p('la pausa ferma l orologio', !!entries[0].pausaDa && allineati());
+    p('  e il tasto diventa Riprendi', /Riprendi/.test(cellaTempo().querySelector('.e-pausa').textContent));
+    const fermoA = contiAperto(entries[0]).contati;
+    p('  e il conto da fermo non cresce',
+      Math.abs(contiAperto(entries[0], Date.now() + 60 * 60000).contati - fermoA) < 0.2);
+    cellaTempo().querySelector('.e-pausa').click(); await att(250);
+    p('  e riprendendo riparte da dove era', !entries[0].pausaDa && allineati() &&
+      Math.abs(contiAperto(entries[0]).contati - fermoA) < 0.2);
+
+    /* e si torna a tempo comprato dall interruttore, che prima spariva */
+    cellaTempo().querySelector('.e-aperto').click(); await att(300);
+    p('dall interruttore si torna a tempo comprato', !entries[0].payLater && allineati());
+    p('  e il meno e il piu tornano', vivi().some(t => /^[−+]/.test(t)), vivi().join(' | '));
+  }
+
   /* ── il verdetto ── */
   localStorage.removeItem('gp_entries');
   entries.length = 0;

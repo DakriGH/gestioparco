@@ -645,9 +645,10 @@ gruppo('Il conto del tempo aperto si vede, non si indovina', () => {
   ok('dentro da quarantuno minuti', Math.round(a.dentro), 41);
   ok('e il giro di Crazy non toglie niente al parco', a.regalati, 0);
   ok('quindi quarantuno contati', Math.round(a.contati), 41);
-  ok('arrotondati ai cinque in su fanno quarantacinque', a.su, 45);
-  ok('che cadono nella fascia loro', a.scaglione, ctx.scaglioneDi(45));
-  ok('e il prezzo e quello della fascia', a.prezzo, ctx.priceFor(45));
+  /* niente piu' arrotondamento ai cinque: la fascia si sceglie sui
+     minuti veri, che e' anche piu' facile da spiegare al banco */
+  ok('che cadono nella fascia piu vicina', a.scaglione, ctx.fasciaVicina(41).m);
+  ok('e il prezzo e quello della fascia', a.prezzo, ctx.fasciaVicina(41).p);
   ok('lo stesso che mette sul conto costOf', ctx.costOf(c).unit, a.prezzo);
 
   vero('e c e scritto da dove esce', /41′ contati/.test(ctx.spiegaAperto(c, true, ora)) &&
@@ -690,15 +691,38 @@ gruppo('Il conto del tempo aperto si vede, non si indovina', () => {
   vero('e se non sono ancora entrati lo dice',
     /non sono ancora entrati/.test(ctx.spiegaAperto(prima, true, ora)));
 
-  /* la fascia e' quella del cartello, non un numero inventato */
+  /* LA FASCIA E' QUELLA DEL CARTELLO, non un numero inventato: e' il
+     numero scritto sul muro, quello che il cliente puo' controllare. */
   const fasce = ctx.settings.tariffs.map(t => t.m);
-  let storte = [];
+  const storte = [];
   for (let m = 1; m <= 200; m++) {
-    const sc = ctx.scaglioneDi(m);
-    if (!fasce.includes(sc)) storte.push(m + ' -> ' + sc);
-    if (ctx.priceFor(m) !== ctx.priceFor(sc)) storte.push(m + ': prezzo diverso dalla fascia');
+    const f = ctx.fasciaVicina(m);
+    if (!f || !fasce.includes(f.m)) storte.push(m + ' -> ' + (f ? f.m : 'niente'));
+    /* e nessuna fascia del cartello e' piu' vicina di quella scelta */
+    else {
+      const piuVicina = ctx.settings.tariffs.reduce((a, t) =>
+        Math.abs(t.m - m) < Math.abs(a - m) ? t.m : a, ctx.settings.tariffs[0].m);
+      if (Math.abs(f.m - m) !== Math.abs(piuVicina - m)) storte.push(m + ': ' + f.m + ' ma ' + piuVicina + ' e piu vicina');
+    }
   }
-  ok('ogni minuto cade su una fascia scritta sul cartello', storte.slice(0, 3), []);
+  ok('ogni minuto cade sulla fascia del cartello piu vicina', storte.slice(0, 3), []);
+
+  /* IL CASO CHE HA FATTO SCOPPIARE TUTTO: trentuno minuti finivano
+     nella fascia dei quaranta, dieci euro invece di sette per un
+     minuto oltre la mezz'ora, e al banco non c'era modo di
+     spiegarlo. */
+  const dove = m => ctx.fasciaVicina(m).m;
+  ok('trentuno minuti stanno nella mezz ora', dove(31), 30);
+  ok('e anche trentacinque, che sta in mezzo', dove(35), 30);
+  ok('trentasei invece passa ai quaranta', dove(36), 40);
+  ok('i primi minuti stanno nei dieci', dove(1), 10);
+  ok('e anche dieci tondi', dove(10), 10);
+  ok('e dodici, che ai dieci ci sta piu vicino', dove(12), 10);
+  ok('tredici passa ai quindici', dove(13), 15);
+  ok('e oltre l ultima fascia si resta sull ultima', dove(400), fasce[fasce.length - 1]);
+  /* il prezzo dei primi dieci minuti e' quello del cartello */
+  ok('i primi dieci minuti costano il primo scaglione',
+    ctx.fasciaVicina(4).p, ctx.settings.tariffs[0].p);
 });
 
 gruppo('Lo stesso tempo costa lo stesso, da qualunque tasto passi', () => {
@@ -1626,7 +1650,7 @@ gruppo('Il Crazy non entra MAI nel prezzo del tempo di parco', () => {
       const t0 = Date.now() - dentroDa * 60000;
       const senza = conto({ children: 2, payLater: true, startTime: t0 });
       const rif = ctx.costOf(senza).parkTotal;
-      const atteso = ctx.r2(ctx.priceFor(ctx.up5(dentroDa)) * 2);
+      const atteso = ctx.r2(ctx.fasciaVicina(dentroDa).p * 2);
       if (rif !== atteso) aperti.push('senza giri, dentro da ' + dentroDa + "': " + rif + ' invece di ' + atteso);
       for (const giri of [1, 2, 3]) {
         const con = conto({ children: 2, payLater: true, startTime: t0 });
