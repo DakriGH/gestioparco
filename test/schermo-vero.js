@@ -590,6 +590,63 @@
     p('  e i soldi incassati sono rimasti quelli',
       entries[0].paidPark > 0 && dueOf(entries[0]).total === 0 && allineati());
 
+    /* ── IL TEMPO SI CAPISCE: due numeri, e la somma scritta ──
+       Sulla scheda c'erano TRE numeri del tempo in tre posti -- quello
+       comprato nella cella, i minuti del Crazy dentro la sua card, il
+       totale nel banner -- e niente che li legasse: al banco non si
+       capiva se un'ora e un quarto fosse tempo comprato in piu' o giri
+       di Crazy. */
+    {
+      /* la sezione qui sopra ha spento il 2.0 per provare il ritorno:
+         qui serve acceso, ed e' l'ultima cosa di questa sezione */
+      settings.grafica2 = true; saveSettings(); applyTheme();
+      entries.length = 0; localStorage.removeItem('gp_entries');
+      const t0 = Date.now() - 50 * 60000;
+      entries.push(normalizeEntries([{ id: 'tt', startTime: t0, createdAt: t0, oraManuale: true,
+        children: 2, durationMinutes: 60, baseMinutes: 30, aggiunte: [30],
+        crazyJumping: 3, crazyGiri: [2, 1] }])[0]);
+      saveEntries(); switchTab('active'); buildActiveView(); await att(400);
+      const banner = () => card().querySelector('.e-orari').textContent.replace(/\s+/g, ' ');
+      const cella = () => [...card().querySelectorAll('.e-colonna .e-cella')]
+        .find(c => c.querySelector('.e-nome').textContent === 'Tempo');
+
+      p('il banner scrive il totale', /1h16/.test(banner()), banner());
+      p('  e come si arriva a quel totale', /1h/.test(banner()) && /16′/.test(banner()) &&
+        /Crazy/.test(banner()), banner());
+      card().querySelector('.e-riga').click(); await att(300);
+      p('la cella dice che quel numero e il tempo COMPRATO',
+        /comprato/i.test(cella().textContent), cella().textContent.replace(/\s+/g, ' '));
+      p('  e nomina a parte i minuti del Crazy',
+        /16′ Crazy/.test(cella().textContent.replace(/\s+/g, ' ')),
+        cella().textContent.replace(/\s+/g, ' '));
+      /* la riga sta SOTTO il numero, non in fondo alla cella attaccata
+         all'interruttore: li' sembrerebbe l'etichetta di quello */
+      const val = cella().querySelector('.v').getBoundingClientRect();
+      const sotto = cella().querySelector('.e-sotto').getBoundingClientRect();
+      const apri = cella().querySelector('.e-aperto').getBoundingClientRect();
+      p('  e sta sotto il numero, prima dell interruttore',
+        sotto.top >= val.bottom - 2 && sotto.bottom <= apri.top + 2,
+        'numero fino a ' + Math.round(val.bottom) + ', riga a ' + Math.round(sotto.top) +
+        ', interruttore a ' + Math.round(apri.top));
+
+      /* su un gruppo senza giri non si aggiunge rumore */
+      entries.length = 0;
+      const t1 = Date.now() - 10 * 60000;
+      entries.push(normalizeEntries([{ id: 'ss', startTime: t1, createdAt: t1, oraManuale: true,
+        children: 2, durationMinutes: 30, baseMinutes: 30 }])[0]);
+      saveEntries(); buildActiveView(); await att(400);
+      p('senza giri il banner non aggiunge niente', !/Crazy/.test(banner()), banner());
+      card().querySelector('.e-riga').click(); await att(300);
+      p('  e la cella dice solo «comprato»',
+        /comprato/i.test(cella().textContent) && !/Crazy/.test(cella().textContent));
+
+      /* e a tempo aperto il numero e un'altra cosa, e lo dice */
+      entries[0].payLater = true; saveEntries(); syncCard(entries[0]); await att(300);
+      p('a tempo aperto dice che e il tempo che stai pagando',
+        /che stai pagando/i.test(cella().textContent), cella().textContent.replace(/\s+/g, ' '));
+    }
+
+
     settings.grafica2 = eraG2; saveSettings(); applyTheme();
   }
 

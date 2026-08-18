@@ -4990,6 +4990,14 @@ function entryCard(entry) {
   colonna.appendChild(sTime.box);
   fila.appendChild(colonna);
 
+  /* LA RIGA CHE NOMINA IL NUMERO STA SUBITO SOTTO IL NUMERO, non in
+     fondo alla cella: attaccata all'interruttore sembrava l'etichetta
+     di quello, e una parola che nomina la cosa sbagliata e' peggio di
+     nessuna parola. Vuota e nascosta con la grafica di sempre. */
+  const sottoTempo = el('div', 'e-sotto hidden');
+  sTime.box.appendChild(sottoTempo);
+  sTime.sotto = sottoTempo;
+
   /* DA TEMPO COMPRATO A TEMPO APERTO, DA QUI.
      Nel pannello c'e' la pastiglia «Tempo aperto» fra i tagli, ma in
      una scheda gia' registrata quella e' proprio la cosa che capita di
@@ -5067,6 +5075,7 @@ function entryCard(entry) {
   };
   sTime.box.appendChild(pausa);
   sTime.pausa = pausa;
+
   /* CHE COS'E' VA SCRITTO. Grigia e senza conto alla rovescia si capiva
      che era un'altra cosa, ma non QUALE: chi la trova in cima alla lista
      deve leggere in due parole che e' un Solo BAR e che se ne
@@ -7110,6 +7119,24 @@ function syncCard(entry) {
      diceva niente proprio quando e' l'unica che si muove da sola. */
   const ap = entry.payLater ? conConto(entry, () => contiAperto(entry)) : null;
   r.sTime.val.textContent = ap ? fmtMin(Math.round(ap.contati)) : fmtMin(entry.durationMinutes);
+  /* GRAFICA 2.0: LA CELLA DICE DI CHE TEMPO STA PARLANDO.
+     Il numero grande e' il tempo COMPRATO -- quello che si paga -- ma
+     non lo diceva, e accanto ce n'erano altri due (i minuti del Crazy e
+     il totale nel banner) senza niente che li legasse. Sotto il numero
+     adesso c'e' una riga che lo nomina, e i minuti regalati quando ci
+     sono: cosi' la cella non tace piu' la meta' del discorso.
+     A tempo aperto il numero e' un'altra cosa ancora -- i minuti che si
+     stanno pagando -- e lo dice. */
+  if (r.sTime.sotto) {
+    const reg = conConto(entry, () => minutiCrazy(entry) + omaggioDi(entry));
+    r.sTime.sotto.classList.toggle('hidden', !settings.grafica2);
+    r.sTime.sotto.innerHTML = settings.grafica2
+      ? (entry.payLater
+        ? '<span class="k">che stai pagando</span>'
+        : '<span class="k">comprato</span>' +
+          (reg > 0 ? '<span class="piu">+' + minTxt(reg) + ' Crazy</span>' : ''))
+      : '';
+  }
   r.sTime.box.classList.toggle('aperta', !!entry.payLater);
   r.sTime.box.classList.toggle('in-pausa', !!(ap && ap.inPausa));
   /* meno e piu' servono a una durata comprata: a tempo aperto non c'e'
@@ -7167,10 +7194,27 @@ function syncCard(entry) {
   const da = inizioParco(entry);
   const dopo = Math.abs(da - num(entry.startTime, 0)) > 60000;
   const durata = Math.round((endTimeOf(entry) - da) / 60000);
+  /* GRAFICA 2.0: LA SOMMA SI LEGGE, NON SI INDOVINA.
+     Sulla scheda c'erano TRE numeri del tempo in tre posti diversi --
+     «1h» nella cella Tempo (quello comprato), «+16′» dentro la card del
+     Crazy, «1h16» qui nel banner -- e nessuno diceva come si mettevano
+     insieme. Al banco la domanda era sempre la stessa: questo 1h16 e'
+     perche' hanno comprato piu' tempo o perche' hanno fatto dei giri?
+     Adesso il totale si spiega da se': «1h16 = 1h + 16′ Crazy». Il
+     tempo COMPRATO e' quello che si paga, i minuti del Crazy sono
+     regalati, e i due non vanno confusi mai.
+     Il pezzo in regalo si scrive solo se c'e': su un gruppo senza giri
+     la riga resta quella di prima. */
+  const comprati = clamp(num(entry.durationMinutes, 0), 0, 1e6);
+  const inRegalo = Math.max(0, durata - comprati);
+  const somma = (settings.grafica2 && !entry.payLater && inRegalo > 0 && comprati > 0)
+    ? '<span class="e-somma">' + fmtMin(comprati) +
+      '<i class="fr">+</i>' + minTxt(inRegalo) + '<i class="fr">Crazy</i></span>'
+    : '';
   r.range.innerHTML = '<span class="fr">dalle</span>' + fmtTime(entry.startTime) +
     (dopo ? '<span class="fr">parco</span>' + fmtTime(da) : '') +
     '<span class="fr">alle</span>' + (entry.payLater ? '?' : fmtTime(endTimeOf(entry))) +
-    (entry.payLater ? '' : '<b class="dur">' + fmtMin(durata) + '</b>');
+    (entry.payLater ? '' : '<b class="dur">' + fmtMin(durata) + '</b>') + somma;
   updateBadge();
 }
 

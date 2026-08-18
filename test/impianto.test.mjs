@@ -243,6 +243,20 @@ gruppo('Niente resti di lavorazione nel codice che gira');
      correzione, e chi sta in cassa da mesi puo' trovarsi peggio. */
   prova('ed e spenta di serie', /grafica2: false/.test(APP));
 
+  /* IL TEMPO SI CAPISCE: i tre numeri della scheda vanno legati.
+     Quello comprato nella cella, i minuti del Crazy, il totale nel
+     banner: senza una riga che li mette insieme, al banco non si
+     capisce se un'ora e un quarto e' tempo comprato in piu' o giri. */
+  prova('il banner spiega di che cosa e fatto il totale',
+    /const inRegalo = Math\.max\(0, durata - comprati\);/.test(APP) &&
+    /e-somma[\s\S]{0,200}Crazy/.test(APP));
+  prova('e la cella dice se quel numero e comprato o da pagare',
+    /comprato<\/span>/.test(APP) && /che stai pagando/.test(APP));
+  /* e non deve aggiungere rumore dove non serve: solo col 2.0, solo se
+     dei minuti regalati ci sono davvero */
+  prova('ma solo col 2.0 e solo se i minuti regalati ci sono',
+    /settings\.grafica2 && !entry\.payLater && inRegalo > 0 && comprati > 0/.test(APP));
+
   const todo = (APP.match(/\bTODO\b|\bFIXME\b|\bXXX\b/g) || []).length;
   prova('nessun TODO appeso', todo === 0, todo + ' trovati');
   prova('e la parola «metodo» non lo fa sbagliare',
