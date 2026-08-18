@@ -2507,8 +2507,13 @@ function aggiornaPannello(opz) {
     /* la pausa entra nella firma: se no si preme «Pausa» e la fila dei
        tagli non si ridisegna, cioe' il tasto resta a dire «Pausa» su un
        orologio che ormai e' fermo */
+    /* e la Grafica 2.0 pure: accendendola o spegnendola i minuti non
+       cambiano, quindi senza questo la fila non si ridisegnava e il
+       campo dei minuti esatti restava li' anche a interruttore spento.
+       E' la stessa svista di `firmaVoce` con le card. */
     const firmaDur = tagli.join('|') + '>' + (c.payLater ? 'dopo' : c.durationMinutes) +
-      (avviso ? '|solo' + omaggioDi(c) : '') + (num(c.pausaDa, 0) ? '|fermo' : '');
+      (avviso ? '|solo' + omaggioDi(c) : '') + (num(c.pausaDa, 0) ? '|fermo' : '') +
+      (settings.grafica2 ? '|g2' : '');
     if (dur.dataset.sig !== firmaDur) {
       dur.dataset.sig = firmaDur;
       dur.innerHTML = avviso
@@ -2527,6 +2532,20 @@ function aggiornaPannello(opz) {
         '<button class="chip later' + (c.payLater ? ' on' : '') + '" data-a="dopo" ' +
         'title="Resta senza un orario di fine: si conta il tempo davvero passato">' +
         '\u23f3 Tempo aperto</button>' +
+        /* GRAFICA 2.0: I MINUTI ESATTI, SCRITTI.
+           C'era un campo «oppure minuti esatti» ed e' sparito l'8 agosto,
+           quando la fascia degli orari ha preso il suo posto: da allora
+           per fare venti minuti bisogna partire da quindici e premere il
+           piu', o spostare l'ora d'uscita a colpi di quarto d'ora.
+           I tagli coprono i casi di tutte le sere, ma non tutti: qui si
+           scrive il numero e basta. Passa dallo STESSO `data-a="min"` dei
+           tagli, quindi non puo' comportarsi in modo diverso da loro. */
+        (settings.grafica2
+          ? '<span class="dur-esatti"><input type="number" class="pc-durin" min="1" max="99999" ' +
+            'step="5" inputmode="numeric" aria-label="minuti esatti" placeholder="min" value="' +
+            (c.payLater ? '' : clamp(num(c.durationMinutes, 0), 0, 99999)) + '">' +
+            '<span class="um">min</span></span>'
+          : '') +
         /* LA PAUSA STA ANCHE QUI. Era solo sulla scheda in lista, e cosi'
            il mini menu sapeva fare una cosa che aprendo \u00abModifica\u00bb --
            cioe' il posto dove si va per cambiare le cose per bene --
@@ -2542,6 +2561,40 @@ function aggiornaPannello(opz) {
             (num(c.pausaDa, 0) ? '\u25b6\ufe0e Riprendi' : '\u23f8 Pausa') + '</button>'
           : '');
     }
+    /* IL CAMPO DEI MINUTI ESATTI risponde quando si scrive, e si
+       aggancia una volta sola: la fila si ridisegna spesso, e legare il
+       gestore ogni volta vorrebbe dire scrivere il numero due volte.
+       Mentre il dito e' dentro NON si riscrive il valore, se no il
+       cursore torna in fondo a ogni cifra battuta. */
+    const esatti = dur.querySelector('.pc-durin');
+    if (esatti && !esatti.dataset.legato) {
+      esatti.dataset.legato = '1';
+      esatti.oninput = () => {
+        const q = C();
+        const n = clamp(Math.round(num(esatti.value, NaN)), 1, 99999);
+        if (!Number.isFinite(n)) return;
+        segnaInizioParco(q, clamp(num(q.durationMinutes, 0), 0, 99999), n);
+        q.durationMinutes = n;
+        /* scrivere i minuti SOSTITUISCE la durata, come i tagli: quello
+           che era stato venduto prima non c'entra piu' niente */
+        delete q.aggiunte;
+        q.baseMinutes = n;
+        q.payLater = false;
+        pcSalva();
+        /* LA FILA VA SEGNATA COME DA RIFARE, anche se adesso non la si
+           tocca: la firma dice «disegnata coi minuti di prima», e senza
+           azzerarla un taglio premuto subito dopo non ridisegnava
+           niente -- il campo restava a 47 mentre la durata era 30. */
+        dur.dataset.sig = '';
+        /* si rifa' tutto TRANNE questa fila: dentro c'e' il dito */
+        disegnaFascia(p, q);
+        pcFondoDis();
+      };
+      /* uscendo dal campo il pannello si rimette in riga: se e' rimasto
+         vuoto o storto, torna a mostrare il numero vero */
+      esatti.onblur = () => aggiornaPannello();
+    }
+
     /* la riga dell'avviso non e' una riga di tagli: si veste da avviso */
     dur.classList.toggle('solo', avviso);
     c.people = lista(c.people);

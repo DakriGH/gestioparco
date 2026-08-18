@@ -521,6 +521,57 @@
     p('accendendolo la pagina lo dice con la sua classe',
       document.documentElement.classList.contains('g2'));
 
+    /* ── I MINUTI ESATTI, SCRITTI ──
+       C'era un campo «oppure minuti esatti» ed e' sparito quando la
+       fascia degli orari ha preso il suo posto: da allora, per fare
+       venti minuti, si parte da quindici e si preme il piu'. */
+    {
+      const campo = () => document.querySelector('#view-new .pc-durin');
+      p('col 2.0 si possono scrivere i minuti esatti', !!campo());
+      if (campo()) {
+        document.querySelector('#view-new [data-add="bimbi"]').click(); await att(250);
+        document.querySelector('#view-new [data-add="bimbi"]').click(); await att(350);
+        const metti = async (n) => {
+          const c = campo();
+          c.value = String(n);
+          c.dispatchEvent(new Event('input', { bubbles: true }));
+          await att(350);
+        };
+        await metti(20);
+        p('  scritto 20, la durata e venti minuti', draft.durationMinutes === 20, draft.durationMinutes + 'm');
+        const a20 = costOf(draft).parkTotal;
+        await metti(47);
+        p('  scritto 47, la durata e quarantasette', draft.durationMinutes === 47, draft.durationMinutes + 'm');
+        p('  e il prezzo sale di conseguenza', costOf(draft).parkTotal > a20,
+          a20 + ' → ' + costOf(draft).parkTotal);
+        /* un taglio rapido SOVRASCRIVE, e il campo deve seguirlo: senza
+           la firma azzerata restava a 47 mentre la durata era 30 */
+        document.querySelector('#view-new .pc-dur [data-v="30"]').click(); await att(450);
+        p('  un taglio rapido lo sovrascrive', draft.durationMinutes === 30);
+        p('  e il campo lo segue', campo() && campo().value === '30',
+          campo() ? campo().value : '(sparito)');
+        /* quello che si scrive puo' essere qualunque cosa */
+        await metti(0);
+        p('  scrivere zero non porta la durata sotto il minimo', draft.durationMinutes >= 1);
+        const prima = draft.durationMinutes;
+        await metti('abc');
+        p('  e una parola non la muove', draft.durationMinutes === prima);
+        await metti(999999);
+        p('  e un numero assurdo resta nei limiti', draft.durationMinutes <= 99999);
+        /* e niente esce dallo schermo */
+        const lim = document.documentElement.clientWidth;
+        const fuori = [...document.querySelectorAll('#view-new .pc-dur *')]
+          .filter(e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.right > lim + 1; });
+        p('  e la fila dei tagli non esce dallo schermo', !fuori.length, fuori.length + ' fuori');
+      }
+      /* e con la grafica di sempre il campo non c'e' */
+      settings.grafica2 = false; saveSettings(); applyTheme(); markNewDirty(); await att(400);
+      p('  e con la grafica di sempre non c e', !campo());
+      settings.grafica2 = true; saveSettings(); applyTheme(); markNewDirty(); await att(400);
+      p('  e riaccendendola torna', !!campo());
+      draft = freshDraft(); switchTab('active'); await att(200); switchTab('new'); await att(500);
+    }
+
     /* il piu' e il meno dei bambini restano quelli di sempre */
     document.querySelector('#view-new [data-add="bimbi"]').click(); await att(300);
     document.querySelector('#view-new [data-add="bimbi"]').click(); await att(300);
