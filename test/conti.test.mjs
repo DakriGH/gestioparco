@@ -2146,65 +2146,6 @@ gruppo('Con la Grafica 2.0 non si perde niente: tutto si può ancora fare', () =
   ctx.settings.grafica2 = era;
 });
 
-gruppo('I numeri rapidi dei bambini: meno tocchi, stessi conti', () => {
-  /* Il tempo ha sempre avuto i suoi tagli e si sceglie con un tocco; i
-     bambini si salivano di uno per volta, quindi una famiglia da
-     quattro costava quattro tocchi. Sono le due cose che si mettono
-     sempre, tutte le sere: l'asimmetria non aveva motivo. */
-  const era = ctx.settings.grafica2;
-
-  ctx.settings.grafica2 = false;
-  vero('a interruttore spento la fila non c e', ctx.numeriRapidi('bimbi', 0) === '');
-  ctx.settings.grafica2 = true;
-  vero('accesa, c e', /data-quanti="bimbi"/.test(ctx.numeriRapidi('bimbi', 0)));
-  vero('e solo sui bambini', ctx.numeriRapidi('crazy', 0) === '' && ctx.numeriRapidi('b1', 0) === '');
-  /* quattro e non sei: con sei la fila non ci stava nella card e dal
-     terzo in su i numeri erano tagliati fuori, cioe' intoccabili */
-  ok('con i numeri che capitano al banco', ctx.NUMERI_RAPIDI, [1, 2, 3, 4]);
-  vero('quello che c e gia risulta acceso', /data-v="3"[^>]*>3<|class="chip on" data-quanti="bimbi" data-v="3"/
-    .test(ctx.numeriRapidi('bimbi', 3).replace(/\s+/g, ' ')) ||
-    ctx.numeriRapidi('bimbi', 3).indexOf('chip on') >= 0);
-
-  /* IL NUMERO RAPIDO PASSA DALLA STESSA STRADA DEL PIU' E DEL MENO.
-     Se scrivesse `children` per conto suo, un giorno una delle due
-     strade imparerebbe una regola e l'altra no. */
-  const conta = (quanti, comeMetterli) => {
-    const c = conto({ children: 0, durationMinutes: 30, baseMinutes: 30,
-      startTime: Date.now() - 20 * 60000 });
-    ctx.PAN.conto = c; ctx.PAN.ingresso = null;
-    comeMetterli(quanti);
-    const k = ctx.costOf(c), d = ctx.dueOf(c);
-    /* NIENTE ORARI ASSOLUTI QUI DENTRO: i due conti si costruiscono in
-       due istanti diversi e l'ora d'uscita esce di un millesimo, che
-       non e' una differenza -- e' l'orologio. Si confronta la DURATA,
-       che e' quello che il tocco decide. */
-    return [c.children, k.parkTotal, k.unit, d.total,
-      c.durationMinutes, ctx.endTimeOf(c) - c.startTime].join('/');
-  };
-  const guai = [];
-  [0, 1, 2, 3, 4, 5, 6].forEach(n => {
-    const aUnoAllaVolta = conta(n, q => { for (let i = 0; i < q; i++) ctx.bcSetQ('bimbi', ctx.bcQ('bimbi') + 1); });
-    const dUnColpo = conta(n, q => ctx.bcSetQ('bimbi', q));
-    if (aUnoAllaVolta !== dUnColpo) guai.push(n + ' bambini: ' + aUnoAllaVolta + ' vs ' + dUnColpo);
-  });
-  ok('mettere quattro bambini con un tocco o con quattro da lo stesso conto', guai, []);
-
-  /* e i soldi gia' incassati non si perdono togliendo bambini col
-     numero rapido, esattamente come col meno */
-  const c = conto({ children: 4, durationMinutes: 30, baseMinutes: 30,
-    startTime: Date.now() - 20 * 60000 });
-  ctx.PAN.conto = c; ctx.PAN.ingresso = null;
-  ctx.pagaTutto();
-  const presi = ctx.r2(c.paidPark);
-  ctx.bcSetQ('bimbi', 2);
-  vero('scendendo a due, l incassato non supera il dovuto',
-    ctx.r2(c.paidPark) <= ctx.costOf(c).parkTotal + 0.005,
-    'incassati ' + c.paidPark + ' per ' + ctx.costOf(c).parkTotal + ' dovuti (prima erano ' + presi + ')');
-  vero('e il dovuto non diventa negativo', ctx.dueOf(c).total >= 0);
-
-  ctx.settings.grafica2 = era;
-});
-
 /* ══════════════════════════════════════════════════════════════ */
 console.log('\n' + '━'.repeat(52));
 console.log(rotti === 0

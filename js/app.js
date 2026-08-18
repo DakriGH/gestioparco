@@ -1478,15 +1478,6 @@ function costruisciPannello() {
       return;
     }
 
-    /* GRAFICA 2.0: un numero rapido mette QUELLA quantita', non ne
-       aggiunge una. Passa dalla stessa `bcSetQ` del piu' e del meno,
-       cosi' non puo' comportarsi in modo diverso da loro. */
-    if (d.quanti !== undefined) {
-      tocchi.id = d.quanti;
-      bcSetQ(d.quanti, clamp(num(d.v, 0), 0, 1e6));
-      pcSalva(); aggiornaPannello(); return;
-    }
-
     /* --- le card: quantita' e pagato --- */
     const voce = d.add || d.meno || d.ppiu || d.pmeno;
     if (voce) {
@@ -4866,8 +4857,16 @@ function entryCard(entry) {
   const countBox = el('div', 'e-conto');
   const countK = el('span', 'k', '');
   const count = el('span', 'v num', '--:--');
+  /* GRAFICA 2.0: DI CHE COS'E' FATTO QUEL TEMPO, sotto il conto alla
+     rovescia. Prima stava nel banner degli orari, ma quello e' gia'
+     pieno -- dalle, alle, la durata, il bracciale, i bambini, i giri --
+     e su una tavoletta le scritte finivano una sull'altra. Qui sotto
+     c'e' il posto giusto: e' la riga che spiega il numero grande, come
+     fa gia' quella sotto i soldi a tempo aperto. */
+  const countS = el('span', 'sott vuota', '');
   countBox.appendChild(countK);
   countBox.appendChild(count);
+  countBox.appendChild(countS);
   riga.appendChild(countBox);
 
   /* i soldi: etichetta sopra, numero sotto */
@@ -5232,7 +5231,7 @@ function entryCard(entry) {
 
   cardRefs.set(entry.id, {
     card, count, range, sKids, sTime, solo, barBtn, scBtn, apriConto, disegnaCrazy,
-    dueVal: soldiV, soldiK, soldiS, soldi, wrist, bimbiV, crzV, crz, countK,
+    dueVal: soldiV, soldiK, soldiS, soldi, wrist, bimbiV, crzV, crz, countK, countS,
     payPanel, payBtn, pagaBtn, disegnaNota,
     /* servono a rivestire la riga quando cambia un vestito */
     avBox, nome, tratti, apriParco, sigGente: firmaGente(entry)
@@ -5808,42 +5807,10 @@ function bcCard(v, sempre) {
         '<button data-add="' + v.id + '">+</button></div>' +
         '<div class="bc-zone v"><span class="bc-chip">' + pg + '/' + q + '</span>' +
         '<button data-pmeno="' + v.id + '"' + (pg <= 0 ? ' disabled' : '') + '>\u2212</button>' +
-        '<button data-ppiu="' + v.id + '"' + (pg >= q ? ' disabled' : '') + '>+</button></div>' +
-        numeriRapidi(v.id, q)
+        '<button data-ppiu="' + v.id + '"' + (pg >= q ? ' disabled' : '') + '>+</button></div>'
       : '') +
     (v.id === 'crazy' ? '</div>' + storicoGiri() : '') +
   '</div>';
-}
-
-/* ══════════════════════════════════════════════════════════
-   GRAFICA 2.0: I NUMERI RAPIDI DEI BAMBINI
-
-   Il tempo ha sempre avuto i suoi tagli -- 15m, 30m, 1h, 1h30 -- e si
-   sceglie con UN tocco. I bambini no: si sale di uno per volta, quindi
-   una famiglia da quattro costa quattro tocchi su un tasto da
-   quaranta pixel, e sono le due cose che si mettono SEMPRE, tutte le
-   sere, decine di volte. Un'asimmetria senza motivo.
-   Qui c'e' la stessa fila di tagli, coi numeri che al banco capitano
-   davvero. Il piu' e il meno restano: per il quinto bambino, o per
-   toglierne uno che se n'e' andato, sono ancora la strada piu' corta.
-   Toccare il numero che c'e' gia' NON azzera: chi arriva a quattro e
-   ritocca il quattro voleva confermare, non ricominciare.
-   Solo sui bambini: al bar le quantita' sono una o due e il piu'
-   basta, e il Crazy si conta dentro un giro, che e' un'altra cosa. */
-/* QUATTRO, NON SEI. Con sei la fila voleva 504 pixel dentro una card
-   che ne ha 246: le colonne non si stringono sotto il loro contenuto, e
-   la card taglia quello che avanza -- dal tre in su i numeri c'erano ma
-   nessuno poteva toccarli. Con quattro ognuno ha una sessantina di
-   pixel, che e' un bersaglio vero, e per il quinto bambino c'e' il piu'
-   che e' li' accanto. Le famiglie da cinque sono poche; quelle da uno a
-   quattro sono tutte le sere. */
-const NUMERI_RAPIDI = [1, 2, 3, 4];
-function numeriRapidi(id, quanti) {
-  if (!settings.grafica2 || id !== 'bimbi') return '';
-  return '<div class="bc-veloci">' + NUMERI_RAPIDI.map(n =>
-    '<button class="chip' + (quanti === n ? ' on' : '') + '" data-quanti="bimbi" data-v="' + n +
-    '" aria-label="' + n + (n === 1 ? ' bambino' : ' bambini') + '">' + n + '</button>').join('') +
-    '</div>';
 }
 
 /* LO STORICO DEI GIRI, a destra della card.
@@ -7153,6 +7120,10 @@ function syncCard(entry) {
   }
   r.sKids.minus.disabled = kids <= 0;
   r.sTime.minus.disabled = num(entry.durationMinutes, 0) <= minimoTempo(entry);
+  /* la riga sotto il conto alla rovescia si rifa' anche adesso: `tick`
+     gira una volta al secondo, e aspettare un secondo dopo aver segnato
+     un giro vuol dire vederla comparire in ritardo sotto le dita */
+  spiegaTempoDi(r, entry);
 
   /* IL VESTITO CAMBIATO SI VEDE SUBITO. syncCard() gira a ogni tocco
      del conto -- anche mentre si veste qualcuno -- e prima guardava
@@ -7194,27 +7165,10 @@ function syncCard(entry) {
   const da = inizioParco(entry);
   const dopo = Math.abs(da - num(entry.startTime, 0)) > 60000;
   const durata = Math.round((endTimeOf(entry) - da) / 60000);
-  /* GRAFICA 2.0: LA SOMMA SI LEGGE, NON SI INDOVINA.
-     Sulla scheda c'erano TRE numeri del tempo in tre posti diversi --
-     «1h» nella cella Tempo (quello comprato), «+16′» dentro la card del
-     Crazy, «1h16» qui nel banner -- e nessuno diceva come si mettevano
-     insieme. Al banco la domanda era sempre la stessa: questo 1h16 e'
-     perche' hanno comprato piu' tempo o perche' hanno fatto dei giri?
-     Adesso il totale si spiega da se': «1h16 = 1h + 16′ Crazy». Il
-     tempo COMPRATO e' quello che si paga, i minuti del Crazy sono
-     regalati, e i due non vanno confusi mai.
-     Il pezzo in regalo si scrive solo se c'e': su un gruppo senza giri
-     la riga resta quella di prima. */
-  const comprati = clamp(num(entry.durationMinutes, 0), 0, 1e6);
-  const inRegalo = Math.max(0, durata - comprati);
-  const somma = (settings.grafica2 && !entry.payLater && inRegalo > 0 && comprati > 0)
-    ? '<span class="e-somma">' + fmtMin(comprati) +
-      '<i class="fr">+</i>' + minTxt(inRegalo) + '<i class="fr">Crazy</i></span>'
-    : '';
   r.range.innerHTML = '<span class="fr">dalle</span>' + fmtTime(entry.startTime) +
     (dopo ? '<span class="fr">parco</span>' + fmtTime(da) : '') +
     '<span class="fr">alle</span>' + (entry.payLater ? '?' : fmtTime(endTimeOf(entry))) +
-    (entry.payLater ? '' : '<b class="dur">' + fmtMin(durata) + '</b>') + somma;
+    (entry.payLater ? '' : '<b class="dur">' + fmtMin(durata) + '</b>');
   updateBadge();
 }
 
@@ -7443,7 +7397,29 @@ function tick() {
       r.count.textContent = fmtClock(r.countK ? Math.abs(resta) : resta);
       if (r.countK) r.countK.textContent = resta < 0 ? 'sforato da' : 'esce fra';
     }
+    spiegaTempoDi(r, entry);
   });
+}
+
+/* DI CHE COS'E' FATTO IL TEMPO CHE MANCA.
+   «Esce fra 25:55» non dice se quei minuti sono tempo comprato o
+   minuti regalati dal Crazy, ed e' la domanda che al banco arrivava
+   ogni volta: hanno comprato piu' tempo o hanno fatto dei giri? La
+   riga sotto lo scrive: «1h + 16′ Crazy».
+   Solo se c'e' qualcosa da spiegare: senza giri il numero e' gia'
+   chiaro da solo, e una riga in piu' sarebbe rumore. */
+function spiegaTempoDi(r, entry) {
+  if (!r || !r.countS) return;
+  const dritto = settings.grafica2 && !entry.payLater && !entry.soloBar &&
+    entry.status !== 'closed';
+  const comprati = clamp(num(entry.durationMinutes, 0), 0, 1e6);
+  const durata = Math.round((endTimeOf(entry) - inizioParco(entry)) / 60000);
+  const inRegalo = Math.max(0, durata - comprati);
+  const mostra = dritto && comprati > 0 && inRegalo > 0;
+  r.countS.classList.toggle('vuota', !mostra);
+  r.countS.textContent = mostra
+    ? fmtMin(comprati) + ' + ' + minTxt(inRegalo) + ' Crazy'
+    : '';
 }
 
 /* SVUOTA: SI SCEGLIE COSA.

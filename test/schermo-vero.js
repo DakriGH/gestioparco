@@ -514,42 +514,22 @@
        cambiare DA SOLE, senza toccare nient'altro */
     settings.grafica2 = false; saveSettings(); applyTheme();
     draft = freshDraft(); switchTab('new'); await att(400);
-    const rapidi = () => document.querySelectorAll('#view-new [data-quanti="bimbi"]').length;
-    p('a interruttore spento i numeri rapidi non ci sono', rapidi() === 0);
+    p('a interruttore spento la pagina non porta la classe della 2.0',
+      !document.documentElement.classList.contains('g2'));
 
     settings.grafica2 = true; saveSettings(); applyTheme(); markNewDirty(); await att(400);
-    p('accendendolo compaiono da soli, senza toccare altro',
-      rapidi() === NUMERI_RAPIDI.length, rapidi() + ' trovati');
-    /* UN TASTO CHE ESCE DALLA SUA CARD NON ESISTE: la card taglia
-       quello che avanza, e i numeri in fondo c'erano ma nessuno poteva
-       toccarli. In node non si vede -- li' niente ha una larghezza. */
-    {
-      const cardB = document.querySelector('#view-new .bc-card');
-      const bordo = cardB.getBoundingClientRect();
-      const fuori = [...cardB.querySelectorAll('[data-quanti]')].filter(b => {
-        const r = b.getBoundingClientRect();
-        return r.width < 1 || r.right > bordo.right + 1 || r.left < bordo.left - 1;
-      });
-      p('  e ci stanno tutti dentro la card, toccabili',
-        !fuori.length, fuori.length + ' tagliati fuori');
-      const largo = Math.min(...[...cardB.querySelectorAll('[data-quanti]')]
-        .map(b => b.getBoundingClientRect().width));
-      p('  con un bersaglio che si preme col dito', largo >= 44, 'il piu stretto e ' + Math.round(largo) + 'px');
-    }
-    p('  e la pagina lo dice con la sua classe',
+    p('accendendolo la pagina lo dice con la sua classe',
       document.documentElement.classList.contains('g2'));
 
-    /* il tocco che vale tre tocchi */
-    document.querySelector('#view-new [data-quanti="bimbi"][data-v="4"]').click();
-    await att(400);
-    p('un tocco mette quattro bambini', draft.children === 4, 'bambini ' + draft.children);
-    p('  e il numero giusto risulta acceso',
-      (document.querySelector('#view-new [data-quanti].on') || {}).textContent === '4');
-    const prezzo4 = costOf(draft).parkTotal;
-    /* e il piu' e il meno di sempre continuano a lavorare accanto */
+    /* il piu' e il meno dei bambini restano quelli di sempre */
+    document.querySelector('#view-new [data-add="bimbi"]').click(); await att(300);
+    document.querySelector('#view-new [data-add="bimbi"]').click(); await att(300);
+    document.querySelector('#view-new [data-add="bimbi"]').click(); await att(300);
+    p('il piu dei bambini funziona come sempre', draft.children === 3, 'bambini ' + draft.children);
+    const prezzo3 = costOf(draft).parkTotal;
     document.querySelector('#view-new [data-meno="bimbi"]').click(); await att(400);
-    p('il meno di sempre funziona ancora', draft.children === 3);
-    p('  e il prezzo scende di conseguenza', costOf(draft).parkTotal < prezzo4);
+    p('  e il meno pure', draft.children === 2);
+    p('  e il prezzo scende di conseguenza', costOf(draft).parkTotal < prezzo3);
 
     /* i tre tasti «paga» di sezione non ci sono piu': lo Scontrino
        deve poterli sostituire davvero */
@@ -607,12 +587,28 @@
         crazyJumping: 3, crazyGiri: [2, 1] }])[0]);
       saveEntries(); switchTab('active'); buildActiveView(); await att(400);
       const banner = () => card().querySelector('.e-orari').textContent.replace(/\s+/g, ' ');
+      const sotto = () => {
+        const x = card().querySelector('.e-conto .sott');
+        return x && !x.classList.contains('vuota') ? x.textContent.replace(/\s+/g, ' ') : '';
+      };
       const cella = () => [...card().querySelectorAll('.e-colonna .e-cella')]
         .find(c => c.querySelector('.e-nome').textContent === 'Tempo');
 
       p('il banner scrive il totale', /1h16/.test(banner()), banner());
-      p('  e come si arriva a quel totale', /1h/.test(banner()) && /16′/.test(banner()) &&
-        /Crazy/.test(banner()), banner());
+      /* LA SPIEGAZIONE STA SOTTO «ESCE FRA», NON NEL BANNER: quello e'
+         gia' pieno, e su una tavoletta le scritte si sovrapponevano. */
+      p('  e il banner NON si allunga con la spiegazione',
+        !/Crazy/.test(banner()), banner());
+      p('sotto «esce fra» c e di che cos e fatto quel tempo',
+        /1h/.test(sotto()) && /16′/.test(sotto()) && /Crazy/.test(sotto()), sotto() || '(vuota)');
+      /* e non deve sbordare dal suo riquadro, che e' stretto */
+      {
+        const box = card().querySelector('.e-conto').getBoundingClientRect();
+        const riga = card().querySelector('.e-conto .sott').getBoundingClientRect();
+        p('  e ci sta dentro il suo riquadro',
+          riga.width <= box.width + 1 && riga.left >= box.left - 1,
+          Math.round(riga.width) + 'px in ' + Math.round(box.width) + 'px');
+      }
       card().querySelector('.e-riga').click(); await att(300);
       p('la cella dice che quel numero e il tempo COMPRATO',
         /comprato/i.test(cella().textContent), cella().textContent.replace(/\s+/g, ' '));
@@ -622,11 +618,11 @@
       /* la riga sta SOTTO il numero, non in fondo alla cella attaccata
          all'interruttore: li' sembrerebbe l'etichetta di quello */
       const val = cella().querySelector('.v').getBoundingClientRect();
-      const sotto = cella().querySelector('.e-sotto').getBoundingClientRect();
+      const rigaCella = cella().querySelector('.e-sotto').getBoundingClientRect();
       const apri = cella().querySelector('.e-aperto').getBoundingClientRect();
       p('  e sta sotto il numero, prima dell interruttore',
-        sotto.top >= val.bottom - 2 && sotto.bottom <= apri.top + 2,
-        'numero fino a ' + Math.round(val.bottom) + ', riga a ' + Math.round(sotto.top) +
+        rigaCella.top >= val.bottom - 2 && rigaCella.bottom <= apri.top + 2,
+        'numero fino a ' + Math.round(val.bottom) + ', riga a ' + Math.round(rigaCella.top) +
         ', interruttore a ' + Math.round(apri.top));
 
       /* su un gruppo senza giri non si aggiunge rumore */
@@ -635,7 +631,7 @@
       entries.push(normalizeEntries([{ id: 'ss', startTime: t1, createdAt: t1, oraManuale: true,
         children: 2, durationMinutes: 30, baseMinutes: 30 }])[0]);
       saveEntries(); buildActiveView(); await att(400);
-      p('senza giri il banner non aggiunge niente', !/Crazy/.test(banner()), banner());
+      p('senza giri non c e nessuna riga da spiegare', sotto() === '', sotto());
       card().querySelector('.e-riga').click(); await att(300);
       p('  e la cella dice solo «comprato»',
         /comprato/i.test(cella().textContent) && !/Crazy/.test(cella().textContent));

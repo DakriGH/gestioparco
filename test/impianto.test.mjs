@@ -226,9 +226,6 @@ gruppo('Niente resti di lavorazione nel codice che gira');
      E' una modalita' di prova: quello che aggiunge deve passare per le
      strade che ci sono gia', se no fra un mese una delle due impara una
      regola e l'altra no. */
-  prova('il numero rapido dei bambini passa dalla stessa bcSetQ del piu e del meno',
-    /if \(d\.quanti !== undefined\) \{[\s\S]{0,200}bcSetQ\(d\.quanti,/.test(APP),
-    'scrivendo `children` per conto suo salterebbe le regole dei soldi');
   /* LE CARD SI RIDISEGNANO SOLO SE I LORO NUMERI CAMBIANO, e accendendo
      l'interruttore i numeri sono gli stessi: senza la 2.0 nella firma,
      la fila dei numeri rapidi non compariva finche' non si toccava
@@ -247,15 +244,25 @@ gruppo('Niente resti di lavorazione nel codice che gira');
      Quello comprato nella cella, i minuti del Crazy, il totale nel
      banner: senza una riga che li mette insieme, al banco non si
      capisce se un'ora e un quarto e' tempo comprato in piu' o giri. */
-  prova('il banner spiega di che cosa e fatto il totale',
-    /const inRegalo = Math\.max\(0, durata - comprati\);/.test(APP) &&
-    /e-somma[\s\S]{0,200}Crazy/.test(APP));
+  /* LA RIGA STA SOTTO «ESCE FRA», NON NEL BANNER DEGLI ORARI: quello
+     e' gia' pieno -- dalle, alle, la durata, il bracciale, i bambini,
+     i giri -- e su una tavoletta le scritte si sovrapponevano. */
+  prova('la riga che spiega il tempo sta sotto il conto alla rovescia',
+    /function spiegaTempoDi/.test(APP) &&
+    /countBox\.appendChild\(countS\)/.test(APP) &&
+    /const inRegalo = Math\.max\(0, durata - comprati\);/.test(APP));
+  prova('e non nel banner degli orari', !/e-somma/.test(APP) && !/e-somma/.test(CSS));
   prova('e la cella dice se quel numero e comprato o da pagare',
     /comprato<\/span>/.test(APP) && /che stai pagando/.test(APP));
   /* e non deve aggiungere rumore dove non serve: solo col 2.0, solo se
      dei minuti regalati ci sono davvero */
   prova('ma solo col 2.0 e solo se i minuti regalati ci sono',
-    /settings\.grafica2 && !entry\.payLater && inRegalo > 0 && comprati > 0/.test(APP));
+    /const dritto = settings\.grafica2 && !entry\.payLater/.test(APP) &&
+    /const mostra = dritto && comprati > 0 && inRegalo > 0;/.test(APP));
+  /* e si rifa' anche a ogni cambio dati: `tick` gira una volta al
+     secondo, e la riga comparirebbe in ritardo sotto le dita */
+  prova('e si rinfresca anche quando i dati cambiano',
+    (APP.match(/spiegaTempoDi\(r, entry\);/g) || []).length >= 2);
 
   const todo = (APP.match(/\bTODO\b|\bFIXME\b|\bXXX\b/g) || []).length;
   prova('nessun TODO appeso', todo === 0, todo + ' trovati');

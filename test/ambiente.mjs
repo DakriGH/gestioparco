@@ -120,8 +120,6 @@ export function caricaApp() {
     SIGLA_LETTERE: SIGLA_LETTERE,
     /* i sette passi del chiaro-scuro della ruota, un'altra const */
     LUCI: LUCI,
-    /* i numeri rapidi dei bambini della Grafica 2.0, un'altra const */
-    NUMERI_RAPIDI: NUMERI_RAPIDI,
     /* quale accessorio si sta guardando nella sua tavolozza */
     get accScelto() { return accScelto; }, set accScelto(v) { accScelto = v; },
     /* il contesto stesso: serve ai test per mettere da parte una

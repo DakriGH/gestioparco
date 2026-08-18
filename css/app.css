@@ -3478,31 +3478,6 @@ html:not(.anima) .view.entra-dx { animation: none; }
   line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center;
   transition: background .12s; }
 .bc-zone button:active { background: rgba(255,255,255,.2); }
-/* ══════════════════════════════════════════════════════════
-   GRAFICA 2.0 — I NUMERI RAPIDI DEI BAMBINI
-   La stessa fila dei tagli del tempo, sotto il piu' e il meno: sei
-   bersagli in riga, alti quanto un dito, e quello acceso dice a colpo
-   d'occhio quanti sono. Sta sotto perche' il numero grande e i suoi
-   due tasti restano la cosa principale: questa e' una scorciatoia,
-   non un altro modo di fare la stessa cosa.
-   ══════════════════════════════════════════════════════════ */
-/* `minmax(0, 1fr)` E NON `1fr`: con `1fr` le colonne non scendono sotto
-   il contenuto -- e `.chip` porta con se' i suoi margini -- quindi la
-   fila voleva piu' larghezza della card, che taglia: i numeri in fondo
-   c'erano ma nessuno poteva toccarli. Con lo zero come minimo si
-   dividono lo spazio che c'e', qualunque esso sia. */
-.bc-veloci { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px;
-  background: rgba(0,0,0,.45); }
-.bc-veloci .chip { border: none; border-radius: 0; min-height: 46px; padding: 0; min-width: 0;
-  background: rgba(255,255,255,.06); color: var(--txt);
-  font-family: 'Fredoka', sans-serif; font-size: 20px; font-weight: 700; line-height: 1;
-  display: flex; align-items: center; justify-content: center; cursor: pointer;
-  transition: background .12s; }
-.bc-veloci .chip:active { background: rgba(255,255,255,.2); }
-/* acceso = "sono questi": lo stesso ambra dei tagli del tempo, cosi'
-   le due file si leggono come la stessa cosa */
-.bc-veloci .chip.on { background: var(--accent); color: #2A1D05; }
-
 .bc-zone.v { background: rgba(106,220,175,.28); }
 .bc-zone.v button { background: rgba(106,220,175,.13); color: var(--ok); font-size: 25px; }
 .bc-zone.v button:active { background: rgba(106,220,175,.3); }
@@ -4805,3 +4780,11 @@ html:not(.anima) .entry.esce { transition: none; }
 /* gli otto ruoli si toccano a ogni ingresso: 42 pixel sono pochi per
    un bersaglio largo ottantasette, dove il dito arriva di sbieco */
 .g2 .ruoli button { min-height: 46px; }
+
+/* GRAFICA 2.0 — la riga che spiega il conto alla rovescia, sotto
+   «esce fra». Stessa forma di quella sotto i soldi: piccola, grigia,
+   e sparisce quando non c'e' niente da spiegare. */
+.e-conto .sott { display: block; font-size: 10px; font-weight: 700;
+  line-height: 1.25; margin-top: 2px; color: rgba(255, 255, 255, .62);
+  font-variant-numeric: tabular-nums; }
+.e-conto .sott.vuota { display: none; }
