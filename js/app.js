@@ -371,7 +371,7 @@ function defaultSettings() {
       { m: 40, p: 10 }, { m: 50, p: 12 }, { m: 60, p: 12 }, { m: 70, p: 15 },
       { m: 80, p: 16.5 }, { m: 90, p: 19 }, { m: 100, p: 22 }, { m: 110, p: 24 }, { m: 120, p: 24 }
     ],
-    quickDurations: [15, 30, 60, 90],
+    quickDurations: [10, 15, 30, 60],
     /* Il listino di Birbalandia, dal cartello. */
     barMenu: [
       { id: 'b1',  name: 'Acqua',           price: 1,    em: '\ud83d\udca7', cat: 'Bevande' },
@@ -9393,7 +9393,22 @@ function init() {
     });
   }
   if (!Array.isArray(settings.quickDurations) || !settings.quickDurations.length) {
-    settings.quickDurations = [15, 30, 60, 90];
+    settings.quickDurations = defaultSettings().quickDurations.slice();
+  }
+  /* I TAGLI NUOVI, ANCHE SU CHI HA GIA' L'APP.
+     Come il listino del bar: i tagli stanno SALVATI su ogni tavoletta,
+     quindi cambiare quelli di serie non tocca chi c'e' gia' e le casse
+     resterebbero con 15/30/1h/1h30 per sempre.
+     Si cambiano solo se sono ancora quelli VECCHI DI SERIE, cioe' se
+     nessuno li ha toccati: chi se li e' messi a modo suo se li tiene,
+     che sono roba sua. E si fa una volta sola. */
+  if (!settings.tagliNuovi) {
+    const vecchi = [15, 30, 60, 90].join(',');
+    if (lista(settings.quickDurations).join(',') === vecchi) {
+      settings.quickDurations = defaultSettings().quickDurations.slice();
+    }
+    settings.tagliNuovi = true;
+    save(SK.settings, settings);
   }
   /* IL BANCO DEGLI AMARI, ANCHE SU CHI HA GIA' L'APP.
      Il listino sta SALVATO su ogni tavoletta: cambiare quello di serie

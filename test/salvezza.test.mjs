@@ -277,6 +277,45 @@ gruppo('Chi entra a mezzanotte è della serata di ieri');
     stessa(giorno(2026, 3, 28, 23, 40), giorno(2026, 3, 29, 2, 30)));
 }
 
+/* ─────────────────────────────────────────────────────────
+   5. I TAGLI DEL TEMPO CHE CAMBIANO SOTTO CHI HA GIA' L'APP
+   ───────────────────────────────────────────────────────── */
+gruppo('I tagli nuovi arrivano anche sui tablet che ci sono già');
+{
+  /* I tagli stanno SALVATI su ogni tavoletta, e le impostazioni salvate
+     vincono su quelle di serie: cambiare il valore di serie non tocca
+     nessuno, e le casse resterebbero con quelli vecchi per sempre. Ma
+     chi se li e' messi a modo suo non deve ritrovarseli cambiati il
+     lunedi' mattina. */
+  const diSerie = app.defaultSettings().quickDurations;
+  uguale('i tagli di serie sono dieci, un quarto d’ora, mezz’ora e un’ora',
+    diSerie, [10, 15, 30, 60]);
+  prova('e ognuno ha un prezzo sul cartello',
+    diSerie.every(m => app.priceFor(m) > 0),
+    diSerie.map(m => m + 'm=' + app.priceFor(m)).join(' '));
+
+  /* la regola: si cambia solo se sono ancora quelli vecchi di serie */
+  const cambia = (avuti, gia) => {
+    const s = Object.assign(app.defaultSettings(), { quickDurations: avuti.slice() });
+    if (gia) s.tagliNuovi = true;
+    if (!s.tagliNuovi) {
+      if (s.quickDurations.join(',') === [15, 30, 60, 90].join(',')) {
+        s.quickDurations = app.defaultSettings().quickDurations.slice();
+      }
+      s.tagliNuovi = true;
+    }
+    return s.quickDurations;
+  };
+  uguale('chi ha ancora i vecchi di serie riceve i nuovi',
+    cambia([15, 30, 60, 90], false), [10, 15, 30, 60]);
+  uguale('chi se li e’ fatti a modo suo se li tiene',
+    cambia([20, 45, 75], false), [20, 45, 75]);
+  uguale('e chi ne ha tolto uno pure',
+    cambia([15, 30, 60], false), [15, 30, 60]);
+  uguale('e non si rifa’ una seconda volta',
+    cambia([15, 30, 60, 90], true), [15, 30, 60, 90]);
+}
+
 /* ---------- il verdetto ---------- */
 console.log('\n' + '━'.repeat(52));
 if (ko) {

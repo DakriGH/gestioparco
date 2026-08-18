@@ -264,6 +264,19 @@ gruppo('Niente resti di lavorazione nel codice che gira');
   prova('e si rinfresca anche quando i dati cambiano',
     (APP.match(/spiegaTempoDi\(r, entry\);/g) || []).length >= 2);
 
+  /* I TAGLI DEL TEMPO STANNO SALVATI SU OGNI TAVOLETTA, e le
+     impostazioni salvate vincono su quelle di serie: senza una
+     migrazione, cambiare il valore di serie non tocca nessuno. Ma chi
+     se li e' fatti a modo suo non deve ritrovarseli cambiati. */
+  prova('i tagli nuovi arrivano anche su chi ha gia l app',
+    /if \(!settings\.tagliNuovi\) \{/.test(APP) &&
+    /settings\.tagliNuovi = true;/.test(APP));
+  prova('ma solo a chi ha ancora quelli vecchi di serie',
+    /const vecchi = \[15, 30, 60, 90\]\.join\(','\);/.test(APP) &&
+    /if \(lista\(settings\.quickDurations\)\.join\(','\) === vecchi\)/.test(APP));
+  prova('e i tagli di serie sono quelli chiesti',
+    /quickDurations: \[10, 15, 30, 60\],/.test(APP));
+
   const todo = (APP.match(/\bTODO\b|\bFIXME\b|\bXXX\b/g) || []).length;
   prova('nessun TODO appeso', todo === 0, todo + ' trovati');
   prova('e la parola «metodo» non lo fa sbagliare',
