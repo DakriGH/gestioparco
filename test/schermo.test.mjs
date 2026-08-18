@@ -541,8 +541,19 @@ gruppo('Bombardamento sui giri di Crazy e sulle vendite di tempo', () => {
       guai.push(i + ': un giro con un numero storto ' + JSON.stringify(gg));
     else if (ctx.minutiCrazy(c) !== pieni * extra)
       guai.push(i + ': minuti regalati ' + ctx.minutiCrazy(c) + ' invece di ' + pieni * extra);
-    else if (Math.round((ctx.endTimeOf(c) - c.startTime) / 60000) !==
-             c.durationMinutes + pieni * extra)
+    else if (!(function () {
+      /* L'ORA D'USCITA E' IL TEMPO COMPRATO PIU' I MINUTI DEI GIRI --
+         a meno che non ci sia un PAVIMENTO, cioe' un'ora gia' promessa
+         che non si puo' riprendere (vedi `nonTogliereTempo`). Con il
+         pavimento l'uscita e' quella, e dev'essere piu' avanti del
+         conto normale: se fosse piu' indietro il pavimento non starebbe
+         facendo il suo mestiere, se fosse uguale non servirebbe. */
+      const base = ctx.inizioParco(c) + (c.durationMinutes + pieni * extra) * 60000;
+      const pavimento = ctx.num(c.regaloFinoA, 0);
+      const uscita = ctx.endTimeOf(c);
+      if (pavimento > base) return uscita === pavimento;
+      return Math.round((uscita - base) / 60000) === 0;
+    })())
       guai.push(i + ': l ora d uscita non torna');
     else if (ctx.r2(ctx.contoCrazy()) !== ctx.r2(somma * ctx.settings.crazyJumpingPrice))
       guai.push(i + ': il Crazy costa ' + ctx.contoCrazy() + ' con ' + somma + ' salite');

@@ -723,7 +723,51 @@ function turniCrazy(e) { return giriCrazy(e).filter(n => n > 0).length; }
    di suo l'ultimo -- perche' una salita appartiene sempre a un giro.
    Quando un giro resta senza nessuno sparisce, e con lui i suoi minuti
    regalati: un giro a cui non e' salito nessuno non e' mai esistito. */
+/* ══════════════════════════════════════════════════════════
+   IL TEMPO DATO PER UN GIRO NON SI RIPRENDE
+
+   Al banco: gruppo con venti minuti ancora, si segna un giro e l'ora
+   d'uscita va a ventotto. Si toglie il giro -- il bambino non e' salito,
+   il tocco era di troppo -- e l'uscita torna a venti. Se nel frattempo
+   quei minuti erano passati, il gruppo diventa ROSSO all'istante: gente
+   a cui era stato detto "fino alle 15:40" si ritrova scaduta, e chi sta
+   in cassa non capisce perche'.
+   I minuti del Crazy sono un REGALO: una volta dati, sono dati. Toglierli
+   e' una cosa che nessuno ha chiesto e che nessuno vede arrivare.
+
+   Il regalo si segnava solo per chi era GIA' scaduto (`regalaDaAdesso`):
+   per chi era ancora dentro i minuti stavano solo nel calcolo, e
+   togliendo il giro svanivano. Adesso qualunque strada che tolga giri --
+   il meno della card, la ✕ di un giro, il numero cambiato a mano -- se
+   accorcia l'uscita lascia un PAVIMENTO all'ora che aveva promesso.
+   Sta attorno ai tre mutatori e non ai tocchi, cosi' una strada nuova
+   e' protetta da se'.
+   ══════════════════════════════════════════════════════════ */
+function nonTogliereTempo(c, fn) {
+  c = c || C();
+  /* `endTimeOf` comprende gia' il pavimento di prima, quindi questo non
+     puo' che salire: un regalo non si accorcia mai. */
+  const prima = endTimeOf(c);
+  const crazyPrima = minutiCrazy(c);
+  const esito = fn();
+  /* SOLO SE SONO STATI TOLTI DEI MINUTI DI GIRO.
+     Queste stesse funzioni fanno anche un'altra cosa: segnare il primo
+     giro di chi entra SOLO per saltare azzera il tempo di parco
+     comprato (`soloCrazy`), e li' l'ora d'uscita scende per un motivo
+     che col regalo non c'entra niente. Guardando solo l'ora finale il
+     pavimento scattava anche li', e a un solo-Crazy restava incollata
+     addosso l'ora d'uscita di un'ora di parco che non aveva mai
+     comprato. */
+  if (minutiCrazy(c) < crazyPrima && endTimeOf(c) < prima) {
+    c.regaloFinoA = Math.max(num(c.regaloFinoA, 0), prima);
+  }
+  return esito;
+}
+
 function metteCrazy(c, n) {
+  return nonTogliereTempo(c, () => metteCrazyGrezzo(c, n));
+}
+function metteCrazyGrezzo(c, n) {
   n = clamp(Math.round(num(n, 0)), 0, 9999);
   const g = giriCrazy(c);
   let somma = g.reduce((a, b) => a + b, 0);
@@ -806,6 +850,9 @@ function rimettiSoldiCrazy(c) {
 }
 
 function cambiaGiro(c, i, delta) {
+  return nonTogliereTempo(c, () => cambiaGiroGrezzo(c, i, delta));
+}
+function cambiaGiroGrezzo(c, i, delta) {
   const g = giriCrazy(c);
   if (i < 0 || i >= g.length) return;
   const era = g[i];
@@ -905,6 +952,9 @@ function giroNuovo(c) {
 /* Cancella un giro intero: chi c'era dentro esce dal conto e i suoi
    minuti se ne vanno con lui. */
 function viaGiro(c, i) {
+  return nonTogliereTempo(c, () => viaGiroGrezzo(c, i));
+}
+function viaGiroGrezzo(c, i) {
   const g = giriCrazy(c);
   if (i < 0 || i >= g.length) return;
   g.splice(i, 1);
@@ -2254,6 +2304,21 @@ function ritoccaTempo(c, delta) {
     c.aggiunte = vendite.filter(x => x > 0);
   }
   sistemaAggiunte(c);
+  /* ACCORCIARE A MANO BATTE IL PAVIMENTO DEL REGALO.
+     Il regalo di un giro lascia un pavimento all'ora d'uscita perche'
+     nessuno se lo riprenda per sbaglio (vedi `nonTogliereTempo`). Ma se
+     la cassiera dice ESPLICITAMENTE che escono prima -- «avevo messo
+     un'ora, erano trenta minuti» -- quello e' un ordine, non uno
+     sbaglio: senza questa riga il meno smetteva di funzionare e l'ora
+     d'uscita restava incollata dov'era, che e' un guasto peggiore di
+     quello che il pavimento evita. */
+  if (vero < 0 && num(c.regaloFinoA, 0) > 0) {
+    const senzaPavimento = inizioParco(c) + (dopo + minutiCrazy(c)) * 60000;
+    if (num(c.regaloFinoA, 0) > senzaPavimento) {
+      if (senzaPavimento > 0) c.regaloFinoA = senzaPavimento;
+      else delete c.regaloFinoA;
+    }
+  }
 }
 
 /* VENDE UN BLOCCO DI TEMPO. Sta fuori dal gestore dei tocchi perche' ci

@@ -114,8 +114,18 @@ gruppo('Il Crazy Jumping', () => {
   ctx.viaGiro(c, 1);
   ok('cancellato il secondo giro', ctx.giriCrazy(c), [2]);
   ok('chi c era dentro esce dal conto', c.crazyJumping, 2);
-  ok('e i minuti tornano a un blocco solo',
-     Math.round((ctx.endTimeOf(c) - c.startTime) / 60000), 60 + extra);
+  /* MA L'ORA D'USCITA NON TORNA INDIETRO.
+     Prima si': cancellato il giro, i suoi minuti sparivano e l'uscita
+     si accorciava. Al banco vuol dire che a un gruppo a cui era stato
+     detto «fino alle 15:40» l'ora si sposta all'indietro sotto il
+     naso, e se nel frattempo quei minuti erano passati la scheda
+     diventa rossa all'istante. I minuti del Crazy sono un REGALO: dati
+     una volta, non si riprendono. Il conteggio dei giri scende -- quelli
+     sono i soldi -- l'ora d'uscita no. */
+  ok('ma l ora d uscita non torna indietro',
+     Math.round((ctx.endTimeOf(c) - c.startTime) / 60000), 60 + 2 * extra);
+  ok('e i soldi seguono le salite, che sono scese',
+     ctx.contoCrazy(), 2 * ctx.settings.crazyJumpingPrice);
 
   /* e chi arriva da una versione vecchia (senza il campo) vale un giro
      solo con tutti dentro: e' la lettura giusta di quei dati */
@@ -1985,6 +1995,78 @@ gruppo('La Grafica 2.0 cambia quello che si vede, non un euro', () => {
     /Resto/.test(fondoAcceso) && /data-tutto|Paga tutto/.test(fondoAcceso));
 
   ctx.settings.grafica2 = era;
+});
+
+gruppo('Il tempo dato per un giro non si riprende mai', () => {
+  /* SEGNALATO AL BANCO, e chiamato grave: «se aggiungo un crazy e poi
+     lo tolgo il tempo torna come era prima, anche il tempo rosso».
+     E' il caso di chi tocca il piu' di troppo e corregge: l'ora
+     d'uscita si era gia' spostata avanti, e tornando indietro un gruppo
+     a cui era stato detto «fino alle 15:40» diventa scaduto sotto il
+     naso -- rosso all'istante, senza che nessuno abbia fatto niente.
+     I minuti del Crazy sono un regalo: dati una volta, restano. */
+  const extra = ctx.settings.crazyExtraMinutes;
+  const guai = [];
+
+  /* le tre strade da cui si tolgono i giri, e i due stati che contano */
+  const strade = [
+    ['il meno della card', c => ctx.contaSalita(-1)],
+    ['la ✕ di un giro', c => ctx.viaGiro(c, 0)],
+    ['il numero messo a mano', c => ctx.metteCrazy(c, 0)]
+  ];
+  [['ancora dentro', -20], ['gia scaduto', 12]].forEach(([stato, sforo]) => {
+    strade.forEach(([nome, togli]) => {
+      const t0 = Date.now() - (30 + sforo) * 60000;
+      const c = conto({ startTime: t0, children: 2, durationMinutes: 30, baseMinutes: 30 });
+      ctx.PAN.conto = c; ctx.PAN.ingresso = null;
+      ctx.contaSalita(1);
+      const promessa = ctx.endTimeOf(c);
+      togli(c);
+      const dopo = ctx.endTimeOf(c);
+      const dove = stato + ', ' + nome;
+      if (dopo < promessa) {
+        guai.push(dove + ': l’uscita torna indietro di ' +
+          Math.round((promessa - dopo) / 60000) + '′');
+      }
+      /* e i SOLDI invece devono seguire le salite: il giro tolto non si
+         paga. Il regalo e' tempo, non denaro. */
+      if (ctx.r2(ctx.costOf(c).crazyCost) !== ctx.r2(ctx.num(c.crazyJumping, 0) * ctx.settings.crazyJumpingPrice)) {
+        guai.push(dove + ': il Crazy costa ' + ctx.costOf(c).crazyCost + ' per ' + c.crazyJumping + ' salite');
+      }
+    });
+  });
+  ok('sei combinazioni di stato e strada, e l’uscita non arretra mai', guai.slice(0, 3), []);
+
+  /* MA ACCORCIARE A MANO DEVE ANCORA FUNZIONARE: se il pavimento
+     bloccasse anche il meno del tempo, la cassiera non potrebbe piu'
+     correggere «avevo messo un'ora, erano trenta minuti» -- e sarebbe
+     un guasto peggiore di quello che il pavimento evita. */
+  const c = conto({ startTime: Date.now() - 10 * 60000, children: 2,
+    durationMinutes: 60, baseMinutes: 60 });
+  ctx.PAN.conto = c; ctx.PAN.ingresso = null;
+  ctx.contaSalita(1);
+  ctx.contaSalita(-1);
+  const conPavimento = ctx.endTimeOf(c);
+  for (let i = 0; i < 6; i++) ctx.ritoccaTempo(c, -5);
+  vero('e il meno del tempo accorcia ancora, pavimento o no',
+    ctx.endTimeOf(c) < conPavimento - 60000,
+    'restano ' + Math.round((ctx.endTimeOf(c) - Date.now()) / 60000) + '′, durata ' + c.durationMinutes);
+  ok('e la durata e quella chiesta', c.durationMinutes, 30);
+
+  /* e allungare sale sopra il pavimento */
+  ctx.ritoccaTempo(c, 60);
+  vero('e allungare porta l uscita piu in la', ctx.endTimeOf(c) > conPavimento);
+
+  /* IL SOLO CRAZY NON DEVE EREDITARE L'ORA DI UN PARCO MAI COMPRATO:
+     segnare il primo giro azzera il tempo comprato, e quello non e' un
+     regalo che si riprende -- e' un altro discorso. */
+  const sc = conto({ startTime: Date.now(), children: 0, durationMinutes: 60, baseMinutes: 60 });
+  ctx.PAN.conto = sc; ctx.PAN.ingresso = null;
+  ctx.bcSetQ('crazy', 2);
+  ok('un solo-Crazy non compra tempo di parco', sc.durationMinutes, 0);
+  vero('e non si porta dietro l’ora d’uscita di un’ora di parco',
+    Math.round((ctx.endTimeOf(sc) - sc.startTime) / 60000) <= ctx.omaggioDi(sc) + 2 * extra,
+    'resta dentro ' + Math.round((ctx.endTimeOf(sc) - sc.startTime) / 60000) + '′');
 });
 
 gruppo('Con la Grafica 2.0 non si perde niente: tutto si può ancora fare', () => {
