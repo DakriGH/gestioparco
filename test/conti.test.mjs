@@ -151,7 +151,17 @@ gruppo('Paga dopo', () => {
   const c = conto({ children: 2, payLater: true, startTime: Date.now() - 40 * 60000 });
   vero('si conta il tempo passato', ctx.contoParco() > 0);
   c.startTime = Date.now();
-  ok('appena entrato paga lo scaglione minimo', ctx.contoParco(), 2 * ctx.priceFor(0));
+  /* MISURATO ALL'ISTANTE DELL'INGRESSO, non «adesso»: fra scrivere
+     l'ora d'ingresso e leggere il prezzo passa un millesimo, i minuti
+     dentro non sono piu' zero e scatta il primo scaglione. La prova
+     falliva una volta su venti accusando il codice di un salto deciso
+     dall'orologio. Che appena entrati non si paghi si dice guardando
+     l'istante giusto; che un attimo dopo si paghi al massimo il primo
+     scaglione e' l'altra meta' della garanzia. */
+  ok('appena entrato non paga niente', ctx.contiAperto(c, c.startTime).prezzo, 0);
+  vero('e un attimo dopo al massimo il primo scaglione',
+    ctx.contoParco() <= 2 * ctx.settings.tariffs[0].p,
+    'paga ' + ctx.contoParco());
 });
 
 gruppo('Le spunte muovono i soldi una volta sola', () => {

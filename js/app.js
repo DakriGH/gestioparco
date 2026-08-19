@@ -2208,6 +2208,15 @@ function sforoCondonato() {
    nessuno. Sopra si CHIEDE -- mezz'ora regalata in silenzio e' un'altra
    cosa, e la cassiera deve poter scegliere col cliente davanti. */
 function conSforo(c, applica) {
+  /* CHI NON HA MAI COMPRATO TEMPO NON PUO' AVERLO SFORATO.
+     Un solo-Crazy a cui e' finito l'omaggio risulta «scaduto», e
+     vendendogli del parco compariva il foglio «Sforano da 15 minuti» --
+     una domanda senza senso, perche' non c'e' nessun tempo comprato che
+     sia finito. E la risposta sbagliata («scala lo sforo») si mangiava
+     il tempo appena venduto: mezz'ora che nasceva gia' quasi finita.
+     Qui il parco comincia adesso, e basta: ci pensa `segnaInizioParco`
+     dentro chi vende. */
+  if (clamp(num(c.durationMinutes, 0), 0, 1e6) <= 0) { applica(); return; }
   const sforo = sforoDi(c);
   if (sforo <= 0) { applica(); return; }
   if (sforo < sforoCondonato()) { condonaSforo(c); applica(); return; }
@@ -2320,6 +2329,15 @@ function vendiBlocco(c, quanti) {
   if (c.payLater) return;
   const m = clamp(num(c.durationMinutes, 60), 0, 1e6);
   c.durationMinutes = clamp(m + quanti, 5, 100000);
+  /* DA QUANDO COMINCIA IL PARCO, anche da qui.
+     Chi entra SOLO per saltare non ha tempo di parco, e quando poi
+     decide di fermarsi quel tempo comincia ADESSO -- non dall'ora in
+     cui e' arrivato. `ritoccaTempo` e i tagli lo segnavano; questa
+     strada -- «⏩ Estendi», che e' proprio quella che si usa per
+     vendere del tempo a chi e' gia' dentro -- se n'era dimenticata: la
+     mezz'ora venduta a uno arrivato venticinque minuti prima nasceva
+     con cinque minuti di vita, e il rosso non si resettava. */
+  segnaInizioParco(c, m, c.durationMinutes);
   /* quello che si e' venduto resta scritto: e' quello che fa il prezzo.
      Il meno toglie dall'ultima vendita, non dal tempo iniziale -- se no
      si sarebbe reso un pezzo di tempo che il cliente non aveva comprato

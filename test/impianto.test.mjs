@@ -719,8 +719,18 @@ gruppo('Estendi tempo: una sezione sua, e i prezzi veri');
      tocchi: ci arriva anche dal foglio dello sforo, che risponde piu'
      tardi, e due strade per la stessa cosa divergerebbero */
   prova('e ogni vendita di tempo resta scritta',
-    /function vendiBlocco[\s\S]{0,700}c\.aggiunte = lista\(c\.aggiunte\)\.concat/.test(APP) &&
+    /function vendiBlocco[\s\S]{0,1400}c\.aggiunte = lista\(c\.aggiunte\)\.concat/.test(APP) &&
     /d\.a === 'est'[\s\S]{0,300}vendiBlocco\(c, quanti\)/.test(APP));
+  /* E ANCHE QUESTA STRADA SEGNA DA QUANDO COMINCIA IL PARCO: e' quella
+     che si usa per vendere tempo a chi e' gia' dentro, quindi e'
+     proprio quella che serve a un solo-Crazy che decide di fermarsi.
+     Se ne dimenticava, e la mezz'ora venduta nasceva gia' quasi finita. */
+  prova('e segna da quando comincia il parco, come le altre',
+    /function vendiBlocco[\s\S]{0,900}segnaInizioParco\(c, m, c\.durationMinutes\)/.test(APP));
+  /* e a chi non ha MAI comprato tempo non si chiede dello sforo: non
+     c'e' nessun tempo comprato che possa essere finito */
+  prova('e a chi non ha tempo comprato non si chiede dello sforo',
+    /function conSforo[\s\S]{0,700}if \(clamp\(num\(c\.durationMinutes, 0\), 0, 1e6\) <= 0\) \{ applica\(\); return; \}/.test(APP));
   prova('il prezzo e quello del cartello per QUEL blocco',
     /vendute\.reduce\(\(a, m\) => a \+ priceFor\(up5\(m\)\), 0\)/.test(APP));
   prova('e le vendite non possono valere piu del tempo che c e',

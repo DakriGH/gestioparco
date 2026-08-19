@@ -722,6 +722,87 @@ gruppo('Tutte le sequenze di quattro mosse, su quattro partenze diverse');
   prova(quante + ' sequenze provate, nessuna garanzia salta', !guai.length, guai.slice(0, 3).join('\n        '));
 }
 
+gruppo('Salta prima, compra il tempo dopo: il parco parte da adesso');
+{
+  /* SEGNALATO AL BANCO: «prendo dei crazy e dopo faccio partire il
+     tempo, ma il tempo dei crazy o il tempo di debito rosso non si
+     resetta, e il calcolo dei costi viene sballato».
+     E' la sequenza piu' comune del parco: arrivano per saltare, si
+     divertono, e dopo mezz'ora decidono di fermarsi. Quel tempo di
+     parco comincia ADESSO -- non dall'ora in cui sono arrivati -- se no
+     la mezz'ora venduta nasce gia' quasi finita e la scheda resta
+     rossa. */
+  const strade = [
+    ['col ritocco del tempo', (c) => app.ritoccaTempo(c, 30)],
+    ['vendendo un blocco (⏩ Estendi)', (c) => app.vendiBlocco(c, 30)],
+    ['col taglio rapido, come fa il pannello', (c) => {
+      const m = app.clamp(app.num(c.durationMinutes, 0), 0, 99999);
+      app.segnaInizioParco(c, m, 30);
+      c.durationMinutes = 30;
+      delete c.aggiunte;
+    }]
+  ];
+  const guai = [];
+  [5, 25, 60].forEach(passati => {
+    strade.forEach(([nome, vendi]) => {
+      fermaOrologio();
+      const c = dentro(0, { children: 0, durationMinutes: 0, baseMinutes: 0, payLater: false });
+      app.PAN.conto = c; app.PAN.ingresso = null;
+      app.bcSetQ('crazy', 2);
+      avanza(passati);                       /* l'omaggio e' finito: scheda rossa */
+      app.bcSetQ('bimbi', 2);
+      vendi(c);
+      const resta = (app.endTimeOf(c) - adesso()) / 60000;
+      const dove = nome + ', dopo ' + passati + '′ di soli salti';
+      /* la mezz'ora comprata adesso deve valere una mezz'ora */
+      if (resta < 29.9) guai.push(dove + ': restano ' + Math.round(resta) + '′ invece di 30');
+      /* e il prezzo e' quello di mezz'ora per due bambini */
+      const atteso = r2(app.fasciaVicina ? app.priceFor(30) * 2 : 0);
+      if (app.costOf(c).parkTotal !== atteso) {
+        guai.push(dove + ': parco ' + app.costOf(c).parkTotal + ' invece di ' + atteso);
+      }
+      /* i giri si pagano a parte, per intero */
+      if (app.costOf(c).crazyCost !== r2(2 * PREZZO_GIRO)) {
+        guai.push(dove + ': crazy ' + app.costOf(c).crazyCost);
+      }
+    });
+  });
+  prova('tre strade per tre attese, e il tempo riparte sempre da adesso',
+    !guai.length, guai.slice(0, 3).join('\n        '));
+
+  /* e a chi non ha MAI comprato tempo non si chiede dello sforo: non
+     c'e' nessun tempo comprato che possa essere finito, e la risposta
+     sbagliata si mangerebbe quello appena venduto */
+  fermaOrologio();
+  const c = dentro(0, { children: 0, durationMinutes: 0, baseMinutes: 0, payLater: false });
+  app.PAN.conto = c; app.PAN.ingresso = null;
+  app.bcSetQ('crazy', 2);
+  avanza(40);
+  let hannoChiesto = false, esploso = null;
+  /* SENZA LA GUARDIA questo apre il foglio dello sforo, cioe' tocca lo
+     schermo, e col DOM finto esplode: si prende l'errore e lo si dice
+     con parole sue, invece di far saltare tutto il file. */
+  try { app.conSforo(c, () => { hannoChiesto = true; }); }
+  catch (e) { esploso = e.message; }
+  prova('non si chiede dello sforo a chi non ha tempo comprato',
+    hannoChiesto && !esploso,
+    esploso ? 'si e messo in mezzo il foglio dello sforo (' + esploso + ')'
+            : 'il tempo venduto non e arrivato a destinazione');
+
+  /* MENTRE A CHI IL TEMPO LO HA COMPRATO DAVVERO E LO HA SFORATO la
+     domanda resta, ed e' la garanzia da non perdere. Qui NON si chiama
+     `conSforo`: su uno sforo vero apre un foglio, cioe' tocca lo
+     schermo, e il DOM finto di node non ce l'ha. Si guarda la
+     condizione che decide -- che e' quello che il guasto aveva
+     cambiato -- e il foglio lo prova il banco a video. */
+  const d = dentro(45, { children: 2, durationMinutes: 30, baseMinutes: 30, payLater: false });
+  prova('chi ha comprato del tempo e lo ha sforato risulta in sforo',
+    app.clamp(app.num(d.durationMinutes, 0), 0, 1e6) > 0 && app.sforoDi(d) > 0,
+    'sforo di ' + Math.round(app.sforoDi(d) / 60000) + '′ su ' + d.durationMinutes + 'm comprati');
+  prova('  e il solo-Crazy invece no, perche non ha comprato niente',
+    app.clamp(app.num(c.durationMinutes, 0), 0, 1e6) <= 0);
+}
+
 /* ---------- il verdetto ---------- */
 console.log('\n' + '━'.repeat(52));
 if (ko) {
