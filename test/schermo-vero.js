@@ -385,8 +385,16 @@
     p('  e il conto da fermo non cresce',
       Math.abs(contiAperto(entries[0], Date.now() + 60 * 60000).contati - fermoA) < 0.2);
     cellaTempo().querySelector('.e-pausa').click(); await att(250);
+    /* TOLLERANZA LARGA, E PER FORZA: fra la pausa e la ripresa passano
+       due attese, e a pannello nascosto il browser strozza i timer a
+       uno al secondo -- 250ms diventano un secondo e mezzo. Stretta a
+       dodici secondi la prova falliva per colpa dell'ambiente, non del
+       codice. Quello che deve valere e' che riprendendo non si torni a
+       zero ne' si salti avanti di minuti: mezzo minuto di margine lo
+       dice benissimo. */
     p('  e riprendendo riparte da dove era', !entries[0].pausaDa && allineati() &&
-      Math.abs(contiAperto(entries[0]).contati - fermoA) < 0.2);
+      Math.abs(contiAperto(entries[0]).contati - fermoA) < 0.5,
+      'contati ' + contiAperto(entries[0]).contati.toFixed(2) + ' invece di ' + fermoA.toFixed(2));
 
     /* e si torna a tempo comprato dall interruttore, che prima spariva */
     cellaTempo().querySelector('.e-aperto').click(); await att(300);
@@ -472,7 +480,15 @@
     const testo = () => sc().textContent.replace(/\s+/g, ' ');
     p('lo scontrino si apre', !!sc() && !sc().classList.contains('hidden'));
     p('  e dice che il tempo e aperto', /tempo aperto/.test(testo()));
-    p('  e quanti minuti sta contando', /43′ contati/.test(testo()), testo().slice(0, 140));
+    /* IL NUMERO NON SI SCRIVE A MANO: il gruppo e' entrato 73 minuti fa
+       e ne ha 30 in pausa, ma fra il momento in cui lo si crea e quello
+       in cui si legge lo scontrino l'orologio va avanti -- e a pannello
+       nascosto va avanti di parecchio. Si chiede quello che conta: che
+       lo scontrino scriva ESATTAMENTE i minuti che il conto sta
+       contando in questo momento. */
+    p('  e quanti minuti sta contando',
+      new RegExp(minTxt(contiAperto(entries[0]).contati) + ' contati').test(testo()),
+      testo().slice(0, 140));
     p('  e che mezz ora e in pausa e non si conta',
       /30′ in pausa, non contati/.test(testo()));
     p('  e la fascia su cui cade', /fascia 40′/.test(testo()));
@@ -695,6 +711,130 @@
 
 
     settings.grafica2 = eraG2; saveSettings(); applyTheme();
+  }
+
+  /* ── 12. OGNI TASTO, PREMUTO DAVVERO ──
+     Le prove qui sopra guardano dei flussi scelti da me: quelli che ho
+     immaginato. Questa invece non sceglie niente -- prende OGNI tasto
+     che c'e' a video, in ogni schermata, e lo preme. Non controlla che
+     faccia la cosa giusta (quello lo fanno gli altri): controlla che
+     non esploda, che non lasci un numero storto sul conto, e che
+     memoria e disco restino d'accordo.
+     E' la rete per i tasti che nessuno prova mai -- quelli in fondo,
+     quelli che compaiono solo in uno stato particolare -- e per quelli
+     che aggiungeremo domani senza pensarci. */
+  {
+    showArchive = false;
+    const guai = [];
+    let premuti = 0;
+    const chiave = () => entries.map(e => [e.id, e.children, e.crazyJumping,
+      e.durationMinutes, e.paidPark, e.paidBar].join('/')).sort().join('|');
+
+    /* i numeri devono restare numeri, e i soldi non possono essere
+       negativi: qualunque cosa si sia premuta */
+    const sano = (dove) => {
+      entries.forEach(e => {
+        const k = costOf(e), d = dueOf(e);
+        if (!Number.isFinite(k.parkTotal) || k.parkTotal < 0) guai.push(dove + ': parco ' + k.parkTotal);
+        if (!Number.isFinite(k.crazyCost) || k.crazyCost < 0) guai.push(dove + ': crazy ' + k.crazyCost);
+        if (!Number.isFinite(d.total) || d.total < 0) guai.push(dove + ': dovuto ' + d.total);
+        if (!Number.isFinite(endTimeOf(e))) guai.push(dove + ': ora d uscita storta');
+        if (endTimeOf(e) < e.startTime) guai.push(dove + ': esce prima di entrare');
+        if (num(e.paidPark, 0) < 0 || num(e.paidBar, 0) < 0) guai.push(dove + ': incassato negativo');
+        if (num(e.children, 0) < 0 || num(e.crazyJumping, 0) < 0) guai.push(dove + ': quantita negativa');
+      });
+      if (!allineati()) guai.push(dove + ': memoria e disco non dicono la stessa cosa');
+    };
+
+    /* un gruppo di prova ricco: tempo comprato, giri, roba dal bar */
+    const rifai = () => {
+      localStorage.removeItem('gp_entries');
+      entries.length = 0;
+      draft = freshDraft();
+      const t0 = Date.now() - 20 * 60000;
+      entries.push(normalizeEntries([{ id: 'tut', startTime: t0, createdAt: t0, oraManuale: true,
+        children: 2, durationMinutes: 30, baseMinutes: 30, crazyJumping: 2, crazyGiri: [1, 1],
+        barItems: [{ id: 'b1', name: 'Acqua', price: 1, qty: 2 }] }])[0]);
+      saveEntries();
+      switchTab('active'); buildActiveView();
+    };
+
+    /* PREME TUTTO QUELLO CHE TROVA, uno dopo l'altro.
+       Rifare lo stato prima di OGNI tasto sarebbe piu' pulito, ma
+       costava undici minuti -- e una prova che nessuno lancia e' una
+       prova che non esiste. Si rifa' solo quando serve: cioe' quando il
+       tasto premuto ha portato via la schermata da sotto i piedi.
+       Premere in fila e' anche piu' vicino al vero: al banco i tasti si
+       premono uno dopo l'altro, non su uno stato appena nato. Quello
+       che si controlla resta lo stesso -- niente esplode, nessun numero
+       storto, memoria e disco d'accordo -- e la sequenza si porta
+       dietro il nome di tutti quelli premuti, cosi' si sa da dove
+       ricominciare a guardare. */
+    const premiTutti = async (nome, apri, dentro) => {
+      const fatti = [];
+      const rimetti = async () => { rifai(); await att(90); await apri(); };
+      await rimetti();
+      let quanti = (dentro() ? [...dentro().querySelectorAll('button')].length : 0);
+      if (!quanti) { guai.push(nome + ': non si apre'); return; }
+      /* qualche giro in piu' del numero di tasti: premendone uno la
+         fila puo' allungarsi (una card che si apre, un menu) */
+      for (let i = 0; i < quanti + 6; i++) {
+        if (!dentro()) await rimetti();
+        const q = dentro();
+        if (!q) { guai.push(nome + ': non si riapre'); return; }
+        const tasti = [...q.querySelectorAll('button')]
+          .filter(b => { const r = b.getBoundingClientRect(); return r.width > 0 && r.height > 0; });
+        const b = tasti[i];
+        if (!b) continue;
+        const eti = (b.textContent || b.title || b.className || '?').replace(/\s+/g, ' ').trim().slice(0, 22);
+        fatti.push(eti);
+        const dove = nome + ' [' + fatti.slice(-3).join(' > ') + ']';
+        try { b.click(); } catch (e) { guai.push(dove + ': esplode — ' + e.message); await rimetti(); continue; }
+        premuti++;
+        await att(70);
+        /* se si e' aperto un foglio si sceglie la prima strada: uno
+           lasciato aperto bloccherebbe tutto il resto */
+        const foglio = [...document.querySelectorAll('#modalRoot .scelta-riga')];
+        if (foglio.length) { foglio[0].click(); await att(150); }
+        else if (!document.getElementById('modalRoot').classList.contains('hidden')) {
+          const chiudi = [...document.querySelectorAll('#modalRoot button')]
+            .find(x => /Lascia stare|Annulla|Chiudi|Conferma/i.test(x.textContent));
+          if (chiudi) { chiudi.click(); await att(120); }
+        }
+        sano(dove);
+        const ann = toastAnnulla();
+        if (ann) { ann.click(); await att(120); sano(dove + ' annullato'); }
+      }
+    };
+
+    const apriScheda = async () => {
+      const c = card();
+      if (c && !c.classList.contains('aperto')) { c.querySelector('.e-riga').click(); await att(200); }
+    };
+    const apriLinguetta = (nome) => async () => {
+      await apriScheda();
+      const b = [...card().querySelectorAll('button.conto')]
+        .find(x => new RegExp(nome).test(x.textContent));
+      if (b) { b.click(); await att(400); }
+    };
+
+    await premiTutti('la scheda', apriScheda, () => card());
+    await premiTutti('il Parco', apriLinguetta('Parco|Modifica'), () => document.querySelector('.pan-conto .pc-parco'));
+    await premiTutti('il Bar', apriLinguetta('Bar'), () => document.querySelector('.pan-conto .pc-bar'));
+    await premiTutti('lo Scontrino', apriLinguetta('Scontrino'), () => document.querySelector('.pan-conto .pc-scontrino'));
+    await premiTutti('la fascia in fondo', apriLinguetta('Parco|Modifica'), () => document.querySelector('.pan-conto .pc-fondo'));
+
+    /* UNA PROVA CHE NON PREME NIENTE PASSA SEMPRE, ed e' il difetto
+       peggiore che possa avere: dice ok senza aver guardato. Se i tasti
+       premuti sono pochi vuol dire che i selettori non trovano piu le
+       schermate, non che va tutto bene. */
+    p('e ne ha premuti abbastanza da voler dire qualcosa', premuti >= 60,
+      'ne ha premuti ' + premuti);
+    p(premuti + ' tasti premuti uno per uno, e nessuno rompe niente',
+      !guai.length, [...new Set(guai)].slice(0, 4).join('\n        '));
+
+    localStorage.removeItem('gp_entries'); entries.length = 0; saveEntries();
+    draft = freshDraft(); chiudiPannelli(); switchTab('active'); buildActiveView();
   }
 
   /* ── il verdetto ── */

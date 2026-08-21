@@ -61,11 +61,18 @@ const PREZZO_GIRO = app.settings.crazyJumpingPrice;
    va a cercarlo -- lasciando intatto tutto il resto.
    ══════════════════════════════════════════════════════════ */
 const VeraData = app.mondo.Date;
-let scarto = 0;
+/* L'OROLOGIO E' FERMO DAVVERO, non «il vero piu' uno scarto».
+   Con lo scarto il tempo continuava a scorrere sotto, e sui CONFINI
+   bastava un millesimo per cambiare risposta: un gruppo entrato in
+   questo istante a tempo aperto valeva zero alla prima lettura e il
+   primo scaglione alla seconda, e la prova accusava il codice di un
+   salto deciso dall'orologio. Fermo per davvero, due letture dello
+   stesso istante danno lo stesso numero -- sempre. */
+let orologio = 0;
 function FintaData(...a) {
-  return a.length ? new VeraData(...a) : new VeraData(VeraData.now() + scarto);
+  return a.length ? new VeraData(...a) : new VeraData(orologio);
 }
-FintaData.now = () => VeraData.now() + scarto;
+FintaData.now = () => orologio;
 FintaData.parse = VeraData.parse;
 FintaData.UTC = VeraData.UTC;
 FintaData.prototype = VeraData.prototype;
@@ -77,9 +84,11 @@ const PARTENZA = (() => {
   d.setHours(15, 0, 0, 0);
   return d.getTime();
 })();
-const adesso = () => VeraData.now() + scarto;
-const fermaOrologio = () => { scarto = PARTENZA - VeraData.now(); };
-const avanza = min => { scarto += min * 60000; };
+const adesso = () => orologio;
+const fermaOrologio = () => { orologio = PARTENZA; };
+const avanza = min => { orologio += min * 60000; };
+/* per le sere precise: si porta l'orologio a un istante e li' resta */
+const orologioA = quando => { orologio = quando; };
 fermaOrologio();
 
 /* Un gruppo dentro da tot minuti. NIENTE DURATE TONDE: a tempo aperto
@@ -803,6 +812,119 @@ gruppo('Salta prima, compra il tempo dopo: il parco parte da adesso');
     'sforo di ' + Math.round(app.sforoDi(d) / 60000) + '′ su ' + d.durationMinutes + 'm comprati');
   prova('  e il solo-Crazy invece no, perche non ha comprato niente',
     app.clamp(app.num(c.durationMinutes, 0), 0, 1e6) <= 0);
+}
+
+/* ═════════════════════════════════════════════════════════
+   ORARI ASSURDI, MA CHE SUCCEDONO
+
+   Non sono casi di laboratorio: sono le sere vere. Il parco chiude
+   tardi, la giornata gira alle quattro del mattino, l'ora legale
+   cambia una notte all'anno, e ogni tanto una tavoletta ha l'orologio
+   sbagliato o un gruppo resta dentro cinque ore.
+   Qui non si chiede che il prezzo sia un numero preciso: si chiede che
+   NIENTE si rompa -- che i conti restino numeri, che nessuno esca
+   prima di entrare, che i soldi non diventino negativi e che rileggere
+   un ingresso non lo cambi.
+   ═════════════════════════════════════════════════════════ */
+gruppo('Orari assurdi: la notte, il cambio giornata, l’ora legale');
+{
+  const guai = [];
+  const controlla = (dove, c) => {
+    const k = app.costOf(c), d = app.dueOf(c), ap = app.contiAperto(c);
+    if (!Number.isFinite(k.parkTotal) || k.parkTotal < 0) guai.push(dove + ': parco ' + k.parkTotal);
+    if (!Number.isFinite(k.crazyCost) || k.crazyCost < 0) guai.push(dove + ': crazy ' + k.crazyCost);
+    if (!Number.isFinite(d.total) || d.total < 0) guai.push(dove + ': dovuto ' + d.total);
+    if (!Number.isFinite(app.endTimeOf(c))) guai.push(dove + ': uscita storta');
+    if (app.endTimeOf(c) < c.startTime) guai.push(dove + ': esce prima di entrare');
+    if (!Number.isFinite(ap.contati) || ap.contati < 0) guai.push(dove + ': minuti contati ' + ap.contati);
+    if (app.num(c.pausato, 0) < 0) guai.push(dove + ': pausa negativa');
+    if (!Number.isFinite(app.giornataDi(c.startTime))) guai.push(dove + ': giornata storta');
+    /* e rileggerlo dal disco non lo cambia */
+    const ri = app.normalizeEntries([JSON.parse(JSON.stringify(c))])[0];
+    if (app.endTimeOf(ri) !== app.endTimeOf(c)) guai.push(dove + ': rileggendolo cambia l uscita');
+    if (app.costOf(ri).parkTotal !== k.parkTotal) guai.push(dove + ': rileggendolo cambia il prezzo');
+    if (typeof app.spiegaAperto(c, false) !== 'string') guai.push(dove + ': la riga del conto non e testo');
+  };
+
+  /* un orario preciso di una sera precisa */
+  const alle = (aa, mm, gg, oo, mi) => new Date(aa, mm - 1, gg, oo, mi, 0, 0).getTime();
+
+  const sere = [
+    ['entrati alle 23:40, sono le 00:30', alle(2026, 8, 15, 23, 40), alle(2026, 8, 16, 0, 30)],
+    ['entrati alle 23:40, sono le 03:59', alle(2026, 8, 15, 23, 40), alle(2026, 8, 16, 3, 59)],
+    ['entrati alle 23:40, sono le 04:01 (giornata girata)', alle(2026, 8, 15, 23, 40), alle(2026, 8, 16, 4, 1)],
+    ['la notte in cui si va avanti di un ora', alle(2026, 3, 28, 23, 40), alle(2026, 3, 29, 3, 30)],
+    ['la notte in cui si torna indietro di un ora', alle(2026, 10, 24, 23, 40), alle(2026, 10, 25, 3, 30)],
+    ['dentro da cinque ore', alle(2026, 8, 15, 15, 0), alle(2026, 8, 15, 20, 0)],
+    ['dentro da due giorni (tavoletta dimenticata)', alle(2026, 8, 13, 15, 0), alle(2026, 8, 15, 15, 0)],
+    ['l orologio della cassa e indietro: entrati nel futuro', alle(2026, 8, 15, 21, 0), alle(2026, 8, 15, 20, 30)],
+    ['entrati un anno fa', alle(2025, 8, 15, 15, 0), alle(2026, 8, 15, 15, 0)],
+    ['appena entrati, stesso istante', alle(2026, 8, 15, 15, 0), alle(2026, 8, 15, 15, 0)]
+  ];
+
+  const modi = [
+    ['tempo aperto', { children: 2, durationMinutes: 0, baseMinutes: 0, payLater: true }],
+    ['tempo comprato', { children: 2, durationMinutes: 30, baseMinutes: 30 }],
+    ['solo Crazy', { children: 0, durationMinutes: 0, baseMinutes: 0, omaggio: 10, crazyJumping: 2, crazyGiri: [2] }],
+    ['aperto e in pausa', { children: 2, durationMinutes: 0, baseMinutes: 0, payLater: true, pausato: 20 * 60000 }],
+    ['comprato con giri e vendite', { children: 3, durationMinutes: 90, baseMinutes: 30,
+      aggiunte: [30, 30], crazyJumping: 3, crazyGiri: [2, 1] }]
+  ];
+
+  sere.forEach(([nome, ingresso, ora]) => {
+    modi.forEach(([modo, extra]) => {
+      orologioA(ora);
+      const c = app.normalizeEntries([Object.assign({
+        id: 'n', startTime: ingresso, createdAt: ingresso, oraManuale: true
+      }, extra)])[0];
+      app.PAN.conto = c; app.PAN.ingresso = null;
+      controlla(nome + ' / ' + modo, c);
+      /* e con qualche tocco addosso */
+      try {
+        app.contaSalita(1);
+        app.ritoccaTempo(c, 5);
+        app.commutaPausa(c);
+        app.chiudiPausa(c);
+        app.pagaTutto();
+      } catch (e) { guai.push(nome + ' / ' + modo + ': esplode toccandolo — ' + e.message); }
+      controlla(nome + ' / ' + modo + ' (toccato)', c);
+    });
+  });
+  fermaOrologio();
+  prova('dieci sere per cinque modi, prima e dopo averli toccati',
+    !guai.length, [...new Set(guai)].slice(0, 4).join('\n        '));
+}
+
+gruppo('Una pausa che attraversa la notte, e altre cose lunghe');
+{
+  fermaOrologio();
+  const guai = [];
+  /* una pausa dimenticata accesa: al banco succede, e il tempo non
+     puo' diventare negativo ne' il conto esplodere */
+  const c = dentro(60, { children: 2, durationMinutes: 0, baseMinutes: 0, payLater: true });
+  app.PAN.conto = c; app.PAN.ingresso = null;
+  app.commutaPausa(c);
+  [30, 120, 60 * 8, 60 * 24, 60 * 24 * 3].forEach(m => {
+    const a = app.contiAperto(c, adesso() + m * 60000);
+    if (a.contati < 0) guai.push('dopo ' + m + '′ di pausa i minuti sono ' + a.contati);
+    if (Math.abs(a.contati - 60) > 0.5) guai.push('dopo ' + m + '′ di pausa i minuti contati sono ' + a.contati.toFixed(1) + ' invece di 60');
+    if (!Number.isFinite(app.costOf(c).parkTotal)) guai.push('dopo ' + m + '′ di pausa il prezzo non e un numero');
+  });
+  prova('una pausa lasciata accesa per tre giorni non muove il conto',
+    !guai.length, guai.slice(0, 3).join('\n        '));
+
+  /* e un gruppo che resta dentro tantissimo: il prezzo si ferma
+     all'ultima fascia, non sale all'infinito */
+  const ultima = app.settings.tariffs[app.settings.tariffs.length - 1];
+  const lungo = [];
+  [3, 6, 12, 24].forEach(ore => {
+    const d = dentro(ore * 60, { children: 1, durationMinutes: 0, baseMinutes: 0, payLater: true });
+    const atteso = r2(ultima.p * 1);
+    if (app.costOf(d).parkTotal !== atteso) {
+      lungo.push(ore + ' ore: ' + app.costOf(d).parkTotal + ' invece di ' + atteso);
+    }
+  });
+  prova('e oltre l ultima fascia il prezzo non sale piu', !lungo.length, lungo.join('\n        '));
 }
 
 /* ---------- il verdetto ---------- */
