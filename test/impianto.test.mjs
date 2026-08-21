@@ -277,6 +277,22 @@ gruppo('Niente resti di lavorazione nel codice che gira');
   prova('e i tagli di serie sono quelli chiesti',
     /quickDurations: \[10, 15, 30, 60\],/.test(APP));
 
+  /* IL TEMPO SI METTE IN UN MODO SOLO.
+     I tagli rapidi e il campo dei minuti esatti fanno la stessa cosa, e
+     scritti in due punti sono divergiti: il campo riscriveva anche
+     `baseMinutes` e con la tariffa a scaglioni la stessa ora costava
+     42,00 € col taglio e 36,00 € scritta a mano. */
+  prova('i tagli rapidi passano da metteTempo',
+    /if \(d\.a === 'min'\) \{[\s\S]{0,300}metteTempo\(c,/.test(APP));
+  prova('e anche il campo dei minuti esatti',
+    /esatti\.oninput[\s\S]{0,600}metteTempo\(q, grezzo\)/.test(APP));
+  /* e `baseMinutes` non si tocca: e' la durata alla registrazione, ed
+     e' lei che distingue il tempo comprato all'ingresso da quello
+     venduto dopo */
+  prova('e metteTempo non tocca baseMinutes',
+    /function metteTempo[\s\S]{0,900}\n\}/.test(APP) &&
+    !/function metteTempo[\s\S]{0,900}baseMinutes\s*=/.test(APP));
+
   const todo = (APP.match(/\bTODO\b|\bFIXME\b|\bXXX\b/g) || []).length;
   prova('nessun TODO appeso', todo === 0, todo + ' trovati');
   prova('e la parola «metodo» non lo fa sbagliare',

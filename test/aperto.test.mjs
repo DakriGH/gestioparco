@@ -319,13 +319,13 @@ gruppo('A tempo aperto il parco dipende solo da quanto sono stati dentro');
 
 gruppo('La fascia e’ quella piu’ vicina, e i primi dieci minuti costano il primo scaglione');
 {
-  const f = m => app.fasciaVicina(m);
+  const f = m => app.fasciaSotto(m);
   uguale('trentuno minuti stanno nella mezz’ora', f(31).m, 30);
-  uguale('trentacinque, che sta in mezzo, pure', f(35).m, 30);
-  uguale('trentasei passa ai quaranta', f(36).m, 40);
+  uguale('e anche trentotto', f(38).m, 30);
+  uguale('quaranta tondi passa ai quaranta', f(40).m, 40);
   uguale('quarantatre’ resta ai quaranta', f(43).m, 40);
-  uguale('quarantasei passa ai cinquanta', f(46).m, 50);
-  uguale('un minuto sta nei dieci', f(1).m, 10);
+  uguale('quarantanove pure', f(49).m, 40);
+  uguale('un minuto sta nel primo scaglione', f(1).m, 10);
   uguale('e costa il primo scaglione', f(1).p, app.settings.tariffs[0].p);
 
   /* E IL CONTO DEL GRUPPO LO SEGUE.
@@ -339,7 +339,7 @@ gruppo('La fascia e’ quella piu’ vicina, e i primi dieci minuti costano il p
   const guai = [];
   [31, 33, 38, 43, 58, 72].forEach(min => {
     const c = dentro(min);
-    const atteso = r2(app.fasciaVicina(app.contiAperto(c).contati).p * 2);
+    const atteso = r2(app.fasciaSotto(app.contiAperto(c).contati).p * 2);
     if (app.costOf(c).parkTotal !== atteso) {
       guai.push('dentro da ' + min + '′: ' + app.costOf(c).parkTotal + ' invece di ' + atteso);
     }
@@ -462,12 +462,14 @@ gruppo('Il cartello di prova e lo stesso dell’app');
     app.settings.tariffs.map(t => [t.m, t.p]), CARTELLO);
 }
 
-/* la fascia piu' vicina, a parita' la piu' bassa: la regola detta a
-   parole, riscritta senza guardare come l'ha scritta l'app */
-function vicina(min) {
+/* LA FASCIA GIA' PASSATA, cioe' quella SOTTO: la regola detta a
+   parole, riscritta senza guardare come l'ha scritta l'app.
+   Trentotto minuti sono mezz'ora passata, non quaranta minuti. Chi e'
+   dentro paga almeno il primo scaglione: sotto quello non si scende. */
+function passata(min) {
   if (min <= 0) return null;
   let b = CARTELLO[0];
-  for (const t of CARTELLO) if (Math.abs(t[0] - min) < Math.abs(b[0] - min)) b = t;
+  for (const t of CARTELLO) if (t[0] <= min) b = t;
   return b;
 }
 /* e la fascia SOPRA, che e' quella del tempo comprato: hai comprato
@@ -478,7 +480,7 @@ function sopra(min) {
   return CARTELLO[CARTELLO.length - 1];
 }
 const su5 = m => Math.ceil(m / 5) * 5;
-const parcoAperto = (min, bimbi) => r2((vicina(min) ? vicina(min)[1] : 0) * bimbi);
+const parcoAperto = (min, bimbi) => r2((passata(min) ? passata(min)[1] : 0) * bimbi);
 const parcoComprato = (min, bimbi) => r2((sopra(su5(min)) ? sopra(su5(min))[1] : 0) * bimbi);
 
 /* ─────────────────────────────────────────────────────────
@@ -757,7 +759,7 @@ gruppo('Salta prima, compra il tempo dopo: il parco parte da adesso');
       /* la mezz'ora comprata adesso deve valere una mezz'ora */
       if (resta < 29.9) guai.push(dove + ': restano ' + Math.round(resta) + '′ invece di 30');
       /* e il prezzo e' quello di mezz'ora per due bambini */
-      const atteso = r2(app.fasciaVicina ? app.priceFor(30) * 2 : 0);
+      const atteso = r2(app.fasciaSotto ? app.priceFor(30) * 2 : 0);
       if (app.costOf(c).parkTotal !== atteso) {
         guai.push(dove + ': parco ' + app.costOf(c).parkTotal + ' invece di ' + atteso);
       }

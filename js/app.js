@@ -504,26 +504,27 @@ function priceFor(mins) {
      avrebbe chiesto 36. */
   return list[list.length - 1].p;
 }
-/* LA FASCIA PIU' VICINA, che e' un'altra cosa dalla fascia SOPRA.
+/* LA FASCIA DEL TEMPO PASSATO: quella SOTTO, non quella sopra.
    Chi COMPRA il tempo sceglie una durata dal cartello e paga quella:
-   li' la fascia sopra e' giusta, perche' e' quello che ha comprato.
-   Chi sta a TEMPO APERTO invece non ha comprato niente: si guarda
-   quanto e' stato dentro e gli si fa il prezzo piu' onesto. Con la
-   fascia sopra, trentuno minuti finivano nella fascia dei quaranta --
-   dieci euro invece di sette per un minuto oltre la mezz'ora -- e al
-   banco non c'era modo di spiegarlo a chi lo chiedeva.
-   A PARITA' SI SCENDE: trentacinque minuti stanno esattamente in mezzo
-   fra trenta e quaranta, e in mezzo si sta dalla parte del cliente.
-   (La lista e' in ordine crescente e si cambia solo su una distanza
-   STRETTAMENTE minore: cosi' il pari resta al primo, cioe' al piu'
-   basso.) */
-function fasciaVicina(mins) {
+   li' e' giusto lo scaglione che la contiene, perche' e' quello che ha
+   comprato. Chi sta a TEMPO APERTO invece non ha comprato niente: si
+   guarda quanto e' stato dentro e si prende la fascia che ha gia'
+   passato.
+
+   Prima si prendeva la piu' VICINA, e prima ancora quella SOPRA. La
+   fascia sopra faceva pagare dieci euro per trentuno minuti -- un
+   minuto oltre la mezz'ora -- e al banco non c'era modo di
+   spiegarlo. La piu' vicina lo faceva ancora a trentotto minuti.
+   Adesso si scende sempre: trentotto minuti sono mezz'ora passata, non
+   quaranta minuti. Chi resta dentro paga almeno il primo scaglione,
+   che e' il minimo del cartello: sotto quello non si scende.
+   Sopra l'ultima fascia si resta sull'ultima -- oltre le due ore il
+   prezzo non sale piu'. */
+function fasciaSotto(mins) {
   const list = tariffs();
   if (!list.length || mins <= 0) return null;
   let best = list[0];
-  for (const t of list) {
-    if (Math.abs(t.m - mins) < Math.abs(best.m - mins)) best = t;
-  }
+  for (const t of list) if (t.m <= mins) best = t;
   return best;
 }
 
@@ -564,7 +565,7 @@ function contiAperto(c, ora) {
      euro invece di sette per un minuto oltre la mezz'ora. Chi sta a
      tempo aperto non ha comprato una durata: si guarda quanto e' stato
      dentro davvero e si prende la fascia che gli somiglia di piu'. */
-  const f = fasciaVicina(contati);
+  const f = fasciaSotto(contati);
   return { dentro, daParco, regalati, fermo, contati,
     inPausa: !!num(c.pausaDa, 0),
     su: up5(contati),
@@ -1643,16 +1644,8 @@ function costruisciPannello() {
     }
     if (d.a === 'min') {
       const m = clamp(c.durationMinutes, 0, 99999);
-      const nuovo = d.v === '-5' ? Math.max(5, m - 5)
-        : d.v === '+5' ? Math.min(99999, m + 5) : clamp(parseInt(d.v, 10), 1, 99999);
-      /* anche da qui il tempo di parco puo' partire da zero: e' la
-         stessa cosa del piu' del mini menu, e va segnata uguale */
-      segnaInizioParco(c, m, nuovo);
-      c.durationMinutes = nuovo;
-      /* i tagli rapidi SCRIVONO la durata: quello che era stato
-         venduto prima non c'entra piu' niente */
-      delete c.aggiunte;
-      c.payLater = false;
+      metteTempo(c, d.v === '-5' ? Math.max(5, m - 5)
+        : d.v === '+5' ? Math.min(99999, m + 5) : parseInt(d.v, 10));
       pcSalva(); aggiornaPannello(); return;
     }
     /* RITOCCARE NON E' VENDERE.
@@ -2188,6 +2181,17 @@ function segnaInizioParco(c, prima, dopo) {
      raddrizzava alla rilettura, il che vuol dire che memoria e disco
      dicevano due cose diverse fino al ricaricamento. */
   c.parcoDa = Math.max(roundTo5(new Date()).getTime(), num(c.startTime, 0));
+  /* E QUESTO E' IL LORO TEMPO INIZIALE.
+     `baseMinutes` e' «la durata al momento della registrazione», e su
+     chi si e' registrato SENZA tempo di parco -- un solo-Crazy --
+     valeva uno: la riparazione mette almeno un minuto per non lasciarlo
+     a zero. Con la tariffa A SCAGLIONI quel numero decide il primo
+     scaglione, quindi quarantasette minuti venduti a un solo-Crazy si
+     spezzavano in «un minuto» piu' «quarantasei» e costavano 45,00 €
+     invece di 36,00 €: piu' di un ingresso normale della stessa durata.
+     Il tempo che comprano ADESSO e' il loro tempo iniziale, e da qui in
+     poi non si muove piu' -- e' il momento esatto in cui va scritto. */
+  c.baseMinutes = dopo;
 }
 
 /* QUANTO SFORO SI CONDONA SENZA CHIEDERE quando si allunga il tempo.
@@ -2319,6 +2323,33 @@ function ritoccaTempo(c, delta) {
       else delete c.regaloFinoA;
     }
   }
+}
+
+/* METTE UNA DURATA, ED E' L'UNICO POSTO CHE LO FA.
+   I tagli rapidi e il campo dei minuti esatti fanno la stessa identica
+   cosa -- «da adesso il tempo di parco e' questo» -- ma erano scritti
+   in due punti diversi, e sono divergiti al primo dettaglio: il campo
+   riscriveva anche `baseMinutes`, i tagli no. Con la tariffa A
+   SCAGLIONI `baseMinutes` decide il primo scaglione, quindi la STESSA
+   ora costava 42,00 € scelta col taglio e 36,00 € scritta a mano.
+   Due strade per la stessa cosa divergono sempre: qui ce n'e' una.
+
+   `baseMinutes` NON si tocca: e' la durata al momento della
+   registrazione, e non si muove piu' -- e' lei che distingue il tempo
+   comprato all'ingresso da quello venduto dopo. */
+function metteTempo(c, minuti) {
+  c = c || C();
+  const m = clamp(num(c.durationMinutes, 0), 0, 99999);
+  const nuovo = clamp(Math.round(num(minuti, 0)), 1, 99999);
+  /* anche da qui il tempo di parco puo' partire da zero: e' la stessa
+     cosa del piu' del mini menu, e va segnata uguale */
+  segnaInizioParco(c, m, nuovo);
+  c.durationMinutes = nuovo;
+  /* mettere una durata SCRIVE: quello che era stato venduto prima non
+     c'entra piu' niente */
+  delete c.aggiunte;
+  c.payLater = false;
+  return nuovo;
 }
 
 /* VENDE UN BLOCCO DI TEMPO. Sta fuori dal gestore dei tocchi perche' ci
@@ -2589,15 +2620,13 @@ function aggiornaPannello(opz) {
       esatti.dataset.legato = '1';
       esatti.oninput = () => {
         const q = C();
-        const n = clamp(Math.round(num(esatti.value, NaN)), 1, 99999);
-        if (!Number.isFinite(n)) return;
-        segnaInizioParco(q, clamp(num(q.durationMinutes, 0), 0, 99999), n);
-        q.durationMinutes = n;
-        /* scrivere i minuti SOSTITUISCE la durata, come i tagli: quello
-           che era stato venduto prima non c'entra piu' niente */
-        delete q.aggiunte;
-        q.baseMinutes = n;
-        q.payLater = false;
+        const grezzo = num(esatti.value, NaN);
+        if (!Number.isFinite(grezzo)) return;
+        /* SCRIVERE I MINUTI E' LA STESSA COSA CHE PREMERE UN TAGLIO, e
+           passa dalla stessa funzione: scritto a parte, il campo aveva
+           gia' imparato a riscrivere `baseMinutes` -- e la stessa ora
+           costava 42,00 € col taglio e 36,00 € scritta a mano. */
+        metteTempo(q, grezzo);
         pcSalva();
         /* LA FILA VA SEGNATA COME DA RIFARE, anche se adesso non la si
            tocca: la firma dice «disegnata coi minuti di prima», e senza

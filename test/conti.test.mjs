@@ -667,8 +667,8 @@ gruppo('Il conto del tempo aperto si vede, non si indovina', () => {
   ok('quindi quarantuno contati', Math.round(a.contati), 41);
   /* niente piu' arrotondamento ai cinque: la fascia si sceglie sui
      minuti veri, che e' anche piu' facile da spiegare al banco */
-  ok('che cadono nella fascia piu vicina', a.scaglione, ctx.fasciaVicina(41).m);
-  ok('e il prezzo e quello della fascia', a.prezzo, ctx.fasciaVicina(41).p);
+  ok('che cadono nella fascia sotto', a.scaglione, ctx.fasciaSotto(41).m);
+  ok('e il prezzo e quello della fascia', a.prezzo, ctx.fasciaSotto(41).p);
   ok('lo stesso che mette sul conto costOf', ctx.costOf(c).unit, a.prezzo);
 
   vero('e c e scritto da dove esce', /41′ contati/.test(ctx.spiegaAperto(c, true, ora)) &&
@@ -716,33 +716,37 @@ gruppo('Il conto del tempo aperto si vede, non si indovina', () => {
   const fasce = ctx.settings.tariffs.map(t => t.m);
   const storte = [];
   for (let m = 1; m <= 200; m++) {
-    const f = ctx.fasciaVicina(m);
+    const f = ctx.fasciaSotto(m);
     if (!f || !fasce.includes(f.m)) storte.push(m + ' -> ' + (f ? f.m : 'niente'));
-    /* e nessuna fascia del cartello e' piu' vicina di quella scelta */
+    /* e non c'e' nessuna fascia del cartello PIU' ALTA di quella
+       scelta che sia comunque gia' passata: si scende, ma solo fino
+       alla prima che si e' davvero superata */
     else {
-      const piuVicina = ctx.settings.tariffs.reduce((a, t) =>
-        Math.abs(t.m - m) < Math.abs(a - m) ? t.m : a, ctx.settings.tariffs[0].m);
-      if (Math.abs(f.m - m) !== Math.abs(piuVicina - m)) storte.push(m + ': ' + f.m + ' ma ' + piuVicina + ' e piu vicina');
+      const piuAlta = ctx.settings.tariffs
+        .filter(t => t.m <= m).map(t => t.m).sort((a, b) => a - b).pop();
+      const atteso = piuAlta === undefined ? ctx.settings.tariffs[0].m : piuAlta;
+      if (f.m !== atteso) storte.push(m + ': ' + f.m + ' invece di ' + atteso);
     }
   }
-  ok('ogni minuto cade sulla fascia del cartello piu vicina', storte.slice(0, 3), []);
+  ok('ogni minuto cade sulla fascia del cartello gia passata', storte.slice(0, 3), []);
 
   /* IL CASO CHE HA FATTO SCOPPIARE TUTTO: trentuno minuti finivano
      nella fascia dei quaranta, dieci euro invece di sette per un
      minuto oltre la mezz'ora, e al banco non c'era modo di
      spiegarlo. */
-  const dove = m => ctx.fasciaVicina(m).m;
+  const dove = m => ctx.fasciaSotto(m).m;
   ok('trentuno minuti stanno nella mezz ora', dove(31), 30);
-  ok('e anche trentacinque, che sta in mezzo', dove(35), 30);
-  ok('trentasei invece passa ai quaranta', dove(36), 40);
-  ok('i primi minuti stanno nei dieci', dove(1), 10);
+  ok('e anche trentacinque', dove(35), 30);
+  ok('e anche trentotto: mezz ora passata, non quaranta minuti', dove(38), 30);
+  ok('quaranta tondi sta nei quaranta', dove(40), 40);
+  ok('i primi minuti stanno nel primo scaglione', dove(1), 10);
   ok('e anche dieci tondi', dove(10), 10);
-  ok('e dodici, che ai dieci ci sta piu vicino', dove(12), 10);
-  ok('tredici passa ai quindici', dove(13), 15);
+  ok('e dodici, che i dieci li ha passati', dove(12), 10);
+  ok('tredici resta ai dieci: i quindici non li ha ancora fatti', dove(13), 10);
   ok('e oltre l ultima fascia si resta sull ultima', dove(400), fasce[fasce.length - 1]);
   /* il prezzo dei primi dieci minuti e' quello del cartello */
   ok('i primi dieci minuti costano il primo scaglione',
-    ctx.fasciaVicina(4).p, ctx.settings.tariffs[0].p);
+    ctx.fasciaSotto(4).p, ctx.settings.tariffs[0].p);
 });
 
 gruppo('Lo stesso tempo costa lo stesso, da qualunque tasto passi', () => {
@@ -1670,7 +1674,7 @@ gruppo('Il Crazy non entra MAI nel prezzo del tempo di parco', () => {
       const t0 = Date.now() - dentroDa * 60000;
       const senza = conto({ children: 2, payLater: true, startTime: t0 });
       const rif = ctx.costOf(senza).parkTotal;
-      const atteso = ctx.r2(ctx.fasciaVicina(dentroDa).p * 2);
+      const atteso = ctx.r2(ctx.fasciaSotto(dentroDa).p * 2);
       if (rif !== atteso) aperti.push('senza giri, dentro da ' + dentroDa + "': " + rif + ' invece di ' + atteso);
       for (const giri of [1, 2, 3]) {
         const con = conto({ children: 2, payLater: true, startTime: t0 });
@@ -2005,6 +2009,90 @@ gruppo('La Grafica 2.0 cambia quello che si vede, non un euro', () => {
     /Resto/.test(fondoAcceso) && /data-tutto|Paga tutto/.test(fondoAcceso));
 
   ctx.settings.grafica2 = era;
+});
+
+gruppo('Il tempo si mette in un modo solo: taglio o scritto, stesso prezzo', () => {
+  /* SEGNALATO AL BANCO: «i tempi custom rompono tutto».
+     I tagli rapidi e il campo dei minuti esatti fanno la stessa cosa --
+     «da adesso il tempo di parco e' questo» -- ma erano scritti in due
+     punti diversi, e sono divergiti al primo dettaglio: il campo
+     riscriveva anche `baseMinutes`, i tagli no. Con la tariffa A
+     SCAGLIONI `baseMinutes` decide il primo scaglione, quindi la STESSA
+     ora costava 42,00 € scelta col taglio e 36,00 € scritta a mano.
+     Adesso passano tutti e due da `metteTempo`. */
+  const era = ctx.settings.tariffaSuTotale;
+  const guai = [];
+  [true, false].forEach(suTotale => {
+    ctx.settings.tariffaSuTotale = suTotale;
+    [10, 15, 20, 45, 60, 75, 90, 137].forEach(n => {
+      const nuovo = () => {
+        const c = conto({ children: 3, durationMinutes: 30, baseMinutes: 30,
+          startTime: Date.now() - 10 * 60000 });
+        ctx.PAN.conto = c; ctx.PAN.ingresso = null;
+        return c;
+      };
+      const a = nuovo(); ctx.metteTempo(a, n);
+      const b = nuovo(); ctx.metteTempo(b, n);
+      const foto = c => [c.durationMinutes, c.baseMinutes, ctx.costOf(c).parkTotal,
+        ctx.costOf(c).unit, ctx.endTimeOf(c) - c.startTime].join('/');
+      if (foto(a) !== foto(b)) {
+        guai.push(n + 'm, tariffa ' + (suTotale ? 'sul totale' : 'a scaglioni') +
+          ': ' + foto(a) + ' vs ' + foto(b));
+      }
+      /* e `baseMinutes` NON si tocca: e' la durata alla registrazione,
+         ed e' lei che distingue il tempo comprato all'ingresso da
+         quello venduto dopo */
+      if (a.baseMinutes !== 30) {
+        guai.push(n + 'm: baseMinutes e diventato ' + a.baseMinutes + ' invece di restare 30');
+      }
+    });
+  });
+  ctx.settings.tariffaSuTotale = era;
+  ok('otto durate per due tariffe, e il prezzo e uno solo', guai.slice(0, 3), []);
+
+  /* CHI COMPRA IL TEMPO DOPO PAGA COME CHI LO COMPRA SUBITO.
+     `baseMinutes` decide il primo scaglione con la tariffa a scaglioni,
+     e su un solo-Crazy valeva UNO -- la riparazione ci mette almeno un
+     minuto per non lasciarlo a zero. Quarantasette minuti venduti a un
+     solo-Crazy si spezzavano in «un minuto» piu' «quarantasei» e
+     costavano piu' di un ingresso normale della stessa durata. */
+  {
+    const eraT = ctx.settings.tariffaSuTotale;
+    const guasti = [];
+    [true, false].forEach(suTotale => {
+      ctx.settings.tariffaSuTotale = suTotale;
+      [15, 30, 47, 60, 90].forEach(n => {
+        const solo = conto({ children: 3, durationMinutes: 0, baseMinutes: 0,
+          omaggio: 10, crazyJumping: 2, crazyGiri: [2], startTime: Date.now() - 12 * 60000 });
+        ctx.PAN.conto = solo; ctx.PAN.ingresso = null;
+        ctx.metteTempo(solo, n);
+        const normale = conto({ children: 3, durationMinutes: n, baseMinutes: n,
+          startTime: Date.now() - 12 * 60000 });
+        ctx.PAN.conto = normale; ctx.PAN.ingresso = null;
+        if (ctx.costOf(solo).parkTotal !== ctx.costOf(normale).parkTotal) {
+          guasti.push(n + 'm, tariffa ' + (suTotale ? 'sul totale' : 'a scaglioni') + ': ' +
+            ctx.costOf(solo).parkTotal + ' al solo-Crazy, ' + ctx.costOf(normale).parkTotal + ' a un normale');
+        }
+        if (solo.baseMinutes !== n) {
+          guasti.push(n + 'm: baseMinutes e ' + solo.baseMinutes + ' invece di ' + n);
+        }
+      });
+    });
+    ctx.settings.tariffaSuTotale = eraT;
+    ok('cinque durate per due tariffe, e paga come chiunque altro', guasti.slice(0, 3), []);
+  }
+
+  /* e mettere una durata butta le vendite di prima: e' una scrittura,
+     non un\'aggiunta */
+  const c = conto({ children: 2, durationMinutes: 30, baseMinutes: 30,
+    startTime: Date.now() - 10 * 60000 });
+  ctx.PAN.conto = c; ctx.PAN.ingresso = null;
+  ctx.vendiBlocco(c, 30);
+  vero('dopo una vendita ci sono delle aggiunte', ctx.lista(c.aggiunte).length > 0);
+  ctx.metteTempo(c, 45);
+  vero('  e mettendo una durata se ne vanno', !ctx.lista(c.aggiunte).length);
+  ok('  e la durata e quella messa', c.durationMinutes, 45);
+  vero('  e il tempo aperto si spegne', !c.payLater);
 });
 
 gruppo('Il tempo dato per un giro non si riprende mai', () => {
