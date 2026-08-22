@@ -1134,8 +1134,23 @@ function costOf(entry) {
       const agg = Math.max(0, iniziale - iniz);
       base = priceFor(up5(iniz)) + (agg > 0 ? priceFor(up5(agg)) : 0) + prezzoVendute;
     } else {
-      // sul totale: chi resta un'ora paga la tariffa dell'ora, non 30'+30'
-      base = priceFor(up5(iniziale)) + prezzoVendute;
+      /* SUL TOTALE VUOL DIRE SUL TOTALE.
+         Qui si sommava il prezzo del tempo iniziale a quello di ogni
+         blocco venduto dopo, e la stessa ora costava quattro prezzi
+         diversi a seconda di come ci si era arrivati: dodici euro
+         comprata tutta insieme, quattordici a mezz'ora piu' mezz'ora,
+         sedici a mezz'ora piu' due quarti, diciotto a quattro quarti
+         d'ora. Il cartello dice un'altra cosa, e la dice a chiare
+         lettere: un'ora costa dodici euro. La gente paga per QUANTO
+         STA, non a pezzi -- e chi ha allungato tre volte non ha
+         comprato tre ingressi, e' rimasto un'ora.
+         Il tetto del cartello vale lo stesso: oltre l'ultima fascia il
+         prezzo non sale piu', e adesso non lo si puo' piu' scavalcare
+         allungando a piccoli pezzi.
+         I blocchi restano scritti in `aggiunte` -- servono a raccontare
+         come e' andata e a sapere dove entra un ritocco -- ma non
+         fanno piu' il prezzo. */
+      base = priceFor(up5(totMin));
     }
   }
   return {

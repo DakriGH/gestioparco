@@ -433,13 +433,85 @@ gruppo('Il tempo DA PAGARE e solo quello del parco', () => {
   ok('e il tempo di parco risulta coperto', ctx.minutiPagati(d) >= ctx.tempoTotale(d), true);
 });
 
-gruppo('Allungare e VENDERE tempo, non ricalcolarlo', () => {
-  /* IL GUASTO CHE C'ERA. Il prezzo dell'allungamento era la differenza
-     sul totale: partendo da mezz'ora, "+15m" e "+30m" finivano nello
-     stesso scaglione del cartello e costavano LO STESSO -- due tasti
-     diversi, un prezzo solo, e mezz'ora regalata senza accorgersene.
-     Adesso ogni blocco venduto si paga al prezzo del cartello per quel
-     blocco, e resta scritto in `aggiunte`. */
+gruppo('La stessa ora costa la stessa cifra, per qualunque strada', () => {
+  /* LA REGOLA DEL BANCO, in una riga: la gente paga per quanto sta.
+     Un'ora e' un'ora -- comprata tutta insieme, o mezz'ora piu' mezz'ora,
+     o allungata cinque minuti alla volta fino a farla. Questa prova ci
+     arriva per ogni strada che l'app permette e pretende sempre lo
+     stesso numero.
+     E' la prova che non c'era quando la stessa ora costava dodici,
+     quattordici, sedici e diciotto euro a seconda di come ci si era
+     arrivati: i "17 euro a caso" visti al banco. */
+  const bersaglio = 60;
+  const attesa = ctx.r2(ctx.priceFor(bersaglio) * 3);
+  const nuovo = () => conto({ children: 3, crazyJumping: 0, durationMinutes: 0,
+    baseMinutes: 0, omaggio: 0, barItems: [] });
+
+  const strade = {
+    'comprata tutta insieme': c => ctx.metteTempo(c, 60),
+    'mezz ora, poi un altra mezz ora': c => { ctx.metteTempo(c, 30); ctx.vendiBlocco(c, 30); },
+    'mezz ora e due quarti': c => { ctx.metteTempo(c, 30); ctx.vendiBlocco(c, 15); ctx.vendiBlocco(c, 15); },
+    'quattro quarti d ora': c => { ctx.metteTempo(c, 15); ctx.vendiBlocco(c, 15);
+      ctx.vendiBlocco(c, 15); ctx.vendiBlocco(c, 15); },
+    'un ora e mezza, poi tornati a un ora': c => { ctx.metteTempo(c, 90); ctx.ritoccaTempo(c, -30); },
+    'mezz ora e sei ritocchi da cinque': c => { ctx.metteTempo(c, 30);
+      for (let i = 0; i < 6; i++) ctx.ritoccaTempo(c, 5); },
+    'un quarto d ora, una mezza, e due ritocchi': c => { ctx.metteTempo(c, 15);
+      ctx.vendiBlocco(c, 30); ctx.ritoccaTempo(c, 5); ctx.ritoccaTempo(c, 10); }
+  };
+
+  const storti = [];
+  Object.keys(strade).forEach(nome => {
+    const c = nuovo();
+    strade[nome](c);
+    ctx.PAN.conto = c;
+    const minuti = ctx.clamp(ctx.num(c.durationMinutes, 0), 0, 1e6);
+    if (minuti !== bersaglio) { storti.push(nome + ': fa ' + minuti + '′, non ' + bersaglio); return; }
+    const prezzo = ctx.costOf(c).parkTotal;
+    if (ctx.r2(prezzo) !== attesa) storti.push(nome + ': ' + prezzo + ' € invece di ' + attesa);
+  });
+  ok('sette strade per un ora, un prezzo solo', storti, []);
+
+  /* e non e' vero solo per l'ora: vale per ogni durata del cartello */
+  const male = [];
+  ctx.settings.tariffs.forEach(t => {
+    const meta = Math.max(5, Math.round(t.m / 2 / 5) * 5);
+    const resto = t.m - meta;
+    if (resto <= 0) return;
+    const a = nuovo(); ctx.metteTempo(a, t.m);
+    const b = nuovo(); ctx.metteTempo(b, meta); ctx.vendiBlocco(b, resto);
+    if (ctx.r2(ctx.costOf(a).parkTotal) !== ctx.r2(ctx.costOf(b).parkTotal)) {
+      male.push(t.m + '′: ' + ctx.costOf(a).parkTotal + ' € tutto insieme, ' +
+        ctx.costOf(b).parkTotal + ' € in due volte');
+    }
+  });
+  ok('e vale per ogni durata del cartello, non solo per l ora', male, []);
+
+  /* IL TETTO DEL CARTELLO NON SI SCAVALCA A PICCOLI PEZZI. Oltre
+     l'ultima fascia il prezzo non sale piu': prima, allungando mezz'ora
+     alla volta, ogni pezzo apriva il suo scaglione e il conto cresceva
+     all'infinito -- una serata intera poteva costare piu' di quanto il
+     cartello chieda per una serata intera. */
+  const lungo = nuovo();
+  ctx.metteTempo(lungo, 30);
+  for (let i = 0; i < 10; i++) ctx.vendiBlocco(lungo, 30);
+  const ultima = ctx.settings.tariffs[ctx.settings.tariffs.length - 1];
+  ok('cinque ore e mezza allungate mezz ora alla volta si fermano al tetto del cartello',
+     ctx.costOf(lungo).parkTotal, ctx.r2(ultima.p * 3));
+});
+
+gruppo('Si paga per QUANTO SI STA, non a pezzi', () => {
+  /* LA REGOLA DEL PARCO, detta dal cartello: un'ora costa dodici euro.
+     Non importa se l'hanno comprata tutta insieme, o mezz'ora e poi
+     un'altra mezz'ora, o quattro quarti d'ora allungando ogni volta:
+     sono rimasti un'ora, e un'ora costa dodici euro.
+     Per un po' ogni blocco venduto si e' pagato al prezzo del cartello
+     per QUEL blocco, e la stessa ora e' arrivata a costare quattro
+     prezzi diversi -- dodici, quattordici, sedici, diciotto -- a
+     seconda di come ci si era arrivati. Al banco erano i "17 euro a
+     caso": stesso tempo sull'orologio, prezzi diversi.
+     I blocchi restano scritti in `aggiunte` -- raccontano come e'
+     andata e dicono dove entra un ritocco -- ma non fanno il prezzo. */
   const T = ctx.settings.tariffs;
   const p30 = T.find(t => t.m === 30).p, p15 = T.find(t => t.m === 15).p;
   const r2 = v => Math.round(v * 100) / 100;
@@ -454,10 +526,21 @@ gruppo('Allungare e VENDERE tempo, non ricalcolarlo', () => {
   const partenza = ctx.dueOf(c).park;
   ok('mezz ora per tre bambini', partenza, r2(p30 * 3));
 
-  ok('il tasto +30m dice il prezzo di mezz ora', ctx.costoEstensione(c, 30), r2(p30 * 3));
-  ok('e il +15m dice quello di un quarto d ora', ctx.costoEstensione(c, 15), r2(p15 * 3));
-  ok('quindi i due tasti NON dicono piu la stessa cifra',
-     ctx.costoEstensione(c, 30) !== ctx.costoEstensione(c, 15), true);
+  /* il tasto dice QUANTO CRESCE IL CONTO: il prezzo del tempo che
+     avranno stando dentro, meno quello che hanno adesso */
+  ok('il tasto +30m dice quanto cresce il conto',
+     ctx.costoEstensione(c, 30), r2((ctx.priceFor(60) - p30) * 3));
+  ok('e il +15m pure',
+     ctx.costoEstensione(c, 15), r2((ctx.priceFor(45) - p30) * 3));
+  /* E SE IL CARTELLO DA' LO STESSO PREZZO A DUE DURATE, i due tasti
+     dicono la stessa cifra: e' il cartello, non un guasto. Sul listino
+     di Birbalandia cinquanta minuti e un'ora costano tutti e due
+     dodici euro, quindi da mezz'ora "+15m" e "+30m" crescono il conto
+     uguale -- e la cassiera, vedendo le due cifre, sa quale conviene
+     al cliente. */
+  vero('e se il cartello non distingue due durate, nemmeno i tasti lo fanno',
+     (ctx.priceFor(45) === ctx.priceFor(60)) ===
+     (ctx.costoEstensione(c, 15) === ctx.costoEstensione(c, 30)));
 
   /* quello che dice il tasto e quello che entra in cassa devono essere
      lo stesso numero, se no il tasto e' una promessa e basta */
@@ -570,18 +653,18 @@ gruppo('Il ritocco da cinque minuti non e una vendita', () => {
   /* IL RITOCCO ENTRA NELL'ULTIMA VENDITA, non ne apre una nuova */
   const d = conto({ children: 1, durationMinutes: 45, baseMinutes: 30 });
   d.aggiunte = [15];
-  ok('venduto un quarto d ora a parte', ctx.costOf(d).unit,
-     ctx.r2(ctx.priceFor(30) + ctx.priceFor(15)));
+  ok('tre quarti d ora, comprati in due volte', ctx.costOf(d).unit, ctx.priceFor(45));
   ctx.ritoccaTempo(d, 5);
   ok('il ritocco cresce il blocco venduto', JSON.stringify(ctx.lista(d.aggiunte)), '[20]');
-  ok('e si paga il blocco da venti, non due blocchi',
-     ctx.costOf(d).unit, ctx.r2(ctx.priceFor(30) + ctx.priceFor(20)));
+  /* i blocchi raccontano come e' andata, ma il prezzo lo fa il tempo:
+     cinquanta minuti costano cinquanta minuti */
+  ok('e si paga il tempo che stanno dentro', ctx.costOf(d).unit, ctx.priceFor(50));
 
   /* i tagli grossi continuano a fare quello che facevano */
   const e = conto({ children: 1, durationMinutes: 75, baseMinutes: 30 });
   e.aggiunte = [15, 30];
-  ok('mezz ora piu un quarto piu mezz ora, ognuno al suo prezzo',
-     ctx.costOf(e).unit, ctx.r2(ctx.priceFor(30) + ctx.priceFor(15) + ctx.priceFor(30)));
+  ok('mezz ora piu un quarto piu mezz ora fanno un ora e un quarto, e si pagano quelli',
+     ctx.costOf(e).unit, ctx.priceFor(75));
 
   /* a tempo aperto non si ritocca: non c e una durata da ritoccare */
   const f = conto({ children: 1, durationMinutes: 30, baseMinutes: 30, payLater: true });
@@ -1061,7 +1144,7 @@ gruppo('Aprire e richiudere il tempo non cambia il prezzo', () => {
   const c = conto({ children: 2, durationMinutes: 60, baseMinutes: 30 });
   c.aggiunte = [30];
   const prima = ctx.costOf(c).parkTotal;
-  ok('un ora con dentro una mezz ora venduta', prima, ctx.r2(ctx.priceFor(30) * 2 * 2));
+  ok('un ora con dentro una mezz ora venduta vale un ora', prima, ctx.r2(ctx.priceFor(60) * 2));
 
   c.payLater = true;
   vero('a tempo aperto i blocchi restano scritti', ctx.lista(c.aggiunte).length === 1);
@@ -1859,8 +1942,8 @@ gruppo('Solo Crazy: dieci minuti in omaggio, e non si pagano mai', () => {
      Math.round((ctx.endTimeOf(c) - ctx.inizioParco(c)) / 60000), 30);
 
   /* e il tasto che allunga dice il prezzo del blocco, non dell'omaggio */
-  ok('allungare di mezz ora costa la mezz ora',
-     ctx.costoEstensione(c, 30), ctx.r2(ctx.priceFor(30) * 2));
+  ok('allungare di mezz ora costa la differenza fra un ora e mezz ora',
+     ctx.costoEstensione(c, 30), ctx.r2((ctx.priceFor(60) - ctx.priceFor(30)) * 2));
 
   /* se il Crazy se ne va, se ne vanno i minuti regalati */
   ctx.bcSetQ('crazy', 0);

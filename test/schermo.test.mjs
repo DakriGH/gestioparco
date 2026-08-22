@@ -211,8 +211,15 @@ gruppo('Lo scontrino: tutto quello che hanno preso, in una lista sola', () => {
   prova('allungato il tempo, non e piu saldata', !/saldata/.test(dopo));
   prova('e dice quanto manca su questa riga', /restano /.test(dopo), dopo.slice(0, 220));
   ctx.scAperta = 'bimbi';
+  /* LA CIFRA NON SI SCRIVE A MANO NELLA PROVA: si chiede al conto.
+     Scritta a mano diceva quattordici euro, che era il prezzo di quando
+     ogni blocco si pagava a parte; adesso un'ora e' un'ora e la cifra
+     e' un'altra. Una prova che ripete un numero imparato a memoria
+     smette di misurare la regola e comincia a misurare se stessa. */
+  const daPrendere = ctx.eur(ctx.dueOf(t).parkDue);
   prova('e il tasto dice quanto c e da incassare',
-    /paga 14,00/.test(ctx.scontrinoRiga(t, 'bimbi')), ctx.scontrinoRiga(t, 'bimbi').slice(0, 400));
+    ctx.scontrinoRiga(t, 'bimbi').indexOf('paga ' + daPrendere) >= 0,
+    'cerco «paga ' + daPrendere + '» in ' + ctx.scontrinoRiga(t, 'bimbi').slice(0, 300));
   ctx.scAperta = null;
   /* e chiudendola i soldi entrano davvero */
   ctx.bcSegna('bimbi', true);
@@ -444,14 +451,19 @@ gruppo('La pastiglia del tempo non chiede soldi gia presi', () => {
 });
 
 gruppo('Il tasto che allunga scrive il prezzo che poi chiede', () => {
-  /* la prova che mancava quando i due tasti dicevano la stessa cifra */
+  /* QUANTO CRESCE IL CONTO, non «il prezzo del pezzo aggiunto».
+     Si paga per quanto si sta: chi ha mezz'ora e ne compra un'altra
+     mezza sta un'ora, e paga l'ora -- non due mezze. Quindi il tasto
+     dice la differenza fra il prezzo del tempo che avranno e quello
+     del tempo che hanno adesso. */
   const T = ctx.settings.tariffs;
   for (const bimbi of [1, 3]) {
     for (const durata of [15, 30, 60, 90]) {
       const c = conto({ children: bimbi, durationMinutes: durata, baseMinutes: durata });
       for (const agg of [15, 30, 60]) {
         const scritto = ctx.costoEstensione(c, agg);
-        const atteso = ctx.r2(ctx.priceFor(ctx.up5(agg)) * bimbi);
+        const atteso = ctx.r2((ctx.priceFor(ctx.up5(durata + agg)) -
+                               ctx.priceFor(ctx.up5(durata))) * bimbi);
         if (Math.abs(scritto - atteso) > 0.005) {
           prova('il tasto +' + agg + 'm su ' + bimbi + ' bambini da ' + durata + "'", false,
             'dice ' + scritto + ', il cartello dice ' + atteso);
@@ -460,7 +472,7 @@ gruppo('Il tasto che allunga scrive il prezzo che poi chiede', () => {
       }
     }
   }
-  prova('il prezzo scritto e sempre la tariffa del tempo aggiunto', true);
+  prova('il prezzo scritto e sempre quanto cresce il conto', true);
 
   /* e quello che scrive e' quello che entra in cassa */
   const c = conto({ children: 3, durationMinutes: 30, baseMinutes: 30 });
