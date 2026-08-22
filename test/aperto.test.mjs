@@ -1094,6 +1094,184 @@ gruppo('Spostare l’ora d’ingresso si porta dietro il tempo di parco');
   }
 }
 
+/* ═════════════════════════════════════════════════════════
+   I TASTI DELL'ORA D'USCITA
+
+   Nella sezione Parco l'ora d'uscita si sposta col meno e col piu', e
+   il salto e' al quarto d'ora dell'orologio -- «me lo tieni fino alle
+   tre?». Quel tasto scriveva la durata a mano invece di passare dalle
+   funzioni che vendono il tempo, e chi scrive il tempo a mano finisce
+   per raccontare una storia diversa da tutti gli altri.
+   Qui si controlla che le due strade -- l'ora d'uscita e il piu'
+   dell'Estendi -- arrivino allo STESSO posto, coi soldi e coi blocchi.
+   ═════════════════════════════════════════════════════════ */
+gruppo('L’ora d’uscita e l’Estendi devono raccontare la stessa storia');
+{
+  fermaOrologio();
+  const rileggi = c => app.normalizeEntries([JSON.parse(JSON.stringify(c))])[0];
+  const oraDi2 = t => new VeraData(t).toTimeString().slice(0, 5);
+  /* quello che fa il tasto, nell'ordine in cui lo fa il gestore */
+  const tastoUscita = (c, verso) => {
+    if (c.payLater) return 0;
+    const passo = app.uscitaAlQuarto(c, verso);
+    if (!passo.delta) return 0;
+    if (verso < 0 && app.num(c.regaloFinoA, 0) > passo.bersaglio) c.regaloFinoA = passo.bersaglio;
+    app.ritoccaTempo(c, passo.delta);
+    return passo.delta;
+  };
+  const gruppoDa = (min, extra) => app.normalizeEntries([Object.assign({
+    id: 'u' + Math.random().toString(36).slice(2, 7), startTime: adesso(), createdAt: adesso(),
+    oraManuale: true, children: 3, durationMinutes: min, baseMinutes: min || undefined
+  }, extra || {})])[0];
+
+  /* 1. L'USCITA VA DAVVERO DOVE DICE: sul quarto d'ora, in su e in giu' */
+  {
+    const guai = [];
+    [15, 30, 47, 60, 95].forEach(min => {
+      [0, 2].forEach(crazy => {
+        [1, -1].forEach(verso => {
+          const c = gruppoDa(min, crazy ? { crazyJumping: crazy } : null);
+          const prima = app.endTimeOf(c);
+          const mosso = tastoUscita(c, verso);
+          if (!mosso) return;
+          const u = new VeraData(app.endTimeOf(c));
+          const eti = min + '′' + (crazy ? ' +' + crazy + ' giri' : '') + (verso > 0 ? ' col +' : ' col −');
+          /* SOTTO I CINQUE MINUTI NON SI SCENDE, e li' il quarto d'ora
+             non si puo' raggiungere: il tempo ha toccato il fondo, non
+             e' il tasto che sbaglia. Chiederglielo lo stesso voleva
+             dire misurare una cosa che il codice non ha mai promesso. */
+          if (c.durationMinutes <= app.minimoTempo(c)) return;
+          if ((u.getHours() * 60 + u.getMinutes()) % 15 !== 0) {
+            guai.push(eti + ': finisce alle ' + oraDi2(app.endTimeOf(c)) + ', non su un quarto d’ora');
+          }
+          /* e si muove nel verso giusto, mai piu' di un quarto d'ora */
+          const salto = (app.endTimeOf(c) - prima) / 60000;
+          if (verso > 0 ? !(salto > 0 && salto <= 15) : !(salto < 0 && salto >= -15)) {
+            guai.push(eti + ': si e mossa di ' + salto + '′');
+          }
+        });
+      });
+    });
+    prova('l’uscita finisce sempre su un quarto d’ora, e si muove del verso giusto',
+      !guai.length, guai.slice(0, 4).join('\n        '));
+  }
+
+  /* 2. STESSI MINUTI, STESSO CONTO: l'uscita contro l'Estendi.
+     Il tasto scriveva la durata a mano e NON entrava nell'ultima
+     vendita: gli stessi minuti lasciavano blocchi diversi, e il
+     ritocco successivo cadeva su un blocco sbagliato. */
+  {
+    const guai = [];
+    [[30, 30], [60, 30], [45, 15], [90, 60]].forEach(([min, venduti]) => {
+      const a = gruppoDa(min); app.vendiBlocco(a, venduti);
+      const b = rileggi(a);
+      const mosso = tastoUscita(b, 1);
+      app.ritoccaTempo(a, mosso);
+      const eti = min + '′+' + venduti + '′ poi +' + mosso + '′: ';
+      if (a.durationMinutes !== b.durationMinutes) guai.push(eti + 'minuti diversi');
+      if (r2(app.costOf(a).parkTotal) !== r2(app.costOf(b).parkTotal)) {
+        guai.push(eti + app.costOf(a).parkTotal + ' € col ritocco, ' + app.costOf(b).parkTotal + ' € con l’uscita');
+      }
+      if (JSON.stringify(a.aggiunte) !== JSON.stringify(b.aggiunte)) {
+        guai.push(eti + 'blocchi diversi: ' + JSON.stringify(a.aggiunte) + ' e ' + JSON.stringify(b.aggiunte));
+      }
+    });
+    prova('spostare l’uscita e premere il più dell’Estendi lasciano lo stesso conto',
+      !guai.length, guai.slice(0, 4).join('\n        '));
+  }
+
+  /* 3. IL SOLO CRAZY CHE SI FERMA AL PARCO.
+     La sua uscita e' fatta di minuti REGALATI, e quelli non si sommano
+     al tempo comprato. Spostandola, il tempo di parco deve partire da
+     ADESSO -- come fa il taglio -- e non dall'arrivo: se no gli si
+     mangia tutto il tempo passato a saltare. E `baseMinutes` deve
+     essere i minuti veri: da uno partiva lo scaglione sbagliato, ed e'
+     il guasto dei 45,00 € invece di 36,00 €. */
+  {
+    const c = app.normalizeEntries([{
+      id: 'sc', startTime: adesso() - 40 * 60000, createdAt: adesso() - 40 * 60000,
+      oraManuale: true, children: 0, durationMinutes: 0, baseMinutes: 0,
+      omaggio: 10, crazyJumping: 2, crazyGiri: [1, 1]
+    }])[0];
+    c.children = 3;
+    /* UN TOCCO SOLO, e il paragone e' con chi compra quegli stessi
+       minuti. Premendolo cinque volte si comprano cinque volte, e col
+       listino A SCAGLIONI cinque acquisti non fanno il prezzo di uno:
+       e' cosi' che deve essere -- chiedere il contrario voleva dire
+       pretendere che allungare cinque volte costasse come comprare
+       tutto subito, che non e' il listino di questo parco. */
+    tastoUscita(c, 1);
+    const minuti = c.durationMinutes;
+    const gemello = app.normalizeEntries([{
+      id: 'sc2', startTime: adesso() - 40 * 60000, createdAt: adesso() - 40 * 60000,
+      oraManuale: true, children: 3, durationMinutes: 0, baseMinutes: 0,
+      omaggio: 10, crazyJumping: 2, crazyGiri: [1, 1]
+    }])[0];
+    app.metteTempo(gemello, minuti);
+    prova('il solo Crazy che si ferma al parco paga come se avesse toccato un taglio',
+      r2(app.costOf(c).parkTotal) === r2(app.costOf(gemello).parkTotal) &&
+      c.baseMinutes === gemello.baseMinutes,
+      minuti + '′: ' + app.costOf(c).parkTotal + ' € (base ' + c.baseMinutes + ') contro ' +
+      app.costOf(gemello).parkTotal + ' € (base ' + gemello.baseMinutes + ')');
+    prova('e il suo tempo di parco comincia da adesso, non da quando è arrivato',
+      app.num(c.parcoDa, 0) > 0 && c.parcoDa >= adesso() - 5 * 60000,
+      'parcoDa ' + (c.parcoDa ? oraDi2(c.parcoDa) : 'non timbrato') + ', arrivato alle ' + oraDi2(c.startTime));
+    /* E L'USCITA DEVE FINIRE NEL FUTURO, su un quarto d'ora.
+       Misurando l'uscita di ADESSO -- fatta di minuti regalati e ormai
+       passata -- il tasto puntava a un quarto d'ora gia' andato: gli
+       vendeva un tempo scaduto prima di cominciare, e il gruppo
+       nasceva rosso. E' il controllo che distingue le due strade:
+       senza, la prova passava anche col guasto rimesso. */
+    const fine3 = app.endTimeOf(c);
+    const u3 = new VeraData(fine3);
+    prova('e la sua uscita cade nel futuro, su un quarto d’ora',
+      fine3 > adesso() && (u3.getHours() * 60 + u3.getMinutes()) % 15 === 0 &&
+      fine3 - adesso() <= 15 * 60000,
+      'esce alle ' + oraDi2(fine3) + ' e sono le ' + oraDi2(adesso()) +
+      ' (comprati ' + minuti + '′)');
+  }
+
+  /* 4. COL PAVIMENTO DI UN REGALO il tasto non deve essere morto.
+     Un giro fatto a tempo scaduto tiene l'uscita ferma a un'ora
+     promessa: la durata da sola non la spiega piu', e premendo il piu'
+     non si muoveva NIENTE mentre i soldi si muovevano lo stesso. */
+  {
+    const c = gruppoDa(30);
+    avanza(40);
+    const finePrima = app.endTimeOf(c);
+    app.metteCrazy(c, 1);
+    app.regalaDaAdesso(c, finePrima);
+    const conPavimento = app.endTimeOf(c);
+    prova('c’è davvero un pavimento da scavalcare', app.num(c.regaloFinoA, 0) > 0);
+    tastoUscita(c, 1);
+    prova('col pavimento di un regalo il più muove l’uscita davvero',
+      app.endTimeOf(c) > conPavimento && app.endTimeOf(c) - conPavimento <= 15 * 60000,
+      'era ' + oraDi2(conPavimento) + ', adesso ' + oraDi2(app.endTimeOf(c)));
+    const su = app.endTimeOf(c);
+    tastoUscita(c, -1);
+    prova('e il meno la riporta indietro, senza restare incollata al pavimento',
+      app.endTimeOf(c) < su, 'era ' + oraDi2(su) + ', adesso ' + oraDi2(app.endTimeOf(c)));
+    fermaOrologio();
+  }
+
+  /* 5. E NIENTE DI TUTTO QUESTO DEVE DIVERGERE fra memoria e disco */
+  {
+    const guai = [];
+    [15, 30, 60].forEach(min => {
+      [1, -1, 1, 1, -1].forEach(verso => {
+        const c = gruppoDa(min, { crazyJumping: 1 });
+        tastoUscita(c, verso);
+        if (app.endTimeOf(c) !== app.endTimeOf(rileggi(c))) guai.push(min + '′ verso ' + verso);
+        if (r2(app.costOf(c).parkTotal) !== r2(app.costOf(rileggi(c)).parkTotal)) {
+          guai.push(min + '′ verso ' + verso + ': prezzo diverso rileggendolo');
+        }
+      });
+    });
+    prova('e rileggendo il dato dal disco esce lo stesso orario e lo stesso prezzo',
+      !guai.length, guai.slice(0, 3).join('\n        '));
+  }
+}
+
 /* ---------- il verdetto ---------- */
 console.log('\n' + '━'.repeat(52));
 if (ko) {

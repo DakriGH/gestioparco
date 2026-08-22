@@ -1621,16 +1621,37 @@ function costruisciPannello() {
        fermato a 14:25, 14:40, 14:55 e le tre non le avrebbe prese mai.
        Si muove la DURATA, non l'orario di fine: l'ingresso resta dov'e'
        e i minuti regalati dal Crazy restano attaccati alla fine. */
+    /* L'ORA D'USCITA PASSA DALLE STESSE FUNZIONI DI TUTTO IL RESTO.
+       Qui la durata si scriveva a mano, e chi scrive il tempo a mano
+       finisce per raccontare una storia diversa da chi lo scrive per
+       le vie normali. Erano quattro differenze in un tasto solo:
+         — non entrava nell'ultima vendita, quindi lo stesso quarto
+           d'ora comprato col piu' dell'Estendi e comprato spostando
+           l'uscita lasciava i blocchi diversi, e il ritocco DOPO
+           cadeva su un blocco sbagliato;
+         — non timbrava ne' `parcoDa` ne' `baseMinutes`: su un solo
+           Crazy che si ferma al parco il tempo cominciava a contare
+           dall'ARRIVO invece che da adesso -- gli si mangiava tutto il
+           tempo passato a saltare -- e il primo scaglione partiva da
+           un minuto, che e' il guasto da 45,00 € invece di 36,00 €;
+         — non chiedeva niente sullo sforo, mentre il piu' da cinque
+           minuti lo chiede: due tasti che vendono tempo, due risposte
+           diverse alla stessa domanda;
+         — e col pavimento di un regalo non muoveva l'uscita di un
+           minuto: il tasto sembrava rotto mentre i soldi si muovevano.
+       Adesso calcola solo DOVE si vuole arrivare, e a portarcelo e'
+       `ritoccaTempo` come per tutti gli altri. */
     if (d.a === 'fine') {
       if (c.payLater) return;
-      const min = clamp(num(c.durationMinutes, 60), 0, 1e6);
-      const uscita = new Date(endTimeOf(c));
-      const resto = (uscita.getHours() * 60 + uscita.getMinutes()) % 15;
-      const passo = num(d.v, 0) > 0 ? 15 - resto : (resto || 15);
-      c.durationMinutes = clamp(num(d.v, 0) > 0 ? min + passo : min - passo, 5, 100000);
-      sistemaAggiunte(c);
-      pcSalva();
-      aggiornaPannello();
+      const verso = num(d.v, 0) > 0 ? 1 : -1;
+      const passo = uscitaAlQuarto(c, verso);
+      if (!passo.delta) return;
+      /* ACCORCIARE A MANO BATTE IL PAVIMENTO DEL REGALO -- la stessa
+         regola del meno da cinque minuti. Va tolto PRIMA di muovere il
+         tempo: se no l'uscita resta incollata dov'era. */
+      if (verso < 0 && num(c.regaloFinoA, 0) > passo.bersaglio) c.regaloFinoA = passo.bersaglio;
+      const fai = () => { ritoccaTempo(c, passo.delta); pcSalva(); aggiornaPannello(); };
+      if (verso > 0) conSforo(c, fai); else fai();
       return;
     }
     /* il menu del bracciale si apre e si chiude senza rifare la
@@ -2376,6 +2397,40 @@ function ritoccaTempo(c, delta) {
       else delete c.regaloFinoA;
     }
   }
+}
+
+/* DOVE PORTA IL PIU' (O IL MENO) DELL'ORA D'USCITA.
+   Il salto e' al QUARTO D'ORA dell'orologio, non di quindici minuti
+   tondi: chi chiede «me lo tieni fino alle tre?» pensa a un orario, e
+   partendo dalle 14:10 il piu' deve portare alle 14:15.
+   Torna di quanto va mossa la DURATA per arrivarci -- e' quello il
+   dato che si vende -- e l'orario a cui si punta.
+
+   DUE CASI CHE NON SI VEDONO SUBITO:
+   — CHI NON HA ANCORA COMPRATO TEMPO (un solo Crazy). La sua ora
+     d'uscita e' fatta di minuti REGALATI, e quelli non si sommano al
+     tempo di parco -- l'omaggio era il tempo di salire e scendere, ed
+     e' gia' stato speso. Partire da li' voleva dire vendergli un tempo
+     che finiva prima di cominciare: si riparte da dove finiscono i
+     giri, e il tempo di parco parte da ADESSO, esattamente come fa
+     `segnaInizioParco`.
+   — IL PAVIMENTO DI UN REGALO. Un giro fatto a tempo scaduto tiene
+     l'uscita ferma a un'ora promessa, e la durata da sola non basta
+     piu' a spiegarla: il conto va fatto sull'uscita VERA, se no il
+     tasto si preme e non si muove niente. */
+function uscitaAlQuarto(c, verso) {
+  c = c || C();
+  const min = clamp(num(c.durationMinutes, 60), 0, 1e6);
+  const crazy = minutiCrazy(c);
+  const daQuando = min > 0 ? inizioParco(c)
+    : Math.max(roundTo5(new Date()).getTime(), num(c.startTime, 0));
+  const fine = min > 0 ? endTimeOf(c) : daQuando + crazy * 60000;
+  const u = new Date(fine);
+  const resto = (u.getHours() * 60 + u.getMinutes()) % 15;
+  const salto = verso > 0 ? 15 - resto : (resto || 15);
+  const bersaglio = fine + verso * salto * 60000;
+  const dopo = clamp(Math.round((bersaglio - daQuando) / 60000) - crazy, minimoTempo(c), 100000);
+  return { dopo: dopo, delta: dopo - min, bersaglio: bersaglio };
 }
 
 /* METTE UNA DURATA, ED E' L'UNICO POSTO CHE LO FA.
