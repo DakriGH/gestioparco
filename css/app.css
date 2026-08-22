@@ -4844,3 +4844,24 @@ html:not(.anima) .entry.esce { transition: none; }
 }
 .entry.in-pausa .e-conto .v { opacity: .72; }
 .entry.in-pausa .e-conto .k { color: rgba(106, 220, 175, .95); letter-spacing: .3px; }
+
+/* QUELLO CHE MANCA SI VEDE CHE MANCA.
+   La cifra da incassare aveva lo stesso colore di tutto il resto: in
+   una lista di dieci schede, «da pagare 24,00» e «pagato ✓» si
+   distinguevano solo leggendo la parolina sopra, in maiuscoletto da
+   dieci pixel. Adesso la cifra e' rossa -- e resta rossa finche' non
+   entra l'ultimo euro. */
+.e-soldi.manca .k { color: rgba(255, 138, 138, .95); }
+.e-soldi.manca .v { color: #ff8a8a; }
+.e-soldi.pagato .v { color: rgba(106, 220, 175, .95); opacity: 1; }
+
+/* IL TASTO DEI SOLDI QUANDO DISFA: stessa forma, stesso posto, un
+   colore che dice «questo torna indietro» invece di «questo incassa».
+   Verde e rosso sono gia' presi dallo stato del tempo: qui serve una
+   cosa che si distingua dall’incasso senza gridare. */
+.e-azioni button.paga.rendi, .bc-tasti .btn.rendi {
+  background: rgba(255, 190, 90, .18);
+  border-color: rgba(255, 190, 90, .5);
+  color: #ffce7a;
+}
+.bc-tasti .btn.hidden { display: none; }

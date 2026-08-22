@@ -1774,15 +1774,20 @@ function costruisciPannello() {
     if (d.desez !== undefined) { bcSegna(d.desez, false); pcSalva(); aggiornaPannello(); return; }
     if (d.tutto !== undefined) {
       const foto = fotografia(C());
-      const prima = r2(contoPagatoParco() + contoPagatoCrazy() + contoPagatoBar());
-      pagaTutto(); pcSalva(); aggiornaPannello();
-      const entrati = r2(r2(C().paidPark + C().paidBar) - r2(foto.paidPark + foto.paidBar));
-      if (entrati > 0.005) {
-        fatto('Incassati ' + eur(entrati), () => {
+      /* lo stesso tasto fa le due cose opposte: incassa finche' c'e' da
+         incassare, e a conto chiuso disfa. Quale sia lo si decide dai
+         numeri, non dalla scritta che c'e' sopra. */
+      const c0 = C(), d0 = dueOf(c0);
+      const preso = r2(num(d0.parkPaid, 0) + num(d0.barPaid, 0));
+      if (r2(d0.total) <= 0.005 && preso > 0.005) rendiTutto(); else pagaTutto();
+      pcSalva(); aggiornaPannello();
+      const mosso = r2(r2(C().paidPark + C().paidBar) - r2(foto.paidPark + foto.paidBar));
+      if (Math.abs(mosso) > 0.005) {
+        fatto(mosso > 0 ? 'Incassati ' + eur(mosso) : 'Resi ' + eur(-mosso), () => {
           rimetti(C(), foto);
           pcSalva();
           aggiornaPannello();
-          toast('Incasso annullato \u21a9\ufe0e');
+          toast(mosso > 0 ? 'Incasso annullato \u21a9\ufe0e' : 'Incasso rimesso \u2705');
         });
       }
       return;
@@ -4267,8 +4272,18 @@ function pcFondo() {
       (!PAN.ingresso && draft.touched
         ? '<button class="btn" data-svuota>\ud83e\uddf9 Svuota\u2026</button>'
         : '') +
-      (resta > 0 ? '<button class="btn" data-resto>\ud83e\uddee Resto</button>' +
-        '<button class="btn" data-tutto>Paga tutto</button>' : '') +
+      /* IL TASTO DEI SOLDI STA SEMPRE NELLO STESSO POSTO.
+         Spariva a conto saldato -- con «Resto» accanto -- e sparendo
+         faceva scivolare tutto il resto della fascia: la cosa piu'
+         grossa della schermata cambiava posto a seconda di quanto
+         avesse pagato il gruppo. Adesso resta, e a conto chiuso
+         diventa il modo per disfare l'incasso. «Resto» invece e' una
+         calcolatrice e ha senso solo con qualcosa da dare indietro. */
+      '<button class="btn' + (resta <= 0.005 && pag > 0.005 ? ' rendi' : '') +
+        (resta <= 0.005 && pag <= 0.005 ? ' hidden' : '') + '" data-tutto>' +
+        (resta <= 0.005 && pag > 0.005 ? '\u21a9\ufe0e Annulla ' + eur(pag) : 'Paga tutto') +
+      '</button>' +
+      (resta > 0 ? '<button class="btn" data-resto>\ud83e\uddee Resto</button>' : '') +
       /* L'USCITA NON STA QUI. Stava in fondo al pannello, cioe' in
          fondo alla schermata dove si sta CONTANDO: chi apriva il conto
          per segnare una birra se la trovava sotto le dita, accanto a
@@ -5505,23 +5520,27 @@ function entryCard(entry) {
     ev.stopPropagation();
     const foto = fotografia(entry);
     const prima = r2(num(entry.paidPark, 0) + num(entry.paidBar, 0));
-    conConto(entry, () => pagaTutto());
+    /* lo stesso tasto fa le due cose opposte, e quale sia lo dice la
+       sua faccia: vedi `aggiornaPaga`. La scelta si fa QUI e non
+       guardando la scritta, che e' un fatto dello schermo. */
+    const rendere = r2(dueOf(entry).total) <= 0.005 && prima > 0.005;
+    conConto(entry, () => (rendere ? rendiTutto() : pagaTutto()));
     saveEntries();
     syncCard(entry);
     /* se il pannello di questo ingresso e' aperto, deve dirlo anche lui */
     if (PAN.ingresso === entry) aggiornaPannello();
-    const entrati = r2(r2(num(entry.paidPark, 0) + num(entry.paidBar, 0)) - prima);
-    if (entrati > 0.005) {
-      fatto('Incassati ' + eur(entrati), () => {
+    const mosso = r2(r2(num(entry.paidPark, 0) + num(entry.paidBar, 0)) - prima);
+    if (Math.abs(mosso) > 0.005) {
+      fatto(mosso > 0 ? 'Incassati ' + eur(mosso) : 'Resi ' + eur(-mosso), () => {
         rimetti(entry, foto);
         saveEntries();
         syncCard(entry);
         if (PAN.ingresso === entry) aggiornaPannello();
-        toast('Incasso annullato \u21a9\ufe0e');
+        toast(mosso > 0 ? 'Incasso annullato \u21a9\ufe0e' : 'Incasso rimesso \u2705');
       });
     }
   });
-  pagaBtn.title = 'Segna come pagato tutto quello che resta';
+  pagaBtn.title = 'Incassa tutto quello che resta \u2014 a conto chiuso, lo disfa';
   /* la cifra si rinfresca insieme al resto della scheda: vedi syncCard */
   aggiornaPaga(pagaBtn, entry);
 
@@ -5583,9 +5602,27 @@ const C = () => PAN.conto || draft;
    crea la scheda sia syncCard, e non possono dire cose diverse. */
 function aggiornaPaga(btn, entry) {
   if (!btn) return;
-  const resta = dueOf(entry).total;
-  btn.classList.toggle('hidden', !(resta > 0.005));
-  if (resta > 0.005) btn.textContent = '\u2705 Paga ' + eur(resta);
+  const d = dueOf(entry);
+  const resta = r2(d.total);
+  const preso = r2(num(d.parkPaid, 0) + num(d.barPaid, 0));
+  /* IL TASTO NON SE NE VA PIU'.
+     Spariva a conto saldato, e sparendo faceva scivolare tutti gli
+     altri di mezzo dito: il Bar e lo Scontrino cambiavano posto a
+     seconda di quanto avesse pagato il gruppo, e il tasto piu' grosso
+     della scheda era anche l'unico che non stava mai fermo. Su una
+     tavoletta si tocca dove ci si aspetta che sia una cosa, non dove
+     e' finita.
+     Adesso resta al suo posto e cambia mestiere: incassa finche' c'e'
+     da incassare, e appena il conto e' chiuso diventa il modo per
+     DISFARLO. Che era la cosa che mancava: «Paga tutto» chiude un
+     conto intero con un dito, e lo sbaglio -- il gruppo di fianco, il
+     doppio tocco, i soldi non ancora in mano -- si fa con lo stesso
+     dito. Per disfarlo bisognava andare nello Scontrino a togliere le
+     spunte una per una. */
+  const annulla = resta <= 0.005 && preso > 0.005;
+  btn.classList.toggle('hidden', resta <= 0.005 && preso <= 0.005);
+  btn.classList.toggle('rendi', annulla);
+  btn.textContent = annulla ? '\u21a9\ufe0e Annulla ' + eur(preso) : '\u2705 Paga ' + eur(resta);
 }
 
 /* CHI SALE ADESSO. Il piu' e il meno della card del Crazy muovono il
@@ -5822,6 +5859,33 @@ function pagaTutto() {
     const primo = lista(c.barItems)[0];
     if (primo) muoviSoldi(primo.id, d.barDue);
   }
+}
+
+/* E IL SUO GEMELLO: RENDE TUTTO.
+   «Paga tutto» e' un tasto solo e chiude un conto intero, quindi lo
+   sbaglio -- premuto sul gruppo di fianco, premuto due volte, premuto
+   prima che il cliente tirasse fuori i soldi -- si fa in un colpo
+   solo. Per disfarlo bisognava andare nello Scontrino e togliere le
+   spunte riga per riga, oppure aprire «Svuota» e scegliere i soldi:
+   due strade lunghe per annullare una cosa fatta con un dito.
+   Rende ogni riga E gli spiccioli: `segnaPagate(id, 0)` restituisce
+   quello che era stato preso su quella riga, e i due totali di sezione
+   si azzerano dietro. Le chiavi si prendono da tutti e due i posti --
+   le spunte e gli importi -- perche' una bibita tolta dal listino dopo
+   il pagamento lascia soldi in cassa e nessuna riga a video. */
+function rendiTutto() {
+  const c = C();
+  const viste = {};
+  ['bimbi', 'crazy'].forEach(id => { viste[id] = 1; });
+  lista(c.barItems).forEach(x => { viste[x.id] = 1; });
+  Object.keys(c.paidLines || {}).forEach(id => { viste[id] = 1; });
+  Object.keys(c.paidAmt || {}).forEach(id => { viste[id] = 1; });
+  Object.keys(viste).forEach(id => segnaPagate(id, 0));
+  /* quello che resta appiccicato ai totali -- spiccioli
+     d'arrotondamento, o soldi di righe che non esistono piu' -- se ne
+     va con loro: se no il conto direbbe «pagato» su una cassa vuota */
+  c.paidAmt = {}; c.paidLines = {};
+  c.paidPark = 0; c.paidBar = 0;
 }
 
 /* le categorie: il Parco davanti, poi quelle vere del menu */
@@ -7245,8 +7309,19 @@ function vociSoldi(entry, due) {
       sotto: spiegaAperto(entry, true), pagato: false };
   }
   if (vale <= 0.005) return { k: 'niente sul conto', v: '\u2014', pagato: false };
-  if (resta <= 0) return { k: 'pagato', v: '\u2713', pagato: true };
-  return { k: preso > 0 ? 'restano' : 'da pagare', v: eur(resta), pagato: false };
+  /* PAGATO, MA QUANTO. C'era una spunta e basta: giusta come segnale --
+     verde, si vede da lontano -- ma toglieva l'unica cifra che si
+     guarda passando in rassegna la lista. Per sapere quanto avesse
+     lasciato un gruppo bisognava aprirlo. Adesso la spunta resta al
+     suo posto e la cifra torna sotto, in piccolo: il colpo d'occhio
+     dice «a posto», la riga sotto dice quanto. */
+  if (resta <= 0) return { k: 'pagato', v: '\u2713', sotto: eur(preso), pagato: true };
+  /* E QUELLO CHE MANCA SI VEDE CHE MANCA. La cifra da incassare aveva
+     lo stesso colore di tutto il resto: in una lista di dieci schede
+     «da pagare 24,00» e «pagato ✓» si distinguevano solo leggendo la
+     parolina sopra, in maiuscoletto da dieci pixel. */
+  return { k: preso > 0 ? 'restano' : 'da pagare', v: eur(resta),
+    sotto: preso > 0 ? 'gi\u00e0 presi ' + eur(preso) : '', pagato: false, manca: true };
 }
 
 function soldiDi(r, entry, due) {
@@ -7258,6 +7333,7 @@ function soldiDi(r, entry, due) {
     r.soldiS.classList.toggle('vuota', !s.sotto);
   }
   r.soldi.classList.toggle('pagato', s.pagato);
+  r.soldi.classList.toggle('manca', !!s.manca);
 }
 
 /* CHI C'E' E COM'E' VESTITO, nella riga della lista.

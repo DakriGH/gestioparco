@@ -166,6 +166,37 @@ gruppo('Pagare tutto chiude il conto, comunque ci si arrivi');
   });
   prova('dopo «paga tutto» non resta né manca un centesimo', !guai.length,
     guai.slice(0, 3).join('\n        '));
+
+  /* E L'ANNULLA DEVE RIMETTERE TUTTO COM'ERA.
+     «Paga tutto» chiude un conto intero con un dito, quindi lo sbaglio
+     -- il gruppo di fianco, il doppio tocco, i soldi non ancora in
+     mano -- si fa con lo stesso dito. Se disfarlo lascia in giro anche
+     un centesimo, a fine serata la cassa non torna e nessuno sa da
+     dove viene la differenza. */
+  const resti = [];
+  casi.filter(k => k.bimbi > 0).forEach(k => {
+    const c = costruisci(k, { paidPark: 0, paidAmt: undefined, paidLines: undefined,
+      barItems: [{ id: 'b1', name: 'Acqua', price: 1, qty: 2 }] });
+    app.PAN.conto = c;
+    const prima = JSON.stringify([c.paidPark || 0, c.paidBar || 0, c.paidAmt || {}, c.paidLines || {}]);
+    app.pagaTutto();
+    const incassato = r2(app.num(c.paidPark, 0) + app.num(c.paidBar, 0));
+    app.rendiTutto();
+    const dopo = JSON.stringify([c.paidPark || 0, c.paidBar || 0, c.paidAmt || {}, c.paidLines || {}]);
+    if (incassato <= 0.005) resti.push(eti(k) + ': non ha incassato niente da disfare');
+    if (r2(app.num(c.paidPark, 0)) !== 0 || r2(app.num(c.paidBar, 0)) !== 0) {
+      resti.push(eti(k) + ': restano ' + eur(app.num(c.paidPark, 0) + app.num(c.paidBar, 0)) + ' in cassa');
+    }
+    if (dopo !== prima) resti.push(eti(k) + ': non torna com’era\n           ' + prima + '\n           ' + dopo);
+    /* e il conto torna a essere tutto da pagare */
+    const deve = r2(app.costOf(c).parkTotal + app.costOf(c).crazyCost +
+      app.lista(c.barItems).reduce((a, x) => a + x.price * x.qty, 0));
+    if (r2(app.dueOf(c).total) !== deve) {
+      resti.push(eti(k) + ': dopo l’annulla resta da pagare ' + eur(app.dueOf(c).total) + ' invece di ' + eur(deve));
+    }
+  });
+  prova('e l’annulla rimette tutto esattamente com’era', !resti.length,
+    resti.slice(0, 3).join('\n        '));
 }
 
 gruppo('Salvare e rileggere non cambia un centesimo né un minuto');

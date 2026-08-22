@@ -1063,12 +1063,33 @@ gruppo('Nella scheda lunga, il Crazy si apre sotto la sua cella');
      per la cosa piu' frequente che succede a chi sta uscendo. */
   prova('c’è il tasto Paga nella riga dei comandi', /'conto paga'/.test(APP));
   prova('dice la cifra che resta', /Paga ' \+ eur\(resta\)/.test(APP));
-  prova('e a conto saldato sparisce invece di restare spento',
-    /btn\.classList\.toggle\('hidden', !\(resta > 0\.005\)\)/.test(APP));
+  /* E NON SE NE VA PIU'. Spariva a conto saldato, e sparendo faceva
+     scivolare Bar e Scontrino di mezzo dito: il tasto piu' grosso
+     della scheda era anche l'unico che non stava mai fermo. Adesso
+     resta al suo posto e cambia mestiere: a conto chiuso e' il modo
+     per DISFARE l'incasso, che prima si poteva fare solo togliendo le
+     spunte una per una nello Scontrino. */
+  prova('a conto saldato non sparisce: diventa l’annulla',
+    /const annulla = resta <= 0\.005 && preso > 0\.005;/.test(APP) &&
+    /Annulla ' \+ eur\(preso\)/.test(APP));
+  prova('e sparisce solo quando non c’è né da incassare né da rendere',
+    /btn\.classList\.toggle\('hidden', resta <= 0\.005 && preso <= 0\.005\)/.test(APP));
+  prova('l’annulla rende ogni riga, non solo i totali',
+    /function rendiTutto/.test(APP) &&
+    /Object\.keys\(viste\)\.forEach\(id => segnaPagate\(id, 0\)\)/.test(APP));
+  prova('e si sceglie dai numeri, non dalla scritta sul tasto',
+    /const rendere = r2\(dueOf\(entry\)\.total\) <= 0\.005 && prima > 0\.005;/.test(APP));
   prova('si rinfresca insieme al resto della scheda',
     /aggiornaPaga\(r\.pagaBtn, entry\)/.test(APP));
-  prova('e quello che incassa si può annullare',
-    /fatto\('Incassati ' \+ eur\(entrati\)[\s\S]{0,220}rimetti\(entry, foto\)/.test(APP));
+  prova('e tutti e due i versi si possono annullare col «Fatto»',
+    /fatto\(mosso > 0 \? 'Incassati ' \+ eur\(mosso\) : 'Resi ' \+ eur\(-mosso\)[\s\S]{0,260}rimetti\(entry, foto\)/.test(APP));
+  /* E LA CIFRA SI VEDE ANCHE DA PAGATA: prima restava una spunta e
+     basta, e per sapere quanto avesse lasciato un gruppo bisognava
+     aprirlo. */
+  prova('la cifra incassata resta scritta in piccolo',
+    /k: 'pagato', v: '\\u2713', sotto: eur\(preso\)/.test(APP));
+  prova('e quella che manca si vede che manca',
+    /\.e-soldi\.manca \.v/.test(CSS));
 }
 
 gruppo('L’app si apre anche quando la rete c’è a metà');
