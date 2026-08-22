@@ -4829,3 +4829,18 @@ html:not(.anima) .entry.esce { transition: none; }
 /* e il meno/piu' dell'Estendi e' lo stesso della cella qui sopra:
    due coppie uguali a due centimetri di distanza */
 .g2 .est-cinque { display: none; }
+
+/* LA SCHEDA IN PAUSA SI RICONOSCE DA LONTANO.
+   E' l'unico stato che non ha un colore suo: fermando l'orologio la
+   scheda restava identica a una che sta correndo, e l'unico modo di
+   sapere che era in pausa era aprirla. Qui prende una banda a righe
+   sul fianco -- il segno del "fermo" -- e il conto alla rovescia si
+   smorza, perche' quel numero non sta piu' correndo. */
+.entry.in-pausa::after {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 6px;
+  border-radius: 14px 0 0 14px; pointer-events: none;
+  background: repeating-linear-gradient(135deg,
+    rgba(106, 220, 175, .95) 0 6px, rgba(10, 40, 30, .55) 6px 12px);
+}
+.entry.in-pausa .e-conto .v { opacity: .72; }
+.entry.in-pausa .e-conto .k { color: rgba(106, 220, 175, .95); letter-spacing: .3px; }

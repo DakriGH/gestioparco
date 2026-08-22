@@ -7664,6 +7664,10 @@ function tick() {
       ['ok', 'warn', 'danger', 'later', 'bar'].forEach(x => r.card.classList.remove('s-' + x));
       r.card.classList.add('s-' + st);
     }
+    /* e la scheda in pausa si riconosce da lontano: e' l'unico stato
+       che non ha un colore suo, e senza un segno restava identica a
+       una che sta correndo */
+    r.card.classList.toggle('in-pausa', !!entry.payLater && !!num(entry.pausaDa, 0));
 
     if (entry.soloBar) {
       /* una vendita al banco non ha un conto alla rovescia da guardare:
@@ -7673,10 +7677,24 @@ function tick() {
       r.count.textContent = fmtClock(restaSoloBar(entry));
       if (r.countK) r.countK.textContent = 'si archivia fra';
     } else if (entry.payLater) {
-      // l'orario d'inizio è arrotondato ai 5 minuti e può cadere
-      // qualche minuto avanti: non mostro un tempo trascorso negativo
-      r.count.textContent = fmtClock(Math.max(0, now - entry.startTime));
-      if (r.countK) r.countK.textContent = 'dentro da';
+      /* IN PAUSA IL NUMERO GRANDE SI DEVE FERMARE.
+         Fermando l'orologio il conto smette di salire -- ed e' giusto
+         -- ma a video continuava a correre «dentro da 1h05», perche'
+         quello e' il tempo passato dall'arrivo e passare passa lo
+         stesso. Le due cose insieme dicevano il contrario di quello che
+         succede: il numero che cresce dice «sta correndo», e invece era
+         fermo. Chi guardava la lista non aveva NESSUN modo di sapere
+         che quella scheda era in pausa.
+         Adesso in pausa il numero grande e' il tempo CONTATO -- quello
+         che si paga -- e si vede stare fermo, con la parola sopra che
+         lo dice. Il tempo passato dall'arrivo non sparisce: va nella
+         riga sotto, dove non puo' piu' essere scambiato per il conto. */
+      const fermo = !!num(entry.pausaDa, 0);
+      const c2 = contiAperto(entry, now);
+      r.count.textContent = fmtClock(fermo
+        ? Math.max(0, c2.contati) * 60000
+        : Math.max(0, now - entry.startTime));
+      if (r.countK) r.countK.textContent = fermo ? '\u23f8 IN PAUSA' : 'dentro da';
       soldiDi(r, entry, dueOf(entry));                     // il conto sale col tempo
     } else {
       const resta = endTimeOf(entry) - now;
@@ -7686,6 +7704,43 @@ function tick() {
       if (r.countK) r.countK.textContent = resta < 0 ? 'sforato da' : 'esce fra';
     }
     spiegaTempoDi(r, entry);
+  });
+  riordinaSchede();
+}
+
+/* ══════════════════════════════════════════════════════════
+   LA LISTA E' IN ORDINE DI USCITA, E DEVE RESTARCI.
+
+   L'ordine e' il colpo d'occhio: chi sta per scadere sta in cima. Ma
+   l'ordine si decideva SOLO quando la lista si rifaceva da zero --
+   cambiando linguetta, o all'apertura -- e nel mezzo restava fermo.
+   Bastava allungare il tempo a un gruppo e chiudere la scheda: quello
+   era ormai l'ultimo a uscire e continuava a stare in cima, davanti a
+   uno che usciva fra due minuti. Per rimetterlo a posto bisognava
+   andare in «+ Nuovo» e tornare indietro, cioe' un giro che non c'entra
+   niente con quello che si sta facendo.
+   Adesso l'ordine si rifa' da se', un secondo dopo l'altro, insieme al
+   conto alla rovescia -- che e' proprio la cosa che lo decide.
+
+   MA NON MENTRE QUALCOSA E' SOTTO IL DITO: se una scheda e' aperta o
+   sta volando, la lista non si tocca. Spostare le schede sotto la mano
+   di chi sta lavorando e' peggio del disordine, e non si spostano solo
+   quelle: si sposterebbe anche quella che si sta guardando.
+   Sposta i riquadri che ci sono gia', non li rifa': rifarli chiuderebbe
+   i menu aperti e farebbe ripartire ogni animazione da capo.
+   ══════════════════════════════════════════════════════════ */
+function riordinaSchede() {
+  if (tab !== 'active' || showArchive) return;
+  if (volante || voloOccupato) return;
+  const box = document.querySelector('#view-active .entries');
+  if (!box) return;
+  if (box.querySelector('.entry.aperto')) return;
+  const voluto = activeEntries();
+  voluto.forEach((e, i) => {
+    const r = cardRefs.get(e.id);
+    const card = r && r.card;
+    if (!card || card.parentNode !== box) return;
+    if (box.children[i] !== card) box.insertBefore(card, box.children[i] || null);
   });
 }
 
@@ -7698,16 +7753,47 @@ function tick() {
    chiaro da solo, e una riga in piu' sarebbe rumore. */
 function spiegaTempoDi(r, entry) {
   if (!r || !r.countS) return;
-  const dritto = settings.grafica2 && !entry.payLater && !entry.soloBar &&
-    entry.status !== 'closed';
-  const comprati = clamp(num(entry.durationMinutes, 0), 0, 1e6);
-  const durata = Math.round((endTimeOf(entry) - inizioParco(entry)) / 60000);
-  const inRegalo = Math.max(0, durata - comprati);
-  const mostra = dritto && comprati > 0 && inRegalo > 0;
-  r.countS.classList.toggle('vuota', !mostra);
-  r.countS.textContent = mostra
-    ? fmtMin(comprati) + ' + ' + minTxt(inRegalo) + ' Crazy'
-    : '';
+  const vivo = settings.grafica2 && !entry.soloBar && entry.status !== 'closed';
+  let testo = '';
+
+  /* A TEMPO APERTO, IN PAUSA: qui sopra il numero grande si e' fermato
+     sul tempo contato, e questa riga dice le due cose che restano da
+     sapere -- da che ora e' fermo, e quanto e' passato davvero
+     dall'arrivo. Sono i due numeri che al banco si chiedono per
+     decidere se farlo ripartire. */
+  if (vivo && entry.payLater && num(entry.pausaDa, 0)) {
+    testo = 'fermo dalle ' + fmtTime(num(entry.pausaDa, 0)) +
+      ' \u00b7 dentro da ' + minTxt(Math.round((Date.now() - num(entry.startTime, 0)) / 60000));
+  } else if (vivo && !entry.payLater) {
+    /* DI CHE COS'E' FATTO IL TEMPO CHE MANCA.
+       «Esce fra 25:55» non dice da dove vengono quei minuti, ed e' la
+       domanda che al banco arrivava ogni volta. I pezzi sono tre:
+         — il tempo COMPRATO, che e' quello che si paga;
+         — i minuti dei GIRI, regalati dal Crazy;
+         — e i minuti REGALATI DALL'ARROTONDAMENTO. Gli orari di questa
+           app si arrotondano ai cinque minuti: chi si presenta alle
+           20:02 viene segnato alle 20:00, chi alle 20:03 alle 20:05.
+           Sono due o tre minuti per volta, ma sono proprio quelli che
+           al banco non tornavano -- il conto alla rovescia diceva un
+           numero e la somma a mente ne dava un altro.
+       Scritti tutti e tre, la somma torna. */
+    const comprati = clamp(num(entry.durationMinutes, 0), 0, 1e6);
+    const inRegalo = Math.max(0, Math.round((endTimeOf(entry) - inizioParco(entry)) / 60000) - comprati);
+    const nato = num(entry.createdAt, num(entry.startTime, 0));
+    const tondo = Math.round((inizioParco(entry) - nato) / 60000);
+    const pezzi = [];
+    if (comprati > 0) pezzi.push(fmtMin(comprati));
+    if (inRegalo > 0) pezzi.push('+ ' + minTxt(inRegalo) + ' Crazy');
+    /* si scrive solo se c'e' davvero: la maggior parte delle volte
+       l'arrotondamento e' di zero minuti, e uno zero in piu' a video e'
+       rumore. E si scrive col segno che ha -- arrotondando si puo'
+       anche perdere un minuto, e dirgli \u00abregalato\u00bb sarebbe una bugia. */
+    if (tondo > 0) pezzi.push('+ ' + minTxt(tondo) + ' arrotondati');
+    else if (tondo < 0) pezzi.push('\u2212 ' + minTxt(-tondo) + ' arrotondati');
+    if (pezzi.length > 1) testo = pezzi.join(' ');
+  }
+  r.countS.classList.toggle('vuota', !testo);
+  r.countS.textContent = testo;
 }
 
 /* SVUOTA: SI SCEGLIE COSA.

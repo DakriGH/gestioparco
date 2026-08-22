@@ -247,18 +247,30 @@ gruppo('Niente resti di lavorazione nel codice che gira');
   /* LA RIGA STA SOTTO «ESCE FRA», NON NEL BANNER DEGLI ORARI: quello
      e' gia' pieno -- dalle, alle, la durata, il bracciale, i bambini,
      i giri -- e su una tavoletta le scritte si sovrapponevano. */
+  /* E I PEZZI SONO TRE: il tempo comprato, i minuti dei giri, e quelli
+     regalati dall'arrotondamento ai cinque minuti. Erano proprio questi
+     ultimi a non tornare al banco: il conto alla rovescia diceva un
+     numero e la somma a mente ne dava un altro. */
   prova('la riga che spiega il tempo sta sotto il conto alla rovescia',
     /function spiegaTempoDi/.test(APP) &&
     /countBox\.appendChild\(countS\)/.test(APP) &&
-    /const inRegalo = Math\.max\(0, durata - comprati\);/.test(APP));
+    /Crazy/.test(APP) && /arrotondati/.test(APP));
   prova('e non nel banner degli orari', !/e-somma/.test(APP) && !/e-somma/.test(CSS));
   prova('e la cella dice se quel numero e comprato o da pagare',
     /comprato<\/span>/.test(APP) && /che stai pagando/.test(APP));
   /* e non deve aggiungere rumore dove non serve: solo col 2.0, solo se
      dei minuti regalati ci sono davvero */
-  prova('ma solo col 2.0 e solo se i minuti regalati ci sono',
-    /const dritto = settings\.grafica2 && !entry\.payLater/.test(APP) &&
-    /const mostra = dritto && comprati > 0 && inRegalo > 0;/.test(APP));
+  prova('ma solo col 2.0 e solo se c e piu di un pezzo da dire',
+    /const vivo = settings\.grafica2 && !entry\.soloBar/.test(APP) &&
+    /if \(pezzi\.length > 1\) testo = pezzi\.join/.test(APP));
+  /* E LA PAUSA SI VEDE DALLA LISTA. Fermando l'orologio il numero
+     grande continuava a correre -- e' il tempo dall'arrivo, e passare
+     passa lo stesso -- mentre il conto stava fermo: le due cose insieme
+     dicevano il contrario di quello che succede. */
+  prova('in pausa il numero grande si ferma sul tempo contato',
+    /r\.countK\.textContent = fermo \? '\\u23f8 IN PAUSA'/.test(APP));
+  prova('e la scheda in pausa si riconosce dalla lista',
+    /classList\.toggle\('in-pausa'/.test(APP) && /\.entry\.in-pausa/.test(CSS));
   /* e si rifa' anche a ogni cambio dati: `tick` gira una volta al
      secondo, e la riga comparirebbe in ritardo sotto le dita */
   prova('e si rinfresca anche quando i dati cambiano',
