@@ -1391,6 +1391,28 @@ function costruisciPannello() {
             </span>
           </span>
         </div>
+        <!-- GRAFICA 2.0: LA CELLA DEL TEMPO, LA STESSA DEL MINI MENU.
+             Aprendo il Parco di un gruppo ci si trovava TRE modi di
+             muovere il tempo -- l'ora d'uscita a quarti d'ora, i tagli,
+             e il meno/piu' dell'Estendi -- e nessuno dei tre diceva di
+             essere quello giusto. Sulla scheda in lista invece c'e' una
+             cosa sola, il meno e il piu' col numero in mezzo, e le
+             cassiere la usano senza pensarci.
+             Qui c'e' quella, identica: gli stessi tasti del resto
+             dell'app -- gli stessi identici gestori -- cosi' non possono
+             comportarsi in modo diverso. L'ora d'uscita resta scritta
+             ma smette di essere un comando: era il terzo modo, ed era
+             quello che confondeva di piu'. -->
+        <div class="tp-riga tp-mini hidden">
+          <span class="tp-gr tp-cella">
+            <span class="em">\u23f1\ufe0f</span>
+            <button data-a="corr" data-v="-5" aria-label="cinque minuti in meno">\u2212</button>
+            <span class="v num pc-cmin">30m</span>
+            <button data-a="corr" data-v="5" aria-label="cinque minuti in pi\u00f9">+</button>
+          </span>
+          <button class="chip later pc-caperto" data-a="dopo">\u23f3 Tempo aperto</button>
+          <button class="chip pausa pc-cpausa hidden" data-a="pausa">\u23f8 Pausa</button>
+        </div>
         <span class="tp-om hidden"></span>
         <span class="tp-parcoda hidden"></span>
         <div class="tp-filo"><i class="pc-filo"></i></div>
@@ -2143,6 +2165,45 @@ function disegnaFascia(p, c) {
       ? '\u23f1\ufe0f il parco conta dalle <b>' + fmtTime(da) + '</b>'
       : '';
   }
+  /* LA CELLA DEL TEMPO DELLA GRAFICA 2.0: dice le stesse cose della
+     scheda in lista, con le stesse parole. */
+  const mini = p.querySelector('.tp-mini');
+  if (mini) {
+    mini.classList.toggle('hidden', !settings.grafica2);
+    const fermo = !!num(c.pausaDa, 0);
+    const cm = p.querySelector('.pc-cmin');
+    if (cm) {
+      cm.textContent = aperto
+        ? fmtMin(Math.round(contiAperto(c).contati))
+        : fmtMin(clamp(num(c.durationMinutes, 0), 0, 1e6));
+      cm.classList.toggle('in-pausa', aperto && fermo);
+    }
+    const ca = p.querySelector('.pc-caperto');
+    if (ca) {
+      ca.classList.toggle('on', aperto);
+      ca.title = aperto
+        ? 'Torna a un tempo comprato, con un orario di fine'
+        : 'Resta senza un orario di fine: si conta il tempo davvero passato';
+    }
+    /* la pausa c'e' solo a tempo aperto: altrove non corre nessun
+       orologio da fermare */
+    const cp = p.querySelector('.pc-cpausa');
+    if (cp) {
+      cp.classList.toggle('hidden', !aperto);
+      cp.classList.toggle('on', fermo);
+      cp.textContent = fermo ? '\u25b6\ufe0e Riprendi' : '\u23f8 Pausa';
+      cp.title = fermo ? 'L\u2019orologio \u00e8 fermo: riprendi a contare il tempo'
+        : 'Ferma l\u2019orologio: il tempo in pausa non si paga';
+    }
+    /* a tempo aperto non c'e' nessuna durata da allungare: i due tasti
+       si spengono ma restano al loro posto, se no la fascia cambia
+       altezza a ogni tocco */
+    const cella = p.querySelector('.tp-cella');
+    if (cella) {
+      cella.classList.toggle('spento', aperto);
+      $$('button', cella).forEach(b => { b.disabled = aperto; });
+    }
+  }
   p.querySelector('.pc-pag').innerHTML = pastigliaPagato(c);
   disegnaEstendi(p, c);
 }
@@ -2686,9 +2747,13 @@ function aggiornaPannello(opz) {
            a una durata. Il conto lo si fa lo stesso all'uscita, sul
            tempo davvero passato: e' sempre stato cosi', cambia solo il
            nome. */
-        '<button class="chip later' + (c.payLater ? ' on' : '') + '" data-a="dopo" ' +
-        'title="Resta senza un orario di fine: si conta il tempo davvero passato">' +
-        '\u23f3 Tempo aperto</button>' +
+        /* in 2.0 «Tempo aperto» e «Pausa» stanno nella cella del tempo
+           qui sopra, e ripeterli qui vorrebbe dire due tasti uguali a
+           tre centimetri di distanza */
+        (settings.grafica2 ? '' :
+          '<button class="chip later' + (c.payLater ? ' on' : '') + '" data-a="dopo" ' +
+          'title="Resta senza un orario di fine: si conta il tempo davvero passato">' +
+          '\u23f3 Tempo aperto</button>') +
         /* GRAFICA 2.0: I MINUTI ESATTI, SCRITTI.
            C'era un campo «oppure minuti esatti» ed e' sparito l'8 agosto,
            quando la fascia degli orari ha preso il suo posto: da allora
@@ -2710,7 +2775,7 @@ function aggiornaPannello(opz) {
            che sanno fare cose diverse sono un posto dove si va a
            cercare un tasto e non c'e'. Compare solo a tempo aperto:
            altrove non c'e' nessun orologio che corra. */
-        (c.payLater
+        (c.payLater && !settings.grafica2
           ? '<button class="chip pausa' + (num(c.pausaDa, 0) ? ' on' : '') + '" data-a="pausa" ' +
             'title="' + (num(c.pausaDa, 0)
               ? 'L\u2019orologio \u00e8 fermo: riprendi a contare il tempo'

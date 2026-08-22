@@ -4803,3 +4803,29 @@ html:not(.anima) .entry.esce { transition: none; }
 .dur-esatti .pc-durin::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .dur-esatti .pc-durin:focus { outline: none; }
 .dur-esatti .um { font-size: 11.5px; font-weight: 800; color: var(--txt-3); }
+
+/* ══════════════════════════════════════════════════════════
+   GRAFICA 2.0 — LA CELLA DEL TEMPO NELLA SEZIONE PARCO
+   E' la stessa cosa del mini menu della scheda in lista: il meno e il
+   piu' col numero in mezzo, e accanto i due interruttori. Aprendo il
+   Parco ci si trovava TRE modi di muovere il tempo e nessuno che
+   dicesse di essere quello giusto; qui ce n'e' uno, ed e' quello che
+   le cassiere usano gia' senza pensarci.
+   ══════════════════════════════════════════════════════════ */
+.tp-mini { margin-top: 6px; }
+.tp-cella .v { min-width: 74px; text-align: center; }
+.tp-cella .v.in-pausa { opacity: .6; }
+/* i due tasti larghi come quelli della scheda: si premono con una mano
+   sola mentre si guarda altro */
+.tp-cella button { min-width: 56px; }
+.tp-mini .chip { flex: 0 0 auto; min-height: 42px; }
+
+/* L'ORA D'USCITA SMETTE DI ESSERE UN COMANDO, e resta un'informazione:
+   era il terzo modo di muovere il tempo, ed era quello che confondeva
+   di piu' -- saltava al quarto d'ora invece che di quindici minuti, e
+   nessuno lo sapeva guardando i due tasti. Il numero resta dov'era. */
+.g2 .pc-gfine button { display: none; }
+.g2 .pc-gfine { padding-right: 10px; }
+/* e il meno/piu' dell'Estendi e' lo stesso della cella qui sopra:
+   due coppie uguali a due centimetri di distanza */
+.g2 .est-cinque { display: none; }
