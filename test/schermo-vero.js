@@ -23,7 +23,91 @@
    ══════════════════════════════════════════════════════════ */
 (async function bancoAVideo() {
   'use strict';
-  const att = ms => new Promise(r => setTimeout(r, ms));
+
+  /* ══════════════════════════════════════════════════════════
+     UN OROLOGIO CHE IL BROWSER NON PUO' STROZZARE
+
+     Con la finestra in secondo piano -- o il pannello del browser
+     chiuso -- Chrome strozza i timer della pagina a UNO AL SECONDO e
+     smette di disegnare fotogrammi. Questo banco di prova e' fatto di
+     attese: «premi, aspetta che l'animazione finisca, guarda». Con i
+     timer strozzati ogni attesa da settanta millesimi ne costa mille,
+     e il giro completo passa da un minuto a piu' di dieci; e le
+     animazioni dell'app, che stanno dentro `requestAnimationFrame`,
+     non partono affatto.
+     Risultato: la prova che serve a dire se l'app funziona si poteva
+     lanciare solo stando li' a guardarla. Una prova che chiede
+     attenzione umana per girare e' una prova che non gira.
+
+     I timer dentro un WORKER non vengono strozzati: gira in un altro
+     filo, e a quel filo il browser non guarda in faccia. Quindi qui si
+     prende un worker che fa da sveglia e ci si appoggiano sia le
+     attese di questa prova sia i timer e i fotogrammi dell'app --
+     `setTimeout`, `setInterval`, `requestAnimationFrame` -- per tutta
+     la durata del giro. Alla fine si rimette tutto com'era.
+     Non cambia NIENTE di quello che si prova: cambia solo chi tiene il
+     tempo. Le misure restano quelle vere, perche' il worker aspetta i
+     millesimi giusti.
+     ══════════════════════════════════════════════════════════ */
+  const sveglia = (() => {
+    try {
+      const codice = 'onmessage=function(e){setTimeout(function(){postMessage(e.data.id)},e.data.ms)}';
+      const w = new Worker(URL.createObjectURL(new Blob([codice], { type: 'text/javascript' })));
+      const attesi = new Map();
+      let n = 0;
+      w.onmessage = e => { const f = attesi.get(e.data); if (f) { attesi.delete(e.data); f(); } };
+      return {
+        dopo(fn, ms) { const id = ++n; attesi.set(id, fn); w.postMessage({ id: id, ms: Math.max(0, ms || 0) }); return id; },
+        togli(id) { attesi.delete(id); },
+        chiudi() { w.terminate(); }
+      };
+    } catch (e) { return null; }
+  })();
+
+  /* i veri, da rimettere a posto quando si finisce */
+  const veri = { st: window.setTimeout, ct: window.clearTimeout,
+    si: window.setInterval, ci: window.clearInterval, raf: window.requestAnimationFrame };
+  /* SI MISURA QUANTO CI METTE DAVVERO UN TIMER.
+     Non si chiede al browser se e' in secondo piano
+     (`document.visibilityState` dice «visibile» anche quando la
+     finestra c'e' ma il pannello che la mostra e' chiuso), e non basta
+     nemmeno guardare se arrivano i fotogrammi: le due cose vanno per
+     conto loro, e ne ho visto uno arrivare con i timer gia' strozzati.
+     L'unica risposta che vale e' quella dei fatti: si chiede una
+     sveglia da cinquanta millesimi e si guarda l'orologio. Se ne sono
+     passati piu' di trecento, il browser sta strozzando. */
+  const strozzati = await new Promise(r => {
+    const t = performance.now();
+    veri.st.call(window, () => r(performance.now() - t > 300), 50);
+  });
+  if (sveglia && strozzati) {
+    const vivi = new Set();
+    window.setTimeout = (fn, ms) => sveglia.dopo(() => { if (typeof fn === 'function') fn(); }, ms);
+    window.clearTimeout = id => sveglia.togli(id);
+    window.setInterval = (fn, ms) => {
+      const box = { id: 0, morto: false };
+      const giro = () => { if (box.morto) return; if (typeof fn === 'function') fn();
+        box.id = sveglia.dopo(giro, ms); };
+      box.id = sveglia.dopo(giro, ms);
+      vivi.add(box);
+      return box;
+    };
+    window.clearInterval = box => { if (box && typeof box === 'object') { box.morto = true; sveglia.togli(box.id); vivi.delete(box); } };
+    /* i fotogrammi non arrivano: si chiamano a mano, sedici millesimi
+       alla volta. Le misure (`getBoundingClientRect`) funzionano lo
+       stesso: il browser calcola la disposizione anche quando non
+       disegna. */
+    window.requestAnimationFrame = fn => sveglia.dopo(() => fn(performance.now()), 16);
+  }
+  const rimettiOrologio = () => {
+    if (!(sveglia && strozzati)) return;
+    window.setTimeout = veri.st; window.clearTimeout = veri.ct;
+    window.setInterval = veri.si; window.clearInterval = veri.ci;
+    window.requestAnimationFrame = veri.raf;
+    sveglia.chiudi();
+  };
+
+  const att = ms => new Promise(r => (sveglia ? sveglia.dopo(r, ms) : veri.st(r, ms)));
   const esiti = [];
   const p = (nome, ok, dett) => esiti.push({ nome, ok: !!ok, dett: dett || '' });
 
@@ -902,9 +986,35 @@
       saveEntries(); tick(); tick(); await att(150);
       p('  con una scheda aperta la lista non si muove sotto le dita',
         ordine().join() === era, ordine().join() + ' era ' + era);
-      bottone.click(); await att(700);
-      tick(); await att(150);
-      p('  e richiudendola si rimette in ordine', ordine().join() === voluto().join(),
+      /* SI ASPETTA LA COSA, NON UN TEMPO: la scheda che si richiude
+         torna a posarsi con un'animazione, e finche' e' per aria la
+         lista non si tocca apposta -- spostare i riquadri sotto il
+         dito di chi lavora e' peggio del disordine. Aspettare
+         settecento millesimi «che di solito bastano» e' il modo di
+         scrivere una prova che un giorno fallisce da sola e fa cercare
+         un guasto che non c'e'. */
+      /* CHIUDERE IL PANNELLO NON E' CHIUDERE LA SCHEDA: il conto si
+         richiude, ma la scheda resta aperta -- e finche' c'e' una
+         scheda aperta la lista non si muove, apposta. */
+      bottone.click();
+      await finche(() => !volante, 4000);
+      tick(); await att(120);
+      p('  chiuso il conto ma non la scheda, la lista sta ancora ferma',
+        ordine().join() === era, ordine().join() + ' era ' + era);
+      /* e adesso si chiude la scheda per davvero.
+         SI ASPETTA ANCHE IL PARACOLPI DEI TOCCHI, non solo che la
+         scheda si sia posata: per mezzo secondo dopo un'animazione i
+         tocchi non contano (serve a non far partire due animazioni una
+         sopra l'altra), e il tocco per chiudere finiva li' dentro
+         senza fare niente. La scheda restava aperta, la lista restava
+         ferma -- giustamente -- e la prova accusava il codice di un
+         guasto che era tutto suo. */
+      await finche(() => !voloOccupato, 3000);
+      primo.querySelector('.e-riga').click();
+      await finche(() => !document.querySelector('#view-active .entry.aperto'), 3000);
+      tick();
+      await finche(() => ordine().join() === voluto().join(), 3000);
+      p('  e chiudendola si rimette in ordine', ordine().join() === voluto().join(),
         ordine().join() + ' invece di ' + voluto().join());
     }
 
@@ -950,6 +1060,7 @@
   }
 
   /* ── il verdetto ── */
+  rimettiOrologio();
   localStorage.removeItem('gp_entries');
   entries.length = 0;
   saveEntries();
