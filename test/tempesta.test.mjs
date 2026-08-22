@@ -15,6 +15,11 @@
      4. non si puo' incassare piu' di quanto una riga costi
      5. i minuti pagati non possono superare il tempo comprato
      6. quello che resta da incassare non puo' essere negativo
+     7. senza giri di Crazy non ci sono minuti di giri sull'uscita
+     8. si paga per QUANTO SI STA: il prezzo e' quello del cartello per
+        il tempo che stanno dentro, non la somma dei pezzi
+     9. memoria e disco devono dire la stessa cosa: rileggendo il dato
+        non cambiano ne' l'ora d'uscita ne' il prezzo
 
    Il seme e' fisso: se un giorno si rompe, si rompe uguale e si puo'
    guardare in faccia il giro che l'ha rotto. */
@@ -40,7 +45,14 @@ function ok(nome, avuto, atteso) {
 function vero(nome, cond) { return ok(nome, !!cond, true); }
 
 /* i dadi truccati: sempre gli stessi, cosi' un guaio si ritrova */
-let seme = 20260808;
+/* IL SEME E' FISSO, MA NON UNO SOLO.
+   Un seme solo vuol dire una sola sequenza: diecimila mosse sempre
+   quelle, e tutto quello che sta fuori da quella strada non lo prova
+   nessuno. Adesso i giri sono cinque, con cinque semi scritti qui --
+   restano fissi, quindi un guaio si ritrova sempre uguale, ma le
+   strade provate sono cinque volte tante. */
+const SEMI = [20260808, 1234567, 99991, 424242, 7654321];
+let seme = SEMI[0];
 /* I BIT ALTI, NON QUELLI BASSI.
    Con `seme % n` si prendono i bit bassi di un generatore lineare, che
    ciclano su pochissimi valori: `caso(4)` tornava SEMPRE zero, e mezza
@@ -90,8 +102,15 @@ function guai(_, dove) {
      di parco -- solo Crazy -- e la sua permanenza sta nei minuti in
      omaggio. Quello che non puo' succedere e' restare senza NIENTE:
      ne' tempo comprato, ne' omaggio, ne' giri. */
-  const dur = num(c.durationMinutes, -1);
-  if (!(dur >= 0)) g.push('durata ' + c.durationMinutes);
+  /* ⚠ `num` QUI E' UN PREDICATO, non una conversione: torna vero o
+     falso. Scritto `num(c.durationMinutes, -1)` dava un BOOLEANO, e da
+     li' in poi `!(dur >= 0)` era sempre falso e `dur === 0` non era mai
+     vero: questi due controlli non sono mai scattati in vita loro.
+     Due invarianti che dormono sono peggio di due invarianti che non
+     ci sono -- l'elenco in cima al file li prometteva, e nessuno e'
+     andato a vedere. */
+  const dur = ctx.num(c.durationMinutes, -1);
+  if (!Number.isFinite(dur) || dur < 0) g.push('durata ' + c.durationMinutes);
   else if (dur === 0 && ctx.omaggioDi(c) <= 0 && ctx.minutiCrazy(c) <= 0 && !c.payLater)
     g.push('permanenza di niente: durata 0 senza omaggio ne giri');
 
@@ -128,7 +147,44 @@ function guai(_, dove) {
   const resta = ctx.contoResta();
   if (!num(resta) || resta < -0.005) g.push('resta da incassare ' + resta);
 
-  return g.map(x => dove + ': ' + x);
+  /* 7. SENZA GIRI, NIENTE MINUTI DI GIRI.
+     E' il guasto che regalava tempo all'infinito: segnando e
+     cancellando un giro su un gruppo scaduto, l'ora d'uscita restava
+     spostata avanti e ogni ripensamento ne aggiungeva altra.
+     Si guarda l'ORA D'USCITA e non il campo `regaloFinoA`: il campo
+     puo' anche restare li' -- chi legge lo ignora quando non ci sono
+     giri (vedi `endTimeOf`) -- ma l'uscita no, quella la guarda la
+     cassiera. Una prova che guarda il campo invece dell'effetto
+     costringe mille punti a ricordarsi di ripulirlo; una che guarda
+     l'effetto lascia la regola in un posto solo. */
+  if (!c.payLater && ctx.minutiCrazy(c) <= 0 && dur > 0) {
+    const senzaGiri = ctx.inizioParco(c) + dur * 60000;
+    if (ctx.endTimeOf(c) > senzaGiri + 1000) {
+      g.push('senza giri l’uscita e ' +
+        Math.round((ctx.endTimeOf(c) - senzaGiri) / 60000) + '′ piu in la del dovuto');
+    }
+  }
+
+  /* 8. SI PAGA PER QUANTO SI STA. Il prezzo del parco e' quello del
+     cartello per il tempo che stanno dentro: non la somma dei pezzi
+     con cui ci sono arrivati. */
+  if (!c.payLater && ctx.settings.tariffaSuTotale !== false) {
+    const atteso = ctx.r2(ctx.priceFor(ctx.up5(dur)) * ctx.clamp(ctx.num(c.children, 0), 0, 1e6));
+    if (ctx.r2(ctx.costOf(c).parkTotal) !== atteso) {
+      g.push('il parco costa ' + ctx.costOf(c).parkTotal + ' invece di ' + atteso + ' per ' + dur + '′');
+    }
+  }
+
+  /* 9. MEMORIA E DISCO DEVONO DIRE LA STESSA COSA. Ogni guasto grosso
+     di questa settimana si e' visto prima qui: un numero che cambiava
+     da solo al ricaricamento. */
+  const ri = ctx.normalizeEntries([JSON.parse(JSON.stringify(c))])[0];
+  if (ctx.endTimeOf(ri) !== ctx.endTimeOf(c)) g.push('l’ora d’uscita cambia rileggendo il dato');
+  if (ctx.r2(ctx.costOf(ri).parkTotal) !== ctx.r2(ctx.costOf(c).parkTotal)) {
+    g.push('il prezzo cambia rileggendo il dato');
+  }
+
+  return g.map(x => dove + ' [' + scia.join(' > ') + ']: ' + x);
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -137,7 +193,22 @@ function guai(_, dove) {
    ══════════════════════════════════════════════════════════ */
 const LISTINO = () => ctx.settings.barMenu.map(x => x.id);
 
+/* L'ULTIMA MOSSA FATTA. Senza, quando la tempesta trovava qualcosa
+   diceva «mossa 2590: conto storto» -- il NUMERO del giro, non la
+   mossa -- e per sapere quale tasto fosse bisognava rifare a mano
+   duemilacinquecento passi. Il seme e' fisso apposta perche' un guaio
+   si possa guardare in faccia: tanto vale dirgli anche il nome. */
+let ultimaMossa = -1;
+const NOMI_MOSSA = ['bimbi', 'crazy', 'bar', 'paga bimbi', 'paga crazy', 'paga bar',
+  'durata a mano', 'tempo aperto', 'paga tempo', 'paga tutto', 'segna parco', 'segna bar',
+  'ora d ingresso a caso', 'via una bibita', 'svuota', 'annulla incasso', 'metti tempo',
+  'ritocca tempo', 'vendi blocco', 'ora d uscita', 'sposta ingresso', 'pausa',
+  'giro di Crazy', 'giro a tempo scaduto'];
+const scia = [];
 function mossa(c, quale) {
+  ultimaMossa = quale;
+  scia.push(NOMI_MOSSA[quale] || quale);
+  if (scia.length > 4) scia.shift();
   const bar = LISTINO();
   switch (quale) {
     case 0: ctx.bcSetQ('bimbi', caso(9)); break;
@@ -160,19 +231,59 @@ function mossa(c, quale) {
     }
     case 14: ctx.svuotaScelto({ numeri: caso(2) === 0, bar: caso(2) === 0, persone: caso(2) === 0,
                                 tempo: caso(2) === 0, soldi: caso(2) === 0 }); break;
+    /* ── i tasti arrivati dopo: senza di loro la tempesta batteva
+       sempre sugli stessi, e le strade nuove restavano non provate ── */
+    case 15: ctx.rendiTutto(); break;                        /* l'annulla dell'incasso */
+    case 16: ctx.metteTempo(c, 5 + caso(200)); break;         /* un taglio, o i minuti scritti */
+    case 17: ctx.ritoccaTempo(c, (caso(2) ? 5 : -5) * (1 + caso(3))); break;   /* il piu' e il meno */
+    case 18: ctx.vendiBlocco(c, [15, 30, 60][caso(3)]); break;                 /* l'Estendi */
+    case 19: {                                                /* l'ora d'uscita al quarto */
+      const verso = caso(2) ? 1 : -1;
+      const passo = ctx.uscitaAlQuarto(c, verso);
+      if (passo.delta) {
+        if (verso < 0 && ctx.num(c.regaloFinoA, 0) > passo.bersaglio) c.regaloFinoA = passo.bersaglio;
+        ctx.ritoccaTempo(c, passo.delta);
+      }
+      break;
+    }
+    case 20: ctx.mettiIngresso(c, ctx.num(c.startTime, 0) + (caso(2) ? 5 : -5) * 60000); break;
+    case 21: ctx.commutaPausa(c); break;                      /* ferma e fa ripartire */
+    case 22: {                                                /* il giro di Crazy, vita e morte */
+      const q = caso(3);
+      if (q === 0) { if (!ctx.giriCrazy(c).length) ctx.giroNuovo(c); ctx.cambiaGiro(c, ctx.giroOra(c), 1); }
+      else if (q === 1) ctx.cambiaGiro(c, ctx.giroOra(c), -1);
+      else ctx.viaGiro(c, ctx.giroOra(c));
+      break;
+    }
+    case 23: {
+      /* il regalo di un giro fatto a tempo scaduto. NEL MODO IN CUI LO
+         FA L'APP: prima si apre il giro, poi si regala. Chiamandolo da
+         solo si costruisce uno stato che al banco non esiste -- un
+         pavimento senza nessun giro sotto -- e la tempesta si metteva
+         a gridare contro un guasto che aveva creato lei. */
+      const finePrima = ctx.endTimeOf(c) - caso(2) * 60 * 60000;
+      if (!ctx.giriCrazy(c).length) ctx.giroNuovo(c);
+      ctx.cambiaGiro(c, ctx.giroOra(c), 1);
+      ctx.regalaDaAdesso(c, finePrima);
+      break;
+    }
     default: ctx.segnaPagate('bimbi', caso(4)); break;
   }
 }
 
 /* ══════════════════════════════════════════════════════════ */
-gruppo('Diecimila mosse a caso su un conto solo', () => {
-  const c = conto({ children: 2, crazyJumping: 1 });
+gruppo('Cinquantamila mosse a caso, cinque strade diverse', () => {
   const trovati = [];
-  for (let i = 0; i < 10000 && trovati.length < 6; i++) {
-    mossa(c, caso(16));
-    if (i % 5 === 0) trovati.push(...guai(c, 'mossa ' + i));
-  }
-  ok('nessun conto storto in diecimila mosse', trovati.slice(0, 6), []);
+  SEMI.forEach((s0, giro) => {
+    if (trovati.length >= 6) return;
+    seme = s0;
+    const c = conto({ children: 2, crazyJumping: 1 });
+    for (let i = 0; i < 10000 && trovati.length < 6; i++) {
+      mossa(c, caso(24));
+      trovati.push(...guai(c, 'giro ' + giro + '/mossa ' + i));
+    }
+  });
+  ok('nessun conto storto in cinquantamila mosse', trovati.slice(0, 6), []);
 });
 
 gruppo('Cento conti da capo, cento mosse ciascuno', () => {
@@ -185,8 +296,8 @@ gruppo('Cento conti da capo, cento mosse ciascuno', () => {
       durationMinutes: 5 + caso(300), payLater: caso(4) === 0
     });
     for (let i = 0; i < 100; i++) {
-      mossa(c, caso(16));
-      if (i % 7 === 0) trovati.push(...guai(c, 'conto ' + n + '/mossa ' + i));
+      mossa(c, caso(24));
+      trovati.push(...guai(c, 'conto ' + n + '/mossa ' + i));
     }
   }
   ok('nessun conto storto in cento partenze diverse', trovati.slice(0, 6), []);
@@ -220,7 +331,7 @@ gruppo('I minuti pagati non promettono mai piu' + '’' + ' di quello che i sold
   const male = [];
   for (let n = 0; n < 500; n++) {
     const c = conto({ children: 1 + caso(5), crazyJumping: caso(3), durationMinutes: 10 + caso(150) });
-    for (let k = 0; k < 4; k++) mossa(c, caso(16));
+    for (let k = 0; k < 4; k++) mossa(c, caso(24));
     const v = vivo();                       // una mossa puo' aver cambiato conto
     const mp = ctx.minutiPagati(v);
     const perBambino = v.children ? Math.max(0, ctx.importoRiga('bimbi')) / v.children : 0;
@@ -241,7 +352,7 @@ gruppo('Svuotare e rifare non lascia soldi appesi', () => {
   const male = [];
   for (let n = 0; n < 300; n++) {
     const c = conto({ children: 1 + caso(5), crazyJumping: caso(3), durationMinutes: 10 + caso(120) });
-    for (let k = 0; k < 6; k++) mossa(c, caso(16));
+    for (let k = 0; k < 6; k++) mossa(c, caso(24));
     ctx.svuotaScelto({ numeri: true, bar: true, persone: true, tempo: true, soldi: true });
     if (Math.abs(vivo().paidPark) > 0.005) male.push('n' + n + ': parco ' + vivo().paidPark);
     if (Math.abs(ctx.PAN.conto.paidBar) > 0.005) male.push('n' + n + ': bar ' + ctx.PAN.conto.paidBar);

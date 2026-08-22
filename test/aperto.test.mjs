@@ -1029,10 +1029,18 @@ gruppo('Spostare l’ora d’ingresso si porta dietro il tempo di parco');
     /* le due mosse che fa la card quando si apre un giro, in quest'ordine:
        si guarda dove finivano PRIMA, si conta il giro, e da li' parte il
        regalo (vedi `regalaDaAdesso`) */
+    /* UN GIRO NUOVO, non un altro bambino su quello di prima.
+       `conTimbro` nasce da un solo-Crazy, e il suo PRIMO giro non porta
+       minuti suoi: quelli li ha gia' dati l'omaggio (vedi
+       `minutiCrazy`). Aggiungendo gente allo stesso giro i minuti
+       restano zero, e senza minuti non c'e' niente da tenere su: il
+       pavimento non si mette, giustamente. Serve un giro VERO in piu'. */
     const finePrima = app.endTimeOf(c);
-    app.metteCrazy(c, 3);
+    app.giroNuovo(c);
+    app.cambiaGiro(c, app.giroOra(c), 1);
     app.regalaDaAdesso(c, finePrima);
     const conRegalo = app.endTimeOf(c);
+    prova('un giro in piu’ porta minuti suoi', app.minutiCrazy(c) > 0, 'minuti ' + app.minutiCrazy(c));
     prova('un giro a tempo scaduto lascia il suo pavimento', app.num(c.regaloFinoA, 0) > 0);
     app.mettiIngresso(c, c.startTime + 15 * 60000);
     prova('e il pavimento si sposta con l’ingresso, senza divergere',

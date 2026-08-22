@@ -881,7 +881,16 @@ gruppo('Il tempo si muove da un posto solo');
   prova('e all avvio il foglio si rimette in pari',
     /draft\.sigla = siglaLibera\(draft\.sigla, draft\.startTime\);/.test(APP));
   prova('e un giro fatto a tempo scaduto regala davvero',
-    /function regalaDaAdesso/.test(APP) && /Math\.max\(base, num\(e\.regaloFinoA, 0\)\)/.test(APP));
+    /function regalaDaAdesso/.test(APP) &&
+    /Math\.max\(base, minutiCrazy\(e\) > 0 \? num\(e\.regaloFinoA, 0\) : 0\)/.test(APP));
+  /* MA IL REGALO NON SOPRAVVIVE AI GIRI, e la regola sta in CHI LEGGE:
+     i giri possono sparire da tante strade -- la ✕, il meno, il numero
+     a mano, e anche mettendo i bambini a zero, che trasforma il gruppo
+     in un solo-Crazy e fa crollare i minuti -- e chiedere a ognuna di
+     ricordarsi del pavimento vuol dire che la prossima se ne
+     dimentichera'. */
+  prova('e non si mette nemmeno un pavimento senza minuti da tenere su',
+    /if \(minutiCrazy\(c\) <= 0\) return;/.test(APP));
   /* A TEMPO APERTO C'ERA UN TRATTINO. Il numero grande della cella e'
      la cosa che al banco si guarda per prima, e proprio a tempo aperto
      -- l'unico caso in cui si muove da solo -- non diceva niente.

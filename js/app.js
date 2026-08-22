@@ -1048,7 +1048,15 @@ function endTimeOf(e) {
      si preparavano il tempo correva lo stesso.
      `regaloFinoA` lo segna chi apre il giro: da quel momento hanno i
      loro minuti, comunque. */
-  return Math.max(base, num(e.regaloFinoA, 0));
+  /* IL PAVIMENTO VALE SOLO FINCHE' CI SONO I GIRI CHE LO REGGONO.
+     E' la stessa regola di `nonTogliereTempo`, ma applicata da CHI
+     LEGGE invece che dai mille punti che scrivono. I giri possono
+     sparire da tante strade -- la ✕, il meno, il numero a mano, e
+     anche mettendo i bambini a zero, che trasforma il gruppo in un
+     solo-Crazy e fa crollare i minuti dei giri -- e chiedere a ognuna
+     di ricordarsi del pavimento vuol dire che la prossima se ne
+     dimentichera'. Qui la regola vale sempre, per costruzione. */
+  return Math.max(base, minutiCrazy(e) > 0 ? num(e.regaloFinoA, 0) : 0);
 }
 /* IL COLORE DELLA SCHEDA E' L'OROLOGIO, e cambia quando cambia
    davvero qualcosa:
@@ -2080,6 +2088,18 @@ function minutiPagati(c) {
      La domanda vera e' un'altra ed e' semplice: il parco e' coperto?
      Se si', il tempo e' pagato per intero, e il cartello non c'entra. */
   const dovutoBimbi = r2(costOf(c).parkTotal);
+  /* A TEMPO APERTO NON C'E' NESSUN TEMPO COMPRATO, quindi non c'e'
+     niente da dire qui. Questa funzione risponde a una domanda sola --
+     QUANTO TEMPO DI PARCO HANNO PAGATO -- e a tempo aperto il tempo
+     non si compra: si conta, e il prezzo si fa all'uscita.
+     Rispondeva `durationMinutes`, che li' e' un numero fermo e vecchio:
+     un gruppo entrato da due minuti, con tre euro sul piatto e una
+     mezz'ora rimasta scritta da prima, risultava «mezz'ora pagata».
+     A video non si vede (a tempo aperto il filo verde non c'e' e la
+     pastiglia dice «si conta all'uscita»), ma una funzione che mente
+     e' un guasto che aspetta solo il posto giusto dove farsi vedere.
+     Trovata dalla tempesta. */
+  if (c.payLater) return 0;
   if (soldiBimbi + 0.005 >= dovutoBimbi) return tempoTotale(c);
   const perBambino = soldiBimbi / bimbi;
   let coperti = 0;
@@ -2474,7 +2494,12 @@ function ritoccaTempo(c, delta) {
      il piu' restava incastrato: cinque minuti e sei euro sul conto, e il
      meno che non tornava piu' indietro. */
   const minimo = minimoTempo(c);
-  const dopo = clamp(m + num(delta, 0), minimo, 100000);
+  /* IL TETTO E' 99999, come nella riparazione dei dati. Qui erano
+     centomila: comprando l'ultimo minuto possibile la scheda diceva
+     100000 e il dato riletto ne diceva 99999 -- un minuto che spariva
+     al ricaricamento. Due limiti per la stessa cosa divergono sempre,
+     anche di uno. */
+  const dopo = clamp(m + num(delta, 0), minimo, 99999);
   const vero = dopo - m;                 /* quello che si e' mosso davvero */
   if (!vero) return;
   segnaInizioParco(c, m, dopo);
@@ -2532,7 +2557,7 @@ function uscitaAlQuarto(c, verso) {
   const resto = (u.getHours() * 60 + u.getMinutes()) % 15;
   const salto = verso > 0 ? 15 - resto : (resto || 15);
   const bersaglio = fine + verso * salto * 60000;
-  const dopo = clamp(Math.round((bersaglio - daQuando) / 60000) - crazy, minimoTempo(c), 100000);
+  const dopo = clamp(Math.round((bersaglio - daQuando) / 60000) - crazy, minimoTempo(c), 99999);
   return { dopo: dopo, delta: dopo - min, bersaglio: bersaglio };
 }
 
@@ -2570,7 +2595,7 @@ function vendiBlocco(c, quanti) {
   c = c || C();
   if (c.payLater) return;
   const m = clamp(num(c.durationMinutes, 60), 0, 1e6);
-  c.durationMinutes = clamp(m + quanti, 5, 100000);
+  c.durationMinutes = clamp(m + quanti, 5, 99999);
   /* DA QUANDO COMINCIA IL PARCO, anche da qui.
      Chi entra SOLO per saltare non ha tempo di parco, e quando poi
      decide di fermarsi quel tempo comincia ADESSO -- non dall'ora in
@@ -5650,6 +5675,16 @@ function regalaDaAdesso(c, finePrima) {
   c = c || C();
   const extra = clamp(num(settings.crazyExtraMinutes, 0), 0, 1e6);
   if (extra <= 0) return;
+  /* NIENTE PAVIMENTO SE NON C'E' NIENTE DA TENERE SU.
+     Il primo giro di chi entra SOLO per saltare non porta minuti suoi:
+     quelli li ha gia' dati l'omaggio (vedi `minutiCrazy`). Il
+     pavimento veniva messo lo stesso, e siccome un pavimento senza
+     minuti di giro non ha ragione di esistere, la riparazione dei dati
+     lo toglieva al primo ricaricamento: la scheda diceva un'ora
+     d'uscita e il dato salvato ne diceva un'altra. Trovato dalla
+     tempesta, non al banco -- ed e' esattamente quello per cui la
+     tempesta esiste. */
+  if (minutiCrazy(c) <= 0) return;
   const ora = Date.now();
   if (num(finePrima, ora + 1) > ora) return;
   /* IN SU al taglio da cinque: arrotondando per difetto un regalo di
@@ -7970,17 +8005,35 @@ function foglioSvuota() {
    scritti a mano: una riga svuotata a mano lascerebbe l'importo in
    cassa senza piu' niente a cui riferirsi. */
 function svuotaScelto(scelte) {
-  const c = draft;
-  const foto = fotografia(C());
+  /* SI SVUOTA QUELLO CHE SI STA GUARDANDO, e basta.
+     Qui c'era scritto `draft`, mentre i suoi aiutanti -- `bcSetQ`,
+     `segnaPagate` -- lavorano tutti su `C()`. Nell'app i due sono lo
+     stesso oggetto (lo Svuota compare solo mentre si registra), quindi
+     non si e' mai visto niente; ma una funzione che tocca DUE oggetti
+     credendo di toccarne uno e' una trappola che scatta il giorno in
+     cui qualcuno la chiama da un altro punto: meta' delle cose
+     azzerate di qua, meta' di la'. */
+  const c = C();
+  const foto = fotografia(c);
   const tutto = scelte.numeri && scelte.bar && scelte.persone && scelte.tempo && scelte.soldi;
-  if (tutto) {
+  /* «da capo» vuol dire un modulo nuovo, e un modulo nuovo esiste solo
+     mentre si registra: su un ingresso gia' dentro si svuota campo per
+     campo, come per le scelte parziali */
+  if (tutto && c === draft) {
     const cat = PAN.cat;
     draft = freshDraft();
     PAN.cat = cat;
     PAN.conto = draft;
   } else {
     const rendi = (id) => segnaPagate(id, 0);
-    if (scelte.numeri) { rendi('bimbi'); rendi('crazy'); bcSetQ('bimbi', 0); bcSetQ('crazy', 0); }
+    if (scelte.numeri) {
+      rendi('bimbi'); rendi('crazy'); bcSetQ('bimbi', 0); bcSetQ('crazy', 0);
+      /* via i giri, via i loro minuti: il pavimento non puo' restare in
+         piedi da solo (vedi `nonTogliereTempo`). Va fatto QUI e non
+         solo nella riparazione, se no fino al ricaricamento la scheda
+         mostra un'ora d'uscita che il dato salvato non conferma. */
+      if (minutiCrazy(c) <= 0) delete c.regaloFinoA;
+    }
     if (scelte.bar) {
       lista(c.barItems).slice().forEach(x => { rendi(x.id); bcSetQ(x.id, 0); });
       c.barItems = [];
@@ -8005,6 +8058,18 @@ function svuotaScelto(scelte) {
     }
     if (!num(c.children, 0) && !num(c.crazyJumping, 0) && !lista(c.barItems).length &&
         !lista(c.people).length) c.touched = false;
+  }
+  if (tutto && c !== draft) {
+    /* tutte le caselle, ma sull'ingresso che si sta guardando */
+    ['bimbi', 'crazy'].forEach(id => segnaPagate(id, 0));
+    lista(c.barItems).forEach(x => segnaPagate(x.id, 0));
+    bcSetQ('bimbi', 0); bcSetQ('crazy', 0);
+    c.barItems = []; c.people = [];
+    c.paidPark = 0; c.paidBar = 0; c.paidAmt = {}; c.paidLines = {};
+    const f2 = freshDraft();
+    c.startTime = f2.startTime; c.durationMinutes = f2.durationMinutes;
+    c.payLater = false; c.baseMinutes = undefined;
+    delete c.parcoDa; delete c.regaloFinoA;
   }
   const box = pcRif('.pc-people');
   if (box) { box.dataset.apri = ''; box.dataset.sig = ''; box.dataset.tav = ''; }
@@ -9597,8 +9662,16 @@ function riparaConto(o) {
   const da = num(o.parcoDa, NaN);
   if (Number.isFinite(da) && da > 0) o.parcoDa = Math.max(da, num(o.startTime, 0));
   else delete o.parcoDa;
-  /* il regalo dato a tempo scaduto: un orario vero, o niente */
-  if (!Number.isFinite(num(o.regaloFinoA, NaN)) || num(o.regaloFinoA, 0) <= 0) delete o.regaloFinoA;
+  /* il regalo dato a tempo scaduto: un orario vero, o niente.
+     E NON PUO' STARE IN PIEDI SENZA I SUOI GIRI: il pavimento tiene i
+     minuti di un giro fatto a tempo scaduto, quindi senza giri non
+     tiene niente. Senza questa riga bastava una strada che azzerasse i
+     numeri -- «Svuota → i numeri» lo faceva -- per lasciare in giro
+     minuti di parco che nessuno aveva comprato e nessun giro
+     giustificava. Qui e' la rete: vale anche per i dati che arrivano
+     dal cloud o da un salvataggio di ieri. */
+  if (!Number.isFinite(num(o.regaloFinoA, NaN)) || num(o.regaloFinoA, 0) <= 0 ||
+      minutiCrazy(o) <= 0) delete o.regaloFinoA;
   /* LA PAUSA DEL TEMPO APERTO. `pausato` e' quanto sono stati fermi in
      tutto e non puo' essere negativo; `pausaDa` e' l'orologio fermo
      ADESSO, e o e' un orario vero o non c'e'. Un valore storto qui
