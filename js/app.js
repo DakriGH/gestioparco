@@ -725,43 +725,51 @@ function turniCrazy(e) { return giriCrazy(e).filter(n => n > 0).length; }
    Quando un giro resta senza nessuno sparisce, e con lui i suoi minuti
    regalati: un giro a cui non e' salito nessuno non e' mai esistito. */
 /* ══════════════════════════════════════════════════════════
-   IL TEMPO DATO PER UN GIRO NON SI RIPRENDE
+   IL REGALO DI UN GIRO NON PUO' SOPRAVVIVERE AL GIRO
 
-   Al banco: gruppo con venti minuti ancora, si segna un giro e l'ora
-   d'uscita va a ventotto. Si toglie il giro -- il bambino non e' salito,
-   il tocco era di troppo -- e l'uscita torna a venti. Se nel frattempo
-   quei minuti erano passati, il gruppo diventa ROSSO all'istante: gente
-   a cui era stato detto "fino alle 15:40" si ritrova scaduta, e chi sta
-   in cassa non capisce perche'.
-   I minuti del Crazy sono un REGALO: una volta dati, sono dati. Toglierli
-   e' una cosa che nessuno ha chiesto e che nessuno vede arrivare.
+   Per un po' la regola e' stata l'opposta: i minuti del Crazy erano un
+   regalo e, una volta dati, restavano -- togliendo il giro l'ora
+   d'uscita non tornava indietro, cosi' a nessuno veniva ripreso un
+   tempo che gli era stato promesso.
+   Serviva a proteggere un caso vero (si segna un giro per sbaglio, lo
+   si toglie, e il gruppo diventa rosso all'istante), ma ne apriva uno
+   molto peggiore: IL TEMPO CRESCEVA ALL'INFINITO.
 
-   Il regalo si segnava solo per chi era GIA' scaduto (`regalaDaAdesso`):
-   per chi era ancora dentro i minuti stavano solo nel calcolo, e
-   togliendo il giro svanivano. Adesso qualunque strada che tolga giri --
-   il meno della card, la ✕ di un giro, il numero cambiato a mano -- se
-   accorcia l'uscita lascia un PAVIMENTO all'ora che aveva promesso.
+   Al banco: gruppo scaduto dalle 18:48. Si segna un giro -- il regalo
+   parte da adesso e l'uscita va alle 20:00 -- e poi lo si cancella. Il
+   giro non c'e' piu', il Crazy non si paga, ma l'uscita resta alle
+   20:00: settantadue minuti di parco regalati da un tocco e un
+   ripensamento. E rifacendolo, ogni volta il regalo riparte da ADESSO:
+   due minuti di ripensamenti al banco erano mezz'ora di parco gratis,
+   e nessuno se ne accorgeva perche' il numero cresceva da solo.
+
+   La regola adesso e' una sola, e si spiega in mezza riga: I MINUTI
+   SEGUONO I GIRI. Se il giro c'e', ci sono i suoi minuti; se il giro
+   viene tolto -- non e' stato fatto, o era un tocco di troppo -- se ne
+   vanno con lui, pavimento compreso.
+   Il pavimento resta quello che e' sempre stato -- il modo di tenere i
+   minuti di un giro fatto A TEMPO SCADUTO, che se no cadrebbero nel
+   passato e non varrebbero niente (vedi `regalaDaAdesso`) -- ma non
+   puo' piu' restare in piedi da solo quando il giro che lo ha creato
+   non c'e' piu'.
    Sta attorno ai tre mutatori e non ai tocchi, cosi' una strada nuova
    e' protetta da se'.
    ══════════════════════════════════════════════════════════ */
 function nonTogliereTempo(c, fn) {
   c = c || C();
-  /* `endTimeOf` comprende gia' il pavimento di prima, quindi questo non
-     puo' che salire: un regalo non si accorcia mai. */
-  const prima = endTimeOf(c);
   const crazyPrima = minutiCrazy(c);
   const esito = fn();
-  /* SOLO SE SONO STATI TOLTI DEI MINUTI DI GIRO.
-     Queste stesse funzioni fanno anche un'altra cosa: segnare il primo
-     giro di chi entra SOLO per saltare azzera il tempo di parco
-     comprato (`soloCrazy`), e li' l'ora d'uscita scende per un motivo
-     che col regalo non c'entra niente. Guardando solo l'ora finale il
-     pavimento scattava anche li', e a un solo-Crazy restava incollata
-     addosso l'ora d'uscita di un'ora di parco che non aveva mai
-     comprato. */
-  if (minutiCrazy(c) < crazyPrima && endTimeOf(c) < prima) {
-    c.regaloFinoA = Math.max(num(c.regaloFinoA, 0), prima);
-  }
+  const persi = crazyPrima - minutiCrazy(c);
+  /* niente giri tolti, niente da fare */
+  if (persi <= 0 || num(c.regaloFinoA, 0) <= 0) return esito;
+  /* SENZA PIU' GIRI IL PAVIMENTO NON HA PIU' NIENTE SU CUI POGGIARE */
+  if (minutiCrazy(c) <= 0) { delete c.regaloFinoA; return esito; }
+  /* e con qualche giro in meno scende di quei minuti li'. Se cosi'
+     facendo finisce sotto l'ora d'uscita normale non serve piu': era
+     un pavimento, non un tetto. */
+  const giu = num(c.regaloFinoA, 0) - persi * 60000;
+  const senza = inizioParco(c) + (clamp(num(c.durationMinutes, 0), 0, 1e6) + minutiCrazy(c)) * 60000;
+  if (giu <= senza) delete c.regaloFinoA; else c.regaloFinoA = giu;
   return esito;
 }
 
@@ -2157,13 +2165,27 @@ function disegnaFascia(p, c) {
        Qui resta solo la riga corta dell'omaggio, che serve a spiegare
        perche' l'uscita e' piu' in la' di quello che si e' venduto. */
     const daSolo = avvisoSoli(c);
-    om.classList.toggle('hidden', q <= 0 || daSolo);
-    if (q <= 0 || daSolo) om.innerHTML = '';
+    /* I MINUTI DEI GIRI VANNO SCRITTI QUI, non solo l'omaggio.
+       Su questa riga ci sono tre numeri: l'ora d'ingresso, l'ora
+       d'uscita e i minuti comprati. Con dei giri di Crazy in mezzo si
+       contraddicevano -- «19:36 ... 20:22 ... 30m», che sono
+       quarantasei minuti e non trenta -- e al banco l'unica lettura
+       possibile era che uno dei tre fosse sbagliato.
+       I minuti comprati restano quello che sono, e devono restarlo: e'
+       quello che si paga, e i giri si pagano a parte. Quello che
+       mancava era la riga che spiega la differenza. */
+    const giri = !c.payLater ? minutiCrazy(c) : 0;
+    const pezzi = [];
+    if (giri > 0) pezzi.push('<b>+' + giri + '\u2032</b> dai giri');
+    if (q > 0) pezzi.push('<b>+' + q + '\u2032</b> in omaggio');
+    const scrivi = pezzi.length && !daSolo;
+    om.classList.toggle('hidden', !scrivi);
+    if (!scrivi) om.innerHTML = '';
     else {
-      om.innerHTML = '\ud83c\udf81 <b>+' + q + '\u2032</b> in omaggio' +
-        '<small>' + (comprato <= 0
+      om.innerHTML = '\ud83c\udf81 ' + pezzi.join(' e ') +
+        '<small>' + (comprato <= 0 && q > 0
           ? 'tocca un taglio per vendere il tempo di parco'
-          : 'non entrano nel prezzo') + '</small>';
+          : 'sull\u2019uscita ci sono, nel prezzo no') + '</small>';
     }
   }
   /* DA QUANDO CONTA IL TEMPO DI PARCO. Si scrive solo quando NON e'
@@ -7731,7 +7753,17 @@ function tick() {
    ══════════════════════════════════════════════════════════ */
 function riordinaSchede() {
   if (tab !== 'active' || showArchive) return;
-  if (volante || voloOccupato) return;
+  /* SI GUARDA CHI STA VOLANDO DAVVERO, non il paracolpi dei tocchi.
+     Il primo guardiano diceva anche `voloOccupato`, che non e' «una
+     scheda e' in volo»: e' il mezzo secondo in cui i tocchi non
+     contano, per non far partire due animazioni una sopra l'altra. Si
+     riarma a ogni tocco e si spegne da solo con un timer -- e se quel
+     timer tarda (una tavoletta lenta, la pagina in secondo piano) la
+     lista smetteva di riordinarsi finche' non lo si toccava di nuovo.
+     Un guardiano che si incanta e non lo dice a nessuno e' peggio del
+     guasto che evita: qui basta sapere se c'e' una scheda staccata
+     dalla lista, e quella e' `volante`. */
+  if (volante && volante.card && volante.card.isConnected) return;
   const box = document.querySelector('#view-active .entries');
   if (!box) return;
   if (box.querySelector('.entry.aperto')) return;

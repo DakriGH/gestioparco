@@ -2,7 +2,7 @@
 
        node test/tutte.mjs
 
-   Sei file, sei mestieri diversi:
+   Nove file, nove mestieri diversi:
      impianto  — che i pezzi si chiamino davvero come li chiama il codice
      conti     — le regole del denaro, una per una
      schermo   — che quello che si VEDE dica quello che dicono i conti
@@ -11,6 +11,8 @@
      tempesta  — sequenze a caso, lunghe e assurde, con gli invarianti
      vestiti   — l'icona e la figura devono dire la stessa cosa
      salvezza  — le reti: backup, dati storti, giornata che cambia alle 4
+     incrocio  — ogni combinazione possibile, e le regole che non devono
+                 cadere in nessuna
 
    Uno solo che si lamenta e questo esce male: al banco non esiste
    "quasi a posto". */
@@ -19,7 +21,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const QUI = dirname(fileURLToPath(import.meta.url));
-const PROVE = ['impianto', 'conti', 'schermo', 'giornata', 'aperto', 'tempesta', 'vestiti', 'salvezza'];
+const PROVE = ['impianto', 'conti', 'schermo', 'giornata', 'aperto', 'tempesta', 'vestiti', 'salvezza', 'incrocio'];
 
 /* DUE GIRI: con la grafica di sempre e con la Grafica 2.0 accesa.
    La 2.0 e' una modalita' di prova che cambia quello che viene

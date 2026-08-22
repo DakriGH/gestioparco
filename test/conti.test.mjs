@@ -114,16 +114,17 @@ gruppo('Il Crazy Jumping', () => {
   ctx.viaGiro(c, 1);
   ok('cancellato il secondo giro', ctx.giriCrazy(c), [2]);
   ok('chi c era dentro esce dal conto', c.crazyJumping, 2);
-  /* MA L'ORA D'USCITA NON TORNA INDIETRO.
-     Prima si': cancellato il giro, i suoi minuti sparivano e l'uscita
-     si accorciava. Al banco vuol dire che a un gruppo a cui era stato
-     detto «fino alle 15:40» l'ora si sposta all'indietro sotto il
-     naso, e se nel frattempo quei minuti erano passati la scheda
-     diventa rossa all'istante. I minuti del Crazy sono un REGALO: dati
-     una volta, non si riprendono. Il conteggio dei giri scende -- quelli
-     sono i soldi -- l'ora d'uscita no. */
-  ok('ma l ora d uscita non torna indietro',
-     Math.round((ctx.endTimeOf(c) - c.startTime) / 60000), 60 + 2 * extra);
+  /* E CON IL GIRO SE NE VANNO I SUOI MINUTI.
+     Per un po' la regola e' stata l'opposta -- i minuti erano un
+     regalo e, dati una volta, restavano -- e apriva un buco molto
+     peggiore di quello che chiudeva: cancellando un giro il tempo
+     restava, e rifacendolo e ricancellandolo se ne aggiungeva altro,
+     ogni volta. Un gruppo scaduto poteva raccogliere piu' di un'ora di
+     parco gratis con due ripensamenti al banco.
+     Adesso i minuti seguono i giri: due giri, due volte i minuti; un
+     giro solo, una volta. */
+  ok('e con il giro se ne vanno i suoi minuti',
+     Math.round((ctx.endTimeOf(c) - c.startTime) / 60000), 60 + extra);
   ok('e i soldi seguono le salite, che sono scese',
      ctx.contoCrazy(), 2 * ctx.settings.crazyJumpingPrice);
 
@@ -2178,14 +2179,19 @@ gruppo('Il tempo si mette in un modo solo: taglio o scritto, stesso prezzo', () 
   vero('  e il tempo aperto si spegne', !c.payLater);
 });
 
-gruppo('Il tempo dato per un giro non si riprende mai', () => {
-  /* SEGNALATO AL BANCO, e chiamato grave: «se aggiungo un crazy e poi
-     lo tolgo il tempo torna come era prima, anche il tempo rosso».
-     E' il caso di chi tocca il piu' di troppo e corregge: l'ora
-     d'uscita si era gia' spostata avanti, e tornando indietro un gruppo
-     a cui era stato detto «fino alle 15:40» diventa scaduto sotto il
-     naso -- rosso all'istante, senza che nessuno abbia fatto niente.
-     I minuti del Crazy sono un regalo: dati una volta, restano. */
+gruppo('I minuti seguono i giri: tolto il giro, tolti i minuti', () => {
+  /* LA REGOLA E' CAMBIATA, ed e' stato il parco a cambiarla.
+     Prima i minuti del Crazy erano un regalo che, dato una volta,
+     restava: togliendo il giro l'ora d'uscita non tornava indietro.
+     Proteggeva un caso vero -- si segna un giro per sbaglio, lo si
+     toglie, e il gruppo diventa rosso all'istante -- ma ne apriva uno
+     molto peggiore: IL TEMPO CRESCEVA ALL'INFINITO. Un gruppo scaduto
+     dalle 18:48 a cui si segnava un giro usciva alle 20:00; cancellato
+     il giro, il Crazy non si pagava piu' ma l'uscita restava alle
+     20:00 -- settantadue minuti di parco regalati da un tocco e un
+     ripensamento -- e rifacendolo il regalo ripartiva da ADESSO.
+     Adesso i minuti seguono i giri: se il giro non c'e', non ci sono
+     nemmeno i suoi minuti. */
   const extra = ctx.settings.crazyExtraMinutes;
   const guai = [];
 
@@ -2200,23 +2206,41 @@ gruppo('Il tempo dato per un giro non si riprende mai', () => {
       const t0 = Date.now() - (30 + sforo) * 60000;
       const c = conto({ startTime: t0, children: 2, durationMinutes: 30, baseMinutes: 30 });
       ctx.PAN.conto = c; ctx.PAN.ingresso = null;
+      const prima = ctx.endTimeOf(c);
       ctx.contaSalita(1);
-      const promessa = ctx.endTimeOf(c);
+      const conGiro = ctx.endTimeOf(c);
+      const dove = stato + ', ' + nome;
+      /* il giro, finche' c'e', i suoi minuti li da' */
+      if (conGiro <= prima) guai.push(dove + ': il giro non ha dato nessun minuto');
       togli(c);
       const dopo = ctx.endTimeOf(c);
-      const dove = stato + ', ' + nome;
-      if (dopo < promessa) {
-        guai.push(dove + ': l’uscita torna indietro di ' +
-          Math.round((promessa - dopo) / 60000) + '′');
+      /* e togliendolo si torna esattamente da dove si era partiti: ne'
+         un minuto in piu' (il tempo che cresce dal nulla), ne' uno in
+         meno (tempo rubato a chi non ha fatto niente) */
+      if (dopo !== prima) {
+        guai.push(dove + ': tolto il giro l’uscita e ' +
+          Math.round((dopo - prima) / 60000) + '′ lontana da dov’era');
       }
-      /* e i SOLDI invece devono seguire le salite: il giro tolto non si
-         paga. Il regalo e' tempo, non denaro. */
+      /* e i SOLDI seguono le salite: il giro tolto non si paga */
       if (ctx.r2(ctx.costOf(c).crazyCost) !== ctx.r2(ctx.num(c.crazyJumping, 0) * ctx.settings.crazyJumpingPrice)) {
         guai.push(dove + ': il Crazy costa ' + ctx.costOf(c).crazyCost + ' per ' + c.crazyJumping + ' salite');
       }
     });
   });
-  ok('sei combinazioni di stato e strada, e l’uscita non arretra mai', guai.slice(0, 3), []);
+  ok('sei combinazioni di stato e strada, e si torna sempre da dove si era partiti', guai.slice(0, 3), []);
+
+  /* E RIFARLO CENTO VOLTE NON REGALA NIENTE: e' il guasto vero, quello
+     che al banco cresceva da solo mentre nessuno guardava. */
+  {
+    const t0 = Date.now() - 90 * 60000;
+    const c2 = conto({ startTime: t0, children: 3, durationMinutes: 30, baseMinutes: 30 });
+    ctx.PAN.conto = c2; ctx.PAN.ingresso = null;
+    const partenza = ctx.endTimeOf(c2);
+    for (let i = 0; i < 20; i++) { ctx.contaSalita(1); ctx.contaSalita(-1); }
+    ok('venti ripensamenti su un gruppo scaduto non regalano un minuto',
+       ctx.endTimeOf(c2), partenza);
+    ok('e non lasciano nessun pavimento in piedi', ctx.num(c2.regaloFinoA, 0), 0);
+  }
 
   /* MA ACCORCIARE A MANO DEVE ANCORA FUNZIONARE: se il pavimento
      bloccasse anche il meno del tempo, la cassiera non potrebbe piu'

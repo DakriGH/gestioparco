@@ -36,7 +36,19 @@
     return entries.map(chiave).sort().join('\n') === disco.map(chiave).sort().join('\n');
   };
 
-  const card = () => document.querySelector('#view-active .entry');
+  /* LA SCHEDA SI PRENDE PER NOME, NON PER POSTO.
+     Era «la prima della lista», e ha funzionato finche' la lista stava
+     ferma. Adesso i riquadri si riordinano da soli in ordine di
+     uscita, un secondo dopo l'altro: allungando il tempo a un gruppo
+     -- che e' proprio quello che queste prove fanno di continuo -- la
+     scheda scivola in fondo, e «la prima» diventa un ALTRO gruppo a
+     meta' di un controllo. Da qui in poi si guarda sempre quella che
+     si sta provando, dovunque sia finita. */
+  let cardId = null;
+  const card = () => (cardId && document.querySelector('#view-active .entry[data-id="' + cardId + '"]')) ||
+    document.querySelector('#view-active .entry');
+  /* e chi prepara una sezione dice qual e' la sua */
+  const guarda = id => { cardId = id; };
   const cella = nome => [...card().querySelectorAll('.e-colonna > .e-cella')]
     .find(c => c.querySelector('.e-nome').textContent === nome);
   const tastiTempo = () => [...cella('Tempo').querySelectorAll('button:not(.e-aperto)')];
@@ -360,7 +372,7 @@
     showArchive = false;
     entries.length = 0; localStorage.removeItem('gp_entries');
     const t0 = Date.now() - 43 * 60000;
-    entries.push(normalizeEntries([{ id: 'ap', startTime: t0, createdAt: t0, oraManuale: true,
+    guarda('ap'); entries.push(normalizeEntries([{ id: 'ap', startTime: t0, createdAt: t0, oraManuale: true,
       children: 2, durationMinutes: 0, baseMinutes: 0, payLater: true }])[0]);
     saveEntries(); switchTab('active'); buildActiveView(); await att(300);
 
@@ -412,7 +424,7 @@
     showArchive = false;
     entries.length = 0; localStorage.removeItem('gp_entries');
     const t0 = Date.now() - 43 * 60000;
-    entries.push(normalizeEntries([{ id: 'due', startTime: t0, createdAt: t0, oraManuale: true,
+    guarda('due'); entries.push(normalizeEntries([{ id: 'due', startTime: t0, createdAt: t0, oraManuale: true,
       children: 2, durationMinutes: 0, baseMinutes: 0, payLater: true }])[0]);
     saveEntries(); switchTab('active'); buildActiveView(); await att(300);
 
@@ -426,15 +438,27 @@
     const chip = t => [...document.querySelectorAll('.pc-dur .chip')]
       .find(c => new RegExp(t).test(c.textContent));
 
-    p('nel pannello c e la pausa, come nella scheda', !!chip('Pausa'));
+    /* LA PAUSA SI CERCA PER QUELLO CHE FA, NON PER DOVE STA.
+       Con la grafica di sempre e' una pastiglia fra i tagli; col 2.0
+       sta nella cella del tempo, accanto al meno e al piu' -- ed e'
+       proprio li' che deve stare, attaccata alla cosa che ferma.
+       Cercandola in un posto solo, questa sezione esplodeva a ogni
+       spostamento: non per un guasto dell'app, ma perche' la prova
+       dava per scontata una delle due grafiche. */
+    const tastoPausa = () => document.querySelector('.pc-cpausa:not(.hidden)') ||
+      [...document.querySelectorAll('.pc-dur .chip')].find(c => /Pausa|Riprendi/.test(c.textContent));
+    const dicePausa = t => { const b = tastoPausa(); return !!b && new RegExp(t).test(b.textContent); };
+    p('nel pannello c e la pausa, come nella scheda', !!tastoPausa());
     p('  e i minuti dicono quanto si sta pagando',
       /\d/.test(document.querySelector('.pc-min').textContent),
       document.querySelector('.pc-min').textContent);
-    chip('Pausa').click(); await att(350);
-    p('  e la pausa dal pannello ferma davvero l orologio', !!entries[0].pausaDa && allineati());
-    p('  e il tasto diventa Riprendi', !!chip('Riprendi'));
-    chip('Riprendi').click(); await att(350);
-    p('  e riprende', !entries[0].pausaDa && allineati());
+    if (tastoPausa()) {
+      tastoPausa().click(); await att(350);
+      p('  e la pausa dal pannello ferma davvero l orologio', !!entries[0].pausaDa && allineati());
+      p('  e il tasto diventa Riprendi', dicePausa('Riprendi'));
+      tastoPausa().click(); await att(350);
+      p('  e riprende', !entries[0].pausaDa && allineati());
+    }
 
     /* LA NOTA SI SCRIVE IN UN MODO SOLO: la stessa striscia e lo stesso
        foglio, nel pannello come nella scheda. Qui c'era un campo da
@@ -468,7 +492,7 @@
     showArchive = false;
     entries.length = 0; localStorage.removeItem('gp_entries');
     const t0 = Date.now() - 73 * 60000;
-    entries.push(normalizeEntries([{ id: 'sc', startTime: t0, createdAt: t0, oraManuale: true,
+    guarda('sc'); entries.push(normalizeEntries([{ id: 'sc', startTime: t0, createdAt: t0, oraManuale: true,
       children: 2, durationMinutes: 0, baseMinutes: 0, payLater: true,
       crazyJumping: 2, crazyGiri: [1, 1], pausato: 30 * 60000,
       barItems: [{ id: 'b1', name: 'Acqua', price: 1, qty: 2 }] }])[0]);
@@ -649,7 +673,7 @@
       settings.grafica2 = true; saveSettings(); applyTheme();
       entries.length = 0; localStorage.removeItem('gp_entries');
       const t0 = Date.now() - 50 * 60000;
-      entries.push(normalizeEntries([{ id: 'tt', startTime: t0, createdAt: t0, oraManuale: true,
+      guarda('tt'); entries.push(normalizeEntries([{ id: 'tt', startTime: t0, createdAt: t0, oraManuale: true,
         children: 2, durationMinutes: 60, baseMinutes: 30, aggiunte: [30],
         crazyJumping: 3, crazyGiri: [2, 1] }])[0]);
       saveEntries(); switchTab('active'); buildActiveView(); await att(400);
@@ -695,7 +719,7 @@
       /* su un gruppo senza giri non si aggiunge rumore */
       entries.length = 0;
       const t1 = Date.now() - 10 * 60000;
-      entries.push(normalizeEntries([{ id: 'ss', startTime: t1, createdAt: t1, oraManuale: true,
+      guarda('ss'); entries.push(normalizeEntries([{ id: 'ss', startTime: t1, createdAt: t1, oraManuale: true,
         children: 2, durationMinutes: 30, baseMinutes: 30 }])[0]);
       saveEntries(); buildActiveView(); await att(400);
       p('senza giri non c e nessuna riga da spiegare', sotto() === '', sotto());
@@ -752,7 +776,7 @@
       entries.length = 0;
       draft = freshDraft();
       const t0 = Date.now() - 20 * 60000;
-      entries.push(normalizeEntries([{ id: 'tut', startTime: t0, createdAt: t0, oraManuale: true,
+      guarda('tut'); entries.push(normalizeEntries([{ id: 'tut', startTime: t0, createdAt: t0, oraManuale: true,
         children: 2, durationMinutes: 30, baseMinutes: 30, crazyJumping: 2, crazyGiri: [1, 1],
         barItems: [{ id: 'b1', name: 'Acqua', price: 1, qty: 2 }] }])[0]);
       saveEntries();
@@ -833,8 +857,96 @@
     p(premuti + ' tasti premuti uno per uno, e nessuno rompe niente',
       !guai.length, [...new Set(guai)].slice(0, 4).join('\n        '));
 
-    localStorage.removeItem('gp_entries'); entries.length = 0; saveEntries();
+    localStorage.removeItem('gp_entries'); entries.length = 0; guarda(null); saveEntries();
     draft = freshDraft(); chiudiPannelli(); switchTab('active'); buildActiveView();
+  }
+
+  /* ── 13. L'ORDINE DELLA LISTA, LA PAUSA E I MINUTI SPIEGATI ──
+     Tre cose che si vedono SOLO a video: l'ordine dei riquadri, il
+     numero grande che si ferma, e la riga che spiega di che cos'e'
+     fatto il tempo. In node il DOM e' finto e non ne dice niente. */
+  {
+    localStorage.removeItem('gp_entries'); entries.length = 0; guarda(null);
+    const t0 = Math.floor(Date.now() / 60000) * 60000;
+    const metti = (id, min, extra) => entries.push(normalizeEntries([Object.assign({
+      id: id, startTime: t0 - 20 * 60000, createdAt: t0 - 20 * 60000, oraManuale: true,
+      children: 2, durationMinutes: min, baseMinutes: min }, extra || {})])[0]);
+    metti('uno', 30); metti('due', 60); metti('tre', 90);
+    saveEntries(); switchTab('active'); buildActiveView(); await att(700);
+
+    const ordine = () => [...document.querySelectorAll('#view-active .entries .entry')]
+      .map(e => e.dataset.id);
+    const voluto = () => activeEntries().map(e => e.id);
+    p('la lista parte in ordine di uscita', ordine().join() === voluto().join(),
+      ordine().join() + ' invece di ' + voluto().join());
+
+    /* SI ALLUNGA IL PRIMO: adesso e' l'ultimo a uscire, e deve
+       spostarsi da solo. Prima restava in cima finche' non si cambiava
+       linguetta e si tornava indietro. */
+    conConto(entries.find(e => e.id === 'uno'), () => ritoccaTempo(entries.find(e => e.id === 'uno'), 180));
+    saveEntries(); tick(); await att(150);
+    p('  allungato il primo, la lista si rimette in ordine da sola',
+      ordine().join() === voluto().join(), ordine().join() + ' invece di ' + voluto().join());
+    p('  e quello allungato non e piu il primo', ordine()[0] !== 'uno', ordine().join());
+
+    /* MA NON MENTRE UNA SCHEDA E' APERTA: spostarle sotto il dito e'
+       peggio del disordine. */
+    const primo = document.querySelector('#view-active .entry');
+    primo.querySelector('.e-riga').click(); await att(250);
+    const bottone = [...primo.querySelectorAll('button.conto')].find(b => /Parco|Modifica/.test(b.textContent));
+    if (bottone) {
+      bottone.click(); await att(500);
+      const era = ordine().join();
+      const chi = entries.find(e => e.id === primo.dataset.id);
+      conConto(chi, () => ritoccaTempo(chi, 240));
+      saveEntries(); tick(); tick(); await att(150);
+      p('  con una scheda aperta la lista non si muove sotto le dita',
+        ordine().join() === era, ordine().join() + ' era ' + era);
+      bottone.click(); await att(700);
+      tick(); await att(150);
+      p('  e richiudendola si rimette in ordine', ordine().join() === voluto().join(),
+        ordine().join() + ' invece di ' + voluto().join());
+    }
+
+    /* LA PAUSA SI VEDE, E IL NUMERO GRANDE SI FERMA */
+    localStorage.removeItem('gp_entries'); entries.length = 0; guarda(null);
+    guarda('ferma'); entries.push(normalizeEntries([{ id: 'ferma', startTime: t0 - 70 * 60000,
+      createdAt: t0 - 70 * 60000, oraManuale: true, children: 2,
+      durationMinutes: 0, baseMinutes: 0, payLater: true }])[0]);
+    saveEntries(); buildActiveView(); await att(250); tick();
+    const scheda = () => document.querySelector('#view-active .entry[data-id="ferma"]');
+    const numero = () => scheda().querySelector('.e-conto .v').textContent;
+    const parola = () => scheda().querySelector('.e-conto .k').textContent;
+    p('a tempo aperto la scheda dice da quanto sono dentro', /dentro da/.test(parola()), parola());
+    conConto(entries[0], () => commutaPausa(entries[0]));
+    saveEntries(); tick(); await att(120);
+    p('  fermato l orologio, la scheda lo dice', /PAUSA/.test(parola()), parola());
+    p('  e si riconosce dalla lista senza aprirla', scheda().classList.contains('in-pausa'));
+    const fermoA = numero();
+    await att(2400); tick();
+    p('  e il numero grande sta fermo davvero', numero() === fermoA,
+      'era ' + fermoA + ', adesso ' + numero());
+    conConto(entries[0], () => commutaPausa(entries[0]));
+    saveEntries(); tick(); await att(120);
+    p('  e riprendendo riparte', /dentro da/.test(parola()) && !scheda().classList.contains('in-pausa'),
+      parola());
+
+    /* DI CHE COS'E' FATTO IL TEMPO: la riga sotto «Esce fra». Solo 2.0. */
+    if (settings.grafica2) {
+      localStorage.removeItem('gp_entries'); entries.length = 0; guarda(null);
+      guarda('spiega'); entries.push(normalizeEntries([{ id: 'spiega', startTime: t0 - 10 * 60000,
+        createdAt: t0 - 10 * 60000 + 2 * 60000, oraManuale: true, children: 2,
+        durationMinutes: 60, baseMinutes: 60, crazyJumping: 2, crazyGiri: [1, 1] }])[0]);
+      saveEntries(); buildActiveView(); await att(250); tick();
+      const sotto = document.querySelector('#view-active .entry[data-id="spiega"] .e-conto .sott');
+      p('sotto «Esce fra» c e scritto di che cos e fatto il tempo', !!sotto && /1h/.test(sotto.textContent),
+        sotto ? sotto.textContent : 'manca');
+      p('  coi minuti dei giri', /Crazy/.test(sotto.textContent), sotto.textContent);
+      p('  e con quelli dell arrotondamento', /arrotondati/.test(sotto.textContent), sotto.textContent);
+    }
+
+    localStorage.removeItem('gp_entries'); entries.length = 0; guarda(null); saveEntries();
+    chiudiPannelli(); switchTab('active'); buildActiveView();
   }
 
   /* ── il verdetto ── */
