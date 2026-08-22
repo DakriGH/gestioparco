@@ -927,6 +927,173 @@ gruppo('Una pausa che attraversa la notte, e altre cose lunghe');
   prova('e oltre l ultima fascia il prezzo non sale piu', !lungo.length, lungo.join('\n        '));
 }
 
+/* ═════════════════════════════════════════════════════════
+   L'ORA D'INGRESSO CHE SI SPOSTA, E IL TEMPO DI PARCO CHE
+   DEVE SEGUIRLA
+
+   L'ora d'ingresso si muove in tre modi: col piu' e col meno, col
+   tasto "Ora", e DA SOLA -- mentre si registra un gruppo l'orario
+   cammina con l'orologio. Tutti e tre spostavano solo `startTime`, e
+   `parcoDa` -- da quando conta il tempo di parco -- restava dov'era.
+   Il guasto non si vedeva subito: la scheda diceva un'ora d'uscita, il
+   tablet si ricaricava, la riparazione dei dati rialzava `parcoDa`
+   all'ingresso, e la stessa scheda ne diceva un'altra. Nel mezzo il
+   gruppo era rosso quando non doveva, e allungando il tempo li' in
+   mezzo l'app chiedeva di far pagare uno sforo che non esisteva.
+
+   La regola: quello che vale in memoria e quello che vale dopo un
+   ricaricamento DEVONO essere lo stesso numero. Sempre.
+   ═════════════════════════════════════════════════════════ */
+gruppo('Spostare l’ora d’ingresso si porta dietro il tempo di parco');
+{
+  fermaOrologio();
+  const rileggi = c => app.normalizeEntries([JSON.parse(JSON.stringify(c))])[0];
+  const oraDi = t => new VeraData(t).toTimeString().slice(0, 5);
+  /* un gruppo come nasce al banco: prima i giri, poi il tempo. E' cosi'
+     che `parcoDa` si timbra -- il tempo di parco parte da zero.
+     L'OMAGGIO NON E' UN DETTAGLIO: senza, la riparazione dei dati
+     rimette un'ora di serie (lo zero varrebbe «dato storto»), il tempo
+     non partirebbe piu' da zero e `parcoDa` non si timbrerebbe. La
+     prova girerebbe a vuoto: passerebbe misurando un ingresso che il
+     guasto non poteva toccare. */
+  const conTimbro = (min) => {
+    const c = app.normalizeEntries([{
+      id: 'i' + Math.random().toString(36).slice(2, 7),
+      startTime: adesso(), createdAt: adesso(), oraManuale: true,
+      children: 3, durationMinutes: 0, baseMinutes: 0, omaggio: 10, crazyJumping: 2
+    }])[0];
+    app.metteTempo(c, min);
+    if (!app.num(c.parcoDa, 0)) throw new Error('la prova gira a vuoto: parcoDa non timbrato');
+    return c;
+  };
+
+  const guai = [];
+  /* si sposta di tutto: avanti (il regalo del banco), indietro (la
+     correzione «erano entrati alle e venti»), e di niente */
+  [-30, -10, -5, 0, 5, 8, 10, 25, 60].forEach(sposta => {
+    [30, 60, 90].forEach(min => {
+      const c = conTimbro(min);
+      const eraFine = app.endTimeOf(c);
+      app.mettiIngresso(c, c.startTime + sposta * 60000);
+      const ora = app.endTimeOf(c);
+      const dopoRilettura = app.endTimeOf(rileggi(c));
+      const eti = sposta + '′ su ' + min + '′: ';
+      if (ora !== dopoRilettura) {
+        guai.push(eti + 'in memoria esce ' + oraDi(ora) + ', riletto ' + oraDi(dopoRilettura));
+      }
+      /* e l'uscita si sposta ESATTAMENTE come l'ingresso: ne' un
+         minuto di piu' ne' uno di meno */
+      if (ora !== eraFine + sposta * 60000) {
+        guai.push(eti + 'l uscita si e mossa di ' +
+          Math.round((ora - eraFine) / 60000) + '′ invece che di ' + sposta + '′');
+      }
+      /* e il prezzo non c'entra niente con l'orario: non deve muoversi */
+      if (app.costOf(c).parkTotal !== app.costOf(rileggi(c)).parkTotal) {
+        guai.push(eti + 'il prezzo cambia rileggendolo');
+      }
+    });
+  });
+  prova('l’uscita si muove con l’ingresso, e dice lo stesso numero dopo un ricaricamento',
+    !guai.length, guai.slice(0, 4).join('\n        '));
+
+  /* IL CASO DEL PAPA' CHE COMPRA IL TEMPO DOPO: e' entrato alle 21:40
+     per due giri, alle 22:10 si ferma al parco. Quel `parcoDa` e' un
+     momento vero dell'orologio, non un'etichetta: correggendo l'ora
+     d'ingresso NON deve muoversi. */
+  {
+    const c = app.normalizeEntries([{
+      id: 'dopo1', startTime: adesso() - 30 * 60000, createdAt: adesso() - 30 * 60000,
+      oraManuale: true, children: 3, durationMinutes: 0, baseMinutes: 0, omaggio: 10, crazyJumping: 2
+    }])[0];
+    app.metteTempo(c, 30);                    /* compra adesso: parcoDa = adesso */
+    const comprato = c.parcoDa;
+    const fine = app.endTimeOf(c);
+    app.mettiIngresso(c, c.startTime - 10 * 60000);   /* «erano entrati prima» */
+    prova('il tempo comprato a metà serata NON si sposta correggendo l’ingresso',
+      c.parcoDa === comprato && app.endTimeOf(c) === fine,
+      'parcoDa mosso di ' + Math.round((c.parcoDa - comprato) / 60000) + '′');
+    /* ma se l'ingresso passa OLTRE, il parco non puo' cominciare prima
+       che arrivino: si fa portare avanti, e memoria e disco d'accordo */
+    app.mettiIngresso(c, comprato + 20 * 60000);
+    prova('ma l’ingresso spostato oltre se lo porta avanti lo stesso',
+      c.parcoDa === comprato + 20 * 60000 &&
+      app.endTimeOf(c) === app.endTimeOf(rileggi(c)),
+      'parcoDa ' + oraDi(c.parcoDa) + ' ingresso ' + oraDi(c.startTime));
+  }
+
+  /* IL PAVIMENTO DEL REGALO si muove col tempo di parco: se restasse
+     indietro, l'ora d'uscita resterebbe incollata dov'era */
+  {
+    const c = conTimbro(60);
+    avanza(70);                               /* tempo scaduto */
+    /* le due mosse che fa la card quando si apre un giro, in quest'ordine:
+       si guarda dove finivano PRIMA, si conta il giro, e da li' parte il
+       regalo (vedi `regalaDaAdesso`) */
+    const finePrima = app.endTimeOf(c);
+    app.metteCrazy(c, 3);
+    app.regalaDaAdesso(c, finePrima);
+    const conRegalo = app.endTimeOf(c);
+    prova('un giro a tempo scaduto lascia il suo pavimento', app.num(c.regaloFinoA, 0) > 0);
+    app.mettiIngresso(c, c.startTime + 15 * 60000);
+    prova('e il pavimento si sposta con l’ingresso, senza divergere',
+      app.endTimeOf(c) === conRegalo + 15 * 60000 &&
+      app.endTimeOf(c) === app.endTimeOf(rileggi(c)),
+      'esce ' + oraDi(app.endTimeOf(c)) + ', riletto ' + oraDi(app.endTimeOf(rileggi(c))));
+    fermaOrologio();
+  }
+
+  /* E LO SFORO: e' lui che fa comparire il foglio «hanno sforato,
+     glielo faccio pagare?». Con l'ingresso spostato in avanti il
+     gruppo risultava sforato prima del tempo, e i soldi che l'app
+     chiedeva erano di minuti mai passati. */
+  {
+    const c = conTimbro(60);
+    app.mettiIngresso(c, c.startTime + 10 * 60000);
+    avanza(65);                               /* dentro i sessanta+dieci */
+    prova('con l’ingresso spostato avanti non risultano ancora sforati',
+      app.sforoDi(c) === 0 && app.sforoDi(rileggi(c)) === 0,
+      'sforo ' + Math.round(app.sforoDi(c) / 60000) + '′ / riletto ' +
+      Math.round(app.sforoDi(rileggi(c)) / 60000) + '′');
+    avanza(10);                               /* adesso si' */
+    prova('e dopo sì, dello stesso identico numero di minuti',
+      app.sforoDi(c) > 0 && app.sforoDi(c) === app.sforoDi(rileggi(c)),
+      Math.round(app.sforoDi(c) / 60000) + '′ / ' + Math.round(app.sforoDi(rileggi(c)) / 60000) + '′');
+    fermaOrologio();
+  }
+
+  /* IL GIRO VERO DEL BANCO, quello che ha fatto uscire il guasto:
+     sono le 20:02, due giri di Crazy, poi un'ora, e mentre si contano
+     i bambini l'orario d'ingresso cammina da solo. Nessuno ha toccato
+     niente, e la scheda cambiava ora d'uscita al ricaricamento. */
+  {
+    const c = conTimbro(60);
+    const fine = app.endTimeOf(c);
+    avanza(8);
+    app.mettiIngresso(c, app.roundTo5(new FintaData()).getTime());   /* ingressoLive */
+    prova('registrare con calma non fa comparire minuti dal nulla',
+      app.endTimeOf(c) === app.endTimeOf(rileggi(c)) &&
+      app.endTimeOf(c) === fine + (c.startTime - (adesso() - 8 * 60000)),
+      'esce ' + oraDi(app.endTimeOf(c)) + ', riletto ' + oraDi(app.endTimeOf(rileggi(c))));
+    fermaOrologio();
+  }
+
+  /* E SVUOTARE IL TEMPO butta via anche i suoi timbri: se restassero,
+     il tempo nuovo nascerebbe gia' scaduto */
+  {
+    const c = conTimbro(60);
+    avanza(90);
+    app.metteCrazy(c, 2);                     /* si lascia dietro il pavimento */
+    const foto = JSON.parse(JSON.stringify(c));
+    delete foto.parcoDa; delete foto.regaloFinoA;
+    foto.startTime = adesso(); foto.durationMinutes = 60; foto.baseMinutes = undefined;
+    const pulito = app.normalizeEntries([foto])[0];
+    prova('svuotando il tempo, quello nuovo non nasce già scaduto',
+      app.endTimeOf(pulito) > adesso(),
+      'esce ' + oraDi(app.endTimeOf(pulito)) + ' e sono le ' + oraDi(adesso()));
+    fermaOrologio();
+  }
+}
+
 /* ---------- il verdetto ---------- */
 console.log('\n' + '━'.repeat(52));
 if (ko) {

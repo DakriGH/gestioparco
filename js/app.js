@@ -1591,11 +1591,11 @@ function costruisciPannello() {
        minuti di parco che non aveva fatto. */
     if (d.a === 'ora') {
       if (d.v === 'ora') {
-        c.startTime = roundTo5(new Date()).getTime();
+        mettiIngresso(c, roundTo5(new Date()).getTime());
         c.braceletCustom = false;
         delete c.oraManuale;
       } else {
-        c.startTime = num(c.startTime, Date.now()) + parseInt(d.v, 10) * 60000;
+        mettiIngresso(c, num(c.startTime, Date.now()) + parseInt(d.v, 10) * 60000);
         c.oraManuale = true;
       }
       pcSalva(); aggiornaPannello(); return;
@@ -2192,6 +2192,59 @@ function segnaInizioParco(c, prima, dopo) {
      Il tempo che comprano ADESSO e' il loro tempo iniziale, e da qui in
      poi non si muove piu' -- e' il momento esatto in cui va scritto. */
   c.baseMinutes = dopo;
+}
+
+/* ══════════════════════════════════════════════════════════
+   SPOSTA L'ORA D'INGRESSO, E PORTA CON SE' IL TEMPO DI PARCO.
+
+   L'ora d'ingresso si muove in tre modi: col piu' e col meno, col
+   tasto "Ora", e DA SOLA -- mentre si registra un gruppo l'orario
+   cammina con l'orologio, cosi' chi ci mette cinque minuti a contare i
+   bambini non gliene segna cinque che non hanno fatto.
+   Tutti e tre spostavano SOLO `startTime`, e `parcoDa` restava dov'era.
+
+   Il guasto che ne veniva era subdolo perche' non si vedeva subito:
+   sono le 20:02, prendono due giri di Crazy, poi decidono un'ora --
+   `parcoDa` si timbra alle 20:00 -- e mentre si contano i bambini
+   l'ingresso cammina alle 20:10. La scheda diceva «esce alle 21:00».
+   Poi il tablet si ricarica, la riparazione dei dati rialza `parcoDa`
+   all'ingresso, e la stessa scheda dice «esce alle 21:10». Dieci
+   minuti comparsi dal nulla, e per dieci minuti il gruppo era rosso
+   quando non doveva: allungando il tempo li' in mezzo, l'app chiedeva
+   di far pagare uno sforo che non c'era.
+   Memoria e disco raccontavano due storie diverse, e la piu' comune
+   delle sequenze al banco bastava a farlo succedere.
+
+   Chi segue l'ingresso e chi no:
+     — il tempo comprato ALL'INGRESSO lo segue, perche' e' cominciato
+       con loro: spostare l'ingresso vuol dire spostare tutto;
+     — il tempo comprato DOPO -- il papa' entrato per due giri che a
+       meta' serata si ferma al parco -- resta dov'e': quello e' un
+       momento vero dell'orologio, non un'etichetta. Ma non puo' finire
+       prima dell'ingresso, se no il parco comincerebbe prima che
+       arrivino.
+   ══════════════════════════════════════════════════════════ */
+function mettiIngresso(c, quando) {
+  c = c || C();
+  const prima = num(c.startTime, Date.now());
+  const dopo = num(quando, prima);
+  if (!Number.isFinite(dopo) || dopo === prima) return prima;
+  c.startTime = dopo;
+  const da = num(c.parcoDa, NaN);
+  if (Number.isFinite(da) && da > 0) {
+    const nuovo = da <= prima ? da + (dopo - prima) : Math.max(da, dopo);
+    const mosso = nuovo - da;
+    c.parcoDa = nuovo;
+    /* il pavimento del regalo si muove col tempo di parco, se no
+       resterebbe indietro e terrebbe l'ora d'uscita incollata dov'era */
+    if (mosso && num(c.regaloFinoA, 0) > 0) c.regaloFinoA = num(c.regaloFinoA, 0) + mosso;
+  }
+  /* nemmeno il cronometro della pausa puo' essere partito prima che
+     entrassero: e' l'altro campo che la riparazione raddrizza da sola,
+     e senza questa riga divergerebbe uguale */
+  const fermo = num(c.pausaDa, NaN);
+  if (Number.isFinite(fermo) && fermo > 0) c.pausaDa = Math.max(fermo, dopo);
+  return dopo;
 }
 
 /* QUANTO SFORO SI CONDONA SENZA CHIEDERE quando si allunga il tempo.
@@ -7378,7 +7431,7 @@ function ingressoLive() {
   if (PAN.ingresso || !draft || draft.oraManuale) return;
   const adesso = roundTo5(new Date()).getTime();
   if (adesso === draft.startTime) return;
-  draft.startTime = adesso;
+  mettiIngresso(draft, adesso);
   if (PAN.root && PAN.conto === draft) { disegnaFascia(PAN.root, draft); pcFondoDis(); }
 }
 
@@ -7616,6 +7669,10 @@ function svuotaScelto(scelte) {
       c.startTime = f.startTime; c.durationMinutes = f.durationMinutes;
       c.payLater = false; c.braceletColor = null; c.braceletCustom = true;
       c.baseMinutes = undefined;
+      /* e via anche i TIMBRI di quel tempo: da quando contava il parco
+         e il pavimento di un regalo. Restavano indietro, e il tempo
+         nuovo nasceva gia' scaduto o gia' rosso. */
+      delete c.parcoDa; delete c.regaloFinoA;
     }
     if (!num(c.children, 0) && !num(c.crazyJumping, 0) && !lista(c.barItems).length &&
         !lista(c.people).length) c.touched = false;
@@ -9108,7 +9165,7 @@ function switchTab(t) {
 
   if (t === 'new') {
     // se il modulo e' vergine, l'orario riparte da adesso
-    if (!draft.touched) draft.startTime = roundTo5(new Date()).getTime();
+    if (!draft.touched) mettiIngresso(draft, roundTo5(new Date()).getTime());
     /* il pannello torna a casa: se stava dentro una scheda che volava,
        posaSubito l'ha gia' rimesso qui sopra */
     /* «+ NUOVO» APRE SEMPRE SUL PARCO. Prima si ricordava l'ultima
